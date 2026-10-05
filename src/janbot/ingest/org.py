@@ -1,13 +1,11 @@
 """Org-mode reading for the ingestion pipeline.
 
-The tracer chunker is deliberately shallow (per the story plan): one
-:class:`Chunk` is produced for each top-level subtree of a file. The text of a
-chunk concatenates its heading, body and the text of every descendant node; the
-breadcrumb carries the heading path down to (and including) the subtree so a
-citation can show where the chunk came from.
-
-Full subtree semantics (PROPERTIES, LOGBOOK, tags, per-subtree chunking) land in
-a later story; this module only establishes the reader-to-chunk seam.
+One :class:`Chunk` is produced for every non-root subtree of a file, at any
+depth. The text of a chunk concatenates its heading, tags, PROPERTIES drawer,
+body (LOGBOOK included) and the text of every descendant node; the breadcrumb
+carries the full heading path down to (and including) the subtree so a citation
+can show where the chunk came from. A document-order ordinal keeps ids unique
+within a file even when sibling headings collide.
 """
 
 from __future__ import annotations
@@ -47,16 +45,31 @@ def _heading_path(node: orgparse.OrgNode) -> str:
     return " > ".join(headings)
 
 
+def _properties_text(node: orgparse.OrgNode) -> str:
+    """Render the node's PROPERTIES drawer, if any, as an org-style block."""
+    if not node.properties:
+        return ""
+    lines = [":PROPERTIES:"]
+    for key, value in node.properties.items():
+        lines.append(f":{key}: {value}")
+    lines.append(":END:")
+    return "\n".join(lines)
+
+
 def _subtree_text(node: orgparse.OrgNode) -> str:
     """Render ``node`` and all of its descendants as plain text lines."""
     lines: list[str] = []
 
     heading = (node.heading or "").strip()
-    if heading:
+    if heading or node.tags:
         if node.tags:
             tags = ":".join(sorted(node.tags))
-            heading = f"{heading} :{tags}:"
+            heading = f"{heading} :{tags}:".strip()
         lines.append(heading)
+
+    properties = _properties_text(node)
+    if properties:
+        lines.append(properties)
 
     body = node.get_body("raw").strip()
     if body:
@@ -70,13 +83,20 @@ def _subtree_text(node: orgparse.OrgNode) -> str:
     return "\n".join(lines)
 
 
+def _iter_subtree_nodes(node: orgparse.OrgNode):
+    """Yield every non-root descendant of ``node`` in document order."""
+    for child in node.children:
+        yield child
+        yield from _iter_subtree_nodes(child)
+
+
 def read_org_file(path: str | Path) -> list[Chunk]:
-    """Read ``path`` and return one chunk per top-level subtree."""
+    """Read ``path`` and return one chunk per non-root subtree node."""
     source = Path(path).resolve()
     root = orgparse.load(source)
 
     chunks: list[Chunk] = []
-    for ordinal, node in enumerate(root.children):
+    for ordinal, node in enumerate(_iter_subtree_nodes(root)):
         breadcrumb = _heading_path(node)
         text = _subtree_text(node)
         if not text:

@@ -31,10 +31,10 @@ def _stub_embedder(texts: list[str]) -> list[list[float]]:
     return vectors
 
 
-def test_read_org_file_chunks_top_level_subtrees() -> None:
+def test_read_org_file_chunks_every_subtree() -> None:
     chunks = read_org_file(FIXTURE_FILE)
 
-    assert len(chunks) == 2
+    assert len(chunks) == 4
     assert all(isinstance(chunk, Chunk) for chunk in chunks)
     assert all(chunk.source_path == str(FIXTURE_FILE) for chunk in chunks)
 
@@ -43,9 +43,17 @@ def test_read_org_file_chunks_top_level_subtrees() -> None:
     assert "Background" in about.text
     assert "biography" in about.text
 
+    background = next(chunk for chunk in chunks if chunk.breadcrumb == "About > Background")
+    assert background.id == f"{FIXTURE_FILE}::1::About > Background"
+    assert "search infrastructure" in background.text
+
     projects = next(chunk for chunk in chunks if chunk.breadcrumb == "Projects")
     assert ":work:" in projects.text
-    assert "JanBot" in projects.text
+    assert "CUSTOM_ID" in projects.text
+    assert "projects" in projects.text
+
+    janbot = next(chunk for chunk in chunks if chunk.breadcrumb == "Projects > JanBot")
+    assert "RAG assistant" in janbot.text
 
 
 def test_duplicate_headings_get_unique_ids(tmp_path: Path) -> None:
@@ -75,7 +83,7 @@ def test_index_one_file_and_retrieve(tmp_path: Path) -> None:
     index_path = tmp_path / "index"
 
     count = index_corpus(FIXTURE_DIR, index_path, _stub_embedder)
-    assert count == 2
+    assert count == 4
 
     store = VectorStore(index_path, _stub_embedder)
     results = store.query("About")
@@ -103,7 +111,7 @@ def test_non_org_files_ignored(tmp_path: Path) -> None:
     index_path = tmp_path / "index"
 
     assert [path.name for path in iter_org_files(corpus)] == ["example.org"]
-    assert index_corpus(corpus, index_path, _stub_embedder) == 2
+    assert index_corpus(corpus, index_path, _stub_embedder) == 4
 
 
 def test_within_is_fail_closed(tmp_path: Path) -> None:
