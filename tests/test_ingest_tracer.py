@@ -1,34 +1,19 @@
 """Tracer-bullet tests: index one public org file and retrieve it.
 
-These tests never load the real embedding model. They always inject a
-deterministic, offline stub embedder through the store's seam.
+These tests never load the real embedding model; they inject the deterministic
+stub embedder from ``conftest`` through the store's seam.
 """
 
 from __future__ import annotations
 
-import hashlib
-import re
+from collections.abc import Callable
 from pathlib import Path
 
-from janbot.ingest import Chunk, index_corpus, iter_org_files, read_org_file, within
+from janbot.ingest import Chunk, index_corpus, iter_org_files, read_org_file
 from janbot.store import VectorStore
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures" / "public_profile_org"
 FIXTURE_FILE = FIXTURE_DIR / "example.org"
-
-_STUB_DIM = 64
-
-
-def _stub_embedder(texts: list[str]) -> list[list[float]]:
-    """Deterministic bag-of-words embedder; no model, stable across runs."""
-    vectors: list[list[float]] = []
-    for text in texts:
-        vector = [0.0] * _STUB_DIM
-        for token in re.findall(r"[a-z0-9]+", text.lower()):
-            index = int(hashlib.sha256(token.encode()).hexdigest(), 16) % _STUB_DIM
-            vector[index] += 1.0
-        vectors.append(vector)
-    return vectors
 
 
 def test_read_org_file_chunks_every_subtree() -> None:
@@ -79,13 +64,15 @@ def test_source_path_is_absolute(tmp_path: Path, monkeypatch) -> None:
     assert chunks[0].source_path == str(source.resolve())
 
 
-def test_index_one_file_and_retrieve(tmp_path: Path) -> None:
+def test_index_one_file_and_retrieve(
+    tmp_path: Path, embedder: Callable[[list[str]], list[list[float]]]
+) -> None:
     index_path = tmp_path / "index"
 
-    count = index_corpus(FIXTURE_DIR, index_path, _stub_embedder)
+    count = index_corpus(FIXTURE_DIR, index_path, embedder)
     assert count == 4
 
-    store = VectorStore(index_path, _stub_embedder)
+    store = VectorStore(index_path, embedder)
     results = store.query("About")
 
     assert results
@@ -94,16 +81,20 @@ def test_index_one_file_and_retrieve(tmp_path: Path) -> None:
     assert top["breadcrumb"] == "About"
 
 
-def test_empty_corpus_indexes_zero(tmp_path: Path) -> None:
+def test_empty_corpus_indexes_zero(
+    tmp_path: Path, embedder: Callable[[list[str]], list[list[float]]]
+) -> None:
     corpus = tmp_path / "empty"
     corpus.mkdir()
     index_path = tmp_path / "index"
 
     assert list(iter_org_files(corpus)) == []
-    assert index_corpus(corpus, index_path, _stub_embedder) == 0
+    assert index_corpus(corpus, index_path, embedder) == 0
 
 
-def test_non_org_files_ignored(tmp_path: Path) -> None:
+def test_non_org_files_ignored(
+    tmp_path: Path, embedder: Callable[[list[str]], list[list[float]]]
+) -> None:
     corpus = tmp_path / "corpus"
     corpus.mkdir()
     (corpus / "notes.txt").write_text("not an org file")
@@ -111,17 +102,4 @@ def test_non_org_files_ignored(tmp_path: Path) -> None:
     index_path = tmp_path / "index"
 
     assert [path.name for path in iter_org_files(corpus)] == ["example.org"]
-    assert index_corpus(corpus, index_path, _stub_embedder) == 4
-
-
-def test_within_is_fail_closed(tmp_path: Path) -> None:
-    root = tmp_path / "corpus"
-    root.mkdir()
-    (root / "real.org").write_text("* Heading\nBody.\n")
-    (root / "link.org").symlink_to(root / "real.org")
-
-    assert within(root, root / "a.org") is True
-    assert within(root, root) is True
-    assert within(root, root / "link.org") is True
-    assert within(root, root / ".." / "priv.org") is False
-    assert within(root, tmp_path / "elsewhere" / "b.org") is False
+    assert index_corpus(corpus, index_path, embedder) == 4

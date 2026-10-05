@@ -24,10 +24,17 @@ Embedder = Callable[[list[str]], list[list[float]]]
 class ChunkLike(Protocol):
     """Structural type for a chunk accepted by the store (avoids ingest dep)."""
 
-    id: str
-    text: str
-    source_path: str
-    breadcrumb: str
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def text(self) -> str: ...
+
+    @property
+    def source_path(self) -> str: ...
+
+    @property
+    def breadcrumb(self) -> str: ...
 
 _COLLECTION_NAME = "janbot"
 
