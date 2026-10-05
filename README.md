@@ -52,6 +52,9 @@ JanBot is configured entirely through environment variables prefixed `JANBOT_`, 
 | `JANBOT_MODEL_SNAPSHOT` | `openai/gpt-4o-mini-2024-07-18` | The locked model used in `eval` mode. |
 | `JANBOT_CORPUS_PATH` | `public_profile_org` | The only corpus the ingestion pipeline will index (fail-closed). |
 | `JANBOT_INDEX_PATH` | `chroma_db` | Where the vector index is written. |
+| `JANBOT_PROJECT_ROOT` | the repository root | Base for relative `JANBOT_CORPUS_PATH`/`JANBOT_INDEX_PATH`; override for packaged deployments or tests. |
+
+Path values are `~`-expanded and resolved to absolute paths under the project root, so they do not depend on the process working directory. A blank or whitespace-only value for any variable counts as unset and takes its documented default.
 
 ```sh
 JANBOT_MODEL_MODE=production uv run uvicorn janbot.api.main:app

@@ -1,3 +1,4 @@
+import importlib
 from importlib.metadata import version
 
 from fastapi.testclient import TestClient
@@ -16,6 +17,22 @@ def test_dependencies_importable() -> None:
     assert version("dspy") == "3.4.0"
     assert version("chromadb") == "1.5.9"
     assert version("orgparse") == "0.5.20260926"
+
+    for module in (
+        "numpy",
+        "fastapi",
+        "uvicorn",
+        "pydantic",
+        "dspy",
+        "chromadb",
+        "orgparse",
+    ):
+        assert importlib.import_module(module) is not None
+
+
+def test_spine_subpackages_importable() -> None:
+    for module in ("janbot.pipeline", "janbot.ingest", "janbot.store", "janbot.llm"):
+        assert importlib.import_module(module) is not None
 
 
 def test_health() -> None:
