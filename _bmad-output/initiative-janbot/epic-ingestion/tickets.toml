@@ -1,0 +1,78 @@
+# tickets.toml — epic-ingestion. Planned entries in build order; no leaf file until an entry is pulled.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Config contract & corpus-root hardening"
+description = "Settle the corpus-root contract and harden config: JANBOT_CORPUS_PATH is the fail-closed root (default public_profile_org), paths are ~-expanded and resolved against the project root, empty/whitespace env is treated as unset, mode is normalized, and the snapshot is validated; new tests assert the documented literal contract (JANBOT_* names and default values), a real dependency import, and the spine subpackages."
+verify = "With no env set the corpus root is the documented default; a blank value is treated as unset; an absolute or ~ path resolves; the four spine subpackages import; tests assert literal JANBOT_* names and defaults."
+covers = ["CAP-4"]
+after = ["1.1", "1.2"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Tracer bullet: index one public org file and retrieve it"
+description = "The thinnest path through every layer: read one .org file under the corpus root with orgparse, chunk its top subtree, embed it (ChromaDB default all-MiniLM-L6-v2 behind an injectable seam), store it in ChromaDB, and query it back; the public scope folder ~/org/h1_horizon/public_profile_org/ is created and symlinked by a person."
+verify = "Indexing one public org file and querying its heading content returns the chunk with its source path."
+covers = ["CAP-4", "CAP-5"]
+after = [1]
+hitl = true
+risk = "high"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Full org subtree chunker"
+description = "Chunk every org subtree (heading + body + PROPERTIES + LOGBOOK + tags + children) with a parent-heading breadcrumb, preserving hierarchy per AD-6; no naive text splitting."
+verify = "A nested subtree becomes one chunk carrying the correct breadcrumb, properties, tags and child content."
+covers = ["CAP-5"]
+after = [2]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Fail-closed scope filter"
+description = "Make ingestion accept only paths under the configured corpus root and refuse any path outside it, so a private note elsewhere changes no retrieval result."
+verify = "A file outside the corpus root is refused, and placing a private note outside it leaves query results unchanged."
+covers = ["CAP-4"]
+after = [2]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Idempotent index rebuild + store adapter hardening"
+description = "Make re-running the ingester rebuild the collection without duplicating or corrupting it, and harden the store adapter to handle an existing collection/index."
+verify = "Running the ingester twice yields the same collection size and no duplicate chunks."
+covers = ["CAP-4", "CAP-5"]
+after = [3, 4]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Refactor sweep"
+description = "Cleanup-only pass over ingest/ and store/ from this epic's plans and any deferred review findings; scope is set when it starts."
+verify = "The suite is green and no deferred cleanup finding from this epic remains open."
+covers = ["CAP-4", "CAP-5"]
+after = [1, 2, 3, 4, 5]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 7
+type = "story"
+title = "End-to-end ingestion suite"
+description = "One closing suite proving the epic's Done when end to end over a hermetic sample corpus: representative org files become subtree chunks in a populated, queryable index; an outside path is refused; a re-run is idempotent."
+verify = "The suite passes against the sample fixture and fails when the chunker or the scope filter regresses."
+covers = ["CAP-4", "CAP-5"]
+after = [6]
+hitl = false
+risk = "low"

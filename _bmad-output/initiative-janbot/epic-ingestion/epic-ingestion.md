@@ -45,5 +45,10 @@ Running the ingester over `public_profile_org/` yields a queryable ChromaDB inde
 
 ## Notes
 
-- Assumption: a `public_profile_org/` corpus will exist or be assembled before this epic runs.
+- Decision (2026-10-05, #1a — corpus-root ownership): the corpus root is configuration. `JANBOT_CORPUS_PATH` (default `public_profile_org`) points at the public scope folder; the ingestion scope filter is fail-closed against that configured root, refusing any path outside it.
+- Decision (2026-10-05, public-scope mechanism): the public scope is a dedicated folder, `~/org/h1_horizon/public_profile_org/`, containing the public profile files (symlinked from their real locations in `~/org`, which also holds private notes). The real corpus stays outside the repository.
+- Decision (2026-10-05, test corpus): tests use a synthetic fixture under `tests/fixtures/public_profile_org/`; the real corpus is never committed.
+- Decision (2026-10-05, embeddings): use ChromaDB's built-in default embedding (`all-MiniLM-L6-v2`) behind an injectable seam, so tests run with a deterministic stub (fast, offline) and production uses the default.
+- Decision (2026-10-05, sequencing): entry 1 is an opening prerequisite carrying the retrospective follow-ups (#1, #3, #5, #6); entry 2 is the tracer bullet (thinnest path through every layer). Entries 3 and 4 touch different files (`ingest/org.py`, `ingest/scope.py`) and may run in parallel; entry 2 owns the shared store setup.
+- Decision (2026-10-05, scope): retrospective item #2 (production routing, `temperature`, `top-k` on `Config`) is deferred to `epic-rag-chat`, not this epic.
 - Decision (2026-10-05, slicing): the DSPy signature's citation contract is a downstream concern; this epic's output is the indexed chunks plus their source-path metadata, which citations will read.
