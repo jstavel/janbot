@@ -15,6 +15,8 @@ from pathlib import Path
 
 import orgparse
 
+from janbot.ingest.scope import located_path
+
 __all__ = ["Chunk", "read_org_file"]
 
 
@@ -92,7 +94,7 @@ def _iter_subtree_nodes(node: orgparse.OrgNode):
 
 def read_org_file(path: str | Path) -> list[Chunk]:
     """Read ``path`` and return one chunk per non-root subtree node."""
-    source = Path(path).resolve()
+    source = located_path(path)
     root = orgparse.load(source)
 
     chunks: list[Chunk] = []

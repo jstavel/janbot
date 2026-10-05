@@ -117,7 +117,11 @@ def test_non_org_files_ignored(tmp_path: Path) -> None:
 def test_within_is_fail_closed(tmp_path: Path) -> None:
     root = tmp_path / "corpus"
     root.mkdir()
+    (root / "real.org").write_text("* Heading\nBody.\n")
+    (root / "link.org").symlink_to(root / "real.org")
 
     assert within(root, root / "a.org") is True
     assert within(root, root) is True
+    assert within(root, root / "link.org") is True
+    assert within(root, root / ".." / "priv.org") is False
     assert within(root, tmp_path / "elsewhere" / "b.org") is False
