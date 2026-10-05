@@ -1,0 +1,17 @@
+#+TITLE: Public Profile
+
+* About
+Jan builds retrieval systems and writes about grounding.
+A short biography lives here.
+
+** Background
+Previously worked on search infrastructure and evaluation.
+
+* Projects :work:
+:PROPERTIES:
+:CUSTOM_ID: projects
+:END:
+Selected public projects.
+
+** JanBot
+A RAG assistant grounded in an org-mode corpus.
