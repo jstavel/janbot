@@ -1,0 +1,34 @@
+# tickets.toml — epic-foundation. Planned entries in build order; no leaf file until an entry is pulled.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Project scaffold & runnable skeleton"
+description = "Creates the uv-managed Python project with the spine's package layout (api, pipeline, ingest, store, llm), pins the Milestone 1 dependencies, adds a FastAPI app skeleton with a health route, and a smoke test that imports the package."
+verify = "uv sync on a clean checkout succeeds; uv run pytest passes the smoke test; the skeleton service starts."
+covers = ["E1", "E2"]
+after = []
+hitl = true
+risk = "low"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Configuration loading"
+description = "Adds the configuration module that reads model mode, the locked snapshot id, the corpus path and the index path from the environment, with documented defaults."
+verify = "With no variables set the documented defaults load; setting each variable overrides it."
+covers = ["E3"]
+after = [1]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 3
+type = "story"
+title = "CI workflow"
+description = "Adds a GitHub Actions workflow that installs the project with uv and runs the pytest suite on every push."
+verify = "CI runs on a push and reports the test suite green."
+covers = ["E4"]
+after = [1]
+hitl = true
+risk = "low"
