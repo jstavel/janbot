@@ -7,6 +7,5 @@ __pycache__/
 .goose/
 .hermes/
 .bmad-output/
-_bmad-output/
 .direnv/
 .env
