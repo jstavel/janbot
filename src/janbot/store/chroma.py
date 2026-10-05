@@ -78,6 +78,30 @@ class VectorStore:
             embeddings=self.embedder(documents),
         )
 
+    def ids(self) -> set[str]:
+        """Return the ids of every chunk currently stored."""
+        result = self._collection.get(include=[])
+        return set(result.get("ids") or [])
+
+    def sources(self) -> dict[str, str]:
+        """Return a mapping of stored chunk id to its source path."""
+        result = self._collection.get(include=["metadatas"])
+        ids = result.get("ids") or []
+        metadatas = result.get("metadatas") or []
+        sources: dict[str, str] = {}
+        for chunk_id, metadata in zip(ids, metadatas):
+            source = (metadata or {}).get("source_path")
+            if source is not None:
+                sources[chunk_id] = source
+        return sources
+
+    def delete(self, ids: Iterable[str]) -> None:
+        """Delete ``ids`` from the collection (no-op when empty)."""
+        id_list = list(ids)
+        if not id_list:
+            return
+        self._collection.delete(ids=id_list)
+
     def query(self, text: str, k: int = 3) -> list[dict[str, Any]]:
         """Return up to ``k`` chunks most similar to ``text``."""
         result = self._collection.query(

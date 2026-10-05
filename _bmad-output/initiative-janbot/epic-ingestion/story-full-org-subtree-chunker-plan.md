@@ -3,7 +3,7 @@ title: 'Full org subtree chunker'
 type: 'feature'
 ticket: '3'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '2f4bc211e72c4f13d066d6bfb860ba1ecfcef06e'
 route: 'full'
 route_source: 'auto'

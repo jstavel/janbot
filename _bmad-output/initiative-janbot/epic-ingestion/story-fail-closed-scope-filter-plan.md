@@ -3,7 +3,7 @@ title: 'Fail-closed scope filter'
 type: 'feature'
 ticket: '4'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '3eec6ca550f1a2d3c9f009e90775627d68a2c458'
 route: 'full'
 route_source: 'auto'
