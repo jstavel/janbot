@@ -31,7 +31,7 @@ This is the platform baseline and owns no parent capability ids; each line cites
 
 ## Done when
 
-1. `uv sync` on a clean checkout yields a runnable environment; `uv run` starts the service skeleton.
+1. `uv sync` on a clean checkout yields a runnable environment; `uv run uvicorn janbot.api.main:app` starts the service skeleton (the documented start command).
 2. The package layout matches the spine and imports resolve.
 3. Configuration loads with sane defaults and is overridable by environment.
 4. CI runs on push and reports the test suite (green, even if empty).

@@ -9,3 +9,6 @@ __pycache__/
 .bmad-output/
 .direnv/
 .env
+
+# transient BMad render snapshots
+_bmad/render/

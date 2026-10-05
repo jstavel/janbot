@@ -32,7 +32,7 @@ JanBot follows a **ports-and-adapters** (hexagonal) architecture. Every caller r
 
 ### 2. DSPy over Manual Prompt Chains
 
-DSPy replaces traditional manual prompt engineering with programmatic module composition and automated optimization (see [ADR-002](https://github.com/jstavel/janbot/tree/main/_bmad-output)).
+DSPy replaces traditional manual prompt engineering with programmatic module composition and automated optimization (see [ADR-002](_bmad-output/initiative-janbot/spec-janbot/decisions.md)).
 
 ### 3. Org-mode AST-aware Ingestion
 
@@ -48,7 +48,7 @@ Only files in `public_profile_org/` are indexed. The ingestion pipeline provably
 
 ### 5. Deterministic Model Routing
 
-Two LLM modes (see [ADR-004](https://github.com/jstavel/janbot/tree/main/_bmad-output)):
+Two LLM modes (see [ADR-004](_bmad-output/initiative-janbot/spec-janbot/decisions.md)):
 
 | Mode | Model | Use Case |
 |------|-------|----------|
