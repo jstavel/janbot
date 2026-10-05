@@ -57,6 +57,10 @@ Two LLM modes (see [ADR-004](https://github.com/jstavel/janbot/tree/main/_bmad-o
 
 ## Layer Details
 
+### Configuration (cross-cutting)
+
+Settings are environment-driven (`JANBOT_*`, loaded by `janbot.config`) and never hard-coded: model mode, locked snapshot, corpus and index paths all resolve from a single `load_config()`. This is what keeps CI deterministic (locked snapshot at `temperature=0`) while production routes flexibly — no code branch selects a model by caller. An unknown `JANBOT_MODEL_MODE` fails fast at load time.
+
 ### API Layer (FastAPI)
 
 - Thin wrapper — no business logic

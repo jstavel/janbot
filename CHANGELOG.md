@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Configuration module `janbot.config`: stdlib-only `JANBOT_*` environment loading (model mode, locked snapshot, corpus and index paths) with documented defaults and fail-fast mode validation.
 - Milestone 1, epics 2–4: org-mode ingestion with fail-closed scope, the DSPy answer + citation pipeline via `/chat`, and the end-to-end test suite (planned, not yet built).
 
 ## [0.1.0] - 2026-10-05

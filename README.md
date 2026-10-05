@@ -8,7 +8,7 @@ JanBot parses an org-mode corpus into semantically intact units, indexes them, a
 
 Work in progress, built with the [BMad Method](https://github.com/bmad-code-org/BMAD-METHOD). The contract for every capability, constraint and decision lives in `_bmad-output/` — the spec is the source of truth, not the code.
 
-- **Milestone 1** — DSPy core + FastAPI MVP (in progress; project scaffold landed)
+- **Milestone 1** — DSPy core + FastAPI MVP (in progress; project scaffold and configuration landed)
 - **Milestone 1.5** — TypeScript test harness (Zod schemas, codegen from OpenAPI)
 - **Milestone 2** — AI evaluation, golden dataset, staged prompt optimization
 - **Milestone 3** — Clojure orchestrator (Ring/Reitit)
@@ -28,6 +28,8 @@ Ports-and-adapters: every caller reaches JanBot only through the `POST /chat` JS
 
 Key invariants: fail-closed scope filter (only `public_profile_org/` is indexed), org subtree chunking (no naive text splitters), Pydantic as the single source of truth for the API contract, and a test layer that is never modified to accommodate a change in the AI core.
 
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
+
 ## Quickstart
 
 Requires [uv](https://docs.astral.sh/uv/) and Python 3.12+.
@@ -40,6 +42,23 @@ uv run uvicorn janbot.api.main:app --reload
 
 Then open `http://127.0.0.1:8000/health` — you should see `{"status":"ok"}`.
 
+## Configuration
+
+JanBot is configured entirely through environment variables prefixed `JANBOT_`, loaded by [`janbot.config`](src/janbot/config.py). Every value has a documented default, so the service runs with none set.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `JANBOT_MODEL_MODE` | `eval` | `eval` uses the locked deterministic snapshot (CI/evaluation); `production` uses `openrouter/auto`. An unknown value fails fast. |
+| `JANBOT_MODEL_SNAPSHOT` | `openai/gpt-4o-mini-2024-07-18` | The locked model used in `eval` mode. |
+| `JANBOT_CORPUS_PATH` | `public_profile_org` | The only corpus the ingestion pipeline will index (fail-closed). |
+| `JANBOT_INDEX_PATH` | `chroma_db` | Where the vector index is written. |
+
+```sh
+JANBOT_MODEL_MODE=production uv run uvicorn janbot.api.main:app
+```
+
+No secrets are read from the environment here; the OpenRouter key is a separate, later concern.
+
 ## Development
 
 ```sh
@@ -51,6 +70,7 @@ The package layout mirrors the architecture:
 
 ```text
 src/janbot/
+  config.py     # env-driven settings (JANBOT_*), fail-fast validation
   api/          # FastAPI app, the /chat contract (the port)
   pipeline/     # DSPy program: retrieve -> answer + cite
   ingest/       # orgparse reader, subtree chunker, fail-closed scope filter
