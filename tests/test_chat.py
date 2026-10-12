@@ -2,8 +2,9 @@
 
 Tests exercise only the HTTP port (AD-7): each builds its own app through
 ``create_app`` with the conftest stub embedder and a recording LM factory that
-returns a canned-answer ``dspy.utils.DummyLM`` — never a real ``dspy.LM``, no
-network. Expectations follow the story's I/O matrix.
+returns a canned-answer ``dspy.utils.DummyLM`` claiming a fixed set of source
+labels — never a real ``dspy.LM``, no network. Expectations follow the story's
+I/O matrix.
 """
 
 from __future__ import annotations
@@ -19,7 +20,6 @@ from fastapi.testclient import TestClient
 from janbot.api.contract import ChatResponse
 from janbot.api.main import create_app
 from janbot.ingest import index_corpus
-from janbot.ingest.scope import located_path
 from janbot.store import VectorStore
 
 Embedder = Callable[[list[str]], list[list[float]]]
@@ -29,17 +29,24 @@ OPENROUTER_MODEL = "openrouter/auto"
 OPENROUTER_API_BASE = "https://openrouter.ai/api/v1"
 
 CANNED_ANSWER = "I work on search infrastructure."
+DEFAULT_CITATIONS = ["profile.org", "projects.org"]
 
 
 class StubLMFactory:
-    """Callable factory recording build kwargs; yields a canned-answer DummyLM."""
+    """Callable factory recording build kwargs; yields a canned-answer DummyLM.
 
-    def __init__(self) -> None:
+    The DummyLM claims ``citations`` as the source labels it derived the answer
+    from — every app under test gets its own instance, so the script never
+    crosses requests.
+    """
+
+    def __init__(self, citations: list[str] | None = None) -> None:
+        self.citations = list(DEFAULT_CITATIONS if citations is None else citations)
         self.history: list[dict[str, object]] = []
 
     def __call__(self, **kwargs: object) -> DummyLM:
         self.history.append(kwargs)
-        return DummyLM([{"answer": CANNED_ANSWER}])
+        return DummyLM([{"answer": CANNED_ANSWER, "citations": list(self.citations)}])
 
 
 class SourcelessChunk:
@@ -49,6 +56,25 @@ class SourcelessChunk:
     text = "Search infrastructure engineer."
     source_path: Any = None
     breadcrumb = "Heading"
+
+
+class ForeignChunk:
+    """Chunk-shaped stand-in whose ``source_path`` lies outside the corpus root."""
+
+    id = "foreign::0::Heading"
+    text = "Search infrastructure engineer."
+    source_path = "/srv/elsewhere/secret.org"
+    breadcrumb = "Heading"
+
+
+class SharedSourceChunk:
+    """Chunk-shaped stand-in; several instances share one ``source_path``."""
+
+    def __init__(self, ordinal: int, text: str, source_path: str) -> None:
+        self.id = f"{source_path}::{ordinal}::Heading"
+        self.text = text
+        self.source_path = source_path
+        self.breadcrumb = "Heading"
 
 
 @pytest.fixture
@@ -70,9 +96,17 @@ def indexed_corpus(
     return corpus, index_path
 
 
-def _client(index_path: Path, embedder: Embedder) -> TestClient:
+def _chat_env(corpus: Path, index_path: Path) -> dict[str, str]:
+    """Environment wiring the corpus root and index the fixtures built."""
+    return {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(index_path),
+    }
+
+
+def _client(corpus: Path, index_path: Path, embedder: Embedder) -> TestClient:
     app = create_app(
-        env={"JANBOT_INDEX_PATH": str(index_path)},
+        env=_chat_env(corpus, index_path),
         embedder=embedder,
         lm_factory=StubLMFactory(),
     )
@@ -86,7 +120,7 @@ def test_chat_happy_path_returns_answer_and_citations(
     corpus, index_path = indexed_corpus
     factory = StubLMFactory()
     app = create_app(
-        env={"JANBOT_INDEX_PATH": str(index_path)},
+        env=_chat_env(corpus, index_path),
         embedder=embedder,
         lm_factory=factory,
     )
@@ -100,10 +134,7 @@ def test_chat_happy_path_returns_answer_and_citations(
     assert ChatResponse.model_validate(data).citations
     assert data["answer"] == CANNED_ANSWER
     sources = [citation["source"] for citation in data["citations"]]
-    assert sources == [
-        str(located_path(corpus / "profile.org")),
-        str(located_path(corpus / "projects.org")),
-    ]
+    assert sources == ["profile.org", "projects.org"]
     assert factory.history == [{"model": DEFAULT_SNAPSHOT, "temperature": 0.0}]
 
 
@@ -111,7 +142,7 @@ def test_chat_missing_mistyped_or_blank_question_is_rejected_with_422(
     indexed_corpus: tuple[Path, Path],
     embedder: Embedder,
 ) -> None:
-    client = _client(indexed_corpus[1], embedder)
+    client = _client(*indexed_corpus, embedder)
 
     for body in ({}, {"question": 123}, {"question": "   "}):
         response = client.post("/chat", json=body)
@@ -152,9 +183,9 @@ def test_chat_model_routing_changes_with_environment_only(
     indexed_corpus: tuple[Path, Path],
     embedder: Embedder,
 ) -> None:
-    _, index_path = indexed_corpus
+    corpus, index_path = indexed_corpus
     factory = StubLMFactory()
-    index_env = {"JANBOT_INDEX_PATH": str(index_path)}
+    index_env = _chat_env(corpus, index_path)
 
     eval_app = create_app(env=index_env, embedder=embedder, lm_factory=factory)
     production_app = create_app(
@@ -226,3 +257,188 @@ def test_chat_sourceless_chunk_returns_500_with_detail_envelope(
     assert response.status_code == 500
     detail = response.json()["detail"]
     assert "source_path" in detail
+
+
+def test_chat_cites_only_the_retrieved_source(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """Derived-from pin: with one chunk retrieved, only that chunk's source is cited."""
+    corpus, index_path = indexed_corpus
+    factory = StubLMFactory(citations=["profile.org"])
+    app = create_app(
+        env={**_chat_env(corpus, index_path), "JANBOT_TOP_K": "1"},
+        embedder=embedder,
+        lm_factory=factory,
+    )
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 200
+    sources = [citation["source"] for citation in response.json()["citations"]]
+    assert sources == ["profile.org"]
+
+
+def test_chat_indexed_but_unretrieved_source_can_never_be_cited(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """Fail-closed: a source that was indexed but not retrieved is never a valid claim."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env={**_chat_env(corpus, index_path), "JANBOT_TOP_K": "1"},
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["projects.org"]),
+    )
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 500
+    assert isinstance(response.json()["detail"], str)
+    assert CANNED_ANSWER not in response.text
+
+
+def test_chat_bracketed_claim_label_is_normalized(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """A model echoing the displayed ``[source]`` form still matches the retrieved source."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["[profile.org]", " [projects.org] "]),
+    )
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 200
+    sources = [citation["source"] for citation in response.json()["citations"]]
+    assert sources == ["profile.org", "projects.org"]
+
+
+def test_chat_uncited_answer_is_rejected_with_500_envelope(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """The model claims no sources: the answer is rejected, never returned."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=[]),
+    )
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 500
+    assert "claimed no sources" in response.json()["detail"]
+    assert CANNED_ANSWER not in response.text
+
+
+def test_chat_unknown_source_claim_is_rejected_with_500_envelope(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """A claim naming a source outside the retrieved set is unverifiable: reject, do not drop."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["elsewhere.md"]),
+    )
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 500
+    detail = response.json()["detail"]
+    assert "unverifiable source claim" in detail
+    assert "outside the retrieved chunks" in detail
+    assert "elsewhere.md" not in response.text
+    assert CANNED_ANSWER not in response.text
+
+
+def test_chat_source_outside_corpus_root_is_refused_with_500_envelope(
+    tmp_path: Path,
+    embedder: Embedder,
+) -> None:
+    """Fail-closed rewrite: an out-of-root ``source_path`` is refused, never emitted."""
+    index_path = tmp_path / "index"
+    app = create_app(
+        env={"JANBOT_INDEX_PATH": str(index_path)},
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+    VectorStore(index_path, embedder).upsert([ForeignChunk()])
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/chat", json={"question": "anything"}
+    )
+
+    assert response.status_code == 500
+    assert "outside the corpus root" in response.json()["detail"]
+    assert "/srv/elsewhere" not in response.text
+
+
+def test_chat_shared_source_is_deduped_to_one_citation(
+    tmp_path: Path,
+    embedder: Embedder,
+) -> None:
+    """Multiple chunks sharing one source cite it once: one entry per distinct source."""
+    corpus = tmp_path / "corpus"
+    index_path = tmp_path / "index"
+    shared_source = str(corpus / "shared.org")
+    app = create_app(
+        env={"JANBOT_INDEX_PATH": str(index_path), "JANBOT_CORPUS_PATH": str(corpus)},
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["shared.org"]),
+    )
+    VectorStore(index_path, embedder).upsert(
+        [
+            SharedSourceChunk(0, "Search infrastructure engineer.", shared_source),
+            SharedSourceChunk(1, "Built JanBot, a retrieval assistant.", shared_source),
+        ]
+    )
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/chat", json={"question": "What have you built?"}
+    )
+
+    assert response.status_code == 200
+    sources = [citation["source"] for citation in response.json()["citations"]]
+    assert sources == ["shared.org"]
+
+
+def test_chat_citations_leak_no_absolute_paths(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """No 200 body may carry an absolute filesystem path: citations are corpus-relative."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 200
+    body = response.text
+    assert str(corpus.parent) not in body
+    assert str(corpus) not in body
+    assert str(Path.home()) not in body
+    for citation in response.json()["citations"]:
+        assert not citation["source"].startswith("/")

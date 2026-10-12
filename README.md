@@ -82,7 +82,9 @@ curl -s -X POST localhost:8000/chat \
   -d '{"question":"What search infrastructure have you built?"}'
 ```
 
-The response is a `ChatResponse` — `{"answer": "...", "citations": [{"source": "<corpus file path>"}, ...]}` — where every citation names the `source_path` of a corpus chunk that grounded the answer, and `citations` always carries at least one entry. Errors use FastAPI's standard `{detail}` envelope: a missing, mistyped, or blank (whitespace-only) `question` is rejected with the default 422; an empty index is refused with 503 naming the missing corpus; a chunk without its `source_path` is refused with 500 naming the integrity failure.
+The response is a `ChatResponse` — `{"answer": "...", "citations": [{"source": "<corpus-root-relative path>"}, ...]}` — where every citation is the path of a retrieved corpus chunk the answer is derived from, relative to `JANBOT_CORPUS_PATH` (e.g. `profile.org`): the model names the labeled context blocks it used, the program validates those claims against the retrieved chunks' metadata, and emits citations only from that metadata — one entry per distinct source. An answer that names no sources, or names sources outside the retrieved set, is rejected rather than returned.
+
+Errors use FastAPI's standard `{detail}` envelope: a missing, mistyped, or blank (whitespace-only) `question` is rejected with the default 422; an empty index is refused with 503 naming the missing corpus; a chunk without its `source_path` — or with one outside the corpus root — is refused with 500 naming the integrity failure; an uncited or unverifiable answer is refused with 500 naming the refusal.
 
 ## Development
 
