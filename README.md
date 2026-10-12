@@ -46,25 +46,43 @@ Then open `http://127.0.0.1:8000/health` — you should see `{"status":"ok"}`.
 
 ## Configuration
 
-JanBot is configured entirely through environment variables prefixed `JANBOT_`, loaded by [`janbot.config`](src/janbot/config.py). Every value has a documented default, so the service runs with none set.
+JanBot is configured through environment variables loaded by [`janbot.config`](src/janbot/config.py): everything prefixed `JANBOT_`, plus one plain operator variable, `OPENROUTER_API_KEY`. Every `JANBOT_` value has a documented default, so the service runs with none set.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `JANBOT_MODEL_MODE` | `eval` | `eval` uses the locked deterministic snapshot (CI/evaluation); `production` uses `openrouter/auto`. An unknown value fails fast. |
 | `JANBOT_MODEL_SNAPSHOT` | `openai/gpt-4o-mini-2024-07-18` | The locked model used in `eval` mode. |
 | `JANBOT_TEMPERATURE` | `0.0` | LM sampling temperature passed to the model in every mode. A value that is not a number fails fast. |
-| `JANBOT_TOP_K` | `3` | Retrieval top-k: how many corpus chunks may ground an answer. Takes effect with the upcoming `/chat` pipeline; an invalid or non-positive value fails fast. |
+| `JANBOT_TOP_K` | `3` | Retrieval top-k: how many corpus chunks ground an answer. An invalid or non-positive value fails fast. |
 | `JANBOT_CORPUS_PATH` | `public_profile_org` | The only corpus the ingestion pipeline will index (fail-closed). |
 | `JANBOT_INDEX_PATH` | `chroma_db` | Where the vector index is written. |
 | `JANBOT_PROJECT_ROOT` | the repository root | Base for relative `JANBOT_CORPUS_PATH`/`JANBOT_INDEX_PATH`; override for packaged deployments or tests. |
+| `OPENROUTER_API_KEY` | — | The OpenRouter key, read once at startup by the app (never stored in config). Required in `production` mode — a missing key fails fast at boot — and unused in `eval` mode. |
 
 Path values are `~`-expanded and resolved to absolute paths under the project root, so they do not depend on the process working directory. A blank or whitespace-only value for any variable counts as unset and takes its documented default.
 
 ```sh
-JANBOT_MODEL_MODE=production uv run uvicorn janbot.api.main:app
+JANBOT_MODEL_MODE=production OPENROUTER_API_KEY=... uv run uvicorn janbot.api.main:app
 ```
 
-No secrets are read from the environment here; the OpenRouter key is a separate, later concern.
+Model mode is configuration only: switching `eval` ↔ `production` is an environment change, with no code change.
+
+## Chat
+
+With the corpus indexed and a running server in `production` mode:
+
+```sh
+uv run python -m janbot.ingest   # index public_profile_org/ into chroma_db/
+JANBOT_MODEL_MODE=production OPENROUTER_API_KEY=... uv run uvicorn janbot.api.main:app
+```
+
+```sh
+curl -s -X POST localhost:8000/chat \
+  -H 'content-type: application/json' \
+  -d '{"question":"What search infrastructure have you built?"}'
+```
+
+The response is a `ChatResponse` — `{"answer": "...", "citations": [{"source": "<corpus file path>"}, ...]}` — where every citation names the `source_path` of a corpus chunk that grounded the answer. A question-less or mistyped body is rejected with FastAPI's default 422; an empty index yields 500.
 
 ## Development
 
