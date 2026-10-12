@@ -23,7 +23,7 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from janbot.api.contract import ChatRequest, ChatResponse
 from janbot.config import MODEL_MODE_PRODUCTION, load_config
@@ -32,7 +32,7 @@ from janbot.store import Embedder, VectorStore, default_embedder
 import dspy
 
 from janbot.llm import LMFactory, build_lm
-from janbot.pipeline.chat import ChatProgram
+from janbot.pipeline.chat import ChatProgram, EmptyRetrieval
 
 OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
 
@@ -80,7 +80,12 @@ def create_app(
 
     @app.post("/chat", response_model=ChatResponse)
     def chat(request: ChatRequest) -> ChatResponse:
-        return app.state.program(question=request.question)
+        try:
+            return app.state.program(question=request.question)
+        except EmptyRetrieval as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     return app
 

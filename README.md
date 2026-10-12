@@ -82,7 +82,7 @@ curl -s -X POST localhost:8000/chat \
   -d '{"question":"What search infrastructure have you built?"}'
 ```
 
-The response is a `ChatResponse` — `{"answer": "...", "citations": [{"source": "<corpus file path>"}, ...]}` — where every citation names the `source_path` of a corpus chunk that grounded the answer. A question-less or mistyped body is rejected with FastAPI's default 422; an empty index yields 500.
+The response is a `ChatResponse` — `{"answer": "...", "citations": [{"source": "<corpus file path>"}, ...]}` — where every citation names the `source_path` of a corpus chunk that grounded the answer, and `citations` always carries at least one entry. Errors use FastAPI's standard `{detail}` envelope: a missing, mistyped, or blank (whitespace-only) `question` is rejected with the default 422; an empty index is refused with 503 naming the missing corpus; a chunk without its `source_path` is refused with 500 naming the integrity failure.
 
 ## Development
 

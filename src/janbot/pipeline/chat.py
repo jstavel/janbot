@@ -25,6 +25,14 @@ import dspy
 from janbot.api.contract import ChatResponse, Citation
 
 
+class EmptyRetrieval(ValueError):
+    """Retrieval returned no chunks: the index holds no corpus context to answer from."""
+
+
+class UnattributableContext(ValueError):
+    """A retrieved chunk carries no ``source_path``: it cannot be cited."""
+
+
 class GroundedAnswer(dspy.Signature):
     """Answer the question using only the provided corpus context."""
 
@@ -45,13 +53,13 @@ class ChatProgram(dspy.Module):
     def forward(self, question: str) -> ChatResponse:
         chunks = self._store.query(question, k=self._top_k)
         if not chunks:
-            raise ValueError(
+            raise EmptyRetrieval(
                 f"retrieval returned 0 chunks for question {question!r}; "
                 "refusing to answer without corpus context"
             )
 
         if any(not chunk["source_path"] for chunk in chunks):
-            raise ValueError(
+            raise UnattributableContext(
                 f"a retrieved chunk has no source_path for question {question!r}; "
                 "cannot cite every grounded chunk"
             )

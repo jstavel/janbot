@@ -10,11 +10,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pytest
 from dspy.utils import DummyLM
 from fastapi.testclient import TestClient
 
+from janbot.api.contract import ChatResponse
 from janbot.api.main import create_app
 from janbot.ingest import index_corpus
 from janbot.ingest.scope import located_path
@@ -38,6 +40,15 @@ class StubLMFactory:
     def __call__(self, **kwargs: object) -> DummyLM:
         self.history.append(kwargs)
         return DummyLM([{"answer": CANNED_ANSWER}])
+
+
+class SourcelessChunk:
+    """Chunk-shaped stand-in whose ``source_path`` was never recorded."""
+
+    id = "unattributed::0::Heading"
+    text = "Search infrastructure engineer."
+    source_path: Any = None
+    breadcrumb = "Heading"
 
 
 @pytest.fixture
@@ -86,6 +97,7 @@ def test_chat_happy_path_returns_answer_and_citations(
 
     assert response.status_code == 200
     data = response.json()
+    assert ChatResponse.model_validate(data).citations
     assert data["answer"] == CANNED_ANSWER
     sources = [citation["source"] for citation in data["citations"]]
     assert sources == [
@@ -95,19 +107,16 @@ def test_chat_happy_path_returns_answer_and_citations(
     assert factory.history == [{"model": DEFAULT_SNAPSHOT, "temperature": 0.0}]
 
 
-def test_chat_missing_or_mistyped_question_is_rejected_with_422(
+def test_chat_missing_mistyped_or_blank_question_is_rejected_with_422(
     indexed_corpus: tuple[Path, Path],
     embedder: Embedder,
 ) -> None:
     client = _client(indexed_corpus[1], embedder)
 
-    missing = client.post("/chat", json={})
-    assert missing.status_code == 422
-    assert "detail" in missing.json()
-
-    mistyped = client.post("/chat", json={"question": 123})
-    assert mistyped.status_code == 422
-    assert "detail" in mistyped.json()
+    for body in ({}, {"question": 123}, {"question": "   "}):
+        response = client.post("/chat", json=body)
+        assert response.status_code == 422
+        assert isinstance(response.json()["detail"], list)
 
 
 @pytest.mark.parametrize(
@@ -177,7 +186,7 @@ def test_chat_model_routing_changes_with_environment_only(
     ]
 
 
-def test_chat_empty_index_returns_500(
+def test_chat_empty_index_returns_503_with_detail_envelope(
     tmp_path: Path,
     embedder: Embedder,
 ) -> None:
@@ -192,5 +201,28 @@ def test_chat_empty_index_returns_500(
         "/chat", json={"question": "anything"}
     )
 
+    assert response.status_code == 503
+    detail = response.json()["detail"]
+    assert "0 chunks" in detail
+    assert "corpus" in detail
+
+
+def test_chat_sourceless_chunk_returns_500_with_detail_envelope(
+    tmp_path: Path,
+    embedder: Embedder,
+) -> None:
+    index_path = tmp_path / "index"
+    app = create_app(
+        env={"JANBOT_INDEX_PATH": str(index_path)},
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+    VectorStore(index_path, embedder).upsert([SourcelessChunk()])
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/chat", json={"question": "anything"}
+    )
+
     assert response.status_code == 500
-    assert "Internal Server Error" in response.text
+    detail = response.json()["detail"]
+    assert "source_path" in detail
