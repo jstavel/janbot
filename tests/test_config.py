@@ -22,6 +22,8 @@ def _clear_janbot_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "JANBOT_CORPUS_PATH",
         "JANBOT_INDEX_PATH",
         "JANBOT_PROJECT_ROOT",
+        "JANBOT_TEMPERATURE",
+        "JANBOT_TOP_K",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -150,3 +152,48 @@ def test_config_is_frozen() -> None:
 
     with pytest.raises(AttributeError):
         config.model_mode = "production"  # type: ignore[misc]
+
+
+def test_default_temperature_is_zero() -> None:
+    assert load_config({}).temperature == 0.0
+
+
+def test_default_top_k_is_three() -> None:
+    assert load_config({}).top_k == 3
+
+
+def test_temperature_and_top_k_overrides_are_parsed() -> None:
+    config = load_config({"JANBOT_TEMPERATURE": "0.7", "JANBOT_TOP_K": "5"})
+
+    assert config.temperature == 0.7
+    assert config.top_k == 5
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_temperature_falls_back_to_default(blank: str) -> None:
+    assert load_config({"JANBOT_TEMPERATURE": blank}).temperature == 0.0
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_top_k_falls_back_to_default(blank: str) -> None:
+    assert load_config({"JANBOT_TOP_K": blank}).top_k == 3
+
+
+@pytest.mark.parametrize("value", ["abc", "0,7", "true"])
+def test_invalid_temperature_raises(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_TEMPERATURE": value})
+
+    message = str(excinfo.value)
+    assert "JANBOT_TEMPERATURE" in message
+    assert value in message
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "two", "1.5"])
+def test_invalid_top_k_raises(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_TOP_K": value})
+
+    message = str(excinfo.value)
+    assert "JANBOT_TOP_K" in message
+    assert value in message

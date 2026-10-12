@@ -52,6 +52,8 @@ JanBot is configured entirely through environment variables prefixed `JANBOT_`, 
 | --- | --- | --- |
 | `JANBOT_MODEL_MODE` | `eval` | `eval` uses the locked deterministic snapshot (CI/evaluation); `production` uses `openrouter/auto`. An unknown value fails fast. |
 | `JANBOT_MODEL_SNAPSHOT` | `openai/gpt-4o-mini-2024-07-18` | The locked model used in `eval` mode. |
+| `JANBOT_TEMPERATURE` | `0.0` | LM sampling temperature passed to the model in every mode. A value that is not a number fails fast. |
+| `JANBOT_TOP_K` | `3` | Retrieval top-k: how many corpus chunks may ground an answer. Takes effect with the upcoming `/chat` pipeline; an invalid or non-positive value fails fast. |
 | `JANBOT_CORPUS_PATH` | `public_profile_org` | The only corpus the ingestion pipeline will index (fail-closed). |
 | `JANBOT_INDEX_PATH` | `chroma_db` | Where the vector index is written. |
 | `JANBOT_PROJECT_ROOT` | the repository root | Base for relative `JANBOT_CORPUS_PATH`/`JANBOT_INDEX_PATH`; override for packaged deployments or tests. |
