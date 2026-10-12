@@ -3,7 +3,7 @@ title: 'Full Pydantic contract & error envelope'
 type: 'feature'
 ticket: 3
 created: '2026-10-12'
-status: 'built'
+status: 'done'
 baseline_revision: 'e3a9a54'
 route: 'full'
 route_source: 'auto'

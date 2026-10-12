@@ -3,7 +3,7 @@ title: 'LM adapter & model-mode routing'
 type: 'feature'
 ticket: 1
 created: '2026-10-12'
-status: 'built'
+status: 'done'
 baseline_revision: '731036f'
 route: 'full'
 route_source: 'auto'

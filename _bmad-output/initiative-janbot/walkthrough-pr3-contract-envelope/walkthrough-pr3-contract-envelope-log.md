@@ -108,6 +108,24 @@ Session: unavailable · Timestamp: 2026-10-12T19:55:03+0200
 - Evidence: walkthrough-pr3-contract-envelope.md
 - Open: wrap-up awaiting user approval.
 
+## 11 — VCS — merged PR #3
+
+Session: unavailable · Timestamp: 2026-10-12T19:56:35+0200
+
+- Action: PR #3 merged to main via GitHub merge commit `4c5d7d3`.
+- Result: Local main fast-forwarded/rebased on top.
+- Evidence: commit 4c5d7d3
+- Open: none
+
+## 12 — Ticket — stories marked done
+
+Session: unavailable · Timestamp: 2026-10-12T19:56:35+0200
+
+- Action: Flipped plan statuses per the reviewer's approval.
+- Result: story-tracer-bullet-chat-retrieve-answer-cite-end-to-end (3.2) and story-full-pydantic-contract-error-envelope (3.3) flipped 'built' → 'done'. Story 3.1 (story-lm-adapter-model-mode-routing) still read 'built' though done via PR #1 walkthrough — flipped too and noted here.
+- Evidence: epic-rag-chat/*.md front matter
+- Open: none
+
 ## 6 — VCS — committed review files
 
 Session: unavailable · Timestamp: 2026-10-12T19:38:44+0200

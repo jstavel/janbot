@@ -3,7 +3,7 @@ title: 'Tracer bullet: /chat retrieve -> answer + cite end to end'
 type: 'feature'
 ticket: 2
 created: '2026-10-12'
-status: 'built'
+status: 'done'
 baseline_revision: '616ac11'
 route: 'full'
 route_source: 'auto'
