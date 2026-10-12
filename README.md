@@ -28,6 +28,8 @@ Ports-and-adapters: every caller reaches JanBot only through the `POST /chat` JS
 
 Key invariants: fail-closed scope filter (only `public_profile_org/` is indexed), org subtree chunking (no naive text splitters), Pydantic as the single source of truth for the API contract, and a test layer that is never modified to accommodate a change in the AI core.
 
+`public_profile_org/` is a copy, not the source of truth: it is an extract of the approved corpus (`~/org/corpus/views/work-profile/index.org`) and is updated only by re-extraction, never edited in place.
+
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
 
 ## Quickstart
