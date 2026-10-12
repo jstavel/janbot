@@ -35,7 +35,9 @@ class ChatRequest(BaseModel):
 class Citation(BaseModel):
     """One corpus source that grounds an answer."""
 
-    source: str = Field(description="Path of the corpus document that grounds the answer.")
+    source: str = Field(
+        description="Corpus-root-relative path of the corpus document that grounds the answer."
+    )
 
 
 class ChatResponse(BaseModel):

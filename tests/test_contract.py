@@ -48,11 +48,11 @@ def test_chat_response_rejects_zero_citations() -> None:
 def test_chat_response_valid_construction_conforms() -> None:
     response = ChatResponse(
         answer="Search infrastructure.",
-        citations=[Citation(source="public_profile_org/profile.org")],
+        citations=[Citation(source="profile.org")],
     )
 
     assert response.answer == "Search infrastructure."
-    assert response.citations[0].source == "public_profile_org/profile.org"
+    assert response.citations[0].source == "profile.org"
 
 
 def test_chat_response_missing_field_is_rejected() -> None:

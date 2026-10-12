@@ -32,7 +32,7 @@ from janbot.store import Embedder, VectorStore, default_embedder
 import dspy
 
 from janbot.llm import LMFactory, build_lm
-from janbot.pipeline.chat import ChatProgram, EmptyRetrieval
+from janbot.pipeline.chat import ChatProgram, EmptyRetrieval, corpus_relative
 
 OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
 
@@ -68,7 +68,9 @@ def create_app(
         )
     lm = build_lm(config, api_key=api_key, lm_factory=lm_factory)
 
-    program = ChatProgram(store, top_k=config.top_k)
+    program = ChatProgram(
+        store, top_k=config.top_k, rewriter=corpus_relative(config.corpus_path)
+    )
     program.set_lm(lm)
 
     app = FastAPI(title="JanBot")
