@@ -4,7 +4,7 @@ Target: [PR #1](https://github.com/jstavel/janbot/pull/1) — head `story-3.1-lm
 
 ## Block 1 — Intent
 
-- [ ] in progress — currently here
+- [x] accepted
 
 > **Problem:** JanBot's LLM layer does not exist: `src/janbot/llm/` is an empty package, and `Config` carries model mode + snapshot but no LM adapter and no temperature/top-k routing knobs — so the `/chat` DSPy pipeline (story 3.2) has nothing to build its LM on.
 >
@@ -16,7 +16,7 @@ The other 5 commits form the kickoff queue that PR #1 publishes ahead of story 3
 
 ## Block 2 — Broad strokes
 
-- [ ] unvisited
+- [x] accepted
 
 The four entry points a reviewer opens first:
 
@@ -29,7 +29,7 @@ By design, story 3.1 touches none of `store/`, `ingest/`, or `api/` — wiring `
 
 ## Block 3 — Slice: model-mode routing
 
-- [ ] unvisited
+- [x] accepted
 
 `resolve_model` routes purely by the resolved `Config` — `production` returns the `openrouter/auto` constant, `eval` returns `config.model_snapshot`, and an impossible mode raises a defensive `ValueError` (unreachable through `load_config`, which validates, but reachable if a `Config` is constructed directly). Switching modes is an environment change only, never code. The mode constants live in `config.py` and `llm` imports them, so there is one vocabulary.
 
@@ -39,7 +39,7 @@ By design, story 3.1 touches none of `store/`, `ingest/`, or `api/` — wiring `
 
 ## Block 4 — Slice: build_lm and the injectable seam
 
-- [ ] unvisited
+- [x] accepted
 
 `build_lm` assembles constructor kwargs from pure configuration — always `model` (via `resolve_model`) and `temperature` — and, only in `production`, the OpenRouter `api_base` plus a caller-supplied `api_key`; a `production` call without a key fails fast with a `ValueError` naming the mode and the parameter. In `eval` mode any supplied `api_key` is deliberately ignored, so eval kwargs stay secret-free. The seam is `lm_factory: Callable[..., Any] = dspy.LM`, and because tests inject a stub factory that just captures kwargs, no test ever constructs a real `dspy.LM` or touches the network.
 
@@ -49,7 +49,7 @@ By design, story 3.1 touches none of `store/`, `ingest/`, or `api/` — wiring `
 
 ## Block 5 — Slice: config knobs
 
-- [ ] unvisited
+- [x] accepted
 
 `load_config` parses the two new knobs after the shared `_clean` trim: a blank or whitespace-only value counts as unset and takes the default (`0.0` / `3`); an unparseable value raises a `ValueError` that names the offending variable. `JANBOT_TOP_K` must additionally be an integer ≥ 1. `JANBOT_TEMPERATURE` deliberately has no range check — it validates parse-only (`nan`/negative would pass), a strictness decision recorded in the plan's implementation notes.
 
@@ -59,7 +59,7 @@ By design, story 3.1 touches none of `store/`, `ingest/`, or `api/` — wiring `
 
 ## Block 6 — Slice: tests
 
-- [ ] unvisited
+- [x] accepted
 
 The two test modules assert literal contracts: `test_llm.py` covers routing by configuration alone (eval → snapshot, production → `openrouter/auto`), a `StubLMFactory` that captures constructor kwargs for both modes, a production-without-key failure test asserting the factory was never called, and a pin that `eval` ignores a supplied `api_key`. `test_config.py` extends its autouse env-clearing fixture with the two new variable names and adds the same literal style of default, override, blank→default, and invalid→`ValueError` tests for both knobs.
 
@@ -70,7 +70,7 @@ The two test modules assert literal contracts: `test_llm.py` covers routing by c
 
 ## Block 7 — Slice: README contract rows
 
-- [ ] unvisited
+- [x] accepted
 
 The Configuration table gains two rows, and the documented defaults are treated as part of the contract: `JANBOT_TEMPERATURE` is documented as passed to the model in every mode, with the exact clause "A value that is not a number fails fast." — wording kept deliberately narrower than the sibling knob after triage, since the code checks parse-only. `JANBOT_TOP_K` documents the retrieval top-k with the exact clause "Takes effect with the upcoming `/chat` pipeline" — an honest note that no code consumes it yet (retrieval wiring is story 3.2; the default `3` matches the store's `k=3`). Both rows were patched in response to the plan's quick-lens triage before commit.
 
@@ -80,7 +80,7 @@ The Configuration table gains two rows, and the documented defaults are treated 
 
 ## Block 8 — Periphery
 
-- [ ] unvisited
+- [x] accepted
 
 The 5 pre-3.1 commits, references only:
 
@@ -91,4 +91,4 @@ The 5 pre-3.1 commits, references only:
 
 ## Status
 
-Current block: Block 1 — Intent, in progress. No blocks are accepted yet.
+All 8 blocks accepted. PR #1 merged as 7caacb5 (2026-10-12). Review complete.
