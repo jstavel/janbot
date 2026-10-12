@@ -39,6 +39,8 @@ A recruiter can ask a real question and receive an accurate answer with correct 
 
 `pipeline/`, `llm/` and `api/` — the DSPy program, the OpenRouter adapter/model-mode config, and the FastAPI route with its Pydantic contract. Not the ingestion/scope filter (`epic-ingestion`); not the end-to-end suite (`epic-verification`); not DSPy compilation or prompt optimization (Milestone 2). Consumes the index built by `epic-ingestion`.
 
+Carried remediation owned here (from `epic-ingestion`'s retrospective, pinned in `deferred-work.md`): the store scope filter (`store/chroma.py`, entry 3.6), the citation-path rewrite (entry 3.4), and the DW3 evidence tests (entry 3.7) — these touch `store/` and the test layer, which the carries explicitly assign to this epic.
+
 ## References
 
 - parent — `../initiative-janbot.md`, section Requirements
@@ -49,5 +51,7 @@ A recruiter can ask a real question and receive an accurate answer with correct 
 ## Notes
 
 - Decision (2026-10-05, slicing): the pipeline and the `/chat` endpoint are one epic — the contract is an invariant (AD-1/AD-4), the work is one owner, and a pipeline without an endpoint is not demoable.
-- Open question: the exact locked snapshot id (`gpt-4o-mini-2024-07-18` vs `claude-3.5-sonnet`) must be chosen for CI/eval; AD-5 binds the two modes, the concrete id is set at configuration.
-- Unknown: whether the baseline manual prompt meets acceptable answer quality on the first pass, or a `BootstrapFewShot` step is pulled forward; the epic delivers the manual baseline regardless.
+- Decision (2026-10-12, sequencing): entry 1 is a thin setup prerequisite (the LM seam); **entry 2 is the tracer bullet** — the thinnest path through `api/` → `pipeline/` → `llm/` → `store/`, and its hitl run (real model) is the only in-epic live proof of Done when 1 (the closing end-to-end suite belongs to `epic-verification`, CAP-7). Lanes after 2: entry 3 = `api/` contract; entries 4/5/6 = pipeline-adjacent, so they run in order (4 → 5 → 6) rather than in parallel; entry 5 stays in `llm/`+config and entry 6 in `store/`+its retrieval call site so they never touch the same code; entry 7 = test-layer evidence hardening; entry 8 is the closing refactor sweep.
+- Decision (2026-10-12, carries): the epic-ingestion retrospective's open items are owned here — store scope filter (3.6), citation-path rewrite (3.4), DW3 evidence tests (3.7) — and pinned in `deferred-work.md` so they cannot disappear. Chunk-id stability stays a review item for entry 8's sweep, not an entry (it would edit `ingest/org.py`, outside this epic's boundary).
+- Decision (2026-10-12, model snapshot): the locked snapshot for CI/eval is the configured default `openai/gpt-4o-mini-2024-07-18`; the OpenRouter API key env var is an open `unknown` on entry 2 (config reads no secrets).
+- Open question: whether the baseline manual prompt meets acceptable answer quality on the first pass, or a `BootstrapFewShot` step is pulled forward; the epic delivers the manual baseline regardless.

@@ -1,5 +1,17 @@
 # Deferred work
 
+## Resolved
+
 - source_plan: `_bmad-output/initiative-janbot/epic-ingestion/story-config-contract-corpus-root-hardening-plan.md`
   summary: Define the symlink policy for the fail-closed scope filter before entry 2.4 builds it, since `config` canonicalizes paths with `.resolve()` while the public corpus folder holds symlinked files.
-  evidence: `src/janbot/config.py` `_resolve_path` returns `Path(value).expanduser()...resolve()` (follows symlinks); the epic's public-scope decision makes `~/org/h1_horizon/public_profile_org/` contain symlinks to real files in `~/org` (which also holds private notes); a naive `is_relative_to(config.corpus_path)` check on a symlink-resolved file can reject legitimate public files or mis-point the whitelist. Entry 2.4 must decide (link path vs resolved target) and may read the configured literal rather than the resolved root. Confirmed in 2.2 review: `within()` resolves symlinks, so `iter_org_files` drops symlinked public files (a temp root with `pub.org -> outside/pub.org` yields `[]`), which means the 2.2 real-data hitl step cannot use symlinks until 2.4 lands.
+  status: **resolved** — delivered by `epic-ingestion` story 2.4 (symlink-aware fail-closed scope filter, `src/janbot/ingest/scope.py`).
+
+## Carry-over to epic-rag-chat (2026-10-12, pinned so they do not disappear)
+
+- **Store scope ownership.** `VectorStore.query` returns global top-k with no scope filter; safe today only because fail-closed ingestion keeps the collection purely public. Owned by `epic-rag-chat` entry **3.6** (Grounding boundary) — add a scope/top-k guarantee at the store boundary, per epic-rag-chat Done-when 5.
+- **DW3 evidence-strength gap.** Refusal is only jointly verified and "no retrieval change" is not a ranked comparison; removing either scope filter alone would go uncaught. Owned by `epic-rag-chat` entry **3.7** (Scope/refusal evidence hardening) — direct-refusal test handing an out-of-scope path to `index_corpus` plus a ranked-comparison assertion.
+- **Citation-path and chunk-id stability carries** from the epic-ingestion retrospective (citation path leak, id stability) land in `epic-rag-chat` entry **3.4** (Citation correctness) and the epic's review.
+
+## Closed by remediation (2026-10-12)
+
+- **Symlink-by-location wording.** Accepted policy (location governs) now reconciled into `spec-janbot.md` CAP-4 and `epic-ingestion.md` Done-when 3 with a dated `Decision:` line in the epic Notes. No open item remains.

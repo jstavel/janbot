@@ -1,0 +1,94 @@
+# tickets.toml — epic-rag-chat. Planned entries in build order; no leaf file until an entry is pulled.
+
+[[entry]]
+id = 1
+type = "story"
+title = "LM adapter & model-mode routing"
+description = "Adds the OpenRouter adapter behind an injectable seam and wires model mode from configuration: eval selects the locked snapshot at temperature 0, production selects openrouter/auto; extends Config with temperature and top-k."
+verify = "A unit test loads the documented defaults and switches model mode by configuration alone; the adapter is callable with a stubbed LM."
+covers = ["CAP-6"]
+after = []
+hitl = false
+risk = "medium"
+notes = ["Carries epic-ingestion retrospective item #2 (production routing, temperature, top-k)."]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Tracer bullet: /chat retrieve -> answer + cite end to end"
+description = "The thinnest path through every layer: a minimal Pydantic ChatRequest/ChatResponse/Citation contract, a FastAPI POST /chat route, and a DSPy manual-prompt module that retrieves from the existing ChromaDB index and returns an answer with at least one citation."
+verify = "A real recruiter-style question posted to /chat returns a coherent answer with a citation through the JSON contract."
+covers = ["CAP-1", "CAP-2", "CAP-3"]
+after = [1, "2.5"]
+hitl = true
+risk = "high"
+unknown = "Which environment variable carries the OpenRouter API key, and who sets it, before the live-model call runs? (config.py reads no secrets today.)"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Full Pydantic contract & error envelope"
+description = "Completes the ChatResponse/Citation schemas as the single source of truth, validates responses via response_model, and rejects a malformed request with the standard error envelope."
+verify = "A valid question returns schema-conforming JSON; a malformed request is rejected with the error envelope."
+covers = ["CAP-3"]
+after = [2]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Citation correctness & uncited-answer rejection"
+description = "Makes every answer cite the document it was actually derived from, using the chunk source_path metadata, and rejects an uncited answer rather than returning it; rewrites citation paths so responses never leak absolute filesystem paths (e.g. $HOME)."
+verify = "With a stubbed retrieval returning a known chunk, the answer cites that chunk's source (derived-from, not merely 'an indexed source'); a forced uncited output is rejected."
+covers = ["CAP-2"]
+after = [3]
+hitl = false
+risk = "high"
+notes = ["Owns the epic-ingestion retrospective carry: citation-path leak (source_path absolute-path leak)."]
+
+[[entry]]
+id = 5
+type = "story"
+title = "Determinism at the locked snapshot"
+description = "Makes the same query under eval mode at temperature 0 return identical output across runs, with the switch to openrouter/auto requiring only configuration."
+verify = "Two runs of the same query are identical under the locked snapshot; switching modes is an environment change with no code change."
+covers = ["CAP-6"]
+after = [4]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Grounding boundary: no answer outside the public corpus"
+description = "Confines retrieval and citations to the public index — the store query carries a scope/top-k guarantee rather than returning global top-k — and proves no citation can point outside public_profile_org/."
+verify = "No answer or citation is produced from content outside public_profile_org/."
+covers = ["CAP-1"]
+after = [4]
+hitl = false
+risk = "medium"
+notes = ["Owns epic-ingestion retrospective carry: store scope ownership (VectorStore.query has no scope filter)."]
+
+[[entry]]
+id = 7
+type = "story"
+title = "Scope/refusal evidence hardening (DW3)"
+description = "Adds the missing evidence for epic-ingestion Done-when 3: a test that hands an out-of-scope path directly to index_corpus (so removing either filter alone fails), and a ranked-comparison assertion that placing a private note changes no retrieval result."
+verify = "The direct-refusal test fails if either scope filter is removed; the ranked comparison fails if a private note alters top-k results."
+covers = ["CAP-1"]
+after = [6]
+hitl = false
+risk = "low"
+notes = ["Remediation of the epic-ingestion retrospective DW3 evidence-strength gap."]
+
+[[entry]]
+id = 8
+type = "story"
+title = "Refactor sweep"
+description = "Cleanup-only pass over api/, pipeline/ and llm/ from this epic's plans and any deferred review findings; scope is set when it starts."
+verify = "The suite is green and no deferred cleanup finding from this epic remains open."
+covers = ["CAP-1", "CAP-2", "CAP-3", "CAP-6"]
+after = [1, 2, 3, 4, 5, 6, 7]
+hitl = false
+risk = "low"

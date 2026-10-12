@@ -8,6 +8,7 @@ covers: ["CAP-4", "CAP-5"]
 after: []
 assignee: ""
 risk: medium
+status: done
 ---
 
 # Org-mode ingestion & fail-closed scope
@@ -29,7 +30,7 @@ Running the ingester over `public_profile_org/` yields a queryable ChromaDB inde
 
 1. The ingester parses representative `.org` files into subtree chunks with correct heading breadcrumbs, properties, tags and child content.
 2. A ChromaDB collection is populated with embeddings for the public corpus and is queryable.
-3. A path outside `public_profile_org/` is refused, and a private note placed elsewhere changes no retrieval result.
+3. A path outside `public_profile_org/` is refused, and a private note placed elsewhere changes no retrieval result. (Containment is decided by *located* path: a symlinked public file is in scope even when its target lives outside the root, whereas a path located outside the root is refused.)
 4. Re-running the ingester does not duplicate or corrupt the index.
 
 ## Boundaries
@@ -52,3 +53,5 @@ Running the ingester over `public_profile_org/` yields a queryable ChromaDB inde
 - Decision (2026-10-05, sequencing): entry 1 is an opening prerequisite carrying the retrospective follow-ups (#1, #3, #5, #6); entry 2 is the tracer bullet (thinnest path through every layer). Entries 3 and 4 touch different files (`ingest/org.py`, `ingest/scope.py`) and may run in parallel; entry 2 owns the shared store setup.
 - Decision (2026-10-05, scope): retrospective item #2 (production routing, `temperature`, `top-k` on `Config`) is deferred to `epic-rag-chat`, not this epic.
 - Decision (2026-10-05, slicing): the DSPy signature's citation contract is a downstream concern; this epic's output is the indexed chunks plus their source-path metadata, which citations will read.
+- Decision (2026-10-12, symlink-by-location reconciliation): containment is decided by *located* path, not target resolution — a symlinked public file under the root is in scope; a path located outside the root is refused. `spec-janbot.md` CAP-4 and this epic's Done when 3 are now worded to match, closing the retrospective's wording item. (Store scope ownership, the DW3 evidence-strength gap and citation/id concerns are tracked as carries to `epic-rag-chat`.)
+- Decision (2026-10-12, closure): epic accepted `done` with the above carries; child tickets `2.1`–`2.7` all `done`, and the payload-stability remediation (`test_rerun_preserves_documents_and_embeddings`, `test_rerun_repairs_corrupted_payload`) closes the retrospective's "corrupt" clause.
