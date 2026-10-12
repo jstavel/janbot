@@ -46,7 +46,7 @@ Chunking preserves semantic structure:
 
 Only files in `public_profile_org/` are indexed. The ingestion pipeline provably never touches private notes — the scope filter is a whitelist, not a blocklist.
 
-`public_profile_org/` is a **copy, not the source of truth**. It contains an extract of `~/org/corpus/views/work-profile/index.org` (37 approved, `REVIEWED`-stamped corpus objects). Updates happen only by re-extracting from the corpus view; the files here are never edited by hand. Corpus origin (with harvest log and git-pinned sources) lives in `~/org/corpus/`.
+`public_profile_org/` is **JanBot's source of truth**, itself an extract of the wider personal corpus SSOT (`~/org/corpus/views/work-profile/index.org`, 37 approved `REVIEWED`-stamped objects). Updates happen only by re-extracting from the corpus view; the files here are never edited in place. The upstream corpus origin (with harvest log and git-pinned sources) lives in `~/org/corpus/`.
 
 ### 5. Deterministic Model Routing
 
