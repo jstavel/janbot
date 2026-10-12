@@ -71,3 +71,48 @@ Session: unavailable · Timestamp: 2026-10-12T19:38:23+0200
 - Result: Narrative checked; block status set to accepted. Review files to be committed next. Review moves to Block 3 — Slice: contract completion (schema-level).
 - Evidence: walkthrough-pr3-contract-envelope.md
 - Open: none
+
+## 7 — Block — accepted (Block 3)
+
+Session: unavailable · Timestamp: 2026-10-12T19:42:15+0200
+
+- Action: Block 3 — Slice: contract completion (schema-level) accepted by the reviewer without a move.
+- Result: Narrative checked; block status set to accepted. Review moves to Block 4 — Slice: failure kinds & envelope mapping.
+- Evidence: walkthrough-pr3-contract-envelope.md
+- Open: none
+
+## 8 — Block — accepted (Block 4)
+
+Session: unavailable · Timestamp: 2026-10-12T19:47:42+0200
+
+- Action: Block 4 — Slice: failure kinds & envelope mapping accepted by the reviewer without a move.
+- Result: Narrative checked; block status set to accepted. Review moves to Block 5 — Slice: test layers.
+- Evidence: walkthrough-pr3-contract-envelope.md
+- Open: none
+
+## 9 — Block — accepted (Block 5)
+
+Session: unavailable · Timestamp: 2026-10-12T19:50:56+0200
+
+- Action: Block 5 — Slice: test layers accepted by the reviewer without a move.
+- Result: Narrative checked; block status set to accepted. Review moves to Block 6 — Periphery.
+- Evidence: walkthrough-pr3-contract-envelope.md
+- Open: none
+
+## 10 — Block — accepted (Block 6)
+
+Session: unavailable · Timestamp: 2026-10-12T19:55:03+0200
+
+- Action: Block 6 — Periphery accepted by the reviewer without a move; all six blocks accepted.
+- Result: Narrative checked; block status set to accepted. Wrap-up proposed: commit review files, then merge PR #3, then mark story 3.3 done — pending the user's say-so.
+- Evidence: walkthrough-pr3-contract-envelope.md
+- Open: wrap-up awaiting user approval.
+
+## 6 — VCS — committed review files
+
+Session: unavailable · Timestamp: 2026-10-12T19:38:44+0200
+
+- Action: Committed the walkthrough folder to main as `1bf4fb3` ("chore: add PR #3 walkthrough review files (blocks 1-2 accepted)").
+- Result: Narrative and log now tracked; tree clean.
+- Evidence: commit 1bf4fb3
+- Open: none

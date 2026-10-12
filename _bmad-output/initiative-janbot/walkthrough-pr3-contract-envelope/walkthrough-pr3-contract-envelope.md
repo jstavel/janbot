@@ -27,7 +27,7 @@ Entry points a reviewer opens first:
 
 ## Block 3 — Slice: contract completion (schema-level)
 
-- [ ] unvisited
+- [x] accepted
 
 Mechanism: the models are now self-validating. A strip-and-reject `field_validator` on `question` strips surrounding whitespace and raises on an all-blank value — so a blank question becomes a `ValidationError`, which FastAPI surfaces as the default 422, and padded values are normalized before retrieval ever sees them. `Field(min_length=1)` on `citations` pins the epic's ≥1-citation invariant at the schema level. Every field also carries a `description` for OpenAPI consumers. The shape is unchanged and no new fields were added — deliberate, since no planning doc names any ([plan, Never list](../epic-rag-chat/story-full-pydantic-contract-error-envelope-plan.md#L37)).
 
@@ -39,7 +39,7 @@ Places to look:
 
 ## Block 4 — Slice: failure kinds & envelope mapping
 
-- [ ] unvisited
+- [x] accepted
 
 Mechanism: two `ValueError` subclasses — `EmptyRetrieval` and `UnattributableContext` — are raised from the unchanged retrieval guards, giving failures machine-readable kinds instead of message matching. The route maps `EmptyRetrieval` → 503 and any other `ValueError` → 500, both via `HTTPException(detail=str(exc))`, so every `/chat` error body is FastAPI's standard `{detail}` envelope, never a raw traceback. Ordering matters: `except EmptyRetrieval` must precede `except ValueError` because `EmptyRetrieval` *is* a `ValueError` — reversed, the generic clause would swallow the kind and collapse the 503 into 500. The 503 itself is a human decision (2026-10-12, recorded in the plan) superseding story 3.2's pinned 500 for the empty-index case.
 
@@ -51,7 +51,7 @@ Places to look:
 
 ## Block 5 — Slice: test layers
 
-- [ ] unvisited
+- [x] accepted
 
 Mechanism: coverage runs on two layers. Schema-level pins in [tests/test_contract.py](../../../tests/test_contract.py) construct models directly — blank/mistyped/missing `question`, zero-citations response — and never touch HTTP. Port-level tests in [tests/test_chat.py](../../../tests/test_chat.py) assert the `{detail}` envelope shapes (422/503/500) through `TestClient`. One mechanism note: the source-less chunk is crafted via the public `VectorStore.upsert` with a stand-in carrying `source_path=None`; verified live, chroma drops `None`-valued metadata keys at upsert, and `query` maps the missing key back to `None` via `.get()` (`store/chroma.py:154`) — the correction recorded in the plan's triage log, and the reason the guard still fires exactly as intended.
 
@@ -63,7 +63,7 @@ Places to look:
 
 ## Block 6 — Periphery
 
-- [ ] unvisited
+- [x] accepted
 
 - README: the Chat section's error paragraph rewritten to the envelope shapes — [README.md:85](../../../README.md#L85).
 - Plan file: status flipped to `built` with implementation notes appended — [plan status](../epic-rag-chat/story-full-pydantic-contract-error-envelope-plan.md#L6).
@@ -71,4 +71,4 @@ Places to look:
 
 ## Status
 
-Current block: Block 3 — Slice: contract completion (schema-level), in progress. Blocks accepted: 2 of 6.
+All blocks accepted: 6 of 6. Review walkthrough complete; wrap-up pending.
