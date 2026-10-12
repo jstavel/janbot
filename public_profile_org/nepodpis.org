@@ -1,0 +1,69 @@
+:PROPERTIES:
+:ID:       20261007-nepodpis
+:TITLE:    NEPodpis — digital signatures for blind clients, PKI + customer-facing
+:CREATED:  2026-10-07
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Deep tech with customer-facing care: provisioned full PKI certificate chains for visually impaired Linux clients — from smartcard research at home visits to bank identity verification.
+:DOMAIN:   projects
+:TAGS:     pki openssl rsa smartcard certificate osvc customer-facing linux opensc
+:STRENGTHS:  deep-technical customer-facing pki-security user-research empathy linux-fundamentals exploratory-engineering
+:WEAKNESSES: none-identified
+:END:
+
+# NEPodpis — PKI certificate provisioning for visually impaired Linux users
+
+An OSVČ project for Brailcom ([[https://www.brailcom.cz/projects]]). Visually
+impared clients using Linux needed state-authorized electronic signatures —
+certificates issued by Czech banks operating as government-certified
+certification authorities.
+
+**What this person did:**
+- Visited blind clients at their homes (often outside Brno)
+- Set up the full PKI certificate chain on their Linux machines
+- Accompanied clients to the bank for identity verification
+
+**Research phase — how does PKI work on Linux?**
+Before any client work, this person had to research the full Linux PKI
+stack. Smartcards on Linux were not well documented at the time, and RSA
+cards that worked with Linux were rare. Key findings:
+
+- Two approaches existed to access an RSA private key from a smartcard
+  on Linux: an older PKCS#11 interface and a newer **OpenSC** stack
+- OpenSC (opensc-project.org) was the path that worked — it provided
+  the bridge between the hardware smartcard and OpenSSL
+- The project depended on lucky timing: RSA cards that actually worked
+  with Linux had become available just recently
+
+This was genuine exploratory engineering — finding a working path through
+undocumented Linux PKI integration.
+
+**Technical process:**
+1. Generate asymmetric key pair — private key on an RSA smartcard via USB reader
+2. Generate Certificate Signing Request (CSR) with mandatory personal data
+3. Bank as certification authority signs the request and issues the certificate (PEM format)
+4. Install and verify the certificate on the client's Linux system
+
+**Stack:** OpenSC, OpenSSL, PKI infrastructure, RSA smartcards, USB readers,
+CSR, certification authority protocols, PKCS#11, Linux.
+
+* What this demonstrates
+
+- **Deep technical + customer-facing** — not just knowing PKI, but
+  delivering it to end users in their homes
+- **Linux for accessibility** — serving users who chose Linux as their
+  primary OS, often for accessibility reasons
+- **Security domain knowledge** — PKI, asymmetric cryptography, smartcard
+  hardware, certification authority workflow
+- **User empathy** — adapting the technical process to each client's
+  environment and abilities
+- **Self-employed delivery** — OSVČ: full ownership from first contact
+  to working certificate
+- **Rare combination** — PKI security experience in a QA/testing context
+  is unusual and valuable
+
+* Sources
+
+- ~/org/h1_horizon/hledam-praci-2026.org (sections 2846–2878)
+  git ref: b4a85c4ef4909d133205fea356a6f81f1af17054
+- [[https://www.brailcom.cz/projects][Brailcom — NEPodpis project page]] (public reference, no code repository)

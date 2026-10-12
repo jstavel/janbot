@@ -1,0 +1,55 @@
+:PROPERTIES:
+:ID:       20261007-perl-clojure-gateway
+:TITLE:    Perl → Clojure gateway — map, grep, sub as functional seed
+:CREATED:  2026-10-07
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Perl as the gateway to functional programming: map/grep/sub and POE async revealed code-as-data thinking years before Node.js, later finding its natural home in Clojure.
+:DOMAIN:   carrier-stories
+:TAGS:     perl clojure functional-programming code-as-data async poe bat a intranet
+:STRENGTHS:  language-hopping functional-thinking deep-fundamentals async-patterns
+:WEAKNESSES: older-ecosystem-focus
+:END:
+
+# Perl → Clojure gateway — map, grep, sub as functional seed
+
+Perl was not just "a language" — it was the gateway to functional programming.
+The three core Perl primitives (map, grep, sub) revealed that code can express
+relations between data without miles of imperative boilerplate. This was the
+first encounter with **code as data** — a thread that later found its natural
+home in Clojure.
+
+**Key experiences:**
+- **POE (Perl Object Environment)** — asynchronous execution in Perl, years
+  before Node.js existed. Event-driven thinking before it was mainstream.
+- **Mojolicious::Lite** — built the company intranet at Baťa; practical web
+  development with functional composition.
+- **map/grep/sub** — not just utilities, but a way of thinking: programming
+  as describing data flow, not control flow.
+
+**Continuity thread:** Perl (map/grep/sub → code is data) → Clojure (code is
+data, first-class) → Spec-First (specs as data about requirements) — same
+principle across three ecosystems.
+
+* What this demonstrates
+
+- **Not language knowledge, but paradigm discovery** — finding functional
+  programming in a language not known for it
+- **Async before mainstream** — POE was event-driven concurrency before
+  Node.js, before asyncio
+- **Bridge-building** — Perl → Clojure shows ability to see patterns
+  across languages, not just collect syntax
+- **Ecosystem depth** — not just "I've used Perl" but deep POE/Mojolicious
+  production experience
+
+* Weaknesses / Risks
+
+- **Older ecosystem** — POE and modern CPAN are different worlds; would
+  need refresh for current Perl work
+- **Focus on intermediate tooling (Mojolicious intranet) rather than
+  modern web frameworks**
+
+* Sources
+
+- ~/Downloads/Perl Experience and Core Values Discussion.md
+  sha256: f109c9ada994cf093b480da3010b28b5d2978aa191b47467ffcd65cca26c743d

@@ -1,0 +1,133 @@
+:PROPERTIES:
+:ID:       20261007-clojure-testing
+:TITLE:    Clojure integration testing era at Red Hat
+:CREATED:  <2026-10-07>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Hired at Red Hat specifically to maintain Clojure tests: wrote Clojure libraries bridging into a Java/TestNG suite, demonstrating applied FP expertise in real testing infrastructure.
+:DOMAIN:   projects way-of-working
+:TAGS:     rhsm clojure selenium integration-testing testng bugzilla gnome desktop platform-shift
+:STRENGTHS:  clojure-expertise test-infrastructure library-authoring cross-language-evolution
+:WEAKNESSES: team-stack-replaced internal-tool-only language-locked-niche
+:PUBLIC: https://github.com/jstavel/test-clj.testng
+:END:
+
+# Clojure integration testing era at Red Hat
+
+The author was **hired at Red Hat specifically to maintain and extend
+Clojure tests** for subscription-manager. The test suite was primarily
+Java (TestNG), with Clojure as an **extension layer** — the author
+wrote Clojure libraries that bridged to the Java TestNG infrastructure,
+and a portion of the tests were written in Clojure alongside existing
+Java tests.
+
+Use to demonstrate Clojure expertise applied to real testing
+infrastructure, library authorship, and the ability to evolve when
+a platform shift happens.
+
+* Context
+
+The subscription-manager testing ecosystem at Red Hat was Java-based
+(TestNG). The author was hired to **own the Clojure part** of that
+ecosystem — maintaining the existing Clojure tests and extending them
+as the subscription-manager feature set grew. This required building
+bridging libraries that made Clojure work seamlessly with the Java
+test infrastructure.
+
+* What was built
+
+**TestNG integration**
+
+- **test-clj.testng** — A Clojure library that allows Clojure
+  functions to be executed as TestNG tests. This bridged the Clojure
+  and Java worlds: write in Clojure, run in the existing Java test
+  infrastructure.
+- **verify-testng** — Verification library for use with Clojure and
+  TestNG. Assertion helpers and verification patterns.
+
+**Bugzilla integration**
+
+- **bugzilla-testng** — A TestNG listener that checks Bugzilla bug
+  status before running a test: if the bug is still open, the test
+  is skipped with a clear reason. This became a pattern across the
+  team's test infrastructure.
+
+**Desktop testing**
+
+- **gnome.ldtp** — A Clojure library to connect to the GNOME LDTP
+  (Linux Desktop Testing Project) driver. This allowed testing of
+  desktop GUI interactions from Clojure — relevant for a CLI tool
+  that also had desktop integration.
+
+**Selenium for Cockpit web UI**
+
+When the Cockpit Subscriptions Plugin (web interface for
+subscription-manager) arrived, the author wrote browser tests using
+**Clojure + Selenium**. Clojure's expressiveness made test code
+concise, and the Selenium bindings provided browser automation.
+
+* The shift
+
+After ~5 years, the team decided to **replace Clojure with pytest**.
+Clojure was a niche skill within the team — Python was the shared
+language everyone could maintain.
+
+The author accepted the shift and began looking for a web testing
+replacement that fit both the domain (Cockpit web UI) and the team
+constraints. This search led first to **JavaScript/WebDriver.io**
+([[id:20261007-rhsm-cockpit-qe][rhsm-cockpit-qe]]) and eventually to **Ansible + Robot Framework**
+([[id:20261007-rhsm-ansible-qe][rhsm-ansible-qe]]).
+
+* What this demonstrates
+
+- **Clojure test infrastructure at scale.** Not just writing tests in
+  Clojure, but building libraries that made Clojure a first-class
+  citizen in a Java testing ecosystem.
+- **Bridging Java and Clojure.** TestNG is Java-native. The author
+  built bridges (test-clj.testng, verify-testng) that let the team
+  benefit from Clojure without leaving the Java infrastructure.
+- **Desktop + web + CLI testing.** From GNOME LDTP to Selenium to
+  CLI tests — the author covered the full surface of
+  subscription-manager testing.
+- **Platform shift acceptance.** When Clojure was replaced by pytest,
+  the author didn't fight it — adapted, explored alternatives, and
+  found a new stack.
+
+* Strengths this demonstrates
+
+- **Clojure + Java interop expertise.** Building libraries that
+  bridge Clojure functions to Java TestNG infrastructure requires
+  deep understanding of both worlds.
+- **Testing infrastructure authorship.** These are not throwaway
+  scripts — they're libraries published and used by others.
+- **Full-stack testing.** Desktop (LDTP) + web (Selenium) + CLI
+  covering the same product across interfaces.
+- **Adaptability to platform shifts.** Clojure → pytest → JS →
+  Ansible+RF. Five years is a long run for a language choice, and
+  the author evolved with each shift.
+
+* Weaknesses this reveals
+
+- **Team stack was replaced.** Clojure as a testing language did not
+  survive — the team chose pytest. The author's personal language
+  preference did not align with team sustainability.
+- **Internal-only.** The Clojure testing infrastructure was internal
+  to Red Hat — no public documentation or conference talks.
+- **Niche skillset.** Clojure expertise was valuable but not
+  transferable to the rest of the team — a recurring pattern.
+
+* Related objects
+
+- [[id:20261007-rhsm-cockpit-qe][rhsm-cockpit-qe]] — the WebDriver.io approach that followed when
+  Clojure was replaced
+- [[id:20261007-rhsm-ansible-qe][rhsm-ansible-qe]] — the Ansible+RF architecture that ultimately
+  replaced both Clojure and the JS proposal
+
+* Sources
+
+- Personal knowledge. The Clojure testing era was internal Red Hat
+  work. The GitHub repos below are the public artifacts.
+- https://github.com/jstavel/test-clj.testng — Clojure → TestNG bridge
+- https://github.com/jstavel/verify-testng — Clojure TestNG verification
+- https://github.com/jstavel/bugzilla-testng — Bugzilla integration
+- https://github.com/jstavel/gnome.ldtp — Clojure LDTP bindings

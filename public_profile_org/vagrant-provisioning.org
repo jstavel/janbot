@@ -1,0 +1,43 @@
+:PROPERTIES:
+:ID:       20261007-vagrant-provisioning
+:TITLE:    Vagrant, libvirt & Packer — Infrastructure as Code for test environments
+:CREATED:  2026-10-07
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Infrastructure as Code for test environments at Red Hat: Vagrant + libvirt + Packer with immutable, reproducible multi-node images — principles later reused in Krakatoa.
+:DOMAIN:   projects
+:TAGS:     vagrant libvirt packer infrastructure-as-code provisioning kvm
+:STRENGTHS:  infrastructure-as-code provisioning testing-infrastructure linux-fundamentals
+:WEAKNESSES: none-identified
+:END:
+
+# Vagrant, libvirt & Packer — IaC for test environments at Red Hat
+
+At Red Hat, this person used a full provisioning stack for test environments:
+
+- **Vagrant + libvirt** — orchestration of virtual machines
+- **Packer** — creating reproducible VM images for KVM/libvirt
+- **Multi-node clusters** — provisioning multiple machines on a single hypervisor
+
+**Principles applied:**
+- **Infrastructure as Code** — environments defined in code, not manual setup
+- **Immutable infrastructure** — images rebuilt from scratch, never patched in place
+- **Reproducibility** — every test runs in an identical environment
+
+**Continuity with later projects:**
+- Krakatoa (Clojure/matching engine) used KVM + Podman with Packer/Terraform
+  for .qcow2 images — same principles, modern tooling
+- Podman in CI/CD (rootless, daemonless) continued the pattern
+
+* What this demonstrates
+
+- **Infrastructure as Code discipline** — test environments are code, not snowflakes
+- **Provisioning experience** — relevant for Platform Engineer / DevOps roles
+- **Continuity** — same principles across Vagrant (2010s) → Packer/Terraform (2020s)
+  → Podman (present)
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org (section "Vagrant, libvirt & Packer", lines 649–682)
+  git ref: b4a85c4ef4909d133205fea356a6f81f1af17054
+- Oral recollection (no file source)

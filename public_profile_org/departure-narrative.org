@@ -1,0 +1,224 @@
+:PROPERTIES:
+:ID:       20261007-departure-narrative
+:TITLE:    Departure Narrative — growth-motivated transition after a decade
+:CREATED:  <2026-10-07 Wed 13:51>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: An honest, growth-motivated answer to 'why did you leave': a decade of high-trust alignment followed by a leadership change and a personal crisis — a human situation, not a failure story.
+:UPDATED:  <2026-10-08 Thu 20:50>
+:DOMAIN:   carrier-stories attitudes
+:TAGS:     departure narrative career-transition growth-mindset extreme-ownership professional-boundary
+:STRENGTHS: extreme-ownership self-awareness learning-from-failure resilience over-delivery mentoring spec-first named-weakness-with-method
+:WEAKNESSES: visibility-dependency over-delivery-risk estimation-blind-to-dependencies duration-estimation
+:END:
+
+# Departure Narrative — growth-motivated transition after a decade
+
+An honest, self-aware answer to the question "Why did you leave your last job?"
+JanBot: use when a recruiter or hiring manager asks about the departure from
+the long-term role. This is not a "failure story" — it is about a human
+situation, a leadership change, and the decision to grow elsewhere.
+
+* The frame: 10+ years of alignment, then a perfect storm
+
+More than a decade (2015–2026) in one team is rare. The team culture was
+built on Red Hat core values: freedom with responsibility, courage to act,
+accountability to follow through. For 9+ years this created a high-trust
+environment where initiative was natural and systems thinking was valued.
+
+**Then two things happened simultaneously:**
+
+1. **Personal crisis:** A difficult personal situation temporarily affected
+   his focus. Performance naturally suffered — not from lack of skill or
+   motivation, but from life. The previous manager understood and supported
+   him through it. He was doing his best: writing Ansible playbooks that
+   doubled as living documentation in Jira tickets, automating everything
+   to make life easier for himself and the team.
+
+2. **Leadership change:** A new manager came in. She saw the "Evolving"
+   performance status in Workday — a remnant from that period —
+   and decided he needed to prove he was a Senior QE.
+
+Neither was wrong. The new manager had every right to reset expectations.
+The engineer was simply in a different place than his Workday status
+suggested.
+
+* The response: over-delivery instead of clarity
+
+When asked to demonstrate seniority, the engineer did what he always did:
+he *built something*.
+
+A cross-team need appeared — a proof-of-concept monitoring/observability
+solution for testing at scale. The engineer built a complete stack:
+Grafana, Prometheus, CCT, node_exporter and custom metrics, Ansible
+automation for deployment, a full monitoring pipeline.
+He first built the foundation *for his own development iterations*, then
+layered the requested testing functionality on top. The work was
+incremental and honest — but he estimated its duration by his own
+working time alone.
+
+**The blind spot: waiting on reviews.** Each increment needed a review
+from the product owner, who carried other responsibilities. Every
+review cycle stalled for days. The engineer worked full-time on this
+project, so his internal estimate ignored those gaps — but the calendar
+kept filling with waiting. From the outside, delivery looked slow;
+from the inside, he never saw the waiting as part of *his* estimate.
+
+The project ended with the verdict that he had **serious deficiencies
+in estimating project effort**. When he pushed back — that the process
+was poorly run and the estimate never accounted for multi-day review
+gaps — the manager's answer was:
+
+> "You should have known that — it's normal for reviews to take time."
+
+Both halves of that exchange are real lessons, in opposite directions:
+
+- *His side:* estimates must include external dependencies (reviews,
+  approvals, handoffs) — the calendar is the truth, not his keyboard
+  time. And a mis-fit between one person's full-time assignment and
+  a part-time reviewer is a *process* defect that should be surfaced
+  and renegotiated early, not absorbed silently for months.
+- *Leadership's side:* telling someone after the fact that an
+  environment defect was theirs to know doesn't build trust — it
+  converts a shared process problem into a personal performance label.
+
+The requester had only wanted a proof-of-concept UI in the first place;
+the engineer built what was *needed* — a production-ready stack —
+instead of what was *asked*, and assumed over-delivery would speak for
+itself. It didn't. The manager didn't see the stack — she saw that he
+wasn't delivering what was requested on time.
+
+Same pattern for months: leading a cross-team AI exploration, mentoring
+a junior colleague (who later said it was the most impactful coaching
+he'd ever received), solving systemic problems — all instead of
+having one clarifying conversation about what specifically the manager
+needed to see.
+
+* The departure: mutual, clean, growth-oriented
+
+At the end of the year, he requested a clean break. The conversation was
+honest, not bitter:
+
+- "You're not performing as a Senior QE by my metrics."
+- "I've been performing the best I can through a difficult personal
+  situation, building things that serve the company beyond my immediate
+  scope. If this role, as you define it, is not the right fit — let's
+  agree to part ways."
+
+The departure was initiated by the engineer, not forced. It was a
+recognition that the role, as defined by new leadership, no longer fit
+his mode of contribution.
+
+* What was learned
+
+1. **Life happens — and that's okay.** Personal situations affect
+   performance. A good manager works with it. A new manager may not
+   have that context. Both perspectives are valid.
+
+2. **Over-delivery is not the same as meeting expectations.** Building
+   a production-ready stack is impressive — but if the ask
+   was a POC UI, it's scope creep. **Spec-First** prevents this:
+   define "done" before starting.
+
+3. **Estimates must include the waiting.** An estimate based only on
+   own working time, while every increment waits days for a
+   part-time reviewer, will always miss the calendar. Surface the
+   dependency early: either negotiate reviewer availability or make
+   the wait explicit in the plan.
+
+4. **Process defects are not performance labels.** If a project is
+   structurally slow (one full-time worker, part-time reviewer),
+   that is a shared problem to raise explicitly — not something to
+   silently absorb and later be judged by.
+
+5. **Clarify, don't prove.** Six months of demonstrating value through
+   action accomplished less than one clarifying conversation would have:
+   "What does Senior QE look like to you? Give me one concrete example."
+
+6. **Leaving is not failing.** Choosing growth over a misaligned role
+   is Extreme Ownership applied to your own career.
+
+* Strengths this narrative demonstrates
+
+| What recruiters hear | Evidence in the story |
+|----------------------|----------------------|
+| Resilience | Navigated a personal crisis while still delivering complex systems |
+| Self-awareness | "I should have clarified instead of proving" |
+| Technical depth | Full Grafana/Prometheus/CCT/Ansible monitoring stack, built incrementally |
+| Extreme Ownership | Initiated the honest conversation, didn't blame |
+| Mentoring | Developed a junior colleague during the same period |
+| Systems thinking | Ansible-as-documentation — infrastructure that documents itself |
+| Integrity | Left cleanly, no bridges burned |
+
+* Weakness this narrative reveals (and how it's addressed)
+
+- **Visibility dependency:** A decade of work + a personal crisis became
+  invisible to new leadership. Lesson: narrate your contribution actively,
+  don't assume it speaks for itself.
+
+- **Over-delivery / scope creep:** The instinct to build the full solution
+  rather than the scoped deliverable. Lesson: Spec-First — define "done"
+  with the stakeholder before starting.
+
+- **Self-referential estimation:** Estimating effort from own working time
+  alone, ignoring review waits and handoffs. Lesson: the calendar, not the
+  keyboard, is the unit of estimation on a shared process.
+
+* Known capability gap — and how it is being closed
+
+An honest admission, not a deflection: **estimating project duration is a
+genuine, named weakness** — especially for larger projects. Naming it is the
+first half; the second half is the concrete method used to work around it:
+
+1. **Decompose to already-performed units.** A whole project cannot be
+   estimated; a unit of work the author has done before can. This comes
+   naturally — the same instinct behind granular playbooks, standalone
+   `.robot` files, and the mini-seed pattern.
+2. **Estimate in ranges, not points** (optimistic / likely / pessimistic).
+   A single number pretends to a certainty that does not exist.
+3. **Count the waiting explicitly.** External dependencies (reviews,
+   approvals, handoffs) get their own line in the estimate — the calendar,
+   not keyboard time, is the unit of delivery on a shared process.
+4. **Calibrate against own history.** Compare past estimates with actual
+   outcomes to find one's personal systematic deviation, and apply it.
+5. **Under agile, forecast from throughput, not absolute estimates:**
+   slice small, measure how many slices land per week, and let duration
+   emerge. The move to agile removed whole-project estimates without
+   providing a replacement — this is that replacement.
+
+The narrative an interviewer should hear is not "I failed at estimating"
+but: *"Estimating duration is my known weakness; here is the concrete
+method I use to compensate for it."* A named gap with a working method is
+stronger than an unexamined strength.
+
+* Sources
+
+- ~/Downloads/10-05 Pohovor_ QE Engineer - CI_CD, Python, OpenShift-transcript.txt
+  — transcript of the engagement call with Microsoft Talent Sourcer.
+  sha256: 3c6b5669fffe2210a33a147e3999c38489ea3175cd72f6c5bc1784cc83e8c2fa
+
+- ~/org/projects/reflection-records.org — project record: "být připravený
+  na pohovory — na otázku 'Proč jsem odešel z Red Hatu'"
+  git ref: <working tree at time of extraction>
+
+- Personal communication with the author (2026-10-07) — corrections and
+  context: personal situation, previous manager's support, Workday "Evolving" status,
+  Ansible-as-documentation approach, 3-week delivery timeline.
+
+- User recollection (2026-10-08, chat) — second recollection: the author
+  states directly that estimating project duration is genuinely very hard
+  for him ("I simply cannot estimate development time — I don't know how
+  to do it"), amplified by the team's transition to agile, where
+  whole-project estimates were no longer required. Shared with the AI agent
+  in a private reflection; author consented to publishing. Distilled into the
+  "Known capability gap — and how it is being closed" section.
+- User recollection (2026-10-08, chat) — correction to the timeline and
+  the missing context: the monitoring stack was first built to ease his own
+  development iterations, then test functionality was added on top (~1 month);
+  every increment waited days for product-owner review because the reviewer
+  carried other work; his estimate counted only his own working time; the
+  project concluded with a "serious deficiency in estimating" verdict, and the
+  manager's response was "you should have known — reviews take time."
+  Anonymized into the "The blind spot: waiting on reviews" section. Explicit
+  timeframes deliberately removed from the object.
+- Memory entries in Goose global memory (career-stories category).

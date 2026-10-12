@@ -1,0 +1,51 @@
+:PROPERTIES:
+:ID:       20261007-nagios-snmp-monitoring
+:TITLE:    Nagios + SNMPv3 monitoring — infrastructure & contracting by data
+:CREATED:  2026-10-07
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: OSVČ-era infrastructure work: Nagios + SNMPv3 monitoring plus a full service stack (qmail-ldap, Samba PDC, stunnel/CA) with ASN.1→C contract-driven data exchange years before Protocol Buffers.
+:DOMAIN:   projects
+:TAGS:     linux monitoring networking snmp nagios infrastructure
+:STRENGTHS:  infrastructure-knowledge monitoring networking sysadmin fundamentals-first
+:WEAKNESSES: none-identified
+:END:
+
+# Nagios + SNMPv3 monitoring with ASN.1 contracts
+
+During OSVČ work as a Linux administrator (approximately 2003–2005), this
+person configured Nagios for site monitoring. Monitored stations ran either
+shell scripts or Perl modules for SNMPv3 (Simple Network Management Protocol
+v3 — the standard for network device discovery and monitoring).
+
+**Infrastructure stack from the same period:**
+- qmail-ldap — mail server with LDAP integration
+- Samba 3.0 as Primary Domain Controller
+- Amavis — antispam gateway
+- stunnel + CA — secured Sybase tunnels between companies (Ganymed project)
+- ASN.1 → C code generation — contract-driven data exchange between
+  central server and clients, years before Google Protocol Buffers (2008)
+
+**The ASN.1 project** is particularly notable: ASN.1 was used as an Interface
+Definition Language (IDL) to define data contracts between systems, with
+C code auto-generated from the specification — the same principle now
+applied as Spec-First development, two decades later.
+
+* What this demonstrates
+
+- **Infrastructure & networking knowledge** — SNMP, LDAP, DNS, DHCP,
+  routing, PKI, TLS tunnelling, mail protocols
+- **Monitoring expertise** — Nagios/SNMP in production, not just theory
+- **First instance of the "Code as Data" DNA thread** — ASN.1 → C code
+  generation in 2003 is the earliest known instance of this principle
+  in the corpus
+- **Not QA experience** — infrastructure experience that complements the
+  later enterprise QE career: understands what happens below the application
+- **Continuity** — from Linux admin with Nagios/SNMP, through enterprise
+  QE at Red Hat, to today
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org (section "Nagios + SNMPv3 monitoring", lines 152–193)
+  git ref: b4a85c4ef4909d133205fea356a6f81f1af17054
+- Oral recollection (no written source)

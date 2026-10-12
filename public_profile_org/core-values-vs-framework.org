@@ -1,0 +1,96 @@
+:PROPERTIES:
+:ID:       20261008-core-values-vs-framework
+:TITLE:    Core values vs. competency framework — the spirit travels person to person
+:CREATED:  <2026-10-08>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Core values are the strongest force in a company — they generate behaviour and travel person to person — while a competency framework is only a tool in their service; the 'why' is protection against burnout and the path to full engagement.
+:DOMAIN:   attitudes way-of-working
+:TAGS:     values culture competency-framework seniority leadership freedom commitment courage accountability
+:STRENGTHS:  values-alignment self-reflection culture-thinking seniority-understanding
+:WEAKNESSES:  framework-interpretation-clash
+:END:
+
+# Core values vs. competency framework — the spirit travels person to person
+
+A reflection on why core values are the strongest force in a company —
+and why a competency framework is only a tool in their service. Use
+when discussing company culture, seniority, or how values outlive any
+documented framework.
+
+* The argument
+
+- **Company values exist to awaken willingness** — loyalty and the
+  desire to do one's best for the company. Willingness is tied to
+  **freedom**: the person themselves feels and sees what is best for
+  the company, what they can contribute, and how — as long as it is
+  aligned with the long-term goals and commitments of the team.
+- A company also has an elaborate **competency framework** — a large
+  table describing what a Senior / Principal engineer is: cross-team
+  influence, go-to person, the one people ask for advice.
+- The reflection: **a framework is just a tool.** The spirit of the
+  company — freedom, commitment, courage, accountability — is not in
+  the table. It travels **from person to person**: through leaders who
+  carry it and apply it when judging work.
+
+* Why core values are the stronger force
+
+1. **Values generate behaviour; frameworks only classify it.** A
+   competency framework measures reach — cross-team influence, being a
+   go-to person. It can describe *what seniority looks like*, but it
+   cannot *cause* anyone to behave with freedom, commitment, courage or
+   accountability. Values do exactly that: they tell people why to
+   reach beyond their immediate scope at all.
+2. **Values are portable; frameworks are situational.** Values travel
+   person to person and stay alive even when the org chart changes. A
+   framework is tied to a specific table, version, and interpretation —
+   and dies the moment the interpretation drifts.
+3. **Values are self-fulfilling when leaders carry them.** The spirit
+   is not in the document. It is in leaders who *apply* the values when
+   judging work — freedom, commitment, courage, accountability. When a
+   leader judges through values, the framework becomes a helpful map.
+   When a leader judges through the framework alone, the values become
+   marketing and the table becomes the real culture.
+4. **Because values are the stronger force, align on them first.**
+   When a framework's boxes and the company's stated values point in
+   different directions, the productive move is to name it early and
+   explicitly ask which one governs the decision — so that months of
+   work are measured by the values, not by an interpretation of a
+   table.
+
+* Personal note — values as a compass
+
+When the author loses direction — searching for the next goal, unsure
+what matters — recalling the company's core values is what reorients
+him. The values work as a compass: they don't prescribe a specific
+next step, but they make the *right kind* of step visible (freedom to
+choose it, courage to reach beyond scope, commitment to the team's
+long-term goals, accountability for the result). That is practical
+evidence of the argument above: values generate behaviour even when
+no framework is consulted.
+
+The guard against reading this as stubbornness: daily commitments
+come first — the team's plan is done honestly, every day. The "why"
+is not a veto on the plan; it is what gives the plan meaning and is
+protection against burnout. Values inside commitments (freedom +
+courage), commitments without values (compliance, burnout), values
+without commitments (stubbornness, air bridges). Only together is
+it full engagement.
+
+* Lessons
+
+1. **A competency framework measures reach, not spirit.** Seniority
+   defined as "cross-team influence, go-to person" says nothing about
+   *why* someone reaches across teams — only the values do.
+2. **Culture is transmitted person to person**, not by document. The
+   people who carry the values are the actual culture.
+3. **When values and framework collide, name the collision early** —
+   ask explicitly which one governs the decision. Because values are
+   the stronger and more durable force, they should win.
+
+* Sources
+
+- ~/Downloads/10-07 Rozbor_ Střet hodnot a kompetenčního rámce v Red Hat-transcript.txt —
+  reflection on values vs. competency framework; "the framework is a
+  tool, the spirit travels person to person".
+  sha256: a91df442eca4ab5ac516d1da976b7945725cc828c956e604fe617079ea12d5ec

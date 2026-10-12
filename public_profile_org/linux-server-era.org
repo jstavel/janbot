@@ -1,0 +1,148 @@
+:PROPERTIES:
+:ID:       20261008-linux-server-era
+:TITLE:    Linux Server Era — running real services when nothing was one command
+:CREATED:  <2026-10-08>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Linux depth as service integration and self-reliance: configured and operated qmail-ldap, Samba PDC, antivirus gateways, encrypted tunnels and his own CA when nothing was one command.
+:DOMAIN:   projects way-of-working
+:TAGS:     linux sysadmin qmail ldap samba pdc clamav postfix apache stunnel pki ipsec doc-pipeline xslt latex docbook
+:STRENGTHS:  linux-depth service-integration self-reliance pki-knowledge documentation-pipeline proportionate-tool-choice
+:WEAKNESSES:  era-dated ipsec-not-mastered
+:END:
+
+# Linux Server Era — running real services when nothing was one command
+
+Before containers made service stacks disposable, the author configured
+and operated real Linux services end-to-end: mail, identity, web,
+antivirus gateway, encrypted tunnels, his own certificate authority —
+and built document pipelines where the stylesheet was the program.
+Use to demonstrate Linux depth as *service integration and
+self-reliance*, not as "was a sysadmin".
+
+* The services — and what each one demonstrates
+
+| Service | The hard part | What it says about the engineer |
+|---------|---------------|-------------------------------|
+| qmail-ldap | No official LDAP support — it was a **patch** | Comfortable reaching into third-party source and building the feature needed |
+| Samba as PDC over LDAP | Cross-system identity: Windows clients authenticating against a directory | The same problem class as today's SSO/IAM — solved with different tools, same thinking |
+| ClamAV in Postfix | Security as an integrated mail pipeline, not a product | Composing layers into a working service chain |
+| Apache | Standard, but operated in production alongside the rest | Baseline web service ownership |
+
+The unifying thread: **nothing was one command in a container**. Every
+service was assembled from components that did not quite fit together,
+and making them fit was the job.
+
+* PKI — his own certificate authority
+
+For encrypted tunnels he ran his **own CA** using OpenSSL's `CA.pl`:
+self-signed root, signing CSRs, serial files, certificate lifecycles.
+Years later this resurfaces directly — in the NEPodpis project he guided
+blind clients through the exact same flow (key pair, CSR, bank as CA),
+now at a public-certification level (see 20261007-nepodpis). The PKI
+knowledge was not theoretical; it was operational, twice, in two eras.
+
+* stunnel vs IPsec — a proportionate tool choice (with an honest limit)
+
+The problem (as an independent contractor for a small software firm):
+securing a **data-collection service port** (a service that picked up
+CSV data from scripts at client sites) on Windows, at a time when
+**OpenVPN did not exist yet**. He installed and configured the tunnel
+at client sites himself. Two paths were on the table:
+
+- **IPsec** — the VPN protocol of the era, part of the IP layer itself
+  (L3). On Linux it meant the **FreeS/WAN** stack: a kernel patch
+  (KLIPS) plus an IKE daemon. Powerful, but configuration-heavy
+  (policies, certificates, key exchange). There was also the option of
+  other early VPN stacks of that period.
+- **stunnel** — wrap the single service port in TLS (L4). Small,
+  targeted, sufficient for the actual need.
+
+Several L3 VPN paths were actually tried or evaluated:
+
+- **IPsec** — the native L3 protocol; complex (IKE, policies, certs);
+  the author **tried to configure it and it never worked out**.
+- **CIPE** — an independent, simpler kernel-mode tunnel (IP-over-UDP)
+  with no IKE complexity; it seemed easier but eventually faded from
+  the field.
+- **VTun** — another tunnel approach; the author experimented with it too.
+
+In the end, because the need was **exactly one service port**, **stunnel**
+won — a single TLS-wrapped port, run as a Windows service:
+"that was completely sufficient".
+
+The boundary he drew then, and states plainly now: **learning and
+deployment are different risk classes.** IPsec, CIPE, VTun — those were
+*learning* targets; he was keeping up with the (trendy) VPN field. But
+when it came to **deployment**, he knew he could not experiment: a
+client production port needed a mechanism he fully understood. So he
+deployed the boring, fully-graspable one (stunnel) and kept the complex
+ones as study. That honesty is itself the signal: he knows where his
+boundaries are, and separates curiosity from production.
+
+*Continuity note for interviews:* the FreeS/WAN lineage did not die —
+it forked into Openswan/strongSwan/Libreswan, and Libreswan ships in
+RHEL today. The era's lesson (choose the proportionate layer, understand
+the alternative) transfers directly to modern VPN/zero-trust choices.
+
+* Document pipelines across eras
+
+Documentation as structured data, with a program (or template engine)
+generating the output — this predates the author's Linux server era and
+repeats across eras:
+
+- **C++ era (print layout):** documentation written in **DocBook**, print
+  layout generated through **XSLT transformations**, invoked from C++.
+  The stylesheet is the program: one source of truth in the XML, the
+  layout as a transformation over it. The same
+  verification-first, machine-consumable-artifact instinct that later
+  became executable documentation and spec-first workflows.
+- **Plone era — CoreNet (product catalogue):** while developing on
+  Plone (see 20261007-corenet-twisted-deferred), the author built a
+  **catalogue of products generated through LaTeX** for a large
+  company — again: structured content in, typeset document out.
+
+The pattern is stable across both eras: separate the content from the
+presentation, describe the content in a format a program can trust, and
+let the presentation be generated — not hand-made.
+
+* Strengths this demonstrates
+
+| What recruiters hear | Evidence |
+|----------------------|----------|
+| Linux depth | Real services: mail, identity, web, security — patched and operated, not read about |
+| Self-reliance | Assembled working systems from components that did not fit together |
+| PKI knowledge | Own CA (OpenSSL CA.pl); later reused in NEPodpis for public certificates |
+| Engineering judgment | stunnel over IPsec — proportionate choice; knows the trade-offs of both |
+| Honest limits | "IPsec was complex for me then" — named, not hidden |
+| Documentation as engineering | DocBook+XSLT from C++ (print), LaTeX catalogue on Plone/CoreNet — content separated from presentation, output generated |
+
+* Weaknesses / risks
+
+- **Era-dated skills:** qmail, FreeS/WAN, Samba-PDC are period
+  technology. The *transfers* (PKI, TLS layering, identity integration,
+  documentation pipelines) are current; the *products* are not. Frame
+  accordingly.
+- **IPsec not mastered at the time** — tried it, could not get it
+  configured, went with stunnel instead. Relevant only if the role
+  needs VPN/L3 networking depth.
+
+* Sources
+
+- ~/Downloads/10-07 Stunnel jako pragmatická náhrada VPN v Ganymedu-transcript.txt
+  — stunnel/VPN era details: contractor context, data-collection port,
+  installation at client sites, IPsec attempts that never worked, one
+  port via stunnel as a Windows service. Company name anonymized.
+  sha256: 33208db84aebddb77b1358e228dc8448fee812fda97245bb1905305aa92d2f88
+- User recollection (2026-10-08, chat) — the services run (qmail-ldap
+  with patch, Samba PDC over LDAP, ClamAV in Postfix, Apache), the
+  stunnel/IPsec/CIPE/VTun decision context ("OpenVPN did not exist yet;
+  I was learning IPsec — it was part of the IP stack as a kernel patch;
+  there was also FreeS/WAN"), the own CA via OpenSSL CA.pl, the
+  C++ + XSLT + DocBook documentation pipeline (belongs to the C++ era),
+  and the LaTeX product-catalogue generation during the Plone/CoreNet era
+  (for a large company).
+- Related corpus objects: 20261007-linux-from-scratch (floppy LFS),
+  20261007-nagios-snmp-monitoring (monitoring era), 20261007-nepodpis
+  (PKI applied for blind clients), 20261007-corenet-twisted-deferred
+  (the C++ era context).

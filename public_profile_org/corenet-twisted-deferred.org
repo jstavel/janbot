@@ -1,0 +1,94 @@
+:PROPERTIES:
+:ID:       20261007-corenet-twisted-deferred
+:TITLE:    CoreNet — First async: PDF merge with Twisted Deferred (2005–2007)
+:CREATED:  <2026-10-07>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: First async experience (2005–2007): multi-process orchestration of a network scanner with Python Twisted Deferred — the pattern of encountering a concept early and applying it decades later.
+:DOMAIN:   projects way-of-working
+:TAGS:     python twisted async deferred promise pdf early-pattern
+:STRENGTHS:  async-patterns deep-learning cross-decade-transfer
+:WEAKNESSES: oral-memory-only no-public-source
+:END:
+
+# CoreNet — First async: network scanner batch merger with Twisted Deferred (2005–2007)
+
+A network scanner at CoreNet (2005–2007) scanned documents in batches
+to a filesystem. Each page was a separate PDF file. The author built
+a **multi-process async orchestration** using Python Twisted Deferred
+to monitor, order, and merge pages into a single document.
+
+Use to demonstrate a recurring pattern: encounter a concept early,
+absorb it deeply, and apply it decades later in a completely different
+context.
+
+* Context
+
+A network scanner produced batches of PDF pages to a shared filesystem.
+Files could arrive out of order. The author designed a **multi-process
+async pipeline** using Python Twisted Deferred:
+
+1. **Watcher process** — monitored filesystem for new pages via
+   Deferred callbacks.
+2. **Batch controller** — tracked whether a batch was complete and
+   ordered the pages by their original sequence.
+3. **Merger process** — after 10 seconds of inactivity (no new pages),
+   merged all pages into a single PDF document.
+
+This was the author's first encounter with the **deferred/promise
+pattern** — before Promises existed in JavaScript, before async/await,
+before ReactiveX.
+
+* Significance
+
+This is not about the PDF merge itself (a straightforward task). The
+significance is the **pattern discovery**:
+
+> **2005–2007:** Twisted Deferred (Python, one-off PDF merge)
+> **→ 2019:** RxJS/RxPy in the reactive testing framework
+>   (event streams, observable patterns)
+> **→ 2026:** TypeScript Spec-First reactive testing
+>   (FSM, contract monitoring, CDP orchestration)
+
+Each iteration applied the same core idea — deferred execution and
+event-driven composition — at a larger scale and with deeper
+understanding.
+
+* What this demonstrates
+
+- **Deep learning, not surface skill.** Not "I used Twisted once" but
+  "I encountered deferred/promise, internalised the concept, and
+  applied it across three career stages."
+- **Cross-decade concept continuity.** The same DNA thread from 2005
+  to 2026 — asynchronous, event-driven thinking.
+- **Pattern recognition.** The ability to recognise a useful abstraction
+  early and carry it forward into increasingly complex systems.
+
+* Strengths this demonstrates
+
+- **Deep pattern absorption.** Concepts are not learned and discarded —
+  they are integrated and re-applied at higher levels of complexity.
+- **Intellectual continuity.** A clear through-line from early Python
+  scripting to TypeScript enterprise architecture.
+
+* Weaknesses this reveals
+
+- **Oral memory only.** No preserved source code, no repository, no
+  written documentation from the period.
+- **No public reference.** The project was internal to CoreNet; no code
+  survives publicly.
+
+* Related objects
+
+- [[id:20261007-reactive-testing-framework][reactive-testing-framework]] — the next iteration: RxJS/RxPy event
+  streams in testing.
+- [[id:20261007-reactive-testing-project][reactive-testing-project]] — the current iteration: TypeScript,
+  contract-based, CDP orchestration.
+- [[id:20261007-bata-stock-update][bata-stock-update]] — early event-driven thinking in the same period.
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org
+  — Section "CoreNet: PDF merge + Twisted Deferred (prvni async)".
+    Oral memory describing the project and its significance.
+  git ref: b4a85c4

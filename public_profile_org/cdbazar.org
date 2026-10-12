@@ -1,0 +1,137 @@
+:PROPERTIES:
+:ID:       20261007-cdbazar
+:TITLE:    cdbazar — 18+ years of a Django solo project in production
+:CREATED:  <2026-10-07>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: An 18+-year-old Django e-commerce platform for a Prague CD retailer, built and maintained solo and still in production — proof of full-stack range and long-term ownership.
+:DOMAIN:   projects
+:TAGS:     django e-commerce freelance proof-of-work full-stack long-running
+:STRENGTHS:  full-stack long-running-production solo-project customer-facing ux-research
+:WEAKNESSES: legacy-stack visibility-dependency
+:PUBLIC:     https://github.com/jstavel/cdbazar
+:END:
+
+# cdbazar — 18+ years of a Django solo project in production
+
+A Django e-commerce application for a Prague-based CD and media retailer.
+Built solo around 2007, still running in 2026 — 18+ years in continuous
+production use. Use when a recruiter asks about full-stack experience, long-term
+ownership, or customer-facing engineering.
+
+* What it is
+
+A full-stack e-commerce platform with inventory management, order workflow,
+payment processing, competitive pricing intelligence, and an internal intranet
+for the retail team. Built and maintained by a single developer over nearly two
+decades.
+
+** Technical stack
+
+- **Django** (0.7 → 1.4, Python 2.5 → 2.7) — the framework evolved with the app
+- **MySQL** (MyISAM with full-text indexes) — relational storage
+- **Xapian/Xappy** — full-text search engine
+- **PIL/sorl-thumbnail** — image processing (watermarking, thumbnails)
+- **FastCGI** — deployment (era-appropriate)
+- **Twisted** — async components
+- **KSS (Kinetic Style Sheets)** — early AJAX framework for Django
+- **SVN → Git** — version control migration
+
+** Modules
+
+The codebase was organised into distinct Django apps:
+- `store` — catalogue (Article, Item, Picture, MediaType)
+- `workflow` — order state machine with invoicing, shipping, and payment states
+- `accounting` — basic ledger integration
+- `registration` — user accounts
+- `fulltext` — Xapian-powered search
+- `summary` — reporting and analytics
+- `intranet` — internal tooling for the retail team
+  - **Competitive pricing intelligence**: team members checked competitor prices
+    in-store, recorded them in the intranet, and the system surfaced pricing gaps
+  - Order fulfilment tracking
+  - Customer contact history
+- `dvdexpres` — integration with an external DVD supplier
+- `export` — product feed for Seznam.cz
+
+* How it was built
+
+The developer visited the physical store and observed how the team worked:
+inventory management, customer interactions, pricing decisions. The intranet
+was designed around their actual workflow — not around an abstract spec.
+Each module grew from a real operational need.
+
+Customer-facing requirements elicitation: in-person meetings at the store,
+discussing what the team needed, proposing solutions, iterating based on
+feedback. This was not "gather requirements and disappear" — it was ongoing
+collaboration with a non-technical team over nearly two decades.
+
+* How it survived 18+ years
+
+Several factors kept the application running:
+
+1. **Conservative stack evolution.** Django was upgraded in-place across major
+   versions. Migration scripts (Perl transform → LOAD DATA INFILE) moved data
+   between MySQL schemas. The app stayed on the same server for most of its
+   life, with occasional hardware refreshes.
+2. **Minimal dependencies.** No microservices, no container orchestration, no
+   cloud lock-in. A single Django process behind FastCGI.
+3. **The intranet became indispensable.** The team depended on it for daily
+   operations — pricing, orders, customer lookups. Replacing it would require
+   changing how they worked.
+4. **No over-engineering.** Features were added when the business needed them,
+   not when the technology was interesting.
+
+* What it proves
+
+| Claim | Evidence |
+|-------|----------|
+| Full-stack capability | DB → backend → frontend → deployment, all solo |
+| Long-term ownership | 18+ years, one developer |
+| Business-domain understanding | E-commerce, inventory, orders, competitive pricing |
+| Customer-facing engineering | In-person visits, iterative feedback, non-technical users |
+| Conservative engineering | Minimal dependencies, upgrade-in-place, no over-engineering |
+| Database proficiency | Raw MySQL, custom migrations, full-text search |
+
+* Strengths this demonstrates
+
+- **Full-stack ownership.** Not just writing code — owning the entire lifecycle
+  from requirements gathering to deployment to 18 years of maintenance.
+- **Customer-facing UX research.** Visited the store, watched the team work,
+  designed the intranet around their real workflow. Same skill as the National
+  Library eDeposit project.
+- **Long-term production reliability.** 18 years without a rewrite. The system
+  is boring — and that is its strength.
+- **Conservative engineering.** Chose proven technologies, upgraded carefully,
+  avoided architectural churn.
+
+* Weaknesses this reveals
+
+- **Stack fossilisation.** Python 2.7, Django 1.4, MySQL MyISAM. The app runs
+  but cannot be easily upgraded to modern tooling without a rewrite.
+- **Single-point-of-failure knowledge.** One person knows the entire codebase
+  and its operational quirks. No bus-factor.
+- **Visibility outside its domain.** A small e-commerce app for a Prague
+  retailer — impressive in context, but not a FAANG-scale reference.
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org
+  — "cdbazar" section contains the full project description, module list, and
+    operational context. The source for this object.
+  git ref: b4a85c4
+
+- https://github.com/jstavel/cdbazar
+  — public GitHub mirror of the codebase.
+
+- https://www.bazar-cd.cz
+  — live site (still running in 2026).
+
+- ~/Downloads/lenovo-P1-zbytky/Soukrome/firma/Jan Stavel/hanza/cdbazar.org
+  — installation diary, Django version history, deployment notes.
+  Not in git (~/Downloads/).
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org
+  — "Intranet pattern" section: meta-analysis of four intranet projects across
+    career (cdbazar, Baťa, eDeposit, gtd-org).
+  git ref: b4a85c4

@@ -1,0 +1,104 @@
+:PROPERTIES:
+:ID:       20261007-rhsm-cockpit-qe
+:TITLE:    WebDriver.io Cockpit tests — JavaScript stack proposed, rejected by team
+:CREATED:  <2026-10-07>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: A systematically researched JavaScript/WebDriver.io test stack for Cockpit, presented and rejected by the team — demonstrating rigorous evaluation plus the ability to accept decisions and pivot.
+:DOMAIN:   projects way-of-working
+:TAGS:     cockpit webdriver.io selenium javascript page-object-pattern async-testing team-rejection adaptability
+:STRENGTHS:  systematic-research cross-stack-evaluation async-testing page-object-pattern
+:WEAKNESSES: not-adopted-by-team no-js-specialist personal-preference-did-not-scale
+:PUBLIC: https://github.com/RedHatQE/rhsm-cockpit-qe
+:END:
+
+# WebDriver.io Cockpit tests — JavaScript stack proposed, rejected by team
+
+A JavaScript/WebDriver.io test stack proposed for the Cockpit
+Subscriptions Plugin (web/PatternFly based app) at Red Hat.
+Systematically researched, prototyped, and presented — but rejected
+by the team due to lack of JavaScript expertise.
+
+Use to demonstrate systematic technology evaluation, clean test
+architecture design, and the ability to accept team decisions and pivot.
+
+* Context
+
+The Cockpit Subscriptions Plugin is a web application — it needed
+browser-based e2e tests. The author researched the JavaScript testing
+ecosystem, built public POCs, and proposed a stack that fit the
+domain.
+
+* Stack proposed
+
+| Component | Choice | Rationale |
+|-----------|--------|-----------|
+| Runner | WebDriver.io | Strong Page Object support, async-friendly |
+| Browser | Firefox | Standard Red Hat desktop environment |
+| Test framework | Jasmine | Familiar, well-integrated with WDIO |
+| Pattern | Page Object + fluent API | `.wait().click().atDialog(...)` chainable calls |
+| Real-time | WebSocket clients | Connected to rhsm-services for live event streams |
+| Custom | waitForRHSMStatus, executeSubscriptionManager | Domain-specific browser commands |
+
+The proposal included:
+- Page Object pattern with fluent API for test readability
+- Async test execution via WDIO's promise chain
+- Custom WebSocket clients for real-time service monitoring
+- Domain-specific browser commands for RHSM interactions
+
+* Outcome
+
+**The team rejected the JavaScript stack.** The team had no JavaScript
+specialist — everyone was Python-focused. A JS testing framework would
+have been unmaintainable by the team that owned it.
+
+The author accepted the decision and **pivoted to Ansible + Robot
+Framework** ([[id:20261007-rhsm-ansible-qe][rhsm-ansible-qe]]) — a stack the team could own.
+
+* What this demonstrates
+
+- **Systematic technology evaluation.** The author researched the JS
+  testing ecosystem, built POCs, made an informed choice, and
+  documented the rationale.
+- **Team-aware decision-making.** The best technical solution is not
+  the right solution if the team cannot maintain it.
+- **Adaptability without resentment.** The proposal was rejected, the
+  author pivoted, built the alternative stack, and delivered the same
+  test coverage on a different platform.
+
+* Strengths this demonstrates
+
+- **Technology research discipline.** Systematic evaluation of JS
+  testing frameworks with explicit criteria and POCs.
+- **Clean test architecture.** Page Object pattern, fluent API,
+  async-friendly design — professional testware, not a hack.
+- **Adaptability.** When the team said no, the author didn't fight it
+  — he built what the team could own.
+
+* Weaknesses this reveals
+
+- **Not adopted by the team.** The entire WebDriver.io stack was
+  rejected — the investment in research and POCs did not result in
+  production use.
+- **Personal preference didn't scale.** The Clojure+Selenium POC and
+  the JS proposal both reflected the author's preferred stack, not the
+  team's reality.
+- **No JS specialist.** The team could not maintain JavaScript code,
+  limiting technology options.
+
+* Related objects
+
+- [[id:20261007-rhsm-ansible-qe][rhsm-ansible-qe]] — the Ansible+RF architecture that replaced this
+  JS approach
+- [[id:20261007-reactive-testing-framework][Reactive Testing Framework]] — WebSocket clients for real-time
+  streams (same pattern, different scale)
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org
+  — Section "rhsm-cockpit-qe — první JavaScript krok týmu (nepřijatý)".
+    Covers the stack, rationale, and team rejection.
+  git ref: b4a85c4
+- https://github.com/RedHatQE/rhsm-cockpit-qe
+  — Public repo under Red Hat QE organization. Contains the
+    WebDriver.io POC code.

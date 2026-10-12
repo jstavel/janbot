@@ -1,0 +1,70 @@
+:PROPERTIES:
+:ID:       20261007-spec-first-pitch
+:TITLE:    Spec-first in practice — human role in an AI workflow
+:CREATED:  <2026-10-07 Wed 11:30>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: The baseline pitch for how AI is used: spec-first with the human as architect — steering direction, reviewing, taking responsibility — so AI stays on track and does not hallucinate.
+:DOMAIN:   workflow
+:TAGS:     spec-first ai-workflow architect review small-steps proof-of-work articulation mentoring adaptation
+:STRENGTHS: adaptation learning-mindset mentoring clarity-through-building proof-of-work
+:WEAKNESSES: under-selling
+:END:
+
+# Spec-first in practice — human role in an AI workflow
+
+How I explain my AI usage to an outside listener (recruiter, sourcer, new colleague).
+JanBot: use as the baseline answer to "how do you use AI?" and as foundation for questions about approach to learning and mentoring.
+
+* How I explain my AI usage
+
+"First, the specification — the spec is the main source, I keep it up to date. It contains the vision, goals, main steps, and milestones. AI generates code from that specification."
+
+Why spec-first: **"so I don't hallucinate, and so it has direction"** — the specification is a stable source of truth that keeps both AI and me on track. Without it, AI wanders and I lose control.
+
+Tools: spec-kit, BMAD-Method (environment simulating agile development).
+
+* Human role: architect, not scribe
+
+My role in an AI workflow:
+- maintain development direction
+- control and steer
+- do reviews
+- plan in small, bounded steps
+
+This is "AI as junior, me as architect": AI generates, the human decides.
+Code is not the main artifact — direction and review are.
+
+* Strength: proof of work — projects as evidence
+
+Personal projects (reactive-testing, JanBot) are built as public proof of work:
+"they are all proof of work." Not promises, not certificates — working artifacts that a recruiter can open.
+
+This applies the external mentor's principle ("visible results, not plans") to career development.
+
+* Strength: clarity through building
+
+"You're helping me clarify this." "To rebuild that project for myself."
+
+Thinking happens best by building and telling: projects serve to clarify my own narrative (for interviews, for JanBot, for myself). Conversation is not a waste of time — it's a thinking tool.
+
+* Strength: mentoring and adaptation as senior value
+
+A senior in the AI era:
+- the brain learns and grows, wants challenges — routine is death
+- adaptation and open-mindedness are more important than specific technologies
+- the senior's role is to guide juniors toward understanding what excites and scares them, and to know that mistakes are building blocks for growth
+
+This isn't just about AI — it's a definition of what makes a senior a senior: not more knowledge, but the ability to create an environment where others grow (cf. Extreme Ownership).
+
+* Weakness: under-selling — "I just built it"
+
+In a conversation about 10 years of work and architectural designs (distributed architecture, intranet, CI/CD stack) I said: "I just built it."
+
+→ Lesson: self-assessment lags behind reality. What I consider "just building" is architecture and senior-level responsibility to the listener. Presenting one's own work is a skill, not bragging.
+
+* Sources
+
+- ~/Downloads/10-05 Pohovor_ QE Engineer - CI_CD, Python, OpenShift.org —
+  transcript of an engagement call (spec-first explanation, role, proof of work, "just built it"). (2026-10-05)
+  sha256: 657e99e0a45be166efdd031d19a561634db3f5e4c337b8df14bb079413505cbc

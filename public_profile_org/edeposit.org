@@ -1,0 +1,156 @@
+:PROPERTIES:
+:ID:       20261007-edeposit
+:TITLE:    eDeposit — Long-Term Preservation, first Clojure in production + RabbitMQ
+:CREATED:  <2026-10-07>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: First Clojure in production: a digital preservation system for the National Library (2013–2015) with RabbitMQ event-driven ingestion and user-research-driven requirements.
+:DOMAIN:   projects way-of-working
+:TAGS:     clojure rabbitmq amqp plone messaging xml long-term-preservation architecture
+:STRENGTHS:  clojure architecture event-driven messaging user-research
+:WEAKNESSES: small-team
+:PUBLIC:   https://github.com/edeposit
+:END:
+
+# eDeposit — Long-Term Preservation, first Clojure in production + RabbitMQ
+
+A digital archiving and long-term preservation system for the National
+Library of the Czech Republic (2013–2015). First Clojure in production
+in the author's career — not "learned Clojure," but "designed a system
+where Clojure processes XML over RabbitMQ."
+
+Use to demonstrate early Clojure adoption in enterprise architecture,
+event-driven messaging design, and user-research-driven requirements.
+
+* Context
+
+The National Library operated Kramerius — a system holding metadata
+about publications. eDeposit was the internal system that supported
+**ingestion of digital content into the Long-Term Preservation (LTP)
+system**. Librarians used it to process, validate, and archive
+publications submitted by publishers. The team grew from two to three developers.
+
+The author designed the architecture based on enterprise patterns — it
+was adopted and became the foundation. Responsibilities included the
+Clojure backend with XML processing for Long-Term Preservation, and UI
+forms for the librarian workflow.
+
+* Key insight: respect for the user's expertise
+
+The author spent time observing librarians' daily work — not just
+interviewing them, but watching how they actually operated. This led to
+a core realisation:
+
+> Their daily work *is* the value that the software serves. The way they
+> work has been validated by daily routine and deep domain understanding.
+> My job was to build a tool that fits *their* rhythm — not to convince
+> them to adopt new workflows that Plone offered by default.
+
+Instead of pushing Plone's built-in workflow patterns, the author
+designed forms and processes that matched the librarians' existing
+mental model. The complex workflow was modelled in Plone, which proved
+well-suited for the task — but always on the librarians' terms, not the
+framework's.
+
+* Architecture
+
+```
+  Plone (CMS + User Interface)
+    │
+    │ async event
+    ▼
+  RabbitMQ (AMQP broker)
+    │
+    ├── Clojure worker (XML/LTP metadata processing)
+    ├── Clojure worker (PDF validation via pdfbox)
+    ├── Clojure worker (EPUB validation via epubcheck)
+    ├── Clojure worker (Kramerius export — bridge to publication system)
+    └── Python workers (storage, antivirus, FTP, ...)
+```
+
+- **Plone** — CMS and user interface for librarians
+- **RabbitMQ** — message broker between Plone and worker services
+- **Clojure workers** — XML processing for Long-Term Preservation
+  metadata; PDF and EPUB format validation; Kramerius export bridge
+- **Python workers** — storage, antivirus, FTP, harvester, Aleph
+  integration, downloader, REST API, and ~20 additional AMQP
+  microservices
+
+* Key design decisions
+
+- **Event-driven architecture with AMQP.** Plone events published to
+  RabbitMQ, workers consume asynchronously — decoupled and resilient.
+- **Clojure for XML processing.** Functional transformation of XML
+  metadata matched Clojure's strengths (code-as-data, persistent data
+  structures).
+- **Polyglot by domain.** Clojure for data transformation, Python for
+  infrastructure services, Plone (Python) for UI — each component in the
+  language that fit the task.
+- **User-research-driven.** The architecture was shaped by observing how
+  librarians worked, not by technology preferences.
+- **Kramerius bridge.** A dedicated Clojure AMQP worker
+  ([edeposit.amqp.kramerius][]) exported processed data from eDeposit to
+  the Kramerius publication system — the concrete integration point
+  between the two systems.
+
+* What this demonstrates
+
+- **First Clojure in production.** Not a tutorial or side project —
+  Clojure as a core component in an enterprise archival system.
+- **Event-driven enterprise architecture.** RabbitMQ + AMQP as the
+  backbone connecting Plone, Clojure, Python, and external systems.
+- **Polyglot microservices before the term was mainstream.** ~20+
+  independent workers communicated via AMQP, each with a single
+  responsibility.
+- **User research as engineering input.** The UX insight from observing
+  librarians informed the backend design — customer-facing requirements
+  elicitation.
+- **Respect for domain expertise.** The architecture adapted to the
+  users' workflow rather than forcing Plone's default patterns — a
+  philosophy of building tools *for* experts, not replacing them.
+
+* Strengths this demonstrates
+
+- **Clojure adoption in enterprise.** Chose Clojure for a live
+  government-backed project, not a skunkworks experiment.
+- **Messaging architecture.** Designed event-driven system with AMQP,
+  years before it became a standard pattern.
+- **Polyglot pragmatism.** Clojure for XML, Python for system
+  integration, Plone for UI — each language where it fit.
+- **User-research practice.** Conducted real ethnographic research with
+  librarians to drive architecture decisions (same muscle as cdbazar).
+- **Domain respect.** Designed tools that fit the experts' existing
+  mental model rather than forcing framework defaults — a recurring
+  theme across projects.
+
+* Weaknesses this reveals
+
+- **Small-team context.** Two developers limited scope and long-term
+  maintainability after the project ended.
+
+* Related objects
+
+- [[id:20261007-bata-stock-update][bata-stock-update]] — RabbitMQ event streaming in 2007, same
+  messaging pattern at the start of the author's career.
+- [[id:20261007-cdbazar][cdbazar]] — another user-research-driven intranet, customer-facing
+  requirements elicitation in practice.
+- [[id:20261007-reactive-testing-framework][reactive-testing-framework]] — event-driven testing prototype at Red
+  Hat, same DNA thread.
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org
+  — Section "Narodni knihovna CR: eDeposit — Long-Term Preservation
+    (Plone + Clojure)". Covers architecture, user research, and context.
+  git ref: b4a85c4
+- ~/Downloads/2026-06-08 07_22_32.org — Plaud recording transcript
+  covering Single Dispatch, Clojure, and E-deposit architecture.
+  git ref: b4a85c4
+- https://github.com/edeposit — GitHub organization
+  (~30 repos, including Clojure AMQP workers and Python microservices).
+- https://github.com/edeposit/edeposit.clj-amqp — Main Clojure AMQP
+  services module (the core Clojure/RabbitMQ integration).
+- https://github.com/edeposit/edeposit.amqp.pdfbox — Clojure AMQP
+  worker for PDF validation via pdfbox.
+- https://github.com/edeposit/edeposit.amqp.kramerius — Clojure AMQP
+  worker for Kramerius export bridge.

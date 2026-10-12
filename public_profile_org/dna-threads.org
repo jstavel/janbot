@@ -1,0 +1,73 @@
+:PROPERTIES:
+:ID:       20261007-dna-threads
+:TITLE:    Two DNA threads — meta-analysis of a 23-year career
+:CREATED:  2026-10-07
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Meta-analysis of 23 years across domains revealing two persistent threads: code as data / declarative contracts, and async/reactive event-driven thinking.
+:DOMAIN:   attitudes
+:TAGS:     meta-analysis continuity threads code-as-data async reactive
+:STRENGTHS:  ecosystem-thinking continuity cross-domain-bridge meta-cognition
+:WEAKNESSES: none-identified
+:END:
+
+# Two DNA threads — 23 years of the same ideas, evolving tools
+
+This is a meta-analysis. Across 23 years and multiple domains (telecom,
+e-commerce, digital preservation, Linux administration, enterprise QE,
+trading), two persistent principles emerge:
+
+** 🧵 Thread 1: Code as Data / Contracts
+
+The idea that behavior can be expressed *declaratively* — as data,
+contracts, or specifications — rather than imperatively.
+
+| Year | Expression |
+|---|---|
+| 2003 | ASN.1 → C (Ganymed) — abstract syntax as C struct generation |
+| 2007 | PostgreSQL triggers → RabbitMQ — data changes as messages |
+| 2013 | Clojure + XML processing — data transformation pipelines |
+| 2016 | Python declarative scenarios — test behavior as structured data |
+| 2026 | Clojure, ADR, AI — Spec-First, model as single source of truth |
+
+** 🧵 Thread 2: Async / Reactive / Event-Driven
+
+The understanding that systems are fundamentally asynchronous, and
+that testing, monitoring, and orchestration should reflect that.
+
+| Year | Expression |
+|---|---|
+| 2003 | Perl POE — first event-driven programming |
+| 2005 | Twisted Deferred (CoreNet) — async orchestration in Python |
+| 2007 | PostgreSQL → RabbitMQ — persistent queues, fail-over |
+| 2013 | Plone → AMQP Broker → Workers — event-driven enterprise |
+| 2016 | RxJS/RxPy, Kafka consideration — reactive extensions |
+| 2019 | QECamp "Testing in a Reactive Way" — conference talk |
+| 2020 | CandleCon RxPy examples — DBus, inotify, REST reactive |
+| 2026 | Krakatoa matching engine — event-driven market simulation |
+
+**First convergence** (Baťa, 2007): PostgreSQL CDC via triggers + RabbitMQ
+— where Code as Data (database state) met Async (event streaming).
+
+* What this demonstrates
+
+- **Continuity, not flakiness** — 23 years of the same two ideas; tools
+  changed, principles did not
+- **Cross-domain thinking** — applying the same insight across telecom,
+  intranets, digital preservation, enterprise testing, and trading
+- **Early adoption** — event streaming in 2007, reactive in 2016,
+  each *before* the buzzword arrived
+- **Not a generalist, a specialist in a pattern** — the speciality is
+  "systems where event-driven meets contract-driven design"
+
+* Related objects
+
+All objects in this corpus are instances of these two threads.
+See [[id:20261007-intranet-pattern][intranet-pattern]] for the meta-analysis of the "tools for people" thread.
+See [[id:20261007-reactive-testing-origin][reactive-testing-origin]] for the testing-specific evolution.
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org (section "DNA: Dve vlakna me kariery", lines 885–908)
+  git ref: b4a85c4ef4909d133205fea356a6f81f1af17054
+- All corpus objects as supporting evidence

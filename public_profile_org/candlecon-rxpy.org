@@ -1,0 +1,60 @@
+:PROPERTIES:
+:ID:       20261007-candlecon-rxpy
+:TITLE:    CandleCon 2020 — RxPy examples, idea propagation
+:CREATED:  2026-10-07
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: When the team rejected a JavaScript/RxJS stack, the reactive idea did not die — it was re-proposed as an RxPy conference talk helping developers solve object-identity and async-event problems.
+:DOMAIN:   projects
+:TAGS:     rxpy reactive conference propagation dbus inotify
+:STRENGTHS:  adaptability persistence conference-speaking cross-domain-bridge
+:WEAKNESSES: idea-without-adoption
+:END:
+
+# CandleCon 2020 — RxPy: when the JS stack was rejected, the idea found Python
+
+When the Node.js/RxJS test stack (see [[id:20261007-rhsm-cockpit-qe][rhsm-cockpit-qe]]) was rejected by the
+team, the idea did not die. Instead, this person prepared a **CandleCon 2020**
+conference talk demonstrating the same reactive concepts using **RxPy**
+(Python Reactive Extensions).
+
+**The goal:** help developers solve architectural problems in their Python
+library. The team struggled with **object identity tracking** and **async
+event processing** — issues that naturally map to reactive streams.
+Instead of fixing symptoms in the library, this person proposed a
+different architecture: reactive streams as the core, with pure
+middleware between input and output gates.
+
+**The demo application** integrated multiple asynchronous sources:
+- DBus methods
+- CLI interaction with the system
+- inotify — reacting to config file changes
+- REST API
+- Persistent state
+- Timeout for offline mode
+- All orchestrated through a single event stream
+
+**Key architectural concepts from the talk:**
+- **Input gate** — `Subject.on_next()` feeds events into the middleware
+- **Output gate** — `subscribe()` for side effects at the boundary
+- **Pure middleware** — business logic between gates has no side effects
+- **"Forget about one particular message. Think bigger."** — think in streams, not messages
+
+This talk was the second in a pair:
+1. QECamp 2019 — "Testing in a Reactive Way" (concept)
+2. **CandleCon 2020 — RxPy in Practice** (concrete implementation)
+
+* What this demonstrates
+
+- **Persistence** — Node.js/RxJS rejected → found another path via Python/RxPy
+- **Conference propagation** — the idea spread through talks, not mandates
+- **Cross-language thinking** — same reactive pattern across JS, Python, TypeScript
+- **Teaching by demo** — concrete POC speaks louder than architecture diagrams
+- **Risk of no adoption** — the idea was demonstrated but not adopted by the team
+  (hence weakness: idea-without-adoption)
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org (section "CandleCon 2020 — RxPy priklady", lines 352–392)
+  git ref: b4a85c4ef4909d133205fea356a6f81f1af17054
+- ~/Downloads/lenovo-P1-zbytky/Projects.orig/reactive-example-for-candlecon-2020/ (git ref: 82108ee)

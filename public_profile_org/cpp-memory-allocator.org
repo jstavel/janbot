@@ -1,0 +1,48 @@
+:PROPERTIES:
+:ID:       20261007-cpp-memory-allocator
+:TITLE:    C++ operator new — custom memory allocator with canary bytes
+:CREATED:  2026-10-07
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Early low-level curiosity: overloading C++ operator new to study a canary-bytes memory allocator with bounds checking — the same technique used by Valgrind and Electric Fence.
+:DOMAIN:   carrier-stories
+:TAGS:     c++ memory-management university low-level
+:STRENGTHS:  deep-system-knowledge curiosity fundamentals-first
+:WEAKNESSES: none-identified
+:END:
+
+# C++ operator new — discovering memory allocator internals
+
+During university, this person discovered that C++ `operator new` can be
+overloaded. This led to studying and building a custom memory buffer
+allocator with **guard bytes (canary bytes)** at allocation boundaries.
+
+**The mechanism:**
+- Pre-allocated pool with items stored between guard byte regions
+- On deallocation, guard bytes were checked for corruption
+- Detected buffer overflows and null pointer errors at free time
+
+```
+[GUARD_BYTES][  ALLOCATED ITEM  ][GUARD_BYTES]
+              ↑                                    ↑
+         on delete, pattern is checked → detects overwrite
+```
+
+This is the same technique used by Valgrind, Electric Fence, and
+similar memory debugging tools — a custom bounds-checking allocator,
+built from first principles long before those tools were understood.
+
+* What it demonstrates
+
+- Curiosity about "how does this really work under the hood?"
+- Low-level systems thinking — operator overloading, memory layout,
+  heap management
+- Self-directed learning — discovered the technique through research
+- Continuity: same mindset from C++ memory management through Linux
+  From Scratch to AI-assisted development today
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org (section "C++ operator new — custom memory allocator s canary bytes", lines 221–249)
+  git ref: b4a85c4ef4909d133205fea356a6f81f1af17054
+- Oral recollection (no written source)

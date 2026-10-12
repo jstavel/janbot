@@ -1,0 +1,59 @@
+:PROPERTIES:
+:ID:       20261007-gtd-org-system-design
+:TITLE:    Personal OS as Professional Architecture — spec-first in the small
+:CREATED:  <2026-10-07 Wed 13:15>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: A personal GTD/Second-Brain operating system designed with production-grade rigor: spec-first, ADRs, contracts, error modeling as data, and CQRS at the filesystem level.
+:DOMAIN:   projects way-of-working
+:TAGS:     clojure architecture spec-first gtd personal-productivity
+:STRENGTHS:  architectural-thinking specification-driven systematic-documentation error-modeling modular-architecture
+:WEAKNESSES: visibility-dependency perfection-tendency
+:PUBLIC:     https://github.com/jstavel/gtd-org
+:END:
+
+# Personal OS as Professional Architecture — spec-first in the small
+
+A personal productivity system designed with the same architectural rigor as a production platform. For recruiters asking about system design, architecture documentation, or spec-first in practice.
+
+** Principles
+
+**Spec-first applies at every scale.** The gtd-org ecosystem — a GTD + Second Brain personal operating system — was designed using the same practices as the Shift-Left testing framework:
+
+- ADRs document every architectural decision before code is written
+- Contracts (Malli-like schemas in `docs/contracts/`) define every data shape, return type, and error variant upfront
+- Invariants encode non-negotiable system properties (immutable objects, human-in-the-loop ingestion, deterministic hashing)
+- `current_slice.md` serves as the single source of truth for each development iteration, referenced before every AI session
+
+**Error modeling, not exception handling.** Every function returns either a success value or a structured error map: `{:error :connection-refused :message "..."}`. No try/catch. Errors are data — predictable, typed, and composable. This pattern appears consistently across the project's contracts.
+
+**CQRS at the filesystem level.** The asset store separates concerns into three layers:
+
+- `objects/` — immutable source of truth (UUID-sharded, never modified)
+- `derived/` — regeneratable outputs (transcripts, summaries)
+- `views/` — navigation layer (symlinks, indexes, never primary data)
+
+Same pattern that later appears in the corpus architecture.
+
+** Strengths
+
+**Architectural thinking beyond work.** The user does not "turn off" system design when the workday ends. A personal productivity system receives the same ADR process, error-modeling discipline, and contract-first design as a professional project. This is not compartmentalized skill — it is a way of thinking.
+
+**Specification-driven in practice.** The README explicitly states: "Before invoking aider, always verify the current task scope and requirements in docs/current_slice.md." The workflow is: spec → contracts → implementation → test. Not a theory — a committed practice with AI tooling.
+
+**Systematic documentation.** The `docs/` directory contains ADRs, RFCs, use cases, contracts, invariants, and a live specification. Every component has `src/`, `test/`, and `deps.edn`. The project models a team structure even for a solo endeavor — CONTRIBUTING.md, AGENTS.md, kanban.org.
+
+**Cross-domain technology depth.** The stack spans Babashka (Clojure on JVM), ClojureScript (shadow-cljs), Playwright (browser automation), and Node.js interop. The `plaud-downloader` component includes a Terraform sub-project for provisioning GCP infrastructure (Cloud Storage buckets with TTL invariants). This is not single-language depth — it is systems thinking across languages, runtimes, and infrastructure.
+
+** Risks
+
+**Visibility dependency.** As with earlier career examples, this architectural rigor is invisible unless the project itself is shown. A recruiter scanning for "Clojure" keywords would miss the deeper system design signal.
+
+**Perfection tendency.** The ADR numbering starts at 0005 and ends at 0009 — a gap between 0001 and 0004 suggests earlier decisions were captured and superseded. The project has extensive documentation relative to code output. The discipline is real, but at the boundary between "thorough" and "over-engineered for a personal tool."
+
+* Sources
+
+- ~/dev/gtd-org/ — gtd-org ecosystem source
+  git ref: 9f6fe38534d615d000214069fa73bafe13d7b9ed
+  README.md, docs/adr/0005-*, docs/contracts/*, docs/current_slice.md, docs/usecases/0002-*,
+  kanban.org, CONTRIBUTING.md, workspace.edn, components/*/deps.edn

@@ -1,0 +1,128 @@
+:PROPERTIES:
+:ID:       20261007-rhsm-ansible-qe
+:TITLE:    Ansible + Robot Framework test architecture for RHSM
+:CREATED:  <2026-10-07>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Production test architecture for RHSM — Ansible as orchestrator, Robot Framework as UI layer — with 60+ playbooks and a custom extension layer, fully integrated into team CI/CD for years.
+:DOMAIN:   projects way-of-working
+:TAGS:     rhsm ansible robot-framework test-architecture cli dbus cockpit ara
+:STRENGTHS:  architecture-design cross-stack-orchestration granular-test-design
+:WEAKNESSES: ara-experiment-failed legacy-stack
+:END:
+
+# Ansible + Robot Framework test architecture for RHSM
+
+A production test architecture for Red Hat Subscription Management
+(RHSM) that was **fully integrated into the team's CI/CD pipeline**.
+Uses **Ansible as orchestrator** and **Robot Framework as the UI/browser
+layer** (SeleniumLibrary). Designed for a Python-only team with no
+JavaScript specialists.
+
+Use to demonstrate test architecture design at scale — 60+ playbooks,
+737-line orchestrator, custom plugins, Beaker CI — running in
+production for years.
+
+* Architecture
+
+The author designed a **two-layer architecture** with clear separation
+of concerns:
+
+| Layer | Technology | Responsible for |
+|-------|-----------|----------------|
+| Orchestration | Ansible | CLI tests, DBus tests, scenario dispatch, machine provisioning |
+| UI/Browser | Robot Framework + SeleniumLibrary | Cockpit Subscriptions plugin e2e tests |
+| Extensions | Custom Python (RhsmRobotExtensions.py) | Browser console logging, Chrome performance monitoring |
+
+Key design decisions:
+
+- **CLI/DBus tests in Ansible, not RF** — command-line tools are
+  simpler to test in Ansible than in RF keywords. This was a deliberate
+  separation, not a limitation.
+- **Granular scenarios, not monolithic suites.** Each test case is an
+  independent playbook → easier debugging, better isolation.
+- **Each scenario is a standalone `.robot` file.** Ansible renders a
+  template into `test-output/` and runs it with `robot` directly. A
+  developer can take that file and run it standalone, without the rest
+  of the framework — no hidden dependencies.
+- **Bugzilla integration.** Each bug has its own playbook; the test
+  checks if the bug is still open before running.
+- **Polarion integration.** Each test case has its own playbook.
+
+Test domains covered:
+- CLI tests (subscription-manager) — via Ansible
+- DBus tests — via Ansible
+- Ansible insights-collection tests
+- Cockpit Subscriptions Plugin — Ansible + RF/SeleniumLibrary
+- Bugzilla regression tests
+- Polarion test cases
+
+Scale:
+- 737-line main playbook (rhsm-ansible.yml)
+- 60+ playbooks (install, deploy, test, reporting)
+- Custom Ansible plugin (rhsm_plugins.py, 269 lines)
+- Cockpit tier0/tier1 suite
+- Beaker integration (test machine reservation)
+- Docker/Podman container for CI/CD
+
+* The ARA experiment — precursor to Reactive Testing
+
+Within rhsm-ansible-qe, the author attempted to use **ARA (Ansible
+Record Analyzer)** to collect data from completed test runs and
+validate them retroactively — the same idea as Reactive Testing:
+use real system data as a validation source, not just pass/fail from
+the test framework.
+
+**Result:** The approach did not succeed. The Ansible+RF platform was
+not built for this kind of post-hoc validation.
+
+**Significance:** This failed experiment is the direct predecessor of
+[[id:20261007-reactive-testing-origin][Reactive Testing Origin]]. The same idea ("validate against real system
+data, not just test assertions"), now on the right platform
+(Playwright + TypeScript + Spec-First). The thought continuity is
+more important than the technology failure.
+
+* What this demonstrates
+
+- **Test architecture at scale.** 60+ playbooks, 737-line orchestrator,
+  custom plugins, Beaker CI — production testware, not a demo.
+- **Pragmatic separation of concerns.** CLI/DBus in Ansible, UI in RF,
+  each tool used where it fits best.
+- **Developer empathy.** Standalone `.robot` files so any developer
+  can reproduce a test without the full framework.
+- **Production CI/CD.** The architecture ran as part of the team's
+  daily CI/CD pipeline for years — not a prototype or PoC.
+- **Thought continuity.** The ARA experiment (2019–2020) contains the
+  seed of Reactive Testing (2026) — same idea, better platform.
+
+* Strengths this demonstrates
+
+- **Test architecture design.** Designing a multi-layer test
+  architecture that fits both the product (CLI + web UI) and the team
+  (Python-only).
+- **Granular thinking.** Every scenario independent, no shared state,
+  no framework lock-in.
+- **Reproducibility.** Any developer can run any single scenario
+  without setup — a debugging-first mindset.
+
+* Weaknesses this reveals
+
+- **ARA experiment failed.** The Reactive Testing precursor did not
+  succeed on the Ansible+RF platform — the technology was not ready
+  for the idea.
+
+* Related objects
+
+- [[id:20261007-rhsm-cockpit-qe][rhsm-cockpit-qe]] — the WebDriver.io approach that preceded this
+  Ansible+RF architecture (same domain, different stack, rejected by
+  team)
+- [[id:20261007-reactive-testing-origin][Reactive Testing Origin]] — the ARA experiment as direct predecessor
+- [[id:20261007-reactive-testing-framework][Reactive Testing Framework]] — the next iteration: RxJS/event-driven
+- [[id:20261007-reactive-testing-project][Reactive Testing Project]] — the current iteration: TypeScript Spec-First
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org
+  — Section "rhsm-ansible-qe — Ansible jako orchestrátor + Robot Framework".
+    Covers the architecture, ARA experiment, and scale details.
+  git ref: b4a85c4
