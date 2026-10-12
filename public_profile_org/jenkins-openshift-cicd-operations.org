@@ -1,0 +1,98 @@
+:PROPERTIES:
+:ID:       20261008-cicd-jenkins-openshift
+:TITLE:    Maintaining and debugging Jenkins CI/CD on OpenShift
+:CREATED:  <2026-10-08>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Hands-on ownership of a shared Jenkins CI/CD on OpenShift: jobs as code, seed jobs, agent images, and building a fast feedback loop for debugging jobs — CI/CD infrastructure, not just test writing.
+:DOMAIN:   projects way-of-working
+:TAGS:     jenkins jenkinscasC openshift podman ansible seed-job ci-cd debugging
+:STRENGTHS:  ci-cd-infrastructure iteration-speed container-images debug-methodology
+:WEAKNESSES:  no-staging-environment orphaned-resources shared-infra-cleanup
+:END:
+
+# Maintaining and debugging Jenkins CI/CD on OpenShift
+
+Daily hands-on maintenance of a shared Jenkins instance running in
+OpenShift: defining jobs as code, building agent/container images,
+and — the distinctive part — building a fast feedback loop for
+debugging jobs on a large shared CI system. Use when demonstrating
+CI/CD infrastructure ownership, not just test writing.
+
+* Role in the pipeline
+
+The author did not only consume the CI system; he extended it:
+
+- Defined and extended **job definitions as code** (Groovy pipelines
+  and job DSL), plus Jenkins **Configuration as Code (CasC)** and
+  credentials (SSH agents, per-job configuration).
+- Contributed to the **seed job** — the meta-job that recreates the
+  whole job set from the repositories.
+- Built and maintained **agent/container images**: custom images with
+  a full test stack (Ansible, Java for integration tests, Robot
+  Framework with current chromedriver/webdriver versions). Deliberate
+  design: keep tooling in versioned images rather than accumulating
+  it on agents, so agents stay generic and images are reproducible.
+- Everything ran in **OpenShift**: Jenkins itself, the agents, and
+  per-pipeline ephemeral containers (pipeline step specifies an
+  image, commands run inside it).
+- Built images with **Podman** (Dockerfile/Containerfile).
+- Investigated **read-only container images** as an initiative —
+  verified whether the team's test tooling worked in immutable
+  images, an early hardening exercise.
+- Also configured CI on **GitHub** for the upstream open-source
+  project, and contributed to the large **Ansible repository** used
+  to deploy the whole test environment, including dynamic
+  inventories that provisioned test machines in OpenShift.
+
+* Fast iteration on shared CI infrastructure — the "mini-seed" pattern
+
+The distinctive lesson. The team's job-definition repository was huge:
+every commit to it triggered the seed job, which **recreated the entire
+job stack**. Debugging a single broken job through that loop was slow
+and risky (a bad change could break everyone's jobs).
+
+The author's workaround: while developing or debugging one job, he
+created a **small separate repository with a mini seed job** that
+updated only that single job's definition, configured to run on every
+commit (or hourly). Effectively a *staging lane for CI configuration*:
+small blast radius, fast feedback, no risk to the shared system.
+
+Principle: **on large shared infrastructure, build a small,
+low-risk reproduction loop before you debug.** The same instinct as
+writing a minimal reproducer for a bug — applied to CI configuration.
+
+* Weaknesses / lessons learned
+
+- **No dedicated test environment for CI changes**: job changes were
+  validated against the production Jenkins instance. This fear
+  ("it might break all the tests") is exactly what motivated the
+  mini-seed pattern. Lesson: CI-as-code deserves its own staging
+  environment; the mini-seed was the lightweight approximation.
+- Debugging on shared infrastructure requires care: config-as-code
+  makes changes reproducible but also makes mistakes reproducible.
+
+** Orphaned agent pods in the shared cluster
+
+A formative incident: the author learned to spin up a full Jenkins
+instance in a container from scratch (entire stack from JCasC
+definitions). He enjoyed it and re-launched it repeatedly while
+iterating on configuration. After a while, a teammate reported that
+the shared OpenShift cluster was nearly full of pods — Jenkins agent
+pods — and the cluster was almost unusable. Investigation showed these
+were **leftovers from his repeated Jenkins runs**: the instance was
+torn down each time, but the agent pods it had spawned were orphaned
+and kept running. A colleague cleaned them up; from then on the author
+was careful to tear down the full set of resources he creates.
+
+Lesson: on shared infrastructure, **what you create has a lifecycle
+beyond what you see** — ephemeral top-level resources can leave
+orphaned children (agents, pods, volumes) that keep consuming shared
+capacity. Always account for and clean up the whole resource tree,
+especially when iterating by re-creating things repeatedly.
+
+* Sources
+
+- /home/jstavel/Downloads/10-08 Rozhovor_ Správa CI_CD systému v Jenkinsi a OpenShiftu v Red Hatu-transcript.txt — verbal walkthrough of the author's CI/CD duties at a large enterprise: Jenkins job definitions as code, seed job, agent images, OpenShift, Podman, read-only images, GitHub upstream CI, Ansible deployment with dynamic inventories, mini-seed debug pattern.
+  sha256: e7fe3ff97f3bb06c47ceb20960134a62fc9943591352b16e64d6b1e364a69126
+- User recollection (2026-10-08, chat) — the orphaned-agent-pods incident: learning to launch a full Jenkins stack from JCasC in a container, re-launching it repeatedly while iterating, and the discovery that orphaned Jenkins agent pods nearly filled the shared OpenShift cluster. Anonymized into the "Orphaned agent pods" lesson (no names).

@@ -1,0 +1,62 @@
+:PROPERTIES:
+:ID:       20261007-krakatoa-matching-engine
+:TITLE:    Krakatoa Matching Engine — polyglot systems design and the 20-year memory arc
+:CREATED:  <2026-10-07 Wed 13:30>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: A polyglot Clojure/Rust matching engine with a zero-allocation hot path and chaos-tested failover, built as spec-kit proof-of-work — closing a 20-year memory-management arc from C++ canary bytes to Rust ownership.
+:DOMAIN:   projects way-of-working carrier-stories
+:TAGS:     rust clojure matching-engine spec-first trading low-level polyglot chaos-engineering
+:STRENGTHS:  deep-curiosity polyglot-architecture spec-first chaos-mindset trading-domain
+:WEAKNESSES: visibility-dependency breadth-over-depth-risk
+:PUBLIC:     https://github.com/jstavel/krakatoa
+:END:
+
+# Krakatoa Matching Engine — polyglot systems design and the 20-year memory arc
+
+A high-throughput, polyglot matching engine (Clojure/Rust) with zero-allocation hot path, built as proof-of-work for the spec-kit framework. Demonstrates systems-level thinking across languages, low-level memory management, and the intellectual arc from early C++ experimentation to modern Rust.
+
+## The 20-year thread: from canary bytes to zero-allocation
+
+In the early university years, the user discovered that `operator new` could be overloaded. They found an article about a custom memory buffer with pre-allocated items and guard bytes (canary bytes) at the edges — when freeing items, the guard bytes were checked to detect buffer overflow. This was the same technique used by Valgrind and Electric Fence.
+
+Two decades later, ADR 0003 in Krakatoa specifies: "Pre-allocated Memory Pools: All data structures required for order processing will be stored in pre-allocated arrays or custom pool allocators initialized at startup." The technique is the same; the difference is Rust's ownership model provides compile-time safety instead of runtime canary bytes. The question was always the same: *"How does memory really work under the hood?"* — asked at every stage of a career.
+
+## Principles
+
+**Polyglot by design, not by accident.** The architecture is intentionally bimodal:
+
+- **Clojure/Polylith** layer handles orchestration, transport (ZeroMQ with off-heap direct byte buffers), event sourcing (Kafka), and infrastructure (KVM + Terraform for chaos testing)
+- **Rust engine** handles the matching hot path — zero-allocation, pre-allocated pools, static dispatch, no GC pauses
+
+The boundary is not a seam — it is an architectural decision. The JVM provides productivity, flexibility, and battle-tested infrastructure. Rust provides deterministic latency. Krakatoa does not compromise one for the other.
+
+**Spec-driven development with spec-kit.** Every feature follows: `specify → clarify → plan → tasks → implement → converge`. The `specs/` directory contains one subdirectory per feature, each with `data-model.md`, `plan.md`, `spec.md`, `tasks.md`, and `research.md`. The README explicitly tracks feature status against these specs.
+
+**Chaos engineering as a first-class concern.** The infrastructure layer (KVM + Terraform) is designed to test automated hot-failover under simulated hardware drops — the same "test the system, not the feature" mindset that produced Reactive Testing six years earlier.
+
+## Strengths
+
+**Deep curiosity across 20+ years.** The thread from C++ operator new overloading through Linux From Scratch on a floppy disk to Rust zero-allocation matching engine is not random — it is a sustained inquiry into how systems work at every level. This is not "full-stack" in the web sense; it is "full-stack" across the memory hierarchy: allocators → operating systems → languages → distributed systems → domain logic.
+
+**Polyglot architecture, not polyglot chaos.** Krakatoa uses two languages for deliberate, documented reasons — not because each microservice uses a different language. The ADR records why Rust is right for the engine (zero-allocation, deterministic latency) and why Clojure is right for the orchestration layer (productivity, infrastructure integration).
+
+**Spec-first maturity.** The Krakatoa specs are more structured than the earlier Reactive Testing specs — they include data models, contracts, research notes, and checklists per feature. The methodology has evolved through three generations of practice.
+
+**Trading domain depth.** Matching engine with price-time priority, taker-maker crossing, partial fills, multi-level sweeps, and Trade record generation. This is not a toy order book — it implements real exchange mechanics.
+
+## Risks
+
+**Visibility dependency.** Same pattern as before — Krakatoa is invisible to a keyword scan. "Rust" and "Clojure" on a CV say nothing about the architectural thinking behind them.
+
+**Breadth-over-depth risk.** The project simultaneously involves Rust, Clojure, Polylith, ZeroMQ, Kafka, KVM, Terraform, and a matching engine domain. The danger is that an interviewer sees breadth and misses the depth in any one area (especially the Rust memory management, which is the deepest signal).
+
+* Sources
+
+- ~/dev/krakatoa/ — Krakatoa matching engine
+  git ref: 292a7eb1a195a31eaae697d881b367f879ef5af8
+  README.md, docs/adr/0003-rust-engine-zero-allocation.md, engine/src/order_book.rs,
+  engine/src/types.rs, specs/001-limit-buy/spec.md, docs/vision.md, kanban.org
+
+- Memory: early C++ operator new / canary bytes story (university deep dive)
+  (global memory, category: career-stories)

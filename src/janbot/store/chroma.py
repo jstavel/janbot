@@ -102,6 +102,29 @@ class VectorStore:
                 sources[chunk_id] = source
         return sources
 
+    def payload(self) -> dict[str, tuple[str, tuple[float, ...]]]:
+        """Return each stored chunk id mapped to its (document, embedding) payload.
+
+        The embedding is normalized to a tuple of floats so payloads are
+        comparable and hashable; a re-run that corrupts either half of a
+        payload while keeping ids stable is therefore detectable.
+        """
+        result = self._collection.get(include=["documents", "embeddings"])
+        ids = result.get("ids") or []
+        documents = result.get("documents") or []
+        embeddings = result.get("embeddings")
+        if embeddings is None:
+            embeddings = []
+        return {
+            chunk_id: (
+                document or "",
+                tuple(float(value) for value in vector)
+                if vector is not None
+                else (),
+            )
+            for chunk_id, document, vector in zip(ids, documents, embeddings)
+        }
+
     def delete(self, ids: Iterable[str]) -> None:
         """Delete ``ids`` from the collection (no-op when empty)."""
         id_list = list(ids)

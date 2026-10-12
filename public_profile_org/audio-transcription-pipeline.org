@@ -1,0 +1,132 @@
+:PROPERTIES:
+:ID:       20261007-audio-transcription-pipeline
+:TITLE:    Audio Transcription Pipeline — pragmatic AI integration for personal workflow
+:CREATED:  <2026-10-07>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: AI integrated as a practical productivity tool: a Python+Gemini pipeline that turns MP3 recordings into structured org-mode files, refined iteratively with the prompt acting as a contract.
+:DOMAIN:   projects way-of-working
+:TAGS:     ai-integration automation python batch-processing spec-first prompt-engineering
+:STRENGTHS: pragmatic-ai spec-first automation iterative-refinement
+:WEAKNESSES: over-engineering-tendency
+:PUBLIC:     https://github.com/jstavel/python-audio-transcription
+:END:
+
+# Audio Transcription Pipeline — pragmatic AI integration for personal workflow
+
+A Python + shell pipeline that transcribes audio recordings (MP3 from Plaud)
+into structured Emacs Org-mode files using Google Gemini API. Demonstrates
+how AI can be integrated as a practical productivity tool, not a showcase.
+
+Use when demonstrating: pragmatic AI integration, prompt-as-contract methodology,
+iterative refinement of LLM-powered tools.
+
+* What it does
+
+The pipeline:
+1. Uploads MP3 files to Gemini's File API
+2. Waits for audio processing (polling with timeout)
+3. Sends a structured prompt (Czech language) specifying exact org-mode output format
+4. Receives formatted transcription with metadata (UUID, synopsis, tone analysis)
+5. Saves to .org file alongside the source MP3
+
+The prompt template is embedded directly in the Python code (prompt_template
+variable), proving the concept before considering extraction into a separate
+file. A separate prompt file (doslovny-prepis.prompt) exists only as a sample.
+
+* Architecture and evolution
+
+The project evolved through three clear stages visible in git history:
+
+1. **transcribe-01.py** — minimal viable version: single file upload + prompt,
+   no retry logic, no argument parsing, prompt embedded in the code. Purpose:
+   prove the concept works.
+
+2. **transcribe.py** — production version: argparse for CLI usage, retry
+   logic with exponential backoff (handles 429/500/502/503/504), idempotency
+   check (skip if .org exists), absolute path resolution, Gemini API cleanup.
+
+3. **transcribe-oldest.sh** — batch orchestration: scans a month directory,
+   finds oldest unprocessed MP3s, shows estimated duration per file,
+   confirmation prompt, parallel-like sequential processing with success/fail
+   tracking.
+
+This evolution shows a pattern: prove → harden → automate.
+
+* Key design decisions and what they reveal
+
+**Prompt-driven output contract:** The prompt template is embedded directly
+in the Python code, defining the *output contract* (org-mode format with
+properties drawer) upfront. The design intent is clear: the prompt
+pre-specifies the output structure, so the model's job is just to fill in
+the content — a Spec-First approach to LLM interaction.
+
+**Cost-conscious model selection:** Uses gemini-3.5-flash-lite — the cheapest
+adequate model. The task (transcription of Czech speech into structured text)
+does not need a frontier model. This shows awareness that AI cost scales with
+model capability, and the right tool is the cheapest one that works.
+
+**Idempotency by default:** Before processing, the script checks if the
+output .org already exists. This allows safe re-runs of the batch script
+without duplicating work — essential for a tool used daily/weekly.
+
+**Output nativity:** The transcription is produced directly in Emacs Org-mode
+format with properties drawer (ID, Path, Source, Synopsis, Tone),
+ready for integration into existing knowledge management workflows.
+
+**Czech-language processing:** The prompt is written in Czech, and the model
+is expected to produce Czech output. This demonstrates multilingual AI
+application in a non-English context.
+
+* The lesson this project teaches
+
+AI tools are most valuable when they solve an immediate, personal, recurring
+problem — not when they chase the latest capability. An audio transcription
+pipeline is not novel, but it eliminates a recurring manual chore and
+produces output that fits directly into an existing workflow.
+
+The iterative evolution (prove → harden → automate) is a repeatable pattern
+for any AI integration: start with a script, add robustness, then wrap with
+batch orchestration.
+
+The prompt-as-contract approach is the same Spec-First methodology applied to
+LLM interactions — define the output structure upfront, then let the model
+fill in the content.
+
+* Strengths this demonstrates
+
+| Strength | Evidence |
+|----------|----------|
+| Pragmatic AI integration | Built a working transcription tool, not a PoC |
+| Spec-First thinking | Output contract defined in prompt template before execution |
+| Automation mindset | Batch processing, idempotency, error handling |
+| Iterative refinement | Clear evolution: v1 → production → batch wrapper |
+| Cost awareness | Uses cheapest adequate model, not the most powerful |
+| Systems thinking | Output fits directly into existing org-mode workflow |
+
+* Weakness this reveals
+
+- **Over-engineering tendency (contained):** The pipeline evolved through
+  three stages (prove → harden → automate), which is good. However, the
+  production version includes retry logic, argument parsing, and error
+  handling — arguably more than a personal tool needs. The shell wrapper
+  adds further complexity. Mitigated by the fact that each layer was added
+  iteratively, not upfront.
+
+* Sources
+
+- ~/dev/python-audio-transcription/transcribe.py
+  — production orchestrator with retry logic, idempotency, argparse.
+  git ref: dcb2330
+
+- ~/dev/python-audio-transcription/transcribe-01.py
+  — first working version, minimal.
+  git ref: 2e8ec6e
+
+- ~/dev/python-audio-transcription/doslovny-prepis.prompt
+  — test/sample of prompt template idea; production uses hardcoded prompt.
+  git ref: a75549d
+
+- ~/dev/python-audio-transcription/transcribe-oldest.sh
+  — batch orchestration shell script.
+  git ref: dcb2330

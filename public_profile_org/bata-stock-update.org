@@ -1,0 +1,116 @@
+:PROPERTIES:
+:ID:       20261007-bata-stock-update
+:TITLE:    Real-Time Stock Update — PostgreSQL triggers + RabbitMQ event streaming (2007)
+:CREATED:  <2026-10-07>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Forward-looking architecture in 2007: PostgreSQL triggers for change data capture plus RabbitMQ persistent queues for real-time stock sync across retail stores, years before event streaming was mainstream.
+:DOMAIN:   projects way-of-working
+:TAGS:     event-streaming postgresql rabbitmq cdc real-time sql perl database
+:STRENGTHS:  architecture forward-looking event-driven database sql polyglot
+:WEAKNESSES: internal-only
+:END:
+
+# Real-Time Stock Update — PostgreSQL triggers + RabbitMQ event streaming (2007)
+
+A proposed architecture for real-time stock synchronisation across
+retail stores using PostgreSQL triggers for change data capture and
+RabbitMQ persistent queues for event streaming — in 2007, years before
+event streaming became an architectural pattern.
+
+Use to demonstrate forward-looking architectural thinking, deep database
+knowledge, and early adoption of event-driven patterns.
+
+* Context
+
+The retail chain operated multiple stores, each with a local Linux
+terminal running PostgreSQL for accounting. Stock changes were
+synchronised to headquarters once daily via the official accounting
+close — meaning a 24-hour delay in stock visibility across the chain.
+
+* Proposed solution
+
+```
+  Store (Linux + POS + PostgreSQL)
+    │
+    │ PostgreSQL trigger copies every accounting change
+    │ to a helper table (change data capture)
+    ▼
+  Perl/Python script → RabbitMQ (persistent queues)
+    │
+    ▼
+  Headquarters: RabbitMQ broker → script updates central stock
+    │
+    ▼
+  1x daily: official accounting close (unchanged)
+```
+
+Key characteristics:
+- **PostgreSQL triggers as CDC** — every change in the accounting table
+  automatically copied to a helper table, years before CDC was a named
+  pattern.
+- **RabbitMQ persistent queues as event log** — messages survive broker
+  restarts; fail-over mechanism ensures delivery.
+- **Async processing** — real-time updates between stores during the
+  day, with the daily accounting close as the authoritative snapshot.
+- **Proof of concept** — built as a working demonstration, not deployed
+  to production.
+
+* Additional context: Perl/Mojolicious intranet
+
+Alongside this project, the main work at this company (2007–2013) was
+extending and maintaining the corporate intranet — a Perl/Mojolicious
+application.
+
+Notable for database skills:
+- **No ORM** — raw DBD::Pg (PostgreSQL driver) only
+- **All SQL written manually** — SELECT, JOIN, subqueries,
+  INSERT/UPDATE/DELETE for every feature, form, report, and workflow
+- **Years of daily SQL practice** — not learned from a course, but from
+  real production development over multiple years
+
+* What this demonstrates
+
+- **Event streaming in 2007.** PostgreSQL triggers for CDC + RabbitMQ
+  persistent queues predate the mainstream event-driven architecture
+  movement by over a decade.
+- **Database depth.** Raw SQL for years without ORM abstraction —
+  genuine relational database fluency, not just "knows SQL syntax."
+- **Architecture thinking applied to a business problem.** Not a
+  technology demo — it solved a real synchronisation problem across a
+  retail chain.
+- **Polyglot pragmatism.** Perl and Python for scripting, SQL for data,
+  RabbitMQ for transport — chose the right tool for each layer.
+
+* Strengths this demonstrates
+
+- **Forward-looking architecture.** CDC + event log pattern in 2007,
+  before it was a recognised architectural style.
+- **Database expertise.** Raw PostgreSQL for years — triggers, PL/pgSQL,
+  complex queries without ORM abstraction.
+- **Event-driven mindset applied early.** The same thinking that later
+  appeared in RabbitMQ at the National Library, Kafka proposals at Red
+  Hat, and the reactive testing framework.
+- **Business context awareness.** The solution was designed for the
+  retail domain — stock visibility, accounting requirements, store
+  infrastructure constraints.
+
+* Weaknesses this reveals
+
+- **Internal-only.** The code lives on legacy intranet. No public
+  reference available.
+
+* Related objects
+
+- [[id:20261007-cdbazar][cdbazar]] — another intranet project with customer-facing requirements
+  elicitation (different company, same patterns).
+- [[id:20261007-reactive-testing-framework][reactive-testing-framework]] — event-driven testing prototype at Red Hat.
+- [[id:20261007-spec-first-evolution][spec-first-evolution]] — the broader evolution of architectural thinking.
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org
+  — Section "Baťa: Real-Time Stock Update — PostgreSQL + RabbitMQ".
+    Oral memory of the architecture, the SAP decision, and the intranet
+    work. Also covers the Perl/Mojolicious intranet with raw SQL detail.
+  git ref: b4a85c4

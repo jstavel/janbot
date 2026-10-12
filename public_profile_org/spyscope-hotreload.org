@@ -1,0 +1,68 @@
+:PROPERTIES:
+:ID:       20261007-spyscope-hotreload
+:TITLE:    Spyscope + hot-reload TDD — pure functions, regressions eliminated
+:CREATED:  2026-10-07
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Pure functions plus hot-reload TDD at eDeposit: capturing a function's real input turns any bug into a deterministic regression test forever — no mocks, no flakiness.
+:DOMAIN:   projects way-of-working
+:TAGS:     clojure spyscope tdd hot-reload testing immutable-data edeposit
+:STRENGTHS:  functional-testing test-architecture regression-elimination
+:WEAKNESSES: clojure-specific
+:END:
+
+# Spyscope + hot-reload TDD — pure functions, regression eliminated
+
+At eDeposit, this person experienced the power of **pure functions + hot-reload
+TDD** using Spyscope. The insight: when a function's input is captured and a
+specific test written against it, regression is gone forever — the same input
+will always produce the same output.
+
+**How it worked in practice:**
+- Spyscope (Clojure library) captures function arguments at runtime
+- When a bug is discovered, the captured input becomes a **test case**
+- Hot-reload TDD: write the test, fix the function, verify immediately
+  without restarting the REPL
+- Because the function is pure, the test is deterministic — no mocks,
+  no state setup, no flakiness
+- "Hit errors once and fix them forever"
+
+**Why this matters:**
+- Most testing catches bugs after they happen — this closes the loop
+  immediately: bug → captured input → test → fix → verified
+- The combination of immutability + hot-reload + Spyscope creates a
+  developer experience where regression is a solvable problem, not
+  accepted risk
+- This is an early practical encounter with **evidence-first testing**:
+  capture real data, then verify against it — the same pattern that
+  later became Reactive Testing's verification phase
+
+**Continuity:** Spyscope (Clojure, 2013) → reactive-testing-origin (2019)
+→ reactive-testing-project (2026) — same principle of "capture input,
+verify against evidence" across three ecosystems.
+
+* What this demonstrates
+
+- **Understanding of pure functions** — not theoretical, but practical:
+  purity enables deterministic testing without mocks
+- **Tooling awareness** — knowing that Spyscope exists and combining it
+  with hot-reload TDD for a workflow that most teams don't have
+- **Regression elimination mindset** — not just "write tests," but
+  architect a system where regression is structurally prevented
+- **Continuity of thinking** — same pattern re-emerging in Reactive
+  Testing a decade later
+
+* Weaknesses / Risks
+
+- **Clojure-specific** — Spyscope + hot-reload TDD depends on Clojure's
+  interactive development model; not directly transferable to compiled
+  languages
+- **Requires team discipline** — the workflow depends on consistently
+  capturing inputs and writing tests; one developer can't enforce it
+
+* Sources
+
+- ~/Downloads/Clojure Revival and Core Values.md (sections "The 'Sure Thing' with Spyscope")
+  sha256: f8c14e9263bc44197a1f2f15be5135ba69674cf887b1032f089ae42510d114ea
+- ~/org/corpus/objects/20261007-edeposit/edeposit.org (project context)
+  git ref: b4a85c4ef4909d133205fea356a6f81f1af17054

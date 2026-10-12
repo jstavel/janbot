@@ -1,0 +1,59 @@
+:PROPERTIES:
+:ID:       20261007-foundational-books
+:TITLE:    Foundational books — professional philosophy framework
+:CREATED:  2026-10-07
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Eight books form a coherent professional philosophy — GTD, Growth Mindset, Deep Work, Start With Why, Leaders Eat Last, Extreme Ownership — that guides how this person works, leads and grows.
+:DOMAIN:   attitudes
+:TAGS:     books philosophy gtd growth-mindset deep-work leadership habits
+:STRENGTHS:  self-awareness systematic-thinking mentoring leadership
+:WEAKNESSES: none-identified
+:END:
+
+# Foundational books — the framework behind the work
+
+Eight books form a coherent professional philosophy that guides every
+aspect of how this person works, leads, and grows. The framework:
+
+1. **David Allen — Getting Things Done (GTD)**
+   *"Mind like water — the mind is not a warehouse."*
+   Applied through Org-mode: inbox capture, projects, horizons, weekly review.
+   GTD is the architecture of his thinking.
+
+2. **Carol Dweck — Growth Mindset**
+   *"It's happening for me to grow."*
+   Every challenge is an opportunity. The Kraken rejection → feedback → better profile.
+
+3. **Cal Newport — Deep Work**
+   *"The mind finds joy when working on something useful for yourself and others."*
+   AI as a junior (OpenCode), himself as an architect. Deep work on specs, ADRs, Clojure.
+
+4. **Simon Sinek — Start With Why**
+   Purpose first, then method, then result. Career change 2026 was about meaning, not just a job.
+
+5. **Simon Sinek — Leaders Eat Last**
+   Safe environment and trust in teams. Applied as a mentor — listening, finding strengths,
+   creating psychological safety.
+
+6. **Jocko Willink — Extreme Ownership**
+   - **UP:** Clean results — ensure manager understands what we're doing.
+   - **DOWN:** Create an environment where a junior can grow.
+   Applied at Red Hat: not just "helping" but taking ownership of another person's growth space.
+
+7. **Tiago Forte — Building a Second Brain**
+   Collect, organize, distill knowledge. This very corpus project is the implementation of
+   that system — memories → distillation → publication.
+
+8. **James Clear — Atomic Habits**
+   Willpower is overrated. Attach a small new step to an existing routine.
+   Applied through GTD: inbox capture, weekly review, project planning as a chain of habits.
+
+**The resulting philosophy:** organized mind (GTD) + growth through challenge (Dweck) +
+focused creation (Newport) + meaningful direction (Sinek) + full accountability (Willink) +
+systematic knowledge management (Forte) + habit design (Clear).
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org (section "Knihy, ktere me formovaly", lines 673–731)
+  git ref: b4a85c4ef4909d133205fea356a6f81f1af17054

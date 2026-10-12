@@ -1,0 +1,55 @@
+:PROPERTIES:
+:ID:       20261007-janbot-ai-agent
+:TITLE:    JanBot — spec-first AI agent as a deployed architecture
+:CREATED:  <2026-10-07 Wed 13:32>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: A spec-first AI career assistant that answers recruiter questions from an org-mode corpus — deployed architecture (FastAPI, DSPy, ChromaDB) proving spec-first scales from a document to a production AI system.
+:DOMAIN:   projects way-of-working
+:TAGS:     spec-first ai-agent architecture python dspy rag testing
+:STRENGTHS:  spec-first architecture-first fail-closed deterministic-testing ports-adapters
+:WEAKNESSES: visibility-dependency
+:PUBLIC:     https://github.com/jstavel/janbot
+:END:
+
+# JanBot — spec-first AI agent as a deployed architecture
+
+An autonomous AI career assistant that answers recruiter questions accurately from a personal org-mode corpus. Built spec-first with the BMad Method, verified by tests from day one. For recruiters asking about AI architecture, testing philosophy, or spec-first in practice.
+
+I built an AI that knows my career better than my CV does — grounded in real documentation, not buzzwords. This is the strongest proof that spec-first thinking scales from a design document to a production AI system. I didn't just talk about how I work — I automated it.
+
+** Principles
+
+**Spec is the source of truth, not the code.** The entire capability contract lives in `_bmad-output/` — specs, decisions, epics, tickets. Code is derived from the spec, not the other way around. The README states this explicitly: "the spec is the source of truth, not the code."
+
+**Ports-and-adapters architecture for AI systems.** The API boundary (FastAPI + Pydantic `ChatResponse`/`Citation`) is the single contract. Everything inside — retrieval, embeddings, DSPy pipeline, LLM — is an isolated core, replaceable as long as it respects the contract.
+
+**Fail-closed by design, not by convention.** The ingestion scope filter is a whitelist, not a blocklist. Only `public_profile_org/` is ever indexed. Private notes are provably never touched — the default is "no access," not "access unless denied."
+
+**Deterministic AI evaluation.** Two LLM modes: `eval` (locked snapshot `openai/gpt-4o-mini-2024-07-18` at `temperature=0`) and `production` (`openrouter/auto`). CI, unit tests, and evaluation always run against the locked mode. Production can flex without breaking test determinism. An unknown mode fails fast at load time — not at request time.
+
+**Testing from day one, at every layer.** The project had tests before the first feature was complete. Milestone 1: pytest + httpx for API smoke and integration. Milestone 1.5: TypeScript/Zod codegen from the OpenAPI contract for contract verification. Milestone 2: golden dataset with metrics for AI evaluation. Testing is not an afterthought — it is baked into the milestone plan.
+
+**Org-mode AST-aware ingestion, not naive chunking.** One chunk per org subtree (heading + content + PROPERTIES + LOGBOOK + parent breadcrumbs). No text splitters that break semantic boundaries. This is the same "understand the data structure before processing it" principle that appears in every project.
+
+** Strengths
+
+**Spec-first at full scale.** JanBot is not a demo — it is a complete deployed architecture (FastAPI, DSPy, ChromaDB, OpenRouter, uv, pytest) built entirely spec-first from the BMad Method output.
+
+**Architecture-first AI development.** Most AI projects start with a notebook and add architecture later. JanBot started with the contract, the security boundary, the testing strategy, and the deployment model — and only then added the AI pipeline. The architecture constrains the AI, not the other way around.
+
+**Fail-closed security mindset.** The whitelist-based ingestion boundary is the same principle as the "customer pays our bills" constraint — define what is allowed explicitly, not what is forbidden.
+
+**Testing maturity for AI systems.** The distinction between `eval` (deterministic) and `production` (flexible) modes shows an understanding that AI systems need a different testing strategy than traditional software. CI must be deterministic. Production can be probabilistic.
+
+** Risks
+
+**Visibility dependency.** Same pattern as Krakatoa and gtd-org — JanBot is invisible to a keyword scan. "Python, FastAPI, ChromaDB" says nothing about the architectural thinking, the fail-closed design, or the testing maturity.
+
+* Sources
+
+- ~/dev/janbot/ — JanBot AI career assistant
+  git ref: 0bf4f3b1fe5989b1f53671dab3a1156c5d0b64d4
+  README.md, ARCHITECTURE.md, pyproject.toml, src/janbot/config.py,
+  src/janbot/pipeline/, src/janbot/ingest/, src/janbot/store/,
+  _bmad-output/initiative-janbot/

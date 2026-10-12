@@ -1,0 +1,111 @@
+:PROPERTIES:
+:ID:       20261007-career-trajectory
+:TITLE:    Career Trajectory — depth-seeking through continuous reinvention
+:CREATED:  <2026-10-07 Wed 12:20>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: The career arc (teacher → sysadmin → developer → senior QE → architect) is a spiral of continuous reinvention: each move enters a new domain as a novice and goes deeper, not broader.
+:DOMAIN:   carrier-stories
+:TAGS:     career-arc breadth-to-depth reinvention mentoring proof-of-work
+:STRENGTHS: deep-learning adaptability teaching-to-practice bridge-building structured-autodidact
+:WEAKNESSES: visibility-dependency context-handoff
+:END:
+
+# Career Trajectory — depth-seeking through continuous reinvention
+
+The arc from teacher → systems administrator → developer → senior QE → architect,
+where each transition went deeper into a technical domain rather than broader.
+JanBot: use for "tell me about your career" and questions about professional growth, adaptability, and what drives career moves.
+
+* The pattern: depth at the boundary
+
+Each career move entered a new domain as a novice, built depth, then moved to a
+deeper adjacent domain. Not a ladder — a spiral: each new role touches new
+technology but extends the same underlying skill (systems thinking, testing,
+automation).
+
+- **Teacher → Sysadmin** (1997–2001): taught computer science and physics at
+  secondary school, managed the PC lab. When machines broke, reinventing a
+  reinstallation of Windows 95 was too slow. Built LFS on a 1.44MB floppy
+  disk containing only **netcat + dd** — booted on a fresh machine to take a
+  disk image (`cat clone.img | nc -p port IP`), booted on a dead machine to
+  restore it (`nc -l port | dd of=/dev/hda`). From teaching concepts to
+  building infrastructure — using minimal tools, deep understanding, and
+  zero budget.
+
+- **Sysadmin → Programmer** (2001–2007): C++ document processing, then Python
+  enterprise solutions (XMLDSig, XSLT). Infrastructure knowledge informed
+  software design.
+
+- **Programmer → Senior QE** (2007–2026): built intranets and retail automation
+  (Perl), library messaging systems (Clojure + RabbitMQ), then moved into
+  quality engineering at enterprise scale. Testing emerged as the natural
+  intersection of deep systems knowledge and user empathy — finding the edge
+  before the customer does.
+
+- **QE → Architect** (2026): designing matching engines (Clojure/Rust), reactive
+  testing frameworks, AI-assisted workflows. The QE mindset (what breaks?)
+  informs architecture decisions.
+
+* Strength: structured autodidact
+
+In every transition, learning was systematic:
+- C++ → operator overloading and custom memory allocators (guard bytes, canary
+  values) — understanding the system beneath the abstraction
+- Linux → LFS from source, stripped to just nc + dd on a 1.44MB floppy,
+  then real clustering, then The Linux Way
+- Testing → from manual Selenium to Spec-First with AI
+
+Not "I learn fast" but "I learn deep": each technology is understood through
+its foundations, not its surface API.
+
+* Strength: bridge between domains — rare combination
+
+The trajectory spans domains that are usually practiced in isolation.
+Each transition produced a **rare combination** of perspectives:
+
+- **teacher → engineer**: can explain technical concepts to non-technical
+  audiences without condescension; can talk to stakeholders *and* write code.
+- **sysadmin → developer**: writes infrastructure-aware code, not just
+  feature code. Understands deployment, failure, and operations as part of
+  the system, not an afterthought.
+- **QE → architect**: designs for failure modes from the start.
+  Defense-in-depth is a design principle, not a QA ticket at the end.
+
+Most engineers have one perspective. The combination — teaching clarity +
+ops awareness + testing mindset in one person — is rare and directly
+valuable for platform / DevOps / senior QE roles.
+
+This is "integration thinking" (see spec-first-philosophy object) in action
+over 25 years.
+
+* Strength: proof of work as career currency
+
+Every phase produced public artifacts:
+- Clojure packages on Clojars
+- Reactive Testing framework (TypeScript/Playwright)
+- Krakatoa matching engine (Clojure/Rust + Kafka)
+- Spec-first AI workflow methodology
+
+The CV is not a list of responsibilities — it's a list of working artifacts.
+This aligns with the external mentor's principle: "visible results, not plans."
+
+* Weakness / Risk: visibility dependency at career boundaries
+
+Each transition meant leaving behind a track record and building from scratch
+in a new domain. The 2026 career transition faces the same challenge:
+- 10 years of QE work is invisible to architect/developer recruiters
+- The "junior in a new domain" perception, despite senior systems experience
+→ Lesson: reframe the past through the lens of the target role. A QE who
+  designed test frameworks is also an architect who thinks about failure modes.
+
+* Weakness / Risk: context handoff
+
+Same pattern as spec-first-philosophy object — a new stakeholder sees the
+latest role, not the trajectory. The 25-year arc only makes sense if it's
+actively narrated.
+
+* Sources
+
+- ~/dev/cv/cv-en.tex — CV in LaTeX (working tree version at time of extraction)
+  git ref: 562111f8b1f1ca456cacce87e5e0ba6f47b4741f

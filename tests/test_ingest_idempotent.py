@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from janbot.ingest import index_corpus
+from janbot.ingest import index_corpus, read_org_file
 from janbot.store import VectorStore
 
 Embedder = Callable[[list[str]], list[list[float]]]
@@ -19,6 +19,50 @@ Embedder = Callable[[list[str]], list[list[float]]]
 
 def _ids(index_path: Path, embedder: Embedder) -> set[str]:
     return VectorStore(index_path, embedder).ids()
+
+
+def _payload(
+    index_path: Path, embedder: Embedder
+) -> dict[str, tuple[str, tuple[float, ...]]]:
+    return VectorStore(index_path, embedder).payload()
+
+
+def _assert_payload_equal(
+    actual: dict[str, tuple[str, tuple[float, ...]]],
+    expected: dict[str, tuple[str, tuple[float, ...]]],
+    *,
+    tol: float = 1e-5,
+) -> None:
+    """Compare payloads by document exactly and embeddings within ``tol``.
+
+    Chroma persists embeddings as float32, so a stored vector read back drifts
+    from the exact embedder output by float32 epsilon; comparing within ``tol``
+    keeps the assertion meaningful while still catching real corruption.
+    """
+    assert set(actual) == set(expected)
+    for chunk_id in expected:
+        actual_doc, actual_vec = actual[chunk_id]
+        expected_doc, expected_vec = expected[chunk_id]
+        assert actual_doc == expected_doc
+        assert len(actual_vec) == len(expected_vec)
+        for actual_value, expected_value in zip(actual_vec, expected_vec):
+            assert abs(actual_value - expected_value) <= tol
+
+
+def _expected_payload(
+    corpus: Path, embedder: Embedder
+) -> dict[str, tuple[str, tuple[float, ...]]]:
+    """Independent oracle: the payload the chunks *should* carry, derived from
+    the reader and the embedder directly rather than from the store's upsert
+    path, so a corruption in either half of a stored payload is detected."""
+    expected: dict[str, tuple[str, tuple[float, ...]]] = {}
+    for path in sorted(corpus.glob("*.org")):
+        for chunk in read_org_file(path):
+            expected[chunk.id] = (
+                chunk.text,
+                tuple(float(value) for value in embedder([chunk.text])[0]),
+            )
+    return expected
 
 
 def test_rerun_unchanged_yields_identical_collection(
@@ -38,6 +82,45 @@ def test_rerun_unchanged_yields_identical_collection(
 
     assert second == first
     assert len(second) == 2
+
+
+def test_rerun_preserves_documents_and_embeddings(
+    tmp_path: Path, embedder: Embedder, write_org: Callable[..., None]
+) -> None:
+    corpus = tmp_path / "corpus"
+    write_org(corpus / "a.org", "Alpha")
+    write_org(corpus / "b.org", "Beta")
+    index_path = tmp_path / "index"
+    expected = _expected_payload(corpus, embedder)
+
+    assert index_corpus(corpus, index_path, embedder) == 2
+    _assert_payload_equal(_payload(index_path, embedder), expected)
+
+    assert index_corpus(corpus, index_path, embedder) == 2
+    _assert_payload_equal(_payload(index_path, embedder), expected)
+
+
+def test_rerun_repairs_corrupted_payload(
+    tmp_path: Path, embedder: Embedder, write_org: Callable[..., None]
+) -> None:
+    corpus = tmp_path / "corpus"
+    write_org(corpus / "a.org", "Alpha")
+    index_path = tmp_path / "index"
+    expected = _expected_payload(corpus, embedder)
+
+    assert index_corpus(corpus, index_path, embedder) == 1
+    chunk_id = next(iter(expected))
+
+    store = VectorStore(index_path, embedder)
+    store._collection.update(
+        ids=[chunk_id],
+        documents=["CORRUPTED"],
+        embeddings=[[0.0] * 64],
+    )
+    assert _payload(index_path, embedder)[chunk_id][0] != expected[chunk_id][0]
+
+    assert index_corpus(corpus, index_path, embedder) == 1
+    _assert_payload_equal(_payload(index_path, embedder), expected)
 
 
 def test_removed_file_chunks_are_deleted(

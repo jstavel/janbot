@@ -1,0 +1,72 @@
+:PROPERTIES:
+:ID:       20261008-gtd-trading-descriptive-phase
+:TITLE:    GTD Trading — the descriptive phase: annotate the chart, let AI do the rest
+:CREATED:  <2026-10-08>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Spec-first design of a trading-analysis system (Wyckoff/P&F/Volume Profile, BTC): in the descriptive phase, everything on the chart exists to be described, not interpreted — and AI works on the description.
+:DOMAIN:   projects
+:TAGS:     gtd-trading wyckoff point-and-figure volume-profile voice-notes dspy ai-pipeline golden-rules
+:STRENGTHS:  domain-knowledge human-ai-division-of-labor spec-of-interaction incremental-design
+:WEAKNESSES:  niche-domain design-not-implemented-yet
+:END:
+
+# GTD Trading — the descriptive phase: annotate the chart, let AI do the rest
+
+A design note for **gtd-trading** (see ~/org/projects/gtd-trading.org) —
+a personal trading-analysis system (Wyckoff / Point & Figure / Volume
+Profile, BTC via Kraken), currently in the **planning / architecture
+phase**. Its principle: in the descriptive phase, **everything seen on
+the chart exists to be described, not interpreted** — and the
+description is captured so AI can work with it. Use to demonstrate
+domain knowledge (trading) plus a concrete human-AI division of labour,
+and as an example of spec-first design of an interaction before code.
+
+* The principle: description before interpretation
+
+When in the descriptive phase — asking "is this a distribution or an
+accumulation?" — everything on the screen is a **support for
+describing**, not a tool for judging. Analysis comes later; description
+first. The interface is designed around that:
+
+- Every description is anchored to **a place in the chart** — click a
+  level, add a note (later: labels).
+- A **voice interface** is the intended primary input: "around 195 USD
+  I see an upthrust; around 60 a spring; around 90 an upthrust" —
+  spoken, in the domain's own terms (the author corrected himself
+  mid-sentence: upthrust, not "upstring" — the vocabulary matters).
+- The captures are then **processed by AI**: the human describes, the
+  machine structures.
+
+* The DSPy idea — golden rules
+
+Time permitting, the prompts would be tuned with **DSPy**: the author's
+own hand-labelled levels become **golden rules** (ground truth), and
+the optimizer tunes the prompt pipeline against them. Same shape as
+everywhere else in his work: define the spec of good output first,
+then let the system approximate it — with a human-curated yardstick.
+
+* Why it matters as a signal
+
+- **Deep, current, non-trivial domain knowledge** — Wyckoff method,
+  Point & Figure charts, volume profile levels, and their correct
+  vocabulary — kept alive as a personal engineering project.
+- **Status honesty:** the object documents *design intent* from the
+  planning phase, not shipped software. The value shown is the quality
+  of the thinking, not a running system (unlike objects marked with a
+  :PUBLIC: repository).
+- **Interaction designed around honesty**: voice notes capture what
+  the human actually sees, before analysis distorts it.
+- **Same design philosophy as the corpus itself**: collect → describe
+  → let AI structure → optimize against golden examples.
+
+* Sources
+
+- ~/Downloads/10-06 Projektová poznámka_ Popisná fáze GTD Trading a AI zpracování grafů-transcript.txt —
+  design note: descriptive phase, chart-anchored notes, voice interface,
+  AI processing, DSPy golden-rules idea.
+  sha256: ccf271e1bc22700e2066ff46e01b1b4e1c2453ef33e185825de5ddbb0a5620a7
+- ~/org/projects/gtd-trading.org — project plan: roadmap (review &
+  psychology module → P&F engine → data ingestion → cloud/IaC), tech
+  choice (re-frame/Clojure, Kraken), books as the knowledge basis.
+  git ref: 5af86a0 (as committed in ~/org repo)

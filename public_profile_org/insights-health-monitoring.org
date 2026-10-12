@@ -1,0 +1,70 @@
+:PROPERTIES:
+:ID:       20261007-insights-health-monitoring
+:TITLE:    Insights Health Monitoring — Prometheus/Grafana, spec-driven development
+:CREATED:  2026-10-07
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Built a complete Prometheus/Grafana monitoring stack for a neighboring team's Insights Core updates — spec-driven, cross-team generosity with production-quality work.
+:DOMAIN:   projects
+:TAGS:     python prometheus grafana monitoring spec-driven development
+:STRENGTHS:  full-stack-rapid prototyping spec-driven-development cross-team-help observability testing-tooling
+:WEAKNESSES: idea-without-adoption specification-overhead
+:END:
+
+# Insights Health Monitoring — Python metric exporter for a neighboring team
+
+The last project at Red Hat. A neighboring team needed better visibility
+into how **Insights Core updates** behave across RHEL versions. This
+person built a complete monitoring stack to help them.
+
+**What the stack did:**
+- Python `prometheus_client` exporter running on test machines
+- Prometheus server collecting metrics from the fleet
+- Grafana dashboards for visual monitoring
+
+**Metrics collected:**
+- Insights Client: successful/failed uploads, core updates, client/core versions
+- GA vs Canary channel comparison
+- RHSM system registration status
+
+**Technical highlights:**
+- `prometheus_client` metrics (Info, Gauge, Counter, Enum)
+- Auto-discovery — any function with `prom_` prefix was automatically registered
+- Smart log parsing — section-based strategy (`split_before`) with `more-itertools`
+- `funcy` utilities (`@cache`, `@memoize`) for optimization
+- TOML configuration via `tomli`
+- Node exporter custom metrics for system-level observability
+
+**Development process — spec-driven:**
+The entire project was developed using an explicit spec-first workflow:
+- `proposal-01/` — analysis.md + proposal.md + specification.md
+- `proposal-02/` — brain-dumps.md + specification.md
+- `task-01..task-10/` — draft → specification → work-summary → commit
+
+**Feedback from colleagues:**
+- "The slide that you prepared is very clear… I am going to talk with my
+  team to think about how to integrate it in our workflow" — lead of the
+  neighboring team
+- "Once we finally aligned on the vision, you were very effective at
+  executing the task rapidly" — project reviewer, reflecting on the
+  collaboration after alignment
+
+* What this demonstrates
+
+- **Cross-team initiative** — identified a visibility gap in a neighboring
+  team and built the solution
+- **Full-stack Python monitoring** — from metric collection through
+  Prometheus/Grafana presentation
+- **Spec-driven development** — complete written workflow with proposals,
+  specifications, task breakdowns
+- **Observability mindset** — testing at scale requires knowing what's
+  happening across the fleet
+- **Positive feedback** — external colleague and the reviewer both
+  recognized the value of the work
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org (section "Insights Health Monitoring — Prometheus/Grafana", lines 314–349)
+  git ref: b4a85c4ef4909d133205fea356a6f81f1af17054
+- ~/Downloads/lenovo-P1-zbytky/Projects.orig/cct-prometheus-metrics/ (git ref: 31b7baa)
+- Feedback_Received.xlsx (personal spreadsheet with peer reviews)

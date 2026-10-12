@@ -1,0 +1,175 @@
+:PROPERTIES:
+:ID:       20261007-reactive-testing-framework
+:TITLE:    Event-Driven Testing Framework — prototype & conference propagation
+:CREATED:  <2026-10-07>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: From QECamp 2019 idea to working prototype: a 3-layer event-driven testing framework for RHSM, promoted through conferences — presentation → prototype → propagation.
+:DOMAIN:   projects way-of-working
+:TAGS:     reactive-testing event-driven nodejs rxjs python websocket testing red-hat
+:STRENGTHS:  architecture ecosystem-thinking cross-language event-driven declarative-testing
+:WEAKNESSES: prototype-not-production internal-only no-team-adoption
+:END:
+
+# Event-Driven Testing Framework — prototype & conference propagation
+
+A 3-layer event-driven testing prototype built at Red Hat for RHSM
+(Red Hat Subscription Management). First concrete implementation of
+the "Testing in a Reactive Way" idea presented at QECamp 2019 —
+promoted at conferences and tech talks.
+
+Use to demonstrate architectural thinking, cross-language system design,
+and the ability to evolve an idea from presentation → prototype →
+conference propagation.
+
+* Origin: QECamp 2019 → CandleCon 2020
+
+The idea was born as a QECamp 2019 presentation titled **"Testing in a
+Reactive Way"** — proposing that tests should be thought of as signal
+streams, not step sequences. The concept was implemented using RxPy and
+RxJS for a demo.
+
+A working prototype was built for **CandleCon 2020**, demonstrating the
+concept with a practical example: monitoring DBus, inotify, and REST API
+through reactive streams.
+
+The concept was further promoted at **internal Red Hat tech talks** and
+across QE teams, aiming to spread the event-driven testing approach
+within the organisation. While it generated interest and discussion,
+it did not gain production adoption.
+
+* Prototype architecture (3 layers)
+
+The concept evolved into three interconnected projects, forming an
+event-driven testing prototype for RHSM:
+
+**1. rhsm-services (JavaScript / Node.js)**
+  Runs on the machine under test. Observes the system through:
+  - RxJS Observable streams (filter, map, flatMap, scan, zip, merge)
+  - WebSocket server for real-time communication
+  - Services: DBus monitor, file/directory monitor, rhsm status,
+    cert monitoring, execute binary
+
+  Chosen over Python because Node.js runtime installation was
+  significantly simpler on the target machine.
+
+**2. rhsm-scenarios (Python)**
+  Test orchestration layer. Declarative scenario definitions written as
+  Python NamedTuples (SetCandlepinURL, RegisterScenario, ListSubscriptions,
+  AutoAttach, ...). These are sent via HTTP to the Node.js runtime on the
+  test machine.
+
+  ~35+ declarative scenarios covering rhsm, dbus, cockpit, candlepin,
+  insights, system, syspurpose.
+
+  Testware framework with abstract base classes for service, message,
+  broker, datatypes, environment, streams, types, utils.
+
+  *(Kafka was considered as a transport option but not implemented in
+  the prototype — communication used HTTP + WebSocket instead.)*
+
+**3. rhsm-dbus-qe (Python)**
+  DBus-specific test layer with TestNG/XUnit reporting and Polarion
+  integration (results into ALM system). Includes PlantUML architecture
+  diagrams.
+
+* Data flow
+
+```
+  scenarios (Python, deklarativně) → HTTP → services (Node.js/RxJS na testovaném stroji)
+                                           ← WebSocket stream (real-time observations)
+```
+
+Tests are NOT executed locally. They are written declaratively, sent as
+HTTP messages, and executed remotely by the Node.js runtime. Results and
+observations stream back via WebSocket in real time — bidirectional
+communication channel.
+
+* Key concept
+
+Decoupling of:
+- **Scenario definition** (what to test — declarative Python)
+- **Message transport** (how to send it — HTTP)
+- **Execution** (where to run it — Node.js/RxJS on target machine)
+- **Observation** (how to observe results — WebSocket stream — bidirectional)
+
+This decoupling was the first practical implementation of the "reactive
+testing" idea, years before the TypeScript implementation against Kraken
+Pro.
+
+* What this demonstrates
+
+- **Idea → prototype → propagation.** From a QECamp talk through a
+  CandleCon demo to a working prototype presented at internal tech talks
+  and conferences. The concept was promoted but not deployed to production.
+- **Cross-language architecture.** Python (declarative scenarios) +
+  JavaScript/Node.js (reactive execution) + HTTP + WebSocket (transport).
+- **Event-driven thinking applied to testing.** Not just a testing
+  framework — a testing *platform* that treats test execution as signal
+  processing.
+- **Ecosystem, not tool.** The framework was not one project but three
+  interconnected projects, each with its own responsibility and lifecycle.
+- **Cost-conscious design.** Node.js chosen over Python for simpler
+  installation on target machines — a pragmatic decision that prioritized
+  operability over language preference.
+
+* Strengths this demonstrates
+
+- **Ecosystem thinking.** The framework was designed as a system of
+  collaborating projects, not a monolithic tool.
+- **Cross-language polyglot architecture.** Python + JavaScript + HTTP + WebSocket.
+- **Event-driven mindset applied to a testing domain.** Unusual and
+  forward-looking approach.
+- **Pragmatic about operability.** Node.js chosen over Python for
+  installation simplicity on target machines.
+- **From idea to prototype.** Track record from QECamp 2019 talk →
+  CandleCon 2020 demo → working prototype discussed at tech talks.
+
+* Weaknesses this reveals
+
+- **Prototype, not production.** The architecture was designed and
+  implemented as a prototype, promoted at conferences and tech talks, but
+  never adopted for production use.
+- **Internal-only.** All code is on Red Hat internal GitLab. No public
+  content to inspect.
+- **No adoption within the team.** The Node.js/RxJS approach did not gain
+  traction inside the team — the concept was ahead of the team's
+  technological readiness.
+
+* Related objects
+
+- [[id:20261007-reactive-testing-origin][reactive-testing-origin]] — the conceptual origin and evolution of the
+  reactive testing idea.
+- [[id:20261007-reactive-testing-project][reactive-testing-project]] — the TypeScript implementation against Kraken
+  Pro, built years later with the same decoupling principle.
+- [[id:20261007-spec-first-evolution][spec-first-evolution]] — the broader Shift-Left / AI-assisted context.
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org
+  — Section "Red Hat: Reactive Testing Framework (Event-Driven Testing)".
+    Contains the full 3-layer architecture description, data flow, and
+    references to all three projects.
+  git ref: b4a85c4
+
+- ~/Downloads/My RedHat/QECamp/2019/proposal.org
+  — Original QECamp 2019 presentation proposal "Testing in a Reactive Way".
+    The conceptual starting point.
+  sha256: b3557d465bb9611a8925f848a05651e15cc50663acf8f651efadd9679fd39cb8
+
+- ~/Downloads/lenovo-P1-zbytky/Projects.orig/reactive-example-for-candlecon-2020/
+  — CandleCon 2020 demo: working prototype of the reactive testing concept.
+    Internal Red Hat GitLab.
+  (git remote: gitlab.sat.engineering.redhat.com/jstavel/reactive-example-for-candlecon-2020.git)
+
+- ~/Downloads/lenovo-P1-zbytky/Projects.orig/rhsm-services/
+  — Node.js/RxJS execution layer. Internal Red Hat GitLab.
+  (git remote: gitlab.sat.engineering.redhat.com/RHSM-QE/rhsm-services.git)
+
+- ~/Downloads/lenovo-P1-zbytky/Projects.orig/rhsm-scenarios/
+  — Python declarative scenarios. Internal Red Hat GitLab.
+  (git remote: gitlab.cee.redhat.com/RHSM-QE/rhsm-scenarios.git)
+
+- ~/Downloads/lenovo-P1-zbytky/Projects.orig/rhsm-dbus-qe/
+  — DBus-specific testing layer. Internal Red Hat GitLab.
+  (git remote: gitlab.sat.engineering.redhat.com/jstavel/rhsm-dbus-qe.git)

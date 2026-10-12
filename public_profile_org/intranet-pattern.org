@@ -1,0 +1,81 @@
+:PROPERTIES:
+:ID:       20261007-intranet-pattern
+:TITLE:    Intranet pattern — building tools for people (meta-analysis)
+:CREATED:  <2026-10-07>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: A 20+-year recurring pattern: building internal tools by observing how people actually work and supporting their real workflow — Platform Engineering before the term existed.
+:DOMAIN:   way-of-working attitudes
+:TAGS:     intranet platform-engineering user-research workflow empathy meta-analysis
+:STRENGTHS:  user-research platform-thinking workflow-empathy cross-project-pattern
+:WEAKNESSES: internal-tool-only no-public-reference
+:END:
+
+# Intranet pattern — building tools for people (meta-analysis)
+
+A recurring pattern across the author's entire career: building
+*internal tools* for people to do their work better — not public
+websites, not product features, but platforms that support daily
+workflow. Platform Engineering before the term existed.
+
+Use to demonstrate user-research-driven development, workflow empathy,
+and a consistent thread across 20+ years of projects.
+
+* The pattern
+
+Four intranets across the author's career — each built the same way:
+
+1. **Observe** — watch how people actually work, not how they say they work
+2. **Understand** — learn their domain, their constraints, their rhythm
+3. **Build** — create a backend that *supports* their existing workflow,
+   not one that forces them to adopt new patterns
+
+| # | Project | Stack | Domain |
+|---|---------|-------|--------|
+| 1 | cdbazar | Django | E-commerce intranet, competitive pricing |
+| 2 | Baťa | Perl/Mojolicious | Corporate intranet |
+| 3 | eDeposit (NK) | Plone + Clojure + RabbitMQ | LTP workflow for librarians |
+| 4 | gtd-org | ClojureScript/Polylith | Personal second brain |
+
+* What this demonstrates
+
+- **Platform Engineering before the term.** The approach predates the
+  buzzword by over a decade — user research → understand workflow →
+  build supporting infrastructure.
+- **Consistent methodology.** Not accidental — the same approach
+  repeated across four different domains with four different tech stacks.
+- **Workflow empathy.** Each system adapted to the users' existing
+  mental model rather than imposing framework defaults (see
+  [[id:20261007-edeposit][eDeposit]] for the clearest example).
+
+* Strengths this demonstrates
+
+- **User-research discipline.** Repeated practice of ethnographic
+  observation to drive technical architecture.
+- **Platform thinking.** Building for longevity and workflow fit, not
+  feature checklists.
+- **Cross-domain adaptability.** The same approach works for
+  librarians, e-commerce buyers, corporate employees, and personal
+  productivity.
+
+* Weaknesses this reveals
+
+- **Internal-only output.** All four systems were internal tools — no
+  public portfolio, no GitHub stars, no conference talks about the
+  architecture.
+- **Pattern recognition is retrospective.** The pattern was identified
+  in hindsight, not planned in advance.
+
+* Related objects
+
+- [[id:20261007-cdbazar][cdbazar]] — Django e-commerce intranet, user-research-driven
+- [[id:20261007-bata-stock-update][bata-stock-update]] — Baťa intranet with real-time stock updates
+- [[id:20261007-edeposit][edeposit]] — NK intranet, strongest example of workflow adaptation
+- [[id:20261007-gtd-org-system-design][gtd-org-system-design]] — personal second brain as an intranet
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org
+  — Section "🏢 Pattern: Intranety — nastroje pro lidi (meta-analyza)".
+    Self-analysis identifying the recurring intranet pattern.
+  git ref: b4a85c4

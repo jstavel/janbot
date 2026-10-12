@@ -1,0 +1,52 @@
+:PROPERTIES:
+:ID:       20261008-remote-work-conviction
+:TITLE:    Remote work by conviction — 15 years of home office, and what meetings cannot replace
+:CREATED:  <2026-10-08>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Remote work by conviction, not adaptation: 15 years of home office, routine collaboration fully virtual, while the office's real irreplaceable value is unstructured human contact.
+:DOMAIN:   way-of-working attitudes
+:TAGS:     remote-work hybrid home-office distributed-teams trust flow meetings
+:STRENGTHS:  remote-fluency self-direction team-trust-thinking flow-discipline
+:WEAKNESSES:  hybrid-preference-location-bound
+:END:
+
+# Remote work by conviction — 15 years of home office, and what meetings cannot replace
+
+Not "I tolerate remote" but "I have practised it for 15 years and know
+exactly what it can and cannot do for a team." Use when a role asks
+about hybrid / remote expectations.
+
+* The position
+
+- **15 years of working from home.** Remote is not an adaptation; it is
+  the default mode of work.
+- Routine collaboration — standups, alignment meetings — works fully
+  virtual. Coming to an office to attend those is superfluous.
+
+* What the office is actually for
+
+The one thing virtual meetings do not replace: **the unstructured
+personal contact** — people getting to know each other, sharing moments,
+being together without an agenda. That is what builds the safety and
+openness out of which people dare to make mistakes and collaborate.
+So the position on hybrid: yes to in-person — **but only when it is
+truly personal time**, not a commute for meetings that work better
+remotely anyway.
+
+* Flow as a working condition
+
+Current personal flow practice: mornings start by taking the goats to
+the pasture, then working — recently a six-hour uninterrupted session,
+no lunch, deep-flow quality. The environment is chosen deliberately:
+calm animals nearby, an uncalming presence, no interruptions. Flow is
+treated as a design problem of the environment, not an accident.
+
+* Sources
+
+- ~/Downloads/10-07 Shrnutí_ Home office, hybridní model a chov koz-transcript.txt —
+  position on hybrid/remote (15 years home office; what virtual meetings
+  can and cannot replace; hybrid only for genuinely personal contact),
+  plus the flow-in-the-pasture practice. Personal goat-farming details
+  kept out of the object except where they illustrate the flow practice.
+  sha256: 7c818786d4762b8eb71f8486f2df8d278199a49d196358d060b45c0e208c4d86

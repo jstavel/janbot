@@ -1,0 +1,73 @@
+:PROPERTIES:
+:ID:       20261007-reactive-testing-origin
+:TITLE:    Reactive Testing — origin of the principle and evidence-first verification
+:CREATED:  <2026-10-07 Wed 11:30>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: The 2019 origin of the testing philosophy: decouple scenario, observations and verification into separate streams — the crystallization that later became Simulation-First and Spec-First.
+:DOMAIN:   carrier-stories
+:TAGS:     reactive-testing decoupling scenario observations verification evidence-first poc microservices expert-outreach
+:STRENGTHS: principle-driven long-view-thinking evidence-based-verification ecosystem-thinking proactive-learning
+:WEAKNESSES: adoption-gap
+:END:
+
+# Reactive Testing — origin of the principle
+
+The first crystallization of the idea that later became Simulation-First and Spec-First: separate what the system DOES from how we VERIFY it.
+JanBot: use for questions about the origin of the testing philosophy, continuity of thinking, and what evidence-first verification looks like.
+
+* Principle (2019): decoupling scenario, observations, and verification
+
+A test consists of three separate parts:
+- Scenario: interacts with the system and sends information to a message broker / log
+- Observations: scan the system under test and send information to the same location
+- Verification: aggregates all information streams and validates them
+
+Benefits identified at the time:
+- complex scenarios can be verified easily (web UI + dbus events + file changes)
+- a single scenario run can feed multiple verifications
+- resource savings — scenarios can be sequenced based on system state, not test order
+- dev can use scenarios without testware
+- testware can recycle others' tests as scenarios (by adding information extraction)
+
+This is the direct predecessor of today's Spec-First: SIMULATION ≠ VERIFICATION.
+The form evolves (message broker → Data Bundle; RxJava → Python assertions),
+the core has been the same since 2019.
+
+* Evidence-first verification (POC, DNS Failover)
+
+A POC within the RHHI.Next team demonstrates verification was always about data, not opinion:
+- verify that no time gap longer than 1s exists for dig queries on every master node when the master with hosted DNS fails
+- verify that the IP of the hosted DNS server moved from the failing node to another
+
+Verification = measurable, observable criteria. Same principle as today:
+"evidence shows this" instead of "someone is satisfied."
+
+* Strength: ecosystem thinking (zero-waste predecessor)
+
+Even in 2019, was thinking about artifacts across boundaries:
+- dev uses scenarios without testware
+- testware recycles others' tests as scenarios
+- same approach fits the microservices world (many async events, many parts playing together)
+
+This is the zero-waste principle before it had a name: every artifact (scenario, data, verification) serves more than one group. And pattern recognition: connected testing approach with an industry trend (microservices) — not with a framework.
+Related object: spec-first-philosophy.org (Zero-waste section).
+
+* Strength: expert outreach — learning through consultation
+
+Reached out to an expert with a concrete consultation request:
+- want to migrate Python scenarios to Quarkus (binary instead of Python installation on the system under test)
+- share message types across testware (TestNG + RxJava)
+
+Learning pattern: not "can you advise me generally," but "here is my proposed solution — can you validate my assumptions (Quarkus = binary without installation)?" Specific question, specific proposal, openness to feedback.
+
+* Weakness: adoption gap
+
+The idea was validated by a POC and used in my domain, but team-wide adoption didn't happen at scale.
+→ Lesson: good idea ≠ adoption. Without change management and visibility, it stays at the individual contributor level. This is the same lesson as "visibility-dependency" in the spec-first object — just 6 years earlier.
+
+* Sources
+
+- ~/Downloads/My RedHat/reactive-testing-offer.org — full email to the expert:
+  decoupling, benefits, DNS Failover POC, Quarkus consultation. (2019)
+  sha256: 5444eb76595fe1d874c8f861169e14a60b62cde8c50bf73cf4f1c7b3daff845a

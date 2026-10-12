@@ -1,0 +1,42 @@
+:PROPERTIES:
+:ID:       20261007-linux-from-scratch
+:TITLE:    Linux From Scratch on 1.44MB floppy
+:CREATED:  2026-10-07
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: As a school IT admin, built a 1.44MB Linux From Scratch boot floppy with only netcat and dd to clone Windows 95 machines across the network — deep Linux fundamentals with minimal resources.
+:DOMAIN:   carrier-stories
+:TAGS:     linux sysadmin problem-solving fundamentals
+:STRENGTHS:  self-reliance deep-system-knowledge creative-problem-solving
+:WEAKNESSES: visibility-dependency
+:END:
+
+# Linux From Scratch — system cloning with netcat and dd on a single floppy
+
+When working as an IT administrator at a high school, this person built a
+custom Linux From Scratch distribution fitting on a single 1.44MB floppy
+disk, containing only two programs: `nc` (netcat) and `dd`.
+
+**The workflow:**
+- Boot the floppy on the source machine → `dd if=/dev/sda | nc -p PORT IP`
+- Boot the same floppy on the target machine → `nc --listen --wait | dd of=/dev/sda`
+
+This allowed cloning Windows 95 workstations across the network without
+reinstalling — faster, simpler, and repeatable.
+
+* What it demonstrates
+
+- Deep Linux fundamentals, not just surface-level administration
+- Creative problem-solving with minimal resources (two CLI tools, one floppy)
+- Self-reliant engineering mindset — building what you need from scratch
+- Understanding of disk I/O, pipes, network streaming, and bootable media
+
+This is a recurring pattern: the same curiosity that led to overloading
+C++ operator new, building a custom memory allocator, or today using
+Spec-First with AI — different tools, same mindset.
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org (section "Linux From Scratch na 1.44MB diskete", lines 195–219)
+  git ref: b4a85c4ef4909d133205fea356a6f81f1af17054
+- Oral recollection (no written source)

@@ -46,6 +46,8 @@ Chunking preserves semantic structure:
 
 Only files in `public_profile_org/` are indexed. The ingestion pipeline provably never touches private notes — the scope filter is a whitelist, not a blocklist.
 
+`public_profile_org/` is **JanBot's source of truth**, itself an extract of the wider personal corpus SSOT (`~/org/corpus/views/work-profile/index.org`, 37 approved `REVIEWED`-stamped objects). Updates happen only by re-extracting from the corpus view; the files here are never edited in place. The upstream corpus origin (with harvest log and git-pinned sources) lives in `~/org/corpus/`.
+
 ### 5. Deterministic Model Routing
 
 Two LLM modes (see [ADR-004](_bmad-output/initiative-janbot/spec-janbot/decisions.md)):

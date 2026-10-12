@@ -1,0 +1,120 @@
+:PROPERTIES:
+:ID:       20261007-mentoring-downchain
+:TITLE:    Extreme Ownership DOWN — mentoring with measurable impact
+:CREATED:  <2026-10-07>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Extreme Ownership DOWN in practice: a mentored junior was promoted from ASME to SME and credits the environment created for them — mentoring with measurable impact.
+:DOMAIN:   carrier-stories attitudes
+:TAGS:     mentoring leadership extreme-ownership psychological-safety growth concrete-feedback
+:STRENGTHS:  mentoring concrete-impact psychological-safety listening guiding
+:WEAKNESSES: single-data-point internal-impact
+:END:
+
+# Extreme Ownership DOWN — mentoring with measurable impact
+
+Concrete evidence of the "Extreme Ownership DOWN" principle: a junior
+colleague credits mentorship with creating the environment and confidence
+that led to their promotion from ASME to SME. Use when a recruiter asks about
+leadership, mentoring, or creating growth space for others.
+
+* The principle
+
+Extreme Ownership (Jocko Willink) flows in two directions:
+
+- **UP:** Ensure your manager understands what you are doing — clean results,
+  clear communication, no surprises.
+- **DOWN:** Take responsibility for the growth environment of people you
+  mentor. If their mind is bored, it is your responsibility to prepare a
+  stimulating environment for them.
+
+The DOWN direction is often overlooked. This object documents what it looks
+like in practice.
+
+* The evidence
+
+Part of a formal company mentoring program at Red Hat. A mentee from India
+was assigned — at the time an Associate Software Maintenance Engineer (ASME).
+provided written feedback after a period of mentorship (June 2025):
+
+> "You always made space for my questions, no matter how small or broad,
+> and I really appreciated your way of listening and guiding without
+> being judgmental."
+
+> "What I liked most was that it never felt like a typical 'formal'
+> mentorship. It was open, easy-going, and very real."
+
+> "Your mentorship gave me the right direction and confidence throughout
+> — it played a big role in my recent promotion from ASME to SME."
+
+> "Thank you for being there 🙌 I'd always consider you as my mentor
+> going forward too."
+
+**The measurable outcome:** The person was promoted from Associate (ASME) to
+full Subject Matter Expert (SME) during or shortly after the mentorship
+period. The feedback explicitly credits the mentorship as a contributing
+factor.
+
+* What it proves
+
+| Claim | Evidence |
+|-------|----------|
+| Mentorship produces measurable results | Direct quote: "played a big role in my recent promotion" |
+| Psychological safety is deliberately created | "listening and guiding without being judgmental" |
+| Mentorship can feel organic, not transactional | "never felt like a typical formal mentorship" |
+| Cross-cultural collaboration | Assigned mentee from India, mentor based in EU |
+| The relationship outlasts the formal program | "I'd always consider you as my mentor going forward" |
+
+* The approach
+
+The mentorship was not structured as a formal program with milestones and
+deliverables. The approach was:
+
+1. **Create space.** Make it clear that no question is too small or too broad.
+2. **Listen first.** Understand where the person is before offering direction.
+3. **Guide, don't instruct.** Help the person discover their own answers
+   rather than providing ready-made solutions.
+4. **Be real.** Drop the formal mentor persona — the relationship works because
+   it is genuine, not because of a title.
+5. **Own the outcome.** If the person is not growing, it is the mentor's
+   responsibility to adjust the environment, not the mentee's fault.
+
+* Strengths this demonstrates
+
+- **Concrete leadership impact.** Not "I am a mentor" — "someone was promoted
+  and credits my mentorship as a contributing factor."
+- **Psychological safety.** Creating an environment where questions are safe
+  is a deliberate skill, not a personality trait.
+- **Cross-cultural collaboration.** Successfully mentored someone in a different
+  country (assigned from India, mentor in EU), navigating time zones and
+  communication styles.
+- **Long-term relationship.** The mentee explicitly stated they would continue
+  to consider the mentor their mentor beyond the formal program.
+
+* Weaknesses this reveals
+
+- **Single data point.** One mentee's experience — powerful but not a pattern
+  until replicated.
+- **Internal impact only.** The impact was within a single organisation;
+  external portability depends on the recruiter's context.
+
+* Related objects
+
+For the theoretical foundation of this approach, see "Extreme Ownership"
+and "Leaders Eat Last" in [[id:20261007-career-trajectory][career-trajectory]].
+
+* Sources
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org
+  — "Feedback od Goutama Tiwari" section. Contains the full quotes from
+    Goutama's written feedback and the analysis of the mentoring approach.
+  git ref: b4a85c4
+
+- ~/Downloads/lenovo-P1-zbytky/Stažené/Feedback_Received.xlsx
+  — personal archive copy containing Goutama's written feedback.
+  sha256: d53e69a1a8a84263d81fed1e44558f30b41ff62cba35a73b74a4df55f734b6db
+
+- ~/org/h1_horizon/muj-profil-je-transparentni-a-uprimny.org
+  — "Red Hat: Insights Health Monitoring" section for additional peer feedback
+    (Zhaolin Zhou, Pavel Holica).
+  git ref: b4a85c4

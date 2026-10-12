@@ -1,0 +1,149 @@
+:PROPERTIES:
+:ID:       20261008-ai-fast-failback
+:TITLE:    AI Fast Failback — contributing a documentation-as-metric idea to a company-wide research initiative
+:CREATED:  <2026-10-08>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Contributed a documentation-as-metric idea to a company-wide AI-trust research initiative — working groups formed around it — treating documentation as a first-class test artifact.
+:DOMAIN:   projects way-of-working
+:TAGS:     ai shift-left documentation executable-spec metrics jira behaviors cross-team initiative
+:STRENGTHS:  idea-propagation cross-team-initiative shift-left-design ai-trust-question networking
+:WEAKNESSES:  unadopted-at-departure
+:END:
+
+# AI Fast Failback — contributing a documentation-as-metric idea to a company-wide research initiative
+
+Near the end of the author's tenure, a **company-wide research initiative**
+was opened around a question about AI trust. Participants brought their own
+ideas, and working groups formed around the ideas that were taken up — one
+of them around the author's. Use to demonstrate: (1) thinking about AI
+trust and verification before it was fashionable, (2) documentation treated
+as a first-class test artifact, (3) the shift-left interface between tester
+and developer.
+
+* The idea the author brought
+
+The initiative's research question — *can AI be trusted on pull
+requests?* — was about **metrics**: which signals make it possible for
+AI to judge whether a pull request is potentially safe or unsafe. The
+author joined the initiative, and at the opening brainstorming meetings
+contributed his answer, built from his testing experience:
+
+1. **Code alone is not enough signal.** If AI is to judge a PR, it needs
+   to read more than the diff — it needs to read the *documentation
+   around the change*: the bug record, how to reproduce it, what to
+   verify. A well-documented bug (simulation steps + validation steps)
+   is the ground truth an automated judge can check a fix against.
+2. **Documentation quality is therefore a PR-safety metric.** Documentation
+   written so it can be *executed and simulated* makes the developer's life
+   easier — they reproduce behaviour immediately — and gives the AI (or a
+   human reviewer) something concrete to validate against.
+
+The second point is the author's recurring signature: the same style as
+Reactive Testing — describe clearly how to simulate, how to check, and
+hand it to the developer. Verification described first, automation
+added later.
+
+* What happened — how the initiative worked
+
+The shape of the initiative matters: it existed first, as a research
+project. It was **not** created by the author's idea; it was *populated*
+by it.
+
+1. The initiative opened around its research question and held
+   **introductory brainstorming meetings**.
+2. People joined and **brought their own ideas**.
+3. Out of the brainstorming, **several working groups formed — one around
+   each idea that was taken up**.
+4. One of those groups formed around the author's idea: making
+   documentation quality (as captured in bug/Jira tickets) a measurable
+   signal for AI PR-judgement.
+
+His contribution was therefore: joining the initiative, bringing one idea
+into the brainstorm at the opening meetings, and having that idea selected
+and staffed as its own working group.
+
+What followed:
+
+- Working on it opened doors across the company: colleagues he had never
+  met reached out offering artifacts — "I have an agent/MCP for Jira
+  tickets, might be useful for you." A small network of AI-practitioner
+  contacts formed around the initiative.
+- The follow-on concept extended the pattern: write test intent as
+  **behaviors** (business-readable, not strictly Gherkin), let **AI
+  generate the test code** from them, and keep **verifications as a
+  separate part** that starts as manual validation and is automated
+  over time. The author explicitly recognized this as the same lineage
+  as his earlier Ansible-based verification work.
+
+* Why the metric belongs there — the author's core conviction
+
+Stated plainly by the author, and worth quoting because it is the whole
+argument in one sentence:
+
+> If a bug is documented well — and it is described well *how to simulate
+> it* and *what to check* — then the chance that the fix will be safe is
+> much greater.
+
+That is why documentation quality belongs in the metrics: documentation
+is not paperwork around the bug, it is the **reproduction and validation
+contract**. A fix is only as verifiable as the description it is judged
+against. Measuring documentation quality therefore measures the
+verifiability of the codebase — the precondition for AI failing fast on
+a risky change.
+
+* How the idea travelled
+
+The initiative was recognized as valuable for the company ("what is good
+for the company is good for the team" — the early framing). The point of
+this object is not that the initiative existed, nor that anyone led it:
+it is that an idea the author had been applying personally in his own
+testing — simulate, then validate, described clearly enough for someone
+else to run — was picked up out of a company-wide brainstorm and staffed
+as a working group of its own.
+
+A note on scope: the initiative was later de-scoped locally and the
+author eventually stopped contributing to it. That belongs to the
+departure narrative, not here. This object records the part that
+matters — the idea, why it belongs in the metrics, and that it was
+taken up beyond one person's desk. The author's own summary:
+
+> "What pleased me was that the idea caught on — and I think it does
+> belong in the metrics."
+
+* What this object demonstrates
+
+| Signal | Evidence |
+|--------|----------|
+| Thinking about AI trust early | "Which metrics let AI judge whether a pull request is safe?" — asked as a research question, not a hype question |
+| Shift-left as a design, not a slogan | Tester writes simulation + validation into the documentation; developer self-serves |
+| Continuity of thinking | Explicitly the same lineage as Reactive Testing and Ansible-based verification — verification described first, automated later |
+| Idea propagation | A personal testing principle became a work package: one of several working groups formed around *his* idea from the brainstorming |
+| Business-readable specs | Behaviors (not strict Gherkin) as the form AI can generate test code from |
+| Networking | Cross-team contacts formed organically around the idea |
+
+* Sources
+
+- **[[id:e8699b75-6039-4954-9091-5917acd2b9c3][inbox.org — Prepis '2026-05-14 09_42_10.mp3']]** — the AI Fast Failback
+  narrative in full (a company-wide research initiative on whether AI can
+  be trusted on pull requests; brainstorming, the working group formed
+  around the author's documentation-as-metric idea, networking, the
+  behaviors/AI-test-generation concept, and the later local de-scoping).
+  Names of people and managers anonymized; the author's
+  formal performance-process context deliberately omitted.
+  git ref: 0d2464ea499aaa0f595d97fdedceffd382f01af0
+- **[[id:522cb4a0-32c0-45e6-b79b-2e499630f548][inbox.org — Prepis '2026-05-14 10_55_56.mp3']]** — wider project résumé
+  recording containing the AI Fast Failback passage among other Red Hat
+  projects (also the Ansible-as-scenario-automation prehistory).
+  git ref: 0d2464ea499aaa0f595d97fdedceffd382f01af0
+- User recollection (2026-10-08, chat) — corrections: (a) the initiative
+  existed first and was *not* created by the author's idea — people brought
+  ideas and groups formed around those ideas; the author's group was one of
+  several; (b) the initiative was a company-wide research project into
+  which metrics would let AI judge whether a pull request is potentially
+  safe or unsafe; (c) the author joined it, brought his idea at the opening
+  brainstorming meetings, and proposed to leadership that he would work on
+  it; leadership declined (early framing: "what is good for Red Hat is good
+  for our team", later reduced in a 1:1 to counting only as "positive
+  feedback"). The author prefers this object to focus on the idea and its
+  adoption, not on the local recognition dispute.

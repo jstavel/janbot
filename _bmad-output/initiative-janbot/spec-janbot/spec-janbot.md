@@ -31,7 +31,7 @@ A **vision to realize**, carrying an **opportunity to capture**. The owner wants
   - **success:** The endpoint validates its response against the Pydantic contract and returns schema-conforming JSON for both a valid question and a malformed request.
 
 - **CAP-4**
-  - **intent:** Only documents under the explicitly designated public profile folder are indexed; private notes are excluded.
+  - **intent:** Only documents under the explicitly designated public profile folder are indexed; private notes are excluded. Containment is decided by *located* path — a symlinked public file is in scope even when its target lives outside the folder; a path located outside the folder is refused.
   - **success:** Adding a private note outside the public folder changes no retrieval result; an automated check fails closed when a non-whitelisted path is offered.
 
 - **CAP-5**

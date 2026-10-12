@@ -1,0 +1,165 @@
+:PROPERTIES:
+:ID:       20261007-reactive-testing-project
+:TITLE:    Reactive Testing — Spec-First testware, TypeScript proof against Kraken Pro
+:CREATED:  <2026-10-08>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: Spec-First testing implemented at scale: a TypeScript monorepo (149 commits, 50 specs, 4 epics) that records evidence from a live browser and verifies it offline against formal models.
+:DOMAIN:   projects way-of-working
+:TAGS:     reactive-testing spec-first typescript playwright ai-assisted-development cicd github-pages
+:STRENGTHS: spec-first-architecture ai-assisted-development evidence-first-verification pipeline-automation zero-waste
+:WEAKNESSES: adoption-gap proof-of-concept-scope
+:PUBLIC:     https://github.com/jstavel/reactive_testing
+:END:
+
+# Reactive Testing — Spec-First testware, TypeScript proof against Kraken Pro
+
+A TypeScript monorepo that implements Spec-First testing as an executable
+architecture against the Kraken Pro trading UI (read-only critical path).
+149 commits, 50 specification documents, 4 completed epics.
+
+Use when demonstrating: Spec-First implemented, not just described; AI-assisted
+development at scale; evidence-first verification pipeline; mature proof-of-work.
+
+* What it is
+
+The project proves a simple claim: describe the application **once** as a formal
+model (FSM + contracts + Zod schemas). A deterministic orchestrator records
+evidence (a corpus) from a live browser session. Pure validators verify that
+evidence **offline** — no browser needed — and failures surface as reviewable
+Gherkin for a human to adjudicate. One navigation funds N validations. **The
+model is the single source of truth**; every test script, plan, and corpus is a
+derived byproduct.
+
+* Architecture (as built)
+
+The pipeline has two deliberately separated phases:
+
+**Phase 1 — Authoring** (offline, AI-assisted, human-reviewed):
+Gherkin features in `features/` are distilled into the executable model
+(`model/fsm.ts` + `model/contracts.ts` + `model/schemas.ts`) — the SSOT.
+A named test plan is derived from the model.
+
+**Phase 2 — Execution & verification** (deterministic, no AI in the loop):
+The orchestrator runs the plan against the live app via Chrome DevTools
+Protocol (CDP), collectors write raw evidence into `corpus/`, then pure
+validators re-check that evidence offline. A failure surfaces as reviewable
+Gherkin; a human adjudicates *spec drift vs app bug*.
+
+Key architectural decisions visible in the code:
+
+- **Model = SSOT.** Three files hold the entire truth about the application.
+  Everything else is derived. `model-version.ts` hashes the three files (SHA-256);
+  the orchestrator refuses a stale plan. A CI test (`model-version.test.ts`)
+  catches a forgotten plan regeneration.
+- **Repro scripts generated from the model.** The `repro/repro-generator.ts`
+  emits standalone scripts that a developer runs without the test framework —
+  just Playwright + model + action-map. No orchestrator, no validators, no
+  collectors. This means a developer can reproduce a bug path *without*
+  learning or installing the testware. The emitted script imports the live
+  action-map, so a regenerated repro always reflects the current spec
+  (FR-12a, AD-7). An unmodeled path is reported as a gap — never silently
+  approximated (FR-12c).
+- **Action map outside the model.** Concrete Playwright locators live in
+  `orchestrator/action-map.ts`, outside the model hash. Editing a locator never
+  bumps the model version.
+- **Collectors write plain data.** Snapshot, probe, network, screenshot — all
+  write plain JSON/files into the corpus. Never into TypeScript.
+- **Validators are pure functions.** Corpus in → `ValidationResult` out. No
+  browser, no network. Can run against any recorded corpus, any time.
+- **One run funds N validations (AD-18).** A validator written months later runs
+  against an *already recorded* corpus without a fresh browser session.
+- **Layer/import discipline.** `collectors/`, `validators/`, and `reporter/`
+  import no other project layer — only `model/` types/schemas (plus libraries).
+  Only `orchestrator/` and `collectors/` touch a live `Page`.
+
+* How it was built
+
+The project was built using the **BMad method** — AI agents drive stories from
+spec through implementation to review. All four epics (21 stories) were built
+this way, each with:
+- A specification document (`spec-*.md` in `_bmad-output/`)
+- A SPEC.md with stories (`stories.yaml`)
+- AI-driven implementation and tests
+- A retrospective after each epic
+
+50 specification documents exist in the implementation artifacts archive,
+documenting every architectural decision from `spec-1-1-scaffold-the-executable-model`
+to `spec-user-documentation-set`.
+
+In the authoring phase, the AI agent uses Playwright MCP to explore the target
+UI and propose a Gherkin feature file. The human's job shifts from *writing
+code* to *deciding what is true* — reviewing AI proposals, catching
+hallucinations, and ensuring the model stays accurate. The tool that drives
+*verification* is the same one used for *authoring*; only the phase differs.
+
+This is Spec-First applied recursively: the framework was *built* the same way
+it *works* — specify first, then implement, then verify.
+
+* What it proves
+
+| Claim | Evidence in this project |
+|-------|--------------------------|
+| Model can be SSOT | FSM + contracts + schemas, version-hashed, plan derived from model |
+| One navigation funds N validations | Validators run offline against committed corpus; no browser needed |
+| AI can drive testware development | 4 epics, 21 stories, 149 commits — all BMad-assisted |
+| CDP is a viable orchestrator target | Runs against Kraken Pro read-only critical path |
+| Evidence pipeline is deterministic | Same plan + same corpus → same validation results |
+| Failures are reviewable | Gherkin output for human adjudication of spec-drift vs app-bug |
+| Model generates developer repro scripts | `repro-generator.ts` emits standalone scripts; dev needs zero testware knowledge |
+
+* Strengths this demonstrates
+
+| Strength | Evidence |
+|----------|----------|
+| Spec-First architecture | Not just describing it — a 3k+ line TypeScript project that embodies it |
+| AI-assisted development at scale | 4 epics, 50 specs, 149 commits driven through BMad method |
+| Evidence-first verification | Pure validators over recorded corpus; no browser in verification phase |
+| Pipeline automation | Full CI (typecheck, test, offline validate, report, GitHub Pages deploy) |
+| Zero-waste design | One run funds N validations; corpus is reusable across validators |
+| Developer empathy | Model generates standalone repro scripts — dev doesn't need the test framework |
+| Documentation discipline | Every story has a spec, every epic has a retrospective, every decision is recorded |
+| Honest scope boundaries | "This is a proof-of-concept for the read-only critical path" — explicitly documented |
+
+* Weaknesses this reveals
+
+- **Adoption gap.** Like the 2019 origin, the idea is validated but not adopted
+  outside the creator's domain. Without organizational change management and
+  visibility, it stays at the individual-contributor level. Related object:
+  `reactive-testing-origin` (same weakness, 6 years apart).
+- **Proof-of-concept scope.** The model covers only the Kraken Pro read-only
+  critical path. Non-read-only flows (trading, settings) are not modelled.
+  No headless mode exists — recording always requires an authenticated browser.
+- **Single application.** Validated against one UI (Kraken Pro). The architecture
+  is generic, but no second application exists to prove portability.
+- **No CI-format output.** Reporters write Gherkin + JSON into the corpus folder;
+  no xunit/JUnit output exists for integration with standard CI dashboards.
+
+* Relationship to other objects
+
+This object describes the **implementation** — the working TypeScript project
+against Kraken Pro. For the **origin and conceptual history** (2019 decoupling
+principle, ARA predecessor, DNS Failover POC), see:
+[[id:20261007-reactive-testing-origin][Reactive Testing — origin of the principle]]
+
+* Sources
+
+- ~/dev/reactive-testing/
+  — full project source code and documentation tree.
+  git ref: ee7b516
+
+- ~/dev/reactive-testing/README.md
+  — project overview, badges, quick start, roadmap, contributing guide.
+  git ref: ee7b516
+
+- ~/dev/reactive-testing/docs/architecture.md
+  — system architecture: two phases, SSOT, players, pipeline, sequence diagram.
+  git ref: ee7b516
+
+- ~/dev/reactive-testing/_bmad-output/implementation-artifacts/
+  — 50 specification documents across 4 epics, plus retrospectives and sprint status.
+  git ref: ee7b516
+
+- ~/dev/reactive-testing/AGENTS.md
+  — BMad agent operating rules used to drive development.
+  git ref: ee7b516

@@ -1,0 +1,124 @@
+:PROPERTIES:
+:ID:       20261007-spec-first-evolution
+:TITLE:    Spec-First Philosophy and Career Evolution
+:CREATED:  <2026-10-07 Wed 10:53>
+:REVIEWED: <2026-10-12>
+:AUTHOR:   goose
+:SYNOPSIS: The evolution of the testing philosophy from Simulation-First to Spec-First: the human writes the specification and reviews it as a contract; AI writes the code and verification runs over collected evidence.
+:DOMAIN:   carrier-stories
+:TAGS:     spec-first shift-left ai-testing simulation-first behave bdd
+:STRENGTHS: long-view-thinking principle-driven resilience honest-assessment integration-thinker value-prioritization grounded-innovation
+:WEAKNESSES: visibility-dependency under-selling context-handoff
+:END:
+
+# Spec-First Philosophy — Career Evolution
+
+Summary of the evolution from "Simulation-First" shift-left testing through today's thinking.
+JanBot: use for questions about testing philosophy, AI approach, career lessons, and decision-making principles.
+
+* Spec-First Testing: "No Code Writing — Spec First"
+
+A person writes the specification, AI writes the code. QE reviews the spec as a contract, not the code.
+
+** Pipeline
+- Developer writes a BASH script that simulates behavior (feature_sim.sh)
+- Developer (or AI) writes a .feature file (Gherkin) with Given/When/Then — a human-readable contract
+- A wrapper runs the script and collects a "Data Bundle" (stdout, log chunks, SELinux messages, metadata.json, service state)
+- AI generates Python step definitions from the .feature — pure verification over the bundle, no simulation
+- Behave runs the tests and reports
+
+** Why Gherkin instead of free text
+- AI-native: massively represented in training data → AI generates reliably
+- Human-reviewable contract: readable by PM, customer, Jira ticket
+- Machine-executable: behave / Cucumber ecosystem (reporting, CI, hooks)
+- Review happens at the contract level (Gherkin), not at the code level — cheaper and faster
+
+** Key principle
+- Decoupled: SIMULATION (bash) ≠ VERIFICATION (data assertions)
+- Zero-waste: every artifact (script, feature file, logs, bundle) serves value to multiple audiences:
+  developer (manual verification), AI (test generation), QE (review), customer (Jira documentation), support (debug)
+
+* Evolution of testing thinking
+
+| Year | Thinking | Form |
+|------|----------|------|
+| 2019 | QECamp: "Testing in a Reactive Way" — event-driven, decoupled framework | Presentation, prototype (Node.js/RxJS + Kafka) |
+| 2025 | Simulation-First: Bash simulation + markdown intent → AI generates assertions | proposal for team work activity |
+| 2026 | Spec-First: .feature as contract, AI generates verification, review at spec level | Mature philosophy |
+
+Continuity: the core is the same — **separate what the system DOES (simulation) from how we VERIFY it (verification)**. The form evolves with AI capabilities.
+
+* Origins of the thinking
+
+The idea emerged in a debate about replacing the team's testing framework.
+
+Two opposing forces:
+1. One view: replace the complex framework with a simpler implementation (e.g., unittest instead of pytest). Change of mechanism without change of value.
+2. Other view: use a BDD framework (behave + .feature files).
+
+Approach: supported the BDD direction and framed it as shift-left:
+- "The test can be written later" → decoupling simulation from verification
+- "The feature file is a living part of documentation/testing" → zero-waste
+
+Lesson: change without "why" is worthless. Change with "why" has value.
+The difference between "this framework is lighter" (unittest) and "this framework changes who does the work" (behave → spec-first).
+
+* Strength: the "What does this bring?" decision principle
+
+"Before every activity I do, I ask: what does this bring?"
+
+A principle adopted from a company meeting about prioritization during a growth slowdown.
+Applied in subsequent work as a value filter.
+
+Correlates with:
+- "Why change when it works" → change without value is churn
+- "Zero-waste" → every artifact must serve more than one group
+- "Visible results, not plans" (external mentor) → value must be measurable
+
+* Strength: principle-driven change
+
+Doesn't reject change, rejects change without value. Criteria:
+- Does it change the mechanism or move human work? (moving work = value)
+- Does it produce a new artifact with multi-stakeholder value? (zero-waste)
+- Does it reduce boilerplate or just move it? (AI boilerplate = OK)
+
+* Strengths (for career context)
+
+1. **Long-view thinking**: sees trends before authorities and sticks with them, even when unpopular. Used AI-assisted development when it was considered "naive."
+
+2. **Principle-driven**: tools change according to principle, not principle according to tools. "No code writing — spec first" instead of "no gherkin."
+
+3. **Resilience under pressure**: produces strategic work (designs, process proposals) even under pressure.
+
+4. **Honest self-assessment**: doesn't inflate past abilities; reflects on "beginnings" and "naivety" — evidence of seeing one's own growth.
+
+5. **Integration thinking**: connects disparate experiences into a coherent narrative (QECamp → behave → simulation-first → spec-first).
+
+6. **Spec-first is a natural working style**: used structure (spec per task, iteration, work-summary) before having a name for it. Not theory — instinct.
+
+7. **Value-based prioritization**: "what does this bring" filter on every activity.
+
+8. **Grounded innovation**: starts by understanding the tools and workflow the team already uses. Improvements emerge organically from using those tools deeply — not from authority or top-down decisions. "Customer pays our bills" bounds experimentation to what delivers real value.
+
+* Weaknesses / Risks (for career context)
+
+1. **Visibility dependency**: work is not automatically visible to every stakeholder. Must be actively reframed under new management/team.
+   → Lesson: when leadership changes, actively present results within the new expectations.
+
+2. **Tendency to under-sell**: characterizing earlier work as "naive" is often harsher than reality. The structure (spec, task slicing) was there — it just wasn't labeled as a "methodology."
+   → Lesson: modesty is fine, but under-selling hurts.
+
+3. **Perception gap during the understanding phase**: when joining a new team/project, the initial phase of understanding the existing stack may look like "nothing is happening" to an external stakeholder. The experimentation is grounded (customer pays bills), but its value isn't visible until it produces results.
+   → Lesson: explicitly communicate the approach during onboarding: "I'm learning your tools first, then I'll improve from within."
+
+4. **Context handoff**: track record doesn't automatically transfer to a new stakeholder. Must be explicitly handed over.
+   → Lesson: onboarding a manager is as important as onboarding into a team.
+
+* Sources
+
+- ~/Downloads/My RedHat/agenda/2026/Q1/Workday/Shift-Left-Testing/
+  executive-summary.md + brain-dumps.md + aa.md — Simulation-First design proposal
+  sha256(executive-summary.md): 6f66ed2a0793657120c086e392d0075147b8d04b7fd2d8e7d14353385969a2e7
+  sha256(brain-dumps.md):      2807320d3e4c61f1aac273310b7b659749b2c0e25e4189817aaf8a0f01332898
+  sha256(aa.md):               b107bee0d1b46d5a84dda5f2e8cd62d3751f9311a98fd6e8b3d969fed5cb9c15
+- Conversation with Goose 2026-10-07 — narrative corrections (Gherkin reframing, Gemini-CLI nuance, self-assessment of "naive experiments")
