@@ -3,7 +3,7 @@ title: 'Citation correctness & uncited-answer rejection'
 type: 'feature'
 ticket: 4
 created: '2026-10-12'
-status: 'built'
+status: 'done'
 baseline_revision: 'd75ba3c9fd44e11ad329edb96e00b07fd2a70419'
 route: 'full'
 route_source: 'auto'

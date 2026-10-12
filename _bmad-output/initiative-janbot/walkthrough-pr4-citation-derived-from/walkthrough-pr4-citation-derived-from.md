@@ -78,4 +78,4 @@ Places to look:
 
 ## Status
 
-All blocks accepted: 6 of 6. Review walkthrough complete; wrap-up pending.
+All blocks accepted: 6 of 6. Review complete: PR #4 merged (c41d353), story 3.4 marked done.

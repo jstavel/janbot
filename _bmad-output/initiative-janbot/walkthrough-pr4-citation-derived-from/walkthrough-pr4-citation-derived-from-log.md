@@ -107,3 +107,21 @@ Session: unavailable · Timestamp: 2026-10-12T21:52:31+0200
 - Result: Narrative checked; block status set to accepted. Wrap-up proposed: commit review files, merge PR #4, mark story 3.4 done — pending the user's say-so.
 - Evidence: walkthrough-pr4-citation-derived-from.md
 - Open: wrap-up awaiting user approval.
+
+## 10 — VCS — merged PR #4
+
+Session: unavailable · Timestamp: 2026-10-12T21:53:26+0200
+
+- Action: PR #4 merged to main via GitHub merge commit `c41d353`.
+- Result: Local main to be aligned on top.
+- Evidence: commit c41d353
+- Open: none
+
+## 11 — Ticket — story marked done
+
+Session: unavailable · Timestamp: 2026-10-12T21:53:26+0200
+
+- Action: Flipped plan status per the reviewer's approval.
+- Result: story-citation-correctness-uncited-answer-rejection (3.4) flipped 'built' → 'done'. The walkthrough files were committed as `646c4a2` before the merge.
+- Evidence: epic-rag-chat/story-citation-correctness-uncited-answer-rejection-plan.md front matter; commit 646c4a2
+- Open: none
