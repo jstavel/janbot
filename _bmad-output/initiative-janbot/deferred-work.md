@@ -21,3 +21,7 @@
 - source_plan: `_bmad-output/initiative-janbot/epic-rag-chat/story-determinism-at-the-locked-snapshot-plan.md`
   summary: CHANGELOG.md `[Unreleased]` gains no entry for the new `JANBOT_SEED` variable, the new `Config.seed` field, or the eval `build_lm` seed pin.
   evidence: The repo states "All notable changes to this project are documented in this file", but the section is stale since story 2.1 (`git log -- CHANGELOG.md` ends at `2d1aa2d`) and stories 3.1–3.4 added no entries either — a pre-existing repo-wide gap, not caused by this change.
+
+- source_plan: `_bmad-output/initiative-janbot/epic-rag-chat/story-determinism-at-the-locked-snapshot-plan.md`
+  summary: Keyed eval-mode double-run not performed — real provider-level reproducibility of the locked snapshot is not demonstrated.
+  evidence: The plan's `## Verification` lists the keyed manual check but it was never run; the automated determinism rows use the stub `DummyLM`, which proves no per-request nondeterminism but not provider reproducibility (plan `## Design Notes`). It backs the ticket's own `verify` ("two runs … identical under the locked snapshot"). Run: start the app in eval mode with `OPENROUTER_API_KEY` set, post the same question twice, diff the bodies.

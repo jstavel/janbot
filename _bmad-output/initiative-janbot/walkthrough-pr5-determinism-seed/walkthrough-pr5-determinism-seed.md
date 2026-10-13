@@ -3,11 +3,11 @@
 Target: PR https://github.com/jstavel/janbot/pull/5 · branch `story-3.5-determinism-locked-snapshot` · commit `03c339b`.
 
 - [x] Block 1 — Intent
-- [ ] Block 2 — Broad strokes (current)
-- [ ] Block 3 — Slice: the seed becomes configuration
-- [ ] Block 4 — Slice: the seed applied at the LM seam
-- [ ] Block 5 — Slice: determinism proven at the port and seam
-- [ ] Block 6 — Periphery
+- [x] Block 2 — Broad strokes
+- [x] Block 3 — Slice: the seed becomes configuration
+- [x] Block 4 — Slice: the seed applied at the LM seam
+- [x] Block 5 — Slice: determinism proven at the port and seam
+- [x] Block 6 — Periphery
 
 ## Block 1 — Intent
 
