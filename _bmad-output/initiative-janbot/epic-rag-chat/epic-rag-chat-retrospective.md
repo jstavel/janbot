@@ -85,7 +85,7 @@ Previous epic: `epic-ingestion` — `epic-ingestion-retrospective.md` (verdict a
 3. **Rewriter coverage + guard alignment** — add tests that fail if `corpus_relative` accepts an out-of-root path or is built from the wrong root; align the rewriter to absolutize `source_path` like the store does (or reject non-absolute at the store). *(owner: next hardening)*
 4. **`JANBOT_TEMPERATURE` validation** — reject non-finite values at config load. *(owner: next hardening)*
 5. **Serve↔ingest root alignment** — either cross-check the serve scope against index provenance or document the operational contract; pins the citation form. *(owner: config/ops)*
-6. **In-place corpus edit** — `public_profile_org/ai-fast-failback.org` was edited in the 3.6 commit; restore via re-extraction or record an accepted deviation. *(owner: human)*
+6. **In-place corpus edit — ACCEPTED DEVIATION (2026-10-13).** The `public_profile_org/ai-fast-failback.org` SYNOPSIS wording ("working group formed") stands: a one-word grammar fix that rode into the 3.6 commit `457bc70`. The owner accepts the current wording; no re-extraction performed. Recorded so later retros stop re-flagging it. *(owner: human, decided)*
 
 **Process lessons:**
 7. Per-story reviews validate stories in isolation and again missed cross-story seams (ingest↔serve root, rewriter/store guard divergence, envelope coverage across the real-model path). Add an epic-close cross-ticket lens pass (as done here) as a standing gate.
