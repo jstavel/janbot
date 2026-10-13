@@ -8,6 +8,10 @@ Target: PR https://github.com/jstavel/janbot/pull/11 · branch `hardening-temper
 - [x] Block 4 — Slice: the tests
 - [x] Block 5 — Periphery
 
+## Status
+
+All blocks accepted: 5 of 5. Review complete: PR #11 squash-merged (`eab9b80`). Loose follow-up work (retro fix-now goal 4) — no ticket to flip.
+
 ## Block 1 — Intent
 
 Source: pasted verbatim from the plan's frozen Intent section — [plan-temperature-finite-validation.md](../plan-temperature-finite-validation.md).
