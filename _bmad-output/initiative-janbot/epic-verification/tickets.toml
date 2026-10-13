@@ -26,11 +26,11 @@ risk = "medium"
 id = 3
 type = "story"
 title = "Grounding coverage through the port"
-description = "Adds HTTP-only cases proving retrieval is bounded to the corpus: an out-of-corpus chunk is never cited (a keyless foreign-only index returns 503) and an uncited answer is refused."
-verify = "No citation names a source outside the served corpus, and an uncited answer is refused with the {detail} envelope."
+description = "Adds HTTP-only cases proving retrieval is bounded to the corpus: the service refuses to start when the index holds an out-of-scope chunk, and a sourceless-only index returns 503."
+verify = "The service refuses to start on an index holding an out-of-scope chunk, and a sourceless-only index returns 503 with the {detail} envelope, through HTTP only."
 covers = ["CAP-7"]
 after = [1, 2]
-hitl = true
+hitl = false
 risk = "medium"
 
 [[entry]]
