@@ -13,6 +13,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
+import pytest
+
 from janbot.ingest import index_corpus, iter_org_files, within
 from janbot.store import VectorStore
 
@@ -148,3 +150,88 @@ def test_unresolvable_path_is_refused(tmp_path: Path) -> None:
 
     assert within(root, loop / "x.org") is False
     assert list(iter_org_files(loop)) == []
+
+
+def test_index_corpus_refuses_out_of_scope_path_handed_directly(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Done-when 3 (isolated): ``index_corpus``' own guard refuses an out-of-scope path.
+
+    ``iter_org_files`` is patched to bypass its filter, so the only thing that can
+    keep the outside file out of the index is ``index_corpus``' ``within`` guard.
+    Removing that guard alone makes this test fail (the file would be indexed).
+    """
+    root = tmp_path / "root"
+    root.mkdir()
+    write_org(root / "public.org", "Public")
+    outside = tmp_path / "elsewhere" / "secret.org"
+    write_org(outside, "Secret")
+
+    monkeypatch.setattr("janbot.ingest.iter_org_files", lambda _root: iter([outside]))
+
+    index_path = tmp_path / "index"
+    assert index_corpus(root, index_path, embedder) == 0
+    assert VectorStore(index_path, embedder).ids() == set()
+
+
+def test_iter_org_files_refuses_out_of_scope_path_from_its_own_filter(
+    tmp_path: Path,
+    write_org: Callable[..., None],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Done-when 3 (isolated): ``iter_org_files``' own ``within`` filter drops an out-of-scope path.
+
+    ``rglob`` is patched to yield both an in-root and an out-of-root file, so the
+    only thing that can drop the outside file is ``iter_org_files``' ``within``
+    check. Removing that filter alone makes this test fail.
+    """
+    root = tmp_path / "root"
+    root.mkdir()
+    inside = root / "in.org"
+    write_org(inside, "In")
+    outside = tmp_path / "outside" / "out.org"
+    write_org(outside, "Out")
+
+    monkeypatch.setattr(Path, "rglob", lambda self, pattern: iter([inside, outside]))
+
+    assert [path.name for path in iter_org_files(root)] == ["in.org"]
+
+
+def test_private_note_changes_no_ranked_retrieval(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Done-when 3: offering a private note to the indexer leaves the *ranked* retrieval identical.
+
+    The private file sits outside the root; it is offered to ``index_corpus`` by
+    patching ``iter_org_files`` so the scope guard is the only thing keeping it
+    out. A regression that let it in would add a matching chunk and change the
+    ranking, so the before/after lists would differ.
+    """
+    corpus = tmp_path / "public_profile_org"
+    corpus.mkdir()
+    public = corpus / "public.org"
+    write_org(public, "Shared topic", body="Public shared content.")
+
+    index_path = tmp_path / "index"
+    index_corpus(corpus, index_path, embedder)
+    before = VectorStore(index_path, embedder).query("shared", k=5)
+    assert before
+    assert all(Path(row["source_path"]).is_relative_to(corpus) for row in before)
+
+    private = tmp_path / "elsewhere" / "priv.org"
+    write_org(private, "Shared topic", body="Private shared content.")
+    monkeypatch.setattr("janbot.ingest.iter_org_files", lambda _root: iter([public, private]))
+
+    index_corpus(corpus, index_path, embedder)
+    after = VectorStore(index_path, embedder).query("shared", k=5)
+
+    assert after == before
+    assert all("Private shared content." not in (row["text"] or "") for row in after)
+
+
