@@ -8,6 +8,7 @@ covers: ["CAP-7"]
 after: []
 assignee: ""
 risk: medium
+status: done
 ---
 
 # End-to-end tests & CI
