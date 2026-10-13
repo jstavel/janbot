@@ -24,7 +24,7 @@ from janbot.store import VectorStore
 
 Embedder = Callable[[list[str]], list[list[float]]]
 
-DEFAULT_SNAPSHOT = "openai/gpt-4o-mini-2024-07-18"
+DEFAULT_SNAPSHOT = "openrouter/openai/gpt-4o-mini-2024-07-18"
 OPENROUTER_MODEL = "openrouter/auto"
 OPENROUTER_API_BASE = "https://openrouter.ai/api/v1"
 
@@ -140,7 +140,7 @@ def test_chat_happy_path_returns_answer_and_citations(
     sources = [citation["source"] for citation in data["citations"]]
     assert sources == ["profile.org", "projects.org"]
     assert factory.history == [
-        {"model": DEFAULT_SNAPSHOT, "temperature": 0.0, "seed": 0}
+        {"model": DEFAULT_SNAPSHOT, "temperature": 0.0, "api_base": OPENROUTER_API_BASE, "seed": 0}
     ]
 
 
@@ -216,7 +216,7 @@ def test_chat_model_routing_changes_with_environment_only(
     assert eval_kwargs["seed"] == 0
     assert "seed" not in production_kwargs
     assert factory.history == [
-        {"model": DEFAULT_SNAPSHOT, "temperature": 0.0, "seed": 0},
+        {"model": DEFAULT_SNAPSHOT, "temperature": 0.0, "api_base": OPENROUTER_API_BASE, "seed": 0},
         {
             "model": OPENROUTER_MODEL,
             "temperature": 0.0,
@@ -270,7 +270,7 @@ def test_chat_two_identical_env_apps_return_identical_json(
     assert first.json() == second.json()
     assert first_factory.history == second_factory.history
     assert first_factory.history == [
-        {"model": DEFAULT_SNAPSHOT, "temperature": 0.0, "seed": 0}
+        {"model": DEFAULT_SNAPSHOT, "temperature": 0.0, "api_base": OPENROUTER_API_BASE, "seed": 0}
     ]
 
 
