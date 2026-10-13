@@ -8,6 +8,10 @@ Target: PR https://github.com/jstavel/janbot/pull/8 · branch `story-3.8-refacto
 - [x] Block 4 — Slice: recording the deferred items
 - [x] Block 5 — Periphery
 
+## Status
+
+All blocks accepted: 5 of 5. Review complete: PR #8 squash-merged (`c6b2986`), story 3.8 marked done; `epic-rag-chat` complete (entries 1–8).
+
 ## Block 1 — Intent
 
 Source: pasted verbatim from the plan's frozen Intent section — [story-refactor-sweep-plan.md](../epic-rag-chat/story-refactor-sweep-plan.md).
