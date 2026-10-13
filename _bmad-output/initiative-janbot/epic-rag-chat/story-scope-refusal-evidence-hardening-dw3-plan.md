@@ -3,7 +3,7 @@ title: 'Scope/refusal evidence hardening (DW3)'
 type: 'chore'
 ticket: 7
 created: '2026-10-13'
-status: 'built'
+status: 'done'
 baseline_revision: 'a4b4e31297a3df253d9d0d9b516c4fbbb7b0c64e'
 route: 'oneshot'
 route_source: 'auto'

@@ -8,6 +8,10 @@ Target: PR https://github.com/jstavel/janbot/pull/7 · branch `story-3.7-scope-e
 - [x] Block 4 — Slice: the ranked comparison
 - [x] Block 5 — Periphery
 
+## Status
+
+All blocks accepted: 5 of 5. Review complete: PR #7 squash-merged (`b482416`), story 3.7 marked done.
+
 ## Block 1 — Intent
 
 Source: pasted verbatim from the plan's frozen Intent section — [story-scope-refusal-evidence-hardening-dw3-plan.md](../epic-rag-chat/story-scope-refusal-evidence-hardening-dw3-plan.md).
