@@ -10,7 +10,7 @@ Target: PR https://github.com/jstavel/janbot/pull/17 · branch `e2e-4.4-determin
 
 ## Status
 
-All blocks accepted: 5 of 5. Review complete; wrap-up pending (merge PR #17, mark story 4.4 done, unblock entry 4.5).
+All blocks accepted: 5 of 5. Review complete: PR #17 squash-merged (`7a76bc2`), story 4.4 marked done; entry 4.5 unblocked.
 
 ## Block 1 — Intent
 
