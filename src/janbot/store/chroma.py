@@ -138,6 +138,20 @@ class VectorStore:
                 sources[chunk_id] = source
         return sources
 
+    def out_of_scope_sources(self) -> dict[str, str]:
+        """Return stored chunks whose ``source_path`` lies outside ``scope``.
+
+        Empty when the store is unscoped. Used at startup to surface an index
+        built from a corpus root other than the one being served.
+        """
+        if self.scope is None:
+            return {}
+        return {
+            chunk_id: source
+            for chunk_id, source in self.sources().items()
+            if not _within_scope(self.scope, source)
+        }
+
     def payload(self) -> dict[str, tuple[str, tuple[float, ...]]]:
         """Return each stored chunk id mapped to its (document, embedding) payload.
 

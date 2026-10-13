@@ -55,13 +55,22 @@ def create_app(
     absent.
 
     Raises:
-        ValueError: if the resolved configuration is invalid, or if the model
-            mode is ``production`` and no ``OPENROUTER_API_KEY`` is present.
+        ValueError: if the resolved configuration is invalid, if the model
+            mode is ``production`` and no ``OPENROUTER_API_KEY`` is present, or
+            if the index holds chunks whose ``source_path`` lies outside
+            ``JANBOT_CORPUS_PATH`` (built from a different corpus root).
     """
     config = load_config(env)
     store = VectorStore(
         config.index_path, embedder or default_embedder(), scope=config.corpus_path
     )
+    foreign = store.out_of_scope_sources()
+    if foreign:
+        raise ValueError(
+            f"the index holds {len(foreign)} chunk(s) whose source_path lies "
+            f"outside {config.corpus_path} — the index was built from a different "
+            "corpus root; refusing to start"
+        )
 
     source = os.environ if env is None else env
     api_key = (source.get(OPENROUTER_API_KEY_ENV) or "").strip() or None

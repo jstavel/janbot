@@ -57,3 +57,7 @@
 - source_plan: none
   summary: `public_profile_org/ai-fast-failback.org` was edited in-place inside the 3.6 PR — restore via re-extraction, or record an accepted deviation.
   evidence: Commit `457bc70` (story 3.6) changed the SYNOPSIS line; outside the epic Boundary and its carries; README says the corpus is updated only by re-extraction. Recorded in the epic-rag-chat retrospective. Split out; human content decision.
+
+- source_plan: `_bmad-output/initiative-janbot/plan-serve-ingest-root-alignment.md`
+  summary: The startup cross-check does not catch a serve corpus root *broader* than the ingest root (all indexed chunks stay in scope; only the citation label shifts).
+  evidence: `out_of_scope_sources()` flags only stored chunks outside `config.corpus_path`; the index records no ingest-root provenance. Covering that direction needs persisted provenance (option C, edits `ingest/`). Low harm: the index holds only the public corpus, so no out-of-corpus content can be retrieved; only the label form changes.
