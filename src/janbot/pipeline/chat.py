@@ -59,15 +59,25 @@ class GroundedAnswer(dspy.Signature):
 def corpus_relative(root: Path) -> Callable[[str], str]:
     """Build the citation rewriter: absolute ``source_path`` -> corpus-root-relative label.
 
-    Fail-closed: a source located outside ``root`` raises
+    Containment is judged by the *located* path — the containing directory is
+    resolved while the final component is left intact — matching the store's
+    retrieval scope, so the two guards cannot disagree. Fail-closed: a
+    non-absolute source, or one located outside ``root``, raises
     :class:`UnattributableContext`, so no unrewritable path can reach a citation.
     """
     resolved_root = Path(root).resolve()
 
     def rewrite(source_path: str) -> str:
+        absolute = Path(source_path)
+        if not absolute.is_absolute():
+            raise UnattributableContext(
+                "a retrieved chunk's source_path is not absolute; "
+                "cannot rewrite it to a corpus-relative citation"
+            )
         try:
-            return str(Path(source_path).relative_to(resolved_root))
-        except ValueError as exc:
+            located = absolute.parent.resolve() / absolute.name
+            return str(located.relative_to(resolved_root))
+        except (ValueError, OSError, RuntimeError) as exc:
             raise UnattributableContext(
                 "a retrieved chunk's source_path lies outside the corpus root; "
                 "cannot rewrite it to a corpus-relative citation"

@@ -43,13 +43,21 @@ _COLLECTION_NAME = "janbot"
 def _within_scope(scope: Path, source_path: str | None) -> bool:
     """Return ``True`` only when ``source_path`` is *located* inside ``scope``.
 
-    Mirrors :func:`janbot.ingest.scope.within` for an already-resolved root,
-    without importing it (``janbot.ingest`` imports ``janbot.store``; that import
-    would be circular). The containing directory is resolved while the final
-    component is left intact, so containment is judged by where a path sits.
-    Fail-closed: a missing or unjudgeable path returns ``False``.
+    Containment is judged by the *located* path, like the citation rewriter
+    (:func:`janbot.pipeline.chat.corpus_relative`), so the retrieval and citation
+    guards agree; it does not import ``janbot.ingest.scope`` (that import would
+    be circular: ``janbot.ingest`` imports ``janbot.store``), and it is stricter
+    than ``janbot.ingest.scope.within``, which does not require an absolute path.
+    The containing directory is resolved while the final component is left
+    intact, so containment is judged by where a path sits.
+    Fail-closed: a missing, non-string, **non-absolute**, or unjudgeable path
+    returns ``False`` (a relative path's meaning would depend on the process
+    CWD, which the citation rewriter — which refuses relative paths — would
+    disagree with).
     """
     if not isinstance(source_path, str) or not source_path:
+        return False
+    if not Path(source_path).is_absolute():
         return False
     if ".." in Path(source_path).parts:
         return False
