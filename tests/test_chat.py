@@ -586,3 +586,60 @@ def test_chat_unexpected_processing_error_is_mapped_to_500_envelope(
     assert response.status_code == 500
     assert response.json()["detail"] == "the service failed to process the request"
     assert "/secret/internal/path" not in response.text
+
+
+def test_chat_citation_order_follows_retrieval_not_claim_order_or_sort(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+) -> None:
+    """Citations follow retrieval order — not claim order, and not label sort order.
+
+    The corpus is built so retrieval rank ("zulu.org" first) differs from
+    lexicographic order ("alpha.org" first); two apps claim the sources in
+    opposite orders and must still emit identical bodies.
+    """
+    corpus = tmp_path / "public_profile_org"
+    corpus.mkdir()
+    write_org(corpus / "alpha.org", "Topic", body="alpha")
+    write_org(corpus / "zulu.org", "Topic", body="zulu zulu zulu zulu")
+    index_path = tmp_path / "index"
+    index_corpus(corpus, index_path, embedder)
+    env = _chat_env(corpus, index_path)
+    question = {"question": "zulu zulu zulu"}
+
+    forward = create_app(
+        env=env, embedder=embedder, lm_factory=StubLMFactory(citations=["zulu.org", "alpha.org"])
+    )
+    reverse = create_app(
+        env=env, embedder=embedder, lm_factory=StubLMFactory(citations=["alpha.org", "zulu.org"])
+    )
+
+    first = TestClient(forward).post("/chat", json=question)
+    second = TestClient(reverse).post("/chat", json=question)
+
+    assert first.status_code == 200 and second.status_code == 200
+    sources = [citation["source"] for citation in first.json()["citations"]]
+    assert sources == ["zulu.org", "alpha.org"]  # retrieval rank, not sorted
+    assert first.text == second.text
+
+
+def test_chat_repeated_claim_yields_one_citation(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """A repeated claim still yields one citation per distinct source."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["profile.org", "profile.org", "projects.org"]),
+    )
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 200
+    sources = [citation["source"] for citation in response.json()["citations"]]
+    assert sources == ["profile.org", "projects.org"]

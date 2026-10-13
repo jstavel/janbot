@@ -8,7 +8,7 @@ corpus-root-relative source. The answer comes from an LM prediction that also
 names the source labels it derived the answer from; the program rewrites each
 retrieved chunk's ``source_path`` to its corpus-root-relative label, treats
 those names as claims, validates them against the rewritten labels, and emits
-citations only from them — so no absolute path can leave the port.
+citations only from them, in retrieval order — so no absolute path can leave the port.
 An answer claiming no sources, or naming sources outside the retrieved set, is
 rejected rather than returned.
 
@@ -134,5 +134,10 @@ class ChatProgram(dspy.Module):
                 "refusing to return the unverifiable answer"
             )
 
-        citations = [Citation(source=source) for source in dict.fromkeys(normalized)]
+        cited = set(normalized)
+        citations = [
+            Citation(source=source)
+            for source in dict.fromkeys(sources)
+            if source in cited
+        ]
         return ChatResponse(answer=prediction.answer, citations=citations)
