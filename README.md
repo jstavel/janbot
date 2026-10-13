@@ -52,7 +52,7 @@ JanBot is configured through environment variables loaded by [`janbot.config`](s
 | --- | --- | --- |
 | `JANBOT_MODEL_MODE` | `eval` | `eval` uses the locked deterministic snapshot (CI/evaluation); `production` uses `openrouter/auto`. An unknown value fails fast. |
 | `JANBOT_MODEL_SNAPSHOT` | `openai/gpt-4o-mini-2024-07-18` | The locked model used in `eval` mode. |
-| `JANBOT_TEMPERATURE` | `0.0` | LM sampling temperature passed to the model in every mode. A value that is not a number fails fast. |
+| `JANBOT_TEMPERATURE` | `0.0` | LM sampling temperature passed to the model in every mode. A value that is not a finite number fails fast. |
 | `JANBOT_SEED` | `0` | Sampling seed pinning determinism in `eval` mode only. `production` (`openrouter/auto`) is seed-free. A value that is not an integer fails fast. |
 | `JANBOT_TOP_K` | `3` | Retrieval top-k: how many corpus chunks ground an answer. An invalid or non-positive value fails fast. |
 | `JANBOT_CORPUS_PATH` | `public_profile_org` | The corpus root: the only tree the ingestion pipeline will index (fail-closed) and the scope retrieval is bounded to at the store. |
