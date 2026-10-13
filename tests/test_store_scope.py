@@ -12,6 +12,8 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from janbot.store import VectorStore
 
 Embedder = Callable[[list[str]], list[list[float]]]
@@ -152,3 +154,44 @@ def test_scoped_store_truncates_to_k_within_scope(
 
     assert len(rows) == 2
     assert all(Path(row["source_path"]).is_relative_to(root) for row in rows)
+
+
+def test_scoped_store_excludes_relative_source_path(
+    tmp_path: Path,
+    embedder: Embedder,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A relative ``source_path`` is excluded, matching the rewriter's refusal — no CWD dependence.
+
+    The process CWD is set to the corpus root, so a relative path would resolve
+    *inside* it under the old ``abspath`` behaviour; the guard must still exclude it.
+    """
+    root = tmp_path / "corpus"
+    root.mkdir()
+    index_path = tmp_path / "index"
+    monkeypatch.chdir(root)
+
+    store = _scoped_store(index_path, embedder, root)
+    store.upsert([StoredChunk("rel::0::H", "needle", str(root / "a.org"))])
+    store.upsert([StoredChunk("rel::1::H", "needle", "a.org")])
+
+    rows = store.query("needle", k=3)
+
+    assert [row["id"] for row in rows] == ["rel::0::H"]
+
+
+def test_scoped_store_excludes_dotdot_source_path(
+    tmp_path: Path, embedder: Embedder
+) -> None:
+    """A ``..`` in a ``source_path`` is excluded (fail-closed)."""
+    root = tmp_path / "corpus"
+    root.mkdir()
+    index_path = tmp_path / "index"
+
+    store = _scoped_store(index_path, embedder, root)
+    store.upsert([StoredChunk("in::0::H", "needle", str(root / "a.org"))])
+    store.upsert([StoredChunk("dd::1::H", "needle", str(root / ".." / "elsewhere" / "x.org"))])
+
+    rows = store.query("needle", k=3)
+
+    assert [row["id"] for row in rows] == ["in::0::H"]
