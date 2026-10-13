@@ -10,7 +10,7 @@ Target: PR https://github.com/jstavel/janbot/pull/20 · branch `e2e-4.6-refactor
 
 ## Status
 
-All blocks accepted: 5 of 5. Review complete; wrap-up pending (merge PR #20, mark story 4.6 done — closes `epic-verification`).
+All blocks accepted: 5 of 5. Review complete: PR #20 squash-merged (`b8eadc8`), story 4.6 marked done — `epic-verification` complete.
 
 ## Block 1 — Intent
 
