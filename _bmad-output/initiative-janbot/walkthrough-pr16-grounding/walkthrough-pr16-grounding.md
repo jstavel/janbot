@@ -11,7 +11,7 @@ Target: PR https://github.com/jstavel/janbot/pull/16 · branch `e2e-4.3-groundin
 
 ## Status
 
-All blocks accepted: 6 of 6. Review complete; wrap-up pending (merge PR #16, mark story 4.3 done, unblock entry 4.4).
+All blocks accepted: 6 of 6. Review complete: PR #16 squash-merged (`c0919dc`), story 4.3 marked done; entry 4.4 unblocked.
 
 ## Block 1 — Intent
 

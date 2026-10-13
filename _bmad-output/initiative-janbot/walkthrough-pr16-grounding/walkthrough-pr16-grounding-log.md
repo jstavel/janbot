@@ -64,3 +64,12 @@ Session: unavailable · Timestamp: 2026-10-13T17:04:00+02:00
 - Result: accepted as-is. All 6 blocks accepted; no findings raised during the walkthrough.
 - Evidence: narrative Block 6.
 - Open: wrap-up — commit walkthrough artifacts, merge PR #16, mark story 4.3 done.
+
+## 8 — Wrap-up — merged
+
+Session: unavailable · Timestamp: 2026-10-13T17:15:00+02:00
+
+- Action: committed the walkthrough artifacts to `e2e-4.3-grounding`; squash-merged PR #16.
+- Result: PR #16 merged as `c0919dc`; plan 4.3 set to `done`; entry 4.4 unblocked.
+- Evidence: `c0919dc`; PR https://github.com/jstavel/janbot/pull/16.
+- Open: none.

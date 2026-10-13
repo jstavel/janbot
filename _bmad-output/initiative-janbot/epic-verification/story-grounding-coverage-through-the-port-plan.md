@@ -3,7 +3,7 @@ title: 'Grounding coverage through the port'
 type: 'feature'
 ticket: 3
 created: '2026-10-13'
-status: 'built'
+status: 'done'
 baseline_revision: '98c6511c84cbf1d14073b62133bbaeb7dab76498'
 route: 'full'
 route_source: 'auto'
