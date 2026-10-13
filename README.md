@@ -117,6 +117,8 @@ The grounding boundary is proven at the port by `tests/e2e/test_grounding_e2e.py
 
 Grounding determinism at the locked snapshot is proven by `tests/e2e/test_determinism_e2e.py`: two **cache-cold** eval service runs (each a fresh process with its own `DSPY_CACHEDIR`, so its single `POST /chat` is a real generation, not a DSPy response-cache hit) are posted the same question once each, and the two `200` runs must ground the answer in the **same corpus sources**. (The provider does not guarantee byte-identical answer *text* at temperature 0, so the row pins grounding, not wording.)
 
+CI (`.github/workflows/ci.yml`) runs the unit/in-process suite and the port-only `tests/e2e` suite as separate named steps, plus a `contract-negative` job that mutates `tests/fixtures/chat_response.json` and requires `tests/test_response_contract.py` to go red — proving the broken-`/chat`-contract check is not vacuous.
+
 Run the port-only happy path with a key (the `eval` snapshot is served through `dspy`/LiteLLM, which reads `OPENAI_API_KEY`):
 
 ```sh

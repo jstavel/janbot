@@ -32,5 +32,53 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked
 
-      - name: Run tests
-        run: uv run pytest -q
+      - name: Run unit and in-process tests
+        run: uv run pytest -q --ignore=tests/e2e
+
+      - name: Run port-only end-to-end tests
+        run: uv run pytest tests/e2e -q
+
+  contract-negative:
+    name: contract-negative
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Mutate the response fixture to hold zero citations
+        run: |
+          uv run python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("tests/fixtures/chat_response.json")
+          payload = json.loads(path.read_text())
+          payload["citations"] = []
+          path.write_text(json.dumps(payload))
+          PY
+
+      - name: The contract self-test must go red on the mutated fixture
+        run: |
+          set +e
+          uv run pytest \
+            tests/test_response_contract.py::test_response_fixture_validates_unchanged -q
+          code=$?
+          set -e
+          if [ "$code" -ne 1 ]; then
+            echo "::error::expected the fixture-validation self-test to FAIL on the broken contract (exit 1); got $code"
+            exit 1
+          fi
+          echo "the self-test detected the broken contract, as required"
