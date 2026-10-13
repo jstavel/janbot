@@ -27,9 +27,7 @@ from typing import Any
 import httpx
 import pytest
 
-OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
-
-QUESTION = "What search infrastructure has Jan worked on?"
+from e2e._support import MODEL_KEY_ENV, QUESTION
 
 
 def _assert_grounded_response(body: dict[str, Any]) -> None:
@@ -50,8 +48,8 @@ def _sources(body: dict[str, Any]) -> list[str]:
 
 
 @pytest.mark.skipif(
-    not (os.environ.get(OPENROUTER_API_KEY_ENV) or "").strip(),
-    reason=f"{OPENROUTER_API_KEY_ENV} is not set: the determinism e2e row is skipped",
+    not (os.environ.get(MODEL_KEY_ENV) or "").strip(),
+    reason=f"{MODEL_KEY_ENV} is not set: the determinism e2e row is skipped",
 )
 def test_two_cold_runs_ground_the_answer_in_the_same_sources(
     cold_service: Callable[[], AbstractContextManager[str]],

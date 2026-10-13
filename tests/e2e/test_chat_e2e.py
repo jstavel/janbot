@@ -6,9 +6,9 @@ question to ``POST /chat`` and asserts the shipped contract: ``200`` with an
 internals — ``httpx``, ``pytest`` and the standard library only.
 
 The real-model answer needs a model key (the ``eval`` snapshot
-``openai/gpt-4o-mini-2024-07-18`` is served through ``dspy``/LiteLLM, which reads
-``OPENROUTER_API_KEY``). Without one the happy path is *skipped*, never failed, so a
-keyless run (CI) stays green.
+``openai/gpt-4o-mini-2024-07-18`` is served through OpenRouter via
+``dspy``/LiteLLM, keyed by ``OPENROUTER_API_KEY``). Without one the happy path is
+*skipped*, never failed, so a keyless run (CI) stays green.
 """
 
 from __future__ import annotations
@@ -18,14 +18,12 @@ import os
 import httpx
 import pytest
 
-OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
-
-QUESTION = "What search infrastructure has Jan worked on?"
+from e2e._support import MODEL_KEY_ENV, QUESTION
 
 
 @pytest.mark.skipif(
-    not (os.environ.get(OPENROUTER_API_KEY_ENV) or "").strip(),
-    reason=f"{OPENROUTER_API_KEY_ENV} is not set: the real-model e2e happy path is skipped",
+    not (os.environ.get(MODEL_KEY_ENV) or "").strip(),
+    reason=f"{MODEL_KEY_ENV} is not set: the real-model e2e happy path is skipped",
 )
 def test_chat_returns_grounded_answer_with_corpus_relative_citation(
     service_base_url: str,
