@@ -28,7 +28,7 @@ Every change to JanBot is verified by an automated, deterministic endpoint suite
 
 1. A pytest + httpx suite starts the service and exercises `/chat` end to end through HTTP.
 2. It asserts the contract shape, the at-least-one-citation rule, and standard error handling for malformed input.
-3. A determinism test passes twice under the locked snapshot at `temperature=0`.
+3. A determinism test passes twice under the locked snapshot at `temperature=0`, grounding the answer in the same corpus sources (the provider does not guarantee byte-identical answer text).
 4. The suite runs green in CI on every push; a deliberately broken contract turns it red.
 5. The suite imports no Python-internal modules — it interacts only through the HTTP port.
 
@@ -51,3 +51,4 @@ Every change to JanBot is verified by an automated, deterministic endpoint suite
 - Decision (2026-10-13, grounding re-scope): entry 3 was re-scoped — the goal-5 startup check makes an out-of-scope index a **startup refusal** (not a served 503), so entry 3 asserts the service refuses to start on such an index plus a sourceless-only → 503; the "uncited answer is refused" assertion was dropped (not deterministically forceable via a live model; covered in-process at `tests/test_chat.py`).
 - Decision (2026-10-13, fixture): **entry 1 owns** building and committing the fixture index (a hitl step), so the test modules import no `janbot` internals (Done-when 5, AD-7).
 - Decision (2026-10-13, broken-contract): Done-when 4's negative is test-side — a keyless self-test feeds a deliberately malformed response through the Pydantic contract (asserting rejection), plus a CI job that mutates the response fixture and expects the run to go red; no `api/` change (the epic boundary holds).
+- Decision (2026-10-13, determinism scope): Done-when 3's "determinism" is **grounding** determinism — the same query under the locked snapshot retrieves and cites the same corpus sources. `gpt-4o-mini` is not byte-stable at `temperature=0` (measured ~50% wording variance), so entry 4's port row asserts same-source grounding, not identical bodies; CAP-6's success criterion was reworded to match.
