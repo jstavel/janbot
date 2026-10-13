@@ -8,6 +8,10 @@ Target: PR https://github.com/jstavel/janbot/pull/10 · branch `hardening-citati
 - [x] Block 4 — Slice: proving the ordering
 - [x] Block 5 — Periphery
 
+## Status
+
+All blocks accepted: 5 of 5. Review complete: PR #10 squash-merged (`40eb40d`). Loose follow-up work (retro fix-now goal 2) — no ticket to flip.
+
 ## Block 1 — Intent
 
 Source: pasted verbatim from the plan's frozen Intent section — [plan-citation-ordering.md](../plan-citation-ordering.md).
