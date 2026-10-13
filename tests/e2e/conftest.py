@@ -20,6 +20,7 @@ import socket
 import subprocess
 import time
 from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import httpx
@@ -115,18 +116,16 @@ def fixture_index(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return index_path
 
 
-@pytest.fixture(scope="session")
-def service_base_url(
-    fixture_index: Path, tmp_path_factory: pytest.TempPathFactory
-) -> Iterator[str]:
-    """Start the service as a subprocess against the fixture index; yield its base URL."""
+@contextmanager
+def _serve(index_path: Path, tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
+    """Start the service as a subprocess against ``index_path``; yield its base URL."""
     port = _free_port()
     base_url = f"http://{HOST}:{port}"
     log_path = tmp_path_factory.mktemp("service") / "service.log"
     env = {
         **os.environ,
         "JANBOT_CORPUS_PATH": str(FIXTURE_CORPUS),
-        "JANBOT_INDEX_PATH": str(fixture_index),
+        "JANBOT_INDEX_PATH": str(index_path),
         "JANBOT_MODEL_MODE": "eval",
     }
 
@@ -152,3 +151,21 @@ def service_base_url(
             yield base_url
         finally:
             _stop(process)
+
+
+@pytest.fixture(scope="session")
+def service_base_url(
+    fixture_index: Path, tmp_path_factory: pytest.TempPathFactory
+) -> Iterator[str]:
+    """The service started against the fixture index (a populated corpus)."""
+    with _serve(fixture_index, tmp_path_factory) as base_url:
+        yield base_url
+
+
+@pytest.fixture(scope="session")
+def empty_service_base_url(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
+    """The service started against an empty index (no corpus grounding)."""
+    empty_index = tmp_path_factory.mktemp("empty_index") / "chroma"
+    with _serve(empty_index, tmp_path_factory) as base_url:
+        yield base_url
+
