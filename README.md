@@ -113,6 +113,8 @@ Planning artifacts live in `_bmad-output/`: `spec-janbot/` (the capability contr
 
 The suite in `tests/e2e/` proves the *shipped service answers through its HTTP port*: it starts `uv run uvicorn janbot.api.main:app` as a subprocess against a fixture index and posts to `POST /chat` over HTTP, importing no `janbot` internals. The fixture index is built at session setup by the ingestion CLI (in a subprocess), so it is never committed — a ChromaDB index bakes absolute `source_path` values and would only match the author's checkout. The real-model happy path needs a model key and is skipped cleanly without one, so a keyless run stays green.
 
+The grounding boundary is proven at the port by `tests/e2e/test_grounding_e2e.py`: a crafted index holding an out-of-scope chunk makes the service exit at startup, and a sourceless-only index answers `/chat` with `503`. Those indexes come from `tests/e2e/make_index.py`, a non-test helper run as a subprocess.
+
 Run the port-only happy path with a key (the `eval` snapshot is served through `dspy`/LiteLLM, which reads `OPENAI_API_KEY`):
 
 ```sh
