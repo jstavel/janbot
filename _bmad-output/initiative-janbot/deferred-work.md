@@ -35,3 +35,25 @@
 - source_plan: `_bmad-output/initiative-janbot/epic-rag-chat/story-refactor-sweep-plan.md`
   summary: Scoped `VectorStore.query` over-fetches the whole collection when scoped; narrowing the fetch is a deferrable optimization.
   evidence: The scope guarantee is correct today; only cost scales with corpus size. `store/` is outside the 3.8 cleanup boundary, and this is performance, not correctness.
+
+## Deferred from the epic-rag-chat retrospective (2026-10-13)
+
+- source_plan: none
+  summary: Citation ordering — emit citations in retrieval-`sources` order rather than LM-claim order, to close the DW4 nondeterminism channel.
+  evidence: `src/janbot/pipeline/chat.py:137` builds citations via `dict.fromkeys(normalized)` in model-claim order; recorded in the epic-rag-chat retrospective. Split out of the fix-now set; the lead goal is envelope robustness.
+
+- source_plan: none
+  summary: Rewriter guard coverage + alignment — tests for `corpus_relative`, and align its `source_path` absolutization with the store's.
+  evidence: `UnattributableContext`/`corpus_relative` appear in no test after 3.6; the store's `_within_scope` uses `os.path.abspath` (`store/chroma.py:57`) while the rewriter uses `relative_to` with no absolutization (`pipeline/chat.py:69`). Recorded in the epic-rag-chat retrospective. Split out of the fix-now set.
+
+- source_plan: none
+  summary: Reject non-finite `JANBOT_TEMPERATURE` (nan/inf) at config load.
+  evidence: `src/janbot/config.py:115-124` parses float only; `load_config({'JANBOT_TEMPERATURE':'nan'})` yields `nan` (verified), silently voiding the 3.5 eval determinism pin. Recorded in the epic-rag-chat retrospective. Split out of the fix-now set.
+
+- source_plan: none
+  summary: Serve↔ingest corpus-root alignment — cross-check the serve scope against index provenance, or document the operational contract.
+  evidence: Ingestion writes through an unscoped store (`ingest/__init__.py`) while serving scopes to `JANBOT_CORPUS_PATH` (`api/main.py:61`); a mismatched root silently changes the citation form or 503s everything. Recorded in the epic-rag-chat retrospective (open question). Split out; design decision.
+
+- source_plan: none
+  summary: `public_profile_org/ai-fast-failback.org` was edited in-place inside the 3.6 PR — restore via re-extraction, or record an accepted deviation.
+  evidence: Commit `457bc70` (story 3.6) changed the SYNOPSIS line; outside the epic Boundary and its carries; README says the corpus is updated only by re-extraction. Recorded in the epic-rag-chat retrospective. Split out; human content decision.
