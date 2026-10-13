@@ -42,6 +42,7 @@
 - source_plan: none
   summary: Citation ordering — emit citations in retrieval-`sources` order rather than LM-claim order, to close the DW4 nondeterminism channel.
   evidence: `src/janbot/pipeline/chat.py:137` builds citations via `dict.fromkeys(normalized)` in model-claim order; recorded in the epic-rag-chat retrospective. Split out of the fix-now set; the lead goal is envelope robustness.
+  status: **resolved** — the code now emits citations in retrieval order (`src/janbot/pipeline/chat.py:147-152`, `dict.fromkeys(sources)`), so the claim-order nondeterminism channel is closed. Confirmed by the `epic-verification` refactor sweep (story 4.6).
 
 - source_plan: none
   summary: Rewriter guard coverage + alignment — tests for `corpus_relative`, and align its `source_path` absolutization with the store's.
