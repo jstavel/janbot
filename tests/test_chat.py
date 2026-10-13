@@ -643,3 +643,30 @@ def test_chat_repeated_claim_yields_one_citation(
     assert response.status_code == 200
     sources = [citation["source"] for citation in response.json()["citations"]]
     assert sources == ["profile.org", "projects.org"]
+
+
+def test_create_app_fails_fast_when_index_has_out_of_scope_chunks(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+) -> None:
+    """A serve corpus root that excludes indexed chunks fails fast, not silently.
+
+    Guards the ingest↔serve alignment: an index built from a different (broader or
+    foreign) root must not start serving with a shifted citation boundary.
+    """
+    corpus = tmp_path / "public_profile_org"
+    corpus.mkdir()
+    write_org(corpus / "profile.org", "About", body="Public profile body.")
+    index_path = tmp_path / "index"
+    index_corpus(corpus, index_path, embedder)
+    VectorStore(index_path, embedder).upsert([ForeignChunk()])
+
+    with pytest.raises(ValueError) as excinfo:
+        create_app(
+            env={"JANBOT_INDEX_PATH": str(index_path), "JANBOT_CORPUS_PATH": str(corpus)},
+            embedder=embedder,
+            lm_factory=StubLMFactory(),
+        )
+
+    assert "outside" in str(excinfo.value)

@@ -60,7 +60,7 @@ JanBot is configured through environment variables loaded by [`janbot.config`](s
 | `JANBOT_PROJECT_ROOT` | the repository root | Base for relative `JANBOT_CORPUS_PATH`/`JANBOT_INDEX_PATH`; override for packaged deployments or tests. |
 | `OPENROUTER_API_KEY` | — | The OpenRouter key, read once at startup by the app (never stored in config). Required in `production` mode — a missing key fails fast at boot — and unused in `eval` mode. |
 
-Path values are `~`-expanded and resolved to absolute paths under the project root, so they do not depend on the process working directory. A blank or whitespace-only value for any variable counts as unset and takes its documented default.
+Path values are `~`-expanded and resolved to absolute paths under the project root, so they do not depend on the process working directory. A blank or whitespace-only value for any variable counts as unset and takes its documented default. At startup the app verifies that every indexed chunk which records a source lies within `JANBOT_CORPUS_PATH` and fails fast otherwise, so an index built from a different corpus root cannot be served silently.
 
 ```sh
 JANBOT_MODEL_MODE=production OPENROUTER_API_KEY=... uv run uvicorn janbot.api.main:app
