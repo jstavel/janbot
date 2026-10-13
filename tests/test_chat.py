@@ -37,8 +37,11 @@ class StubLMFactory:
 
     The DummyLM claims ``citations`` as the source labels it derived the answer
     from — every app under test gets its own instance, so the script never
-    crosses requests.
+    crosses requests. One app builds one LM at startup, so the script repeats the
+    same canned answer enough times to serve every request the test posts.
     """
+
+    REPEATS = 16
 
     def __init__(self, citations: list[str] | None = None) -> None:
         self.citations = list(DEFAULT_CITATIONS if citations is None else citations)
@@ -46,7 +49,8 @@ class StubLMFactory:
 
     def __call__(self, **kwargs: object) -> DummyLM:
         self.history.append(kwargs)
-        return DummyLM([{"answer": CANNED_ANSWER, "citations": list(self.citations)}])
+        answer = {"answer": CANNED_ANSWER, "citations": list(self.citations)}
+        return DummyLM([dict(answer) for _ in range(self.REPEATS)])
 
 
 class SourcelessChunk:
@@ -135,7 +139,9 @@ def test_chat_happy_path_returns_answer_and_citations(
     assert data["answer"] == CANNED_ANSWER
     sources = [citation["source"] for citation in data["citations"]]
     assert sources == ["profile.org", "projects.org"]
-    assert factory.history == [{"model": DEFAULT_SNAPSHOT, "temperature": 0.0}]
+    assert factory.history == [
+        {"model": DEFAULT_SNAPSHOT, "temperature": 0.0, "seed": 0}
+    ]
 
 
 def test_chat_missing_mistyped_or_blank_question_is_rejected_with_422(
@@ -206,14 +212,65 @@ def test_chat_model_routing_changes_with_environment_only(
     assert production_response.status_code == 200
     assert eval_response.json()["answer"] == CANNED_ANSWER
     assert production_response.json()["answer"] == CANNED_ANSWER
+    eval_kwargs, production_kwargs = factory.history
+    assert eval_kwargs["seed"] == 0
+    assert "seed" not in production_kwargs
     assert factory.history == [
-        {"model": DEFAULT_SNAPSHOT, "temperature": 0.0},
+        {"model": DEFAULT_SNAPSHOT, "temperature": 0.0, "seed": 0},
         {
             "model": OPENROUTER_MODEL,
             "temperature": 0.0,
             "api_base": OPENROUTER_API_BASE,
             "api_key": "sk-test",
         },
+    ]
+
+
+def test_chat_same_question_twice_returns_byte_identical_json(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """Determinism at the port: one app, two identical questions, identical bodies."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+    client = TestClient(app)
+    question = {"question": "What search infrastructure have you built?"}
+
+    first = client.post("/chat", json=question)
+    second = client.post("/chat", json=question)
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.json() == second.json()
+    assert first.text == second.text
+
+
+def test_chat_two_identical_env_apps_return_identical_json(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """Two apps from identical env build identical LM kwargs and answer identically."""
+    corpus, index_path = indexed_corpus
+    env = _chat_env(corpus, index_path)
+    first_factory = StubLMFactory()
+    second_factory = StubLMFactory()
+    first_app = create_app(env=env, embedder=embedder, lm_factory=first_factory)
+    second_app = create_app(env=env, embedder=embedder, lm_factory=second_factory)
+    question = {"question": "What search infrastructure have you built?"}
+
+    first = TestClient(first_app).post("/chat", json=question)
+    second = TestClient(second_app).post("/chat", json=question)
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.json() == second.json()
+    assert first_factory.history == second_factory.history
+    assert first_factory.history == [
+        {"model": DEFAULT_SNAPSHOT, "temperature": 0.0, "seed": 0}
     ]
 
 

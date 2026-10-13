@@ -23,6 +23,7 @@ def _clear_janbot_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "JANBOT_INDEX_PATH",
         "JANBOT_PROJECT_ROOT",
         "JANBOT_TEMPERATURE",
+        "JANBOT_SEED",
         "JANBOT_TOP_K",
     ):
         monkeypatch.delenv(name, raising=False)
@@ -196,4 +197,35 @@ def test_invalid_top_k_raises(value: str) -> None:
 
     message = str(excinfo.value)
     assert "JANBOT_TOP_K" in message
+    assert value in message
+
+
+def test_default_seed_is_zero() -> None:
+    assert load_config({}).seed == 0
+
+
+def test_seed_override_is_parsed() -> None:
+    config = load_config({"JANBOT_SEED": "42"})
+
+    assert config.seed == 42
+
+
+def test_negative_seed_is_parsed() -> None:
+    config = load_config({"JANBOT_SEED": "-7"})
+
+    assert config.seed == -7
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_seed_falls_back_to_default(blank: str) -> None:
+    assert load_config({"JANBOT_SEED": blank}).seed == 0
+
+
+@pytest.mark.parametrize("value", ["abc", "0.5", "true", "1,2"])
+def test_invalid_seed_raises(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_SEED": value})
+
+    message = str(excinfo.value)
+    assert "JANBOT_SEED" in message
     assert value in message

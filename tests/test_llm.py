@@ -39,6 +39,7 @@ def _clear_janbot_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "JANBOT_INDEX_PATH",
         "JANBOT_PROJECT_ROOT",
         "JANBOT_TEMPERATURE",
+        "JANBOT_SEED",
         "JANBOT_TOP_K",
     ):
         monkeypatch.delenv(name, raising=False)
@@ -72,7 +73,24 @@ def test_build_lm_eval_uses_snapshot_and_configured_temperature() -> None:
 
     assert lm == "stub-lm"
     assert factory.calls == 1
-    assert factory.kwargs == {"model": DEFAULT_SNAPSHOT, "temperature": 0.7}
+    assert factory.kwargs == {
+        "model": DEFAULT_SNAPSHOT,
+        "temperature": 0.7,
+        "seed": 0,
+    }
+
+
+def test_build_lm_eval_uses_configured_seed() -> None:
+    factory = StubLMFactory()
+    config = load_config({"JANBOT_SEED": "42"})
+
+    build_lm(config, lm_factory=factory)
+
+    assert factory.kwargs == {
+        "model": DEFAULT_SNAPSHOT,
+        "temperature": 0.0,
+        "seed": 42,
+    }
 
 
 def test_build_lm_eval_records_no_api_base_or_api_key() -> None:
@@ -81,7 +99,11 @@ def test_build_lm_eval_records_no_api_base_or_api_key() -> None:
 
     build_lm(config, "sk-test", lm_factory=factory)
 
-    assert factory.kwargs == {"model": DEFAULT_SNAPSHOT, "temperature": 0.0}
+    assert factory.kwargs == {
+        "model": DEFAULT_SNAPSHOT,
+        "temperature": 0.0,
+        "seed": 0,
+    }
 
 
 def test_build_lm_production_uses_openrouter_snapshot_and_key() -> None:
@@ -100,6 +122,8 @@ def test_build_lm_production_uses_openrouter_snapshot_and_key() -> None:
         "api_base": OPENROUTER_API_BASE,
         "api_key": "sk-test",
     }
+    assert factory.kwargs is not None
+    assert "seed" not in factory.kwargs
 
 
 def test_build_lm_production_without_api_key_fails_fast() -> None:

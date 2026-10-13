@@ -7,11 +7,16 @@ against the OpenRouter API base. Switching modes is an environment change only
 — no code changes.
 
 ``build_lm`` is the LM-construction seam. It assembles constructor kwargs from
-pure configuration — always ``model`` and ``temperature``, and only in
-``production`` the OpenRouter ``api_base`` plus a caller-supplied ``api_key`` —
-and returns ``lm_factory(**kwargs)``. The default factory is ``dspy.LM``; tests
-inject a stub factory, so routing is verifiable without ever constructing a
-real LM or touching the network.
+pure configuration — always ``model`` and ``temperature``, a ``seed`` for
+determinism in every mode but ``production``, and only in ``production`` the
+OpenRouter ``api_base`` plus a caller-supplied ``api_key`` — and returns
+``lm_factory(**kwargs)``. The default factory is ``dspy.LM``; tests inject a
+stub factory, so routing is verifiable without ever constructing a real LM or
+touching the network.
+
+The ``seed`` pins eval sampling reproducibility (AD-5): ``production`` stays
+seed-free because ``openrouter/auto`` routes across providers where a seed is
+meaningless or rejected.
 
 No secrets are read here: the OpenRouter key is an explicit ``api_key``
 argument (its sourcing is decided later, by the ``/chat`` pipeline story) and
@@ -58,6 +63,9 @@ def build_lm(
         "model": resolve_model(config),
         "temperature": config.temperature,
     }
+
+    if config.model_mode != MODEL_MODE_PRODUCTION:
+        kwargs["seed"] = config.seed
 
     if config.model_mode == MODEL_MODE_PRODUCTION:
         if not api_key:
