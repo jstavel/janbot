@@ -17,3 +17,21 @@ Session: unavailable · Timestamp: 2026-10-13T00:00:00+00:00
 - Action: Authored the review narrative with six blocks (Intent, Broad strokes, three slices, Periphery).
 - Result: Block 1 presented first; all blocks unaccepted.
 - Evidence: `walkthrough-pr6-grounding-boundary.md`
+
+## 3 — VCS — squash-merged PR #6
+
+Session: unavailable · Timestamp: 2026-10-13T00:00:00+00:00
+
+- Action: PR #6 squash-merged to main as a single commit `457bc70` (all PR commits collapsed, per the user's request for a consistent main log).
+- Result: Local main aligned on top.
+- Evidence: commit 457bc70
+- Open: none
+
+## 4 — Ticket — story marked done
+
+Session: unavailable · Timestamp: 2026-10-13T00:00:00+00:00
+
+- Action: Flipped plan status per the reviewer's approval.
+- Result: story-grounding-boundary-no-answer-outside-the-public-corpus (3.6) flipped 'built' → 'done'. Walkthrough files were committed as `8e617ca` before the merge.
+- Evidence: epic-rag-chat/story-grounding-boundary-no-answer-outside-the-public-corpus-plan.md front matter; commit 8e617ca
+- Open: none

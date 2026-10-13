@@ -3,7 +3,7 @@ title: 'Grounding boundary: no answer outside the public corpus'
 type: 'feature'
 ticket: 6
 created: '2026-10-13'
-status: 'built'
+status: 'done'
 baseline_revision: '3d64f58081ddb6aad7c0f483efeb497555d52abd'
 route: 'full'
 route_source: 'auto'

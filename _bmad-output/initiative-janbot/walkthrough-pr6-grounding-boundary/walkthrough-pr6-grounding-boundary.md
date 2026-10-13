@@ -9,6 +9,10 @@ Target: PR https://github.com/jstavel/janbot/pull/6 · branch `story-3.6-groundi
 - [x] Block 5 — Slice: proving the boundary (store + port)
 - [x] Block 6 — Periphery
 
+## Status
+
+All blocks accepted: 6 of 6. Review complete: PR #6 squash-merged (`457bc70`), story 3.6 marked done.
+
 ## Block 1 — Intent
 
 Source: pasted verbatim from the plan's frozen Intent section — [story-grounding-boundary-no-answer-outside-the-public-corpus-plan.md](../epic-rag-chat/story-grounding-boundary-no-answer-outside-the-public-corpus-plan.md).
