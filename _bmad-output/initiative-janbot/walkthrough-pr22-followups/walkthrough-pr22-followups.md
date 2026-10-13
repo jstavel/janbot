@@ -10,7 +10,7 @@ Target: PR https://github.com/jstavel/janbot/pull/22 · branch `hardening-verifi
 
 ## Status
 
-All blocks accepted: 5 of 5. Review complete; wrap-up pending (merge PR #22).
+All blocks accepted: 5 of 5. Review complete: PR #22 squash-merged (`77ca93d`), plan set to done.
 
 ## Block 1 — Intent
 
