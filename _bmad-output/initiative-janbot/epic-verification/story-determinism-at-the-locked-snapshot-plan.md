@@ -3,7 +3,7 @@ title: 'Determinism at the locked snapshot'
 type: 'feature'
 ticket: 4
 created: '2026-10-13'
-status: 'built'
+status: 'done'
 baseline_revision: '1a3d45c6d53e9aeec32f9a77f268dd6664a97b9f'
 route: 'full'
 route_source: 'auto'
