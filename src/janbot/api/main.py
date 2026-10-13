@@ -56,7 +56,9 @@ def create_app(
             mode is ``production`` and no ``OPENROUTER_API_KEY`` is present.
     """
     config = load_config(env)
-    store = VectorStore(config.index_path, embedder or default_embedder())
+    store = VectorStore(
+        config.index_path, embedder or default_embedder(), scope=config.corpus_path
+    )
 
     source = os.environ if env is None else env
     api_key = (source.get(OPENROUTER_API_KEY_ENV) or "").strip() or None

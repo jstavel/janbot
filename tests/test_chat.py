@@ -295,10 +295,11 @@ def test_chat_empty_index_returns_503_with_detail_envelope(
     assert "corpus" in detail
 
 
-def test_chat_sourceless_chunk_returns_500_with_detail_envelope(
+def test_chat_sourceless_chunk_is_excluded_from_retrieval_with_503(
     tmp_path: Path,
     embedder: Embedder,
 ) -> None:
+    """The store scope excludes a chunk with no ``source_path``: retrieval is empty, 503."""
     index_path = tmp_path / "index"
     app = create_app(
         env={"JANBOT_INDEX_PATH": str(index_path)},
@@ -311,9 +312,8 @@ def test_chat_sourceless_chunk_returns_500_with_detail_envelope(
         "/chat", json={"question": "anything"}
     )
 
-    assert response.status_code == 500
-    detail = response.json()["detail"]
-    assert "source_path" in detail
+    assert response.status_code == 503
+    assert "0 chunks" in response.json()["detail"]
 
 
 def test_chat_cites_only_the_retrieved_source(
@@ -425,11 +425,11 @@ def test_chat_unknown_source_claim_is_rejected_with_500_envelope(
     assert CANNED_ANSWER not in response.text
 
 
-def test_chat_source_outside_corpus_root_is_refused_with_500_envelope(
+def test_chat_foreign_only_index_returns_503_with_detail_envelope(
     tmp_path: Path,
     embedder: Embedder,
 ) -> None:
-    """Fail-closed rewrite: an out-of-root ``source_path`` is refused, never emitted."""
+    """The store scope excludes the out-of-root chunk, so retrieval is empty: 503."""
     index_path = tmp_path / "index"
     app = create_app(
         env={"JANBOT_INDEX_PATH": str(index_path)},
@@ -442,8 +442,38 @@ def test_chat_source_outside_corpus_root_is_refused_with_500_envelope(
         "/chat", json={"question": "anything"}
     )
 
-    assert response.status_code == 500
-    assert "outside the corpus root" in response.json()["detail"]
+    assert response.status_code == 503
+    assert "0 chunks" in response.json()["detail"]
+    assert "/srv/elsewhere" not in response.text
+
+
+def test_chat_foreign_and_public_index_cites_only_public_source(
+    tmp_path: Path,
+    embedder: Embedder,
+) -> None:
+    """Port row: a foreign chunk never enters retrieval, so only the public source can be cited."""
+    corpus = tmp_path / "public_profile_org"
+    index_path = tmp_path / "index"
+    public_source = str(corpus / "profile.org")
+    app = create_app(
+        env={"JANBOT_INDEX_PATH": str(index_path), "JANBOT_CORPUS_PATH": str(corpus)},
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["profile.org"]),
+    )
+    VectorStore(index_path, embedder).upsert(
+        [
+            SharedSourceChunk(0, "Search infrastructure engineer.", public_source),
+            ForeignChunk(),
+        ]
+    )
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/chat", json={"question": "anything"}
+    )
+
+    assert response.status_code == 200
+    sources = [citation["source"] for citation in response.json()["citations"]]
+    assert sources == ["profile.org"]
     assert "/srv/elsewhere" not in response.text
 
 
