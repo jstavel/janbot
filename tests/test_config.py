@@ -180,7 +180,7 @@ def test_blank_top_k_falls_back_to_default(blank: str) -> None:
     assert load_config({"JANBOT_TOP_K": blank}).top_k == 3
 
 
-@pytest.mark.parametrize("value", ["abc", "0,7", "true"])
+@pytest.mark.parametrize("value", ["abc", "0,7", "true", "1.2x"])
 def test_invalid_temperature_raises(value: str) -> None:
     with pytest.raises(ValueError) as excinfo:
         load_config({"JANBOT_TEMPERATURE": value})
@@ -188,6 +188,17 @@ def test_invalid_temperature_raises(value: str) -> None:
     message = str(excinfo.value)
     assert "JANBOT_TEMPERATURE" in message
     assert value in message
+
+
+@pytest.mark.parametrize("value", ["nan", "inf", "-inf", "Infinity"])
+def test_non_finite_temperature_raises(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_TEMPERATURE": value})
+
+    message = str(excinfo.value)
+    assert "JANBOT_TEMPERATURE" in message
+    assert value in message
+    assert "finite" in message
 
 
 @pytest.mark.parametrize("value", ["0", "-1", "two", "1.5"])

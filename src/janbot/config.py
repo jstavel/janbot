@@ -17,8 +17,8 @@ reads eight variables, each with a documented default:
 Values are trimmed, and a blank or whitespace-only value counts as unset (so it
 takes the documented default). The model mode is normalized to lower case before
 validation, so ``"Production"`` and ``" production "`` are accepted.
-``JANBOT_TEMPERATURE`` must parse as a number, ``JANBOT_SEED`` must parse as an
-integer, and ``JANBOT_TOP_K`` must be a positive integer; a value that violates
+``JANBOT_TEMPERATURE`` must parse as a finite number, ``JANBOT_SEED`` must parse
+as an integer, and ``JANBOT_TOP_K`` must be a positive integer; a value that violates
 any clause fails fast with a ``ValueError`` naming the variable. Paths are
 ``~``-expanded and, when still relative, resolved against
 the project root, then canonicalized to absolute paths, so no path depends on
@@ -34,6 +34,7 @@ without mutating process state; when omitted it reads ``os.environ``.
 
 from __future__ import annotations
 
+import math
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -122,6 +123,10 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
             raise ValueError(
                 f"{TEMPERATURE_ENV}={raw_temperature!r} is not a number"
             ) from exc
+        if not math.isfinite(temperature):
+            raise ValueError(
+                f"{TEMPERATURE_ENV}={raw_temperature!r} must be a finite number"
+            )
 
     raw_seed = _clean(source.get(SEED_ENV))
     if raw_seed is None:
