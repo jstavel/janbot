@@ -47,14 +47,17 @@
 - source_plan: none
   summary: Rewriter guard coverage + alignment — tests for `corpus_relative`, and align its `source_path` absolutization with the store's.
   evidence: `UnattributableContext`/`corpus_relative` appear in no test after 3.6; the store's `_within_scope` uses `os.path.abspath` (`store/chroma.py:57`) while the rewriter uses `relative_to` with no absolutization (`pipeline/chat.py:69`). Recorded in the epic-rag-chat retrospective. Split out of the fix-now set.
+  status: **resolved** — `corpus_relative` now absolutizes via the located path and fail-closes, matching the store's scope (`src/janbot/pipeline/chat.py:59-80`); delivered by the hardening PR #12 (`0cfc7ce`).
 
 - source_plan: none
   summary: Reject non-finite `JANBOT_TEMPERATURE` (nan/inf) at config load.
   evidence: `src/janbot/config.py:115-124` parses float only; `load_config({'JANBOT_TEMPERATURE':'nan'})` yields `nan` (verified), silently voiding the 3.5 eval determinism pin. Recorded in the epic-rag-chat retrospective. Split out of the fix-now set.
+  status: **resolved** — `load_config` now rejects non-finite `JANBOT_TEMPERATURE` (`src/janbot/config.py:126`); delivered by the hardening PR #11 (`eab9b80`).
 
 - source_plan: none
   summary: Serve↔ingest corpus-root alignment — cross-check the serve scope against index provenance, or document the operational contract.
   evidence: Ingestion writes through an unscoped store (`ingest/__init__.py`) while serving scopes to `JANBOT_CORPUS_PATH` (`api/main.py:61`); a mismatched root silently changes the citation form or 503s everything. Recorded in the epic-rag-chat retrospective (open question). Split out; design decision.
+  status: **resolved** — the startup cross-check refuses to serve an index holding out-of-scope chunks (`src/janbot/api/main.py:60-72`); delivered by the hardening PR #13 (`1338643`). The broader-serve-root direction remains tracked separately below.
 
 - source_plan: none
   summary: `public_profile_org/ai-fast-failback.org` was edited in-place inside the 3.6 PR — **resolved: reverted** (the original "working groups formed" is correct), 2026-10-13.

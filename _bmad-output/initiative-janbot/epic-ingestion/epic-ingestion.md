@@ -8,7 +8,7 @@ covers: ["CAP-4", "CAP-5"]
 after: []
 assignee: ""
 risk: medium
-status: done
+status: in-progress
 ---
 
 # Org-mode ingestion & fail-closed scope
@@ -55,3 +55,4 @@ Running the ingester over `public_profile_org/` yields a queryable ChromaDB inde
 - Decision (2026-10-05, slicing): the DSPy signature's citation contract is a downstream concern; this epic's output is the indexed chunks plus their source-path metadata, which citations will read.
 - Decision (2026-10-12, symlink-by-location reconciliation): containment is decided by *located* path, not target resolution — a symlinked public file under the root is in scope; a path located outside the root is refused. `spec-janbot.md` CAP-4 and this epic's Done when 3 are now worded to match, closing the retrospective's wording item. (Store scope ownership, the DW3 evidence-strength gap and citation/id concerns are tracked as carries to `epic-rag-chat`.)
 - Decision (2026-10-12, closure): epic accepted `done` with the above carries; child tickets `2.1`–`2.7` all `done`, and the payload-stability remediation (`test_rerun_preserves_documents_and_embeddings`, `test_rerun_repairs_corrupted_payload`) closes the retrospective's "corrupt" clause.
+- Decision (2026-10-13, reopened): entry **8** (stable content-hash chunk ids) added from `deferred-work.md` ("Sweep decisions", chunk-id stability). The epic is reopened `in-progress` until it lands; the earlier `done` closure covered entries 1–7.

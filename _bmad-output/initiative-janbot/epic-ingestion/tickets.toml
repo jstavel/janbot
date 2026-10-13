@@ -76,3 +76,14 @@ covers = ["CAP-4", "CAP-5"]
 after = [6]
 hitl = false
 risk = "low"
+
+[[entry]]
+id = 8
+type = "story"
+title = "Stable content-hash chunk ids"
+description = "Give each chunk a stable id derived from its content (located source path plus heading breadcrumb) instead of the document-order ordinal, so inserting or reordering a heading no longer re-ids the following chunks; reconcile the store's scope key with the new ids."
+verify = "Editing or inserting a heading above an existing chunk leaves that chunk's id unchanged across a re-index, and a re-run neither duplicates entries nor orphans the scope key."
+covers = ["CAP-5"]
+after = [7]
+hitl = false
+risk = "medium"
