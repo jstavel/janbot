@@ -17,3 +17,12 @@ Session: unavailable · Timestamp: 2026-10-13T00:00:00+00:00
 - Action: Authored the review narrative with five blocks (Intent, Broad strokes, two slices, Periphery).
 - Result: Block 1 presented first; all blocks unaccepted.
 - Evidence: `walkthrough-pr12-rewriter-alignment.md`
+
+## 3 — VCS — squash-merged PR #12
+
+Session: unavailable · Timestamp: 2026-10-13T00:00:00+00:00
+
+- Action: PR #12 squash-merged to main as a single commit `0cfc7ce`.
+- Result: Local main aligned on top. Retro fix-now goal 3 delivered; code fix-now goals 1–4 complete. Goals 5/6 (design/content) remain in `deferred-work.md`.
+- Evidence: commit 0cfc7ce
+- Open: none

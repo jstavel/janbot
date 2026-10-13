@@ -8,6 +8,10 @@ Target: PR https://github.com/jstavel/janbot/pull/12 · branch `hardening-rewrit
 - [x] Block 4 — Slice: the rewriter aligns on the located path + direct coverage
 - [x] Block 5 — Periphery
 
+## Status
+
+All blocks accepted: 5 of 5. Review complete: PR #12 squash-merged (`0cfc7ce`). Loose follow-up work (retro fix-now goal 3) — no ticket to flip. This completes the retro's code fix-now items (goals 1–4).
+
 ## Block 1 — Intent
 
 Source: pasted verbatim from the plan's frozen Intent section — [plan-rewriter-coverage-alignment.md](../plan-rewriter-coverage-alignment.md).
