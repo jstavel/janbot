@@ -9,6 +9,10 @@ Target: PR https://github.com/jstavel/janbot/pull/14 · branch `e2e-4.1-port-onl
 - [x] Block 5 — Slice: what the review changed
 - [x] Block 6 — Periphery
 
+## Status
+
+All blocks accepted: 6 of 6. Review complete: PR #14 squash-merged (`1a1a30e`), story 4.1 marked done; entry 4.2 unblocked.
+
 ## Block 1 — Intent
 
 Source: pasted verbatim from the plan's frozen Intent section — [story-port-only-e2e-harness-tracer-bullet-plan.md](../epic-verification/story-port-only-e2e-harness-tracer-bullet-plan.md).

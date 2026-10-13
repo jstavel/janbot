@@ -3,7 +3,7 @@ title: 'Port-only e2e harness (tracer bullet)'
 type: 'feature'
 ticket: 1
 created: '2026-10-13'
-status: 'built'
+status: 'done'
 baseline_revision: '43ae8157ce47311f242dcddf9e02233ec2393eb6'
 route: 'full'
 route_source: 'auto'
