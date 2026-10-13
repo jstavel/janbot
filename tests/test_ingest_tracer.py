@@ -16,7 +16,9 @@ FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures" / "public_profile_org
 FIXTURE_FILE = FIXTURE_DIR / "example.org"
 
 
-def test_read_org_file_chunks_every_subtree() -> None:
+def test_read_org_file_chunks_every_subtree(
+    chunk_id: Callable[..., str],
+) -> None:
     chunks = read_org_file(FIXTURE_FILE)
 
     assert len(chunks) == 4
@@ -24,12 +26,12 @@ def test_read_org_file_chunks_every_subtree() -> None:
     assert all(chunk.source_path == str(FIXTURE_FILE) for chunk in chunks)
 
     about = next(chunk for chunk in chunks if chunk.breadcrumb == "About")
-    assert about.id == f"{FIXTURE_FILE}::0::About"
+    assert about.id == chunk_id(FIXTURE_FILE, "About")
     assert "Background" in about.text
     assert "biography" in about.text
 
     background = next(chunk for chunk in chunks if chunk.breadcrumb == "About > Background")
-    assert background.id == f"{FIXTURE_FILE}::1::About > Background"
+    assert background.id == chunk_id(FIXTURE_FILE, "About > Background")
     assert "search infrastructure" in background.text
 
     projects = next(chunk for chunk in chunks if chunk.breadcrumb == "Projects")

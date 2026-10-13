@@ -25,12 +25,15 @@ def index_corpus(
     """Index every ``.org`` file under ``corpus_root`` and return the chunk count.
 
     Only files proven to lie within ``corpus_root`` are read (fail-closed). The
-    index is reconciled to this corpus: desired chunks are upserted, then any
-    stored id whose source lies within ``corpus_root`` but is no longer present
-    is deleted, so a re-run never duplicates and removed or renamed subtrees
-    leave no orphan while other corpora's chunks are preserved. A missing or
-    non-directory ``corpus_root`` raises ``ValueError`` rather than wiping the
-    index.
+    index is reconciled to this corpus: desired chunks are upserted carrying this
+    corpus's resolved root as their scope key, then any stored id whose *stored*
+    scope key equals this corpus's root but is no longer present is deleted, so a
+    re-run never duplicates and removed or renamed subtrees leave no orphan while
+    other corpora's chunks are preserved. Ownership is stored with the chunk, not
+    re-derived from a filesystem-path coincidence. A chunk written before the
+    scope key existed (none recorded) falls back to path ownership, so an
+    in-place rebuild still prunes its orphans. A missing or non-directory
+    ``corpus_root`` raises ``ValueError`` rather than wiping the index.
     """
     root = Path(corpus_root)
     try:
@@ -46,13 +49,24 @@ def index_corpus(
             continue
         chunks.extend(read_org_file(path))
 
+    scope_key = str(root_resolved)
     store = VectorStore(index_path, embedder or default_embedder())
-    store.upsert(chunks)
+    store.upsert(chunks, scope_key=scope_key)
     desired = {chunk.id for chunk in chunks}
-    stale = [
-        chunk_id
-        for chunk_id, source in store.sources().items()
-        if chunk_id not in desired and within(root, source)
-    ]
+    scopes = store.scope_keys()
+    sources = store.sources()
+    stale: list[str] = []
+    for chunk_id in store.ids():
+        if chunk_id in desired:
+            continue
+        stored_scope = scopes.get(chunk_id)
+        if stored_scope == scope_key:
+            stale.append(chunk_id)
+        elif stored_scope is None:
+            # Predates the scope-key scheme; fall back to path ownership so an
+            # in-place rebuild prunes this corpus's orphans.
+            source = sources.get(chunk_id)
+            if source and within(root, source):
+                stale.append(chunk_id)
     store.delete(stale)
     return len(chunks)
