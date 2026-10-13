@@ -70,21 +70,29 @@ def _port_was_taken(log_path: Path) -> bool:
     return "address already in use" in _log_text(log_path).lower()
 
 
-def _build_fixture_index(index_path: Path) -> None:
-    """Build ``index_path`` from the fixture corpus via the ingestion CLI subprocess."""
+def _run_cli(command: list[str], *, env: Mapping[str, str], what: str) -> None:
+    """Run a janbot CLI subprocess from the repo root; raise with its output on failure."""
     result = subprocess.run(
-        ["uv", "run", "python", "-m", "janbot.ingest", "--index", str(index_path)],
+        command,
         cwd=str(REPO_ROOT),
-        env={**os.environ, "JANBOT_CORPUS_PATH": str(FIXTURE_CORPUS)},
+        env=env,
         capture_output=True,
         text=True,
         timeout=BUILD_TIMEOUT_SECONDS,
     )
     if result.returncode != 0:
         raise RuntimeError(
-            "building the fixture index failed "
-            f"(exit {result.returncode}):\n{result.stdout}\n{result.stderr}"
+            f"{what} failed (exit {result.returncode}):\n{result.stdout}\n{result.stderr}"
         )
+
+
+def _build_fixture_index(index_path: Path) -> None:
+    """Build ``index_path`` from the fixture corpus via the ingestion CLI subprocess."""
+    _run_cli(
+        ["uv", "run", "python", "-m", "janbot.ingest", "--index", str(index_path)],
+        env={**os.environ, "JANBOT_CORPUS_PATH": str(FIXTURE_CORPUS)},
+        what="building the fixture index",
+    )
 
 
 def _make_index(index_path: Path, kind: str, *, corpus: Path | None = None) -> None:
@@ -96,18 +104,7 @@ def _make_index(index_path: Path, kind: str, *, corpus: Path | None = None) -> N
     command = ["uv", "run", "python", str(MAKE_INDEX), str(index_path), "--kind", kind]
     if corpus is not None:
         command += ["--corpus", str(corpus)]
-    result = subprocess.run(
-        command,
-        cwd=str(REPO_ROOT),
-        capture_output=True,
-        text=True,
-        timeout=BUILD_TIMEOUT_SECONDS,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"building the crafted {kind!r} index failed "
-            f"(exit {result.returncode}):\n{result.stdout}\n{result.stderr}"
-        )
+    _run_cli(command, env=dict(os.environ), what=f"building the crafted {kind!r} index")
 
 
 def _stop(process: subprocess.Popen[bytes]) -> None:

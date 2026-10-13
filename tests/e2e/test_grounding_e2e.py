@@ -22,6 +22,8 @@ from pathlib import Path
 
 import httpx
 
+from e2e._support import assert_detail_string
+
 
 def test_foreign_index_refuses_to_start(
     foreign_index: Path,
@@ -45,7 +47,5 @@ def test_sourceless_index_returns_503_with_detail_envelope(
         timeout=30.0,
     )
 
-    assert response.status_code == 503, response.text
-    detail = response.json()["detail"]
-    assert isinstance(detail, str) and detail, "the 503 detail must be a non-empty string"
+    detail = assert_detail_string(response, 503)
     assert "corpus" in detail
