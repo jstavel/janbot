@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from janbot.ingest import read_org_file
 from janbot.ingest.scope import located_path
 
 _STUB_DIM = 64
@@ -37,9 +38,20 @@ def _write_org(path: Path, heading: str = "Heading", body: str = "Body.") -> Non
     path.write_text(f"* {heading}\n{body}\n")
 
 
-def _chunk_id(path: Path, ordinal: int, breadcrumb: str) -> str:
-    """Build the id production uses: from the located path, not the symlink."""
-    return f"{located_path(path)}::{ordinal}::{breadcrumb}"
+def _chunk_id(path: Path, breadcrumb: str) -> str:
+    """Reconstruct the expected content-hash id for a chunk independently.
+
+    The chunk's text and breadcrumb come from the reader; the id is rebuilt with
+    the documented formula (``{source}::{sha256(source, breadcrumb, text)}``)
+    rather than read off a chunk, so a regression in the id construction is
+    caught by the assertion.
+    """
+    source = located_path(path)
+    text = next(
+        chunk.text for chunk in read_org_file(path) if chunk.breadcrumb == breadcrumb
+    )
+    digest = hashlib.sha256(f"{source}\n{breadcrumb}\n{text}".encode()).hexdigest()
+    return f"{source}::{digest}"
 
 
 @pytest.fixture

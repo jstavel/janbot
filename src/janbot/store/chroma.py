@@ -83,6 +83,24 @@ def default_embedder() -> Embedder:
     return embed
 
 
+def _chunk_metadata(
+    chunk: ChunkLike, *, scope_key: str | None = None
+) -> dict[str, str]:
+    """Build the metadata written for a chunk.
+
+    ``scope_key`` is included only when provided, so a chunk stored without one
+    simply cannot be attributed to a corpus (Chroma silently drops ``None``
+    metadata values, which would lose that distinction anyway).
+    """
+    metadata = {
+        "source_path": chunk.source_path,
+        "breadcrumb": chunk.breadcrumb,
+    }
+    if scope_key is not None:
+        metadata["scope_key"] = scope_key
+    return metadata
+
+
 class VectorStore:
     """A persistent ChromaDB collection written and queried via ``embedder``."""
 
@@ -101,8 +119,16 @@ class VectorStore:
             metadata={"hnsw:space": "cosine"},
         )
 
-    def upsert(self, chunks: Iterable[ChunkLike]) -> None:
-        """Embed and store ``chunks`` by their stable ids (no-op when empty)."""
+    def upsert(
+        self, chunks: Iterable[ChunkLike], *, scope_key: str | None = None
+    ) -> None:
+        """Embed and store ``chunks`` by their stable ids (no-op when empty).
+
+        When ``scope_key`` is given it is recorded in every chunk's metadata, so
+        the corpus a chunk belongs to is stored with the chunk rather than
+        re-derived from its ``source_path``. The keyword is optional so existing
+        direct-upsert callers (tests) keep working unchanged.
+        """
         chunk_list = list(chunks)
         if not chunk_list:
             return
@@ -112,11 +138,7 @@ class VectorStore:
             ids=[chunk.id for chunk in chunk_list],
             documents=documents,
             metadatas=[
-                {
-                    "source_path": chunk.source_path,
-                    "breadcrumb": chunk.breadcrumb,
-                }
-                for chunk in chunk_list
+                _chunk_metadata(chunk, scope_key=scope_key) for chunk in chunk_list
             ],
             embeddings=self.embedder(documents),
         )
@@ -137,6 +159,23 @@ class VectorStore:
             if source is not None:
                 sources[chunk_id] = source
         return sources
+
+    def scope_keys(self) -> dict[str, str]:
+        """Return a mapping of stored chunk id to its recorded scope key.
+
+        The scope key is the resolved corpus root recorded at upsert, so this is
+        the stored ownership the reconcile deletes by. Chunks stored without a
+        scope key are omitted: they cannot be attributed to a corpus.
+        """
+        result = self._collection.get(include=["metadatas"])
+        ids = result.get("ids") or []
+        metadatas = result.get("metadatas") or []
+        scopes: dict[str, str] = {}
+        for chunk_id, metadata in zip(ids, metadatas):
+            scope_key = (metadata or {}).get("scope_key")
+            if scope_key is not None:
+                scopes[chunk_id] = scope_key
+        return scopes
 
     def out_of_scope_sources(self) -> dict[str, str]:
         """Return stored chunks whose ``source_path`` lies outside ``scope``.

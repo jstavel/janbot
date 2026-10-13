@@ -53,6 +53,14 @@ def test_duplicate_sibling_headings_get_unique_ids(tmp_path: Path) -> None:
     assert len({chunk.id for chunk in chunks}) == 2
 
 
+def test_identical_sibling_subtrees_get_distinct_ids(tmp_path: Path) -> None:
+    """Exact-duplicate siblings (same heading and body) still get distinct ids."""
+    chunks = _chunks(tmp_path, "* Notes\nSame body.\n* Notes\nSame body.\n")
+
+    assert len(chunks) == 2
+    assert len({chunk.id for chunk in chunks}) == 2
+
+
 def test_empty_node_still_yields_heading_text(tmp_path: Path) -> None:
     chunks = _chunks(tmp_path, "* Empty\n* Full\nBody.\n")
 

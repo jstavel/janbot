@@ -135,7 +135,7 @@ def test_removed_file_chunks_are_deleted(
     index_path = tmp_path / "index"
 
     assert index_corpus(corpus, index_path, embedder) == 2
-    dropped = _ids(index_path, embedder) & {chunk_id(corpus / "drop.org", 0, "Drop")}
+    dropped = _ids(index_path, embedder) & {chunk_id(corpus / "drop.org", "Drop")}
     assert len(dropped) == 1
 
     (corpus / "drop.org").unlink()
@@ -143,8 +143,33 @@ def test_removed_file_chunks_are_deleted(
     assert index_corpus(corpus, index_path, embedder) == 1
     remaining = _ids(index_path, embedder)
 
-    assert remaining == {chunk_id(corpus / "keep.org", 0, "Keep")}
+    assert remaining == {chunk_id(corpus / "keep.org", "Keep")}
     assert not remaining & dropped
+
+
+def test_inserting_heading_above_leaves_chunk_id_unchanged(
+    tmp_path: Path,
+    embedder: Embedder,
+    chunk_id: Callable[..., str],
+) -> None:
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    source = corpus / "doc.org"
+    source.write_text("* Top\nTop body.\n* Target\nTarget body.\n")
+    index_path = tmp_path / "index"
+
+    assert index_corpus(corpus, index_path, embedder) == 2
+    target_id = chunk_id(source, "Target")
+    assert target_id in _ids(index_path, embedder)
+
+    source.write_text("* Top\nTop body.\n* Inserted\nNew body.\n* Target\nTarget body.\n")
+
+    assert index_corpus(corpus, index_path, embedder) == 3
+    ids = _ids(index_path, embedder)
+
+    assert chunk_id(source, "Target") == target_id
+    assert target_id in ids
+    assert chunk_id(source, "Inserted") in ids
 
 
 def test_edited_subtree_replaces_chunk_without_duplication(
@@ -159,7 +184,7 @@ def test_edited_subtree_replaces_chunk_without_duplication(
     index_path = tmp_path / "index"
 
     assert index_corpus(corpus, index_path, embedder) == 1
-    assert _ids(index_path, embedder) == {chunk_id(source, 0, "About")}
+    assert _ids(index_path, embedder) == {chunk_id(source, "About")}
 
     write_org(source, "About", "Rewritten body.")
 
@@ -182,12 +207,12 @@ def test_renamed_heading_removes_orphan(
     index_path = tmp_path / "index"
 
     assert index_corpus(corpus, index_path, embedder) == 1
-    assert _ids(index_path, embedder) == {chunk_id(source, 0, "Old")}
+    assert _ids(index_path, embedder) == {chunk_id(source, "Old")}
 
     write_org(source, "New")
 
     assert index_corpus(corpus, index_path, embedder) == 1
-    assert _ids(index_path, embedder) == {chunk_id(source, 0, "New")}
+    assert _ids(index_path, embedder) == {chunk_id(source, "New")}
 
 
 def test_empty_corpus_empties_populated_index(
@@ -219,8 +244,8 @@ def test_existing_collection_is_reused_without_corruption(
     second = tmp_path / "second"
     write_org(second / "b.org", "Beta")
     index_path = tmp_path / "index"
-    first_id = chunk_id(first / "a.org", 0, "Alpha")
-    second_id = chunk_id(second / "b.org", 0, "Beta")
+    first_id = chunk_id(first / "a.org", "Alpha")
+    second_id = chunk_id(second / "b.org", "Beta")
 
     assert index_corpus(first, index_path, embedder) == 1
     assert _ids(index_path, embedder) == {first_id}
@@ -251,7 +276,7 @@ def test_second_corpus_preserves_first_corpus_chunks(
 
     assert index_corpus(second, index_path, embedder) == 1
     assert first_ids <= _ids(index_path, embedder)
-    assert chunk_id(second / "b.org", 0, "Beta") in _ids(index_path, embedder)
+    assert chunk_id(second / "b.org", "Beta") in _ids(index_path, embedder)
 
 
 def test_missing_corpus_root_raises_and_leaves_index_intact(
@@ -273,3 +298,33 @@ def test_missing_corpus_root_raises_and_leaves_index_intact(
         index_corpus(file_root, index_path, embedder)
 
     assert _ids(index_path, embedder) == before
+
+
+class _LegacyChunk:
+    """A ``ChunkLike`` carrying no scope key, as stored before the scope key existed."""
+
+    def __init__(self, chunk_id: str, text: str, source_path: str) -> None:
+        self.id = chunk_id
+        self.text = text
+        self.source_path = source_path
+        self.breadcrumb = "Legacy"
+
+
+def test_rebuild_prunes_orphans_without_a_scope_key(
+    tmp_path: Path, embedder: Embedder, write_org: Callable[..., None]
+) -> None:
+    """A chunk stored before scope keys existed is pruned by an in-place rebuild."""
+    corpus = tmp_path / "corpus"
+    write_org(corpus / "a.org", "Alpha")
+    index_path = tmp_path / "index"
+    legacy_id = f"{corpus / 'a.org'}::0::Alpha"
+
+    VectorStore(index_path, embedder).upsert(
+        [_LegacyChunk(legacy_id, "Legacy body.", str(corpus / "a.org"))]
+    )
+
+    assert index_corpus(corpus, index_path, embedder) == 1
+    ids = _ids(index_path, embedder)
+
+    assert legacy_id not in ids
+    assert len(ids) == 1
