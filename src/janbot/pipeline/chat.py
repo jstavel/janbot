@@ -5,19 +5,20 @@ question + retrieved context, no compilation or optimization (that is
 Milestone 2). Retrieval is a plain ``VectorStore.query(question, k=top_k)``;
 each retrieved chunk enters the prompt as a block labeled with its
 corpus-root-relative source. The answer comes from an LM prediction that also
-names the source labels it derived the answer from; the program treats those
-names as claims and validates them against the retrieved chunks'
-``source_path`` metadata, then emits citations only from that metadata —
-rewritten to corpus-root-relative form so no absolute path can leave the port.
+names the source labels it derived the answer from; the program rewrites each
+retrieved chunk's ``source_path`` to its corpus-root-relative label, treats
+those names as claims, validates them against the rewritten labels, and emits
+citations only from them — so no absolute path can leave the port.
 An answer claiming no sources, or naming sources outside the retrieved set, is
 rejected rather than returned.
 
-The LM is set once at construction time by the caller (``set_lm``), so a
-request is a single program call.
+The LM is set once at startup by the caller via ``set_lm``, so a request is a
+single program call.
 
 Import order matters here: ``janbot.store`` (chromadb) must load before
 ``dspy``, which installs a lazy numpy proxy at import time and breaks numpy
-when it lands first.
+when it lands first (verified 2026-10-13: importing ``dspy`` before
+``chromadb`` fails with ``TypeError: data type 'bool' not understood``).
 """
 
 from __future__ import annotations

@@ -25,3 +25,13 @@
 - source_plan: `_bmad-output/initiative-janbot/epic-rag-chat/story-determinism-at-the-locked-snapshot-plan.md`
   summary: Keyed eval-mode double-run not performed — real provider-level reproducibility of the locked snapshot is not demonstrated.
   evidence: The plan's `## Verification` lists the keyed manual check but it was never run; the automated determinism rows use the stub `DummyLM`, which proves no per-request nondeterminism but not provider reproducibility (plan `## Design Notes`). It backs the ticket's own `verify` ("two runs … identical under the locked snapshot"). Run: start the app in eval mode with `OPENROUTER_API_KEY` set, post the same question twice, diff the bodies.
+
+## Sweep decisions (2026-10-13, epic-rag-chat story 3.8)
+
+- source_plan: `_bmad-output/initiative-janbot/epic-rag-chat/story-refactor-sweep-plan.md`
+  summary: Chunk-id stability — ids embed a document-order ordinal, so inserting a heading re-ids the tail; the fix is a content hash (source+breadcrumb) plus a scope-key reconcile.
+  evidence: Not cleanup-only: it changes chunk ids → requires a re-index, edits `ingest/org.py` (outside the epic-rag-chat boundary), and rewrites ingestion tests. The epic decided it was a review item, not an entry. Deserves its own ticket; do not fold into a cleanup sweep.
+
+- source_plan: `_bmad-output/initiative-janbot/epic-rag-chat/story-refactor-sweep-plan.md`
+  summary: Scoped `VectorStore.query` over-fetches the whole collection when scoped; narrowing the fetch is a deferrable optimization.
+  evidence: The scope guarantee is correct today; only cost scales with corpus size. `store/` is outside the 3.8 cleanup boundary, and this is performance, not correctness.

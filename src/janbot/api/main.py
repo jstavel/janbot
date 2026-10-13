@@ -15,7 +15,8 @@ injected store/LM adapters and speak HTTP only (AD-7).
 
 Import order matters: ``janbot.store`` (chromadb) must load before anything
 that imports ``dspy``, whose lazy numpy proxy breaks numpy when it lands
-first.
+first (verified 2026-10-13: importing ``dspy`` before ``chromadb`` fails
+with ``TypeError: data type 'bool' not understood``).
 """
 
 from __future__ import annotations
