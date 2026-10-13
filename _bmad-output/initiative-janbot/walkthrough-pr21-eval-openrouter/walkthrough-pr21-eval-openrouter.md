@@ -10,7 +10,7 @@ Target: PR https://github.com/jstavel/janbot/pull/21 · branch `route-eval-via-o
 
 ## Status
 
-All blocks accepted: 5 of 5. Review complete; wrap-up pending (merge PR #21).
+All blocks accepted: 5 of 5. Review complete: PR #21 squash-merged (`d83c570`), plan set to done.
 
 ## Block 1 — Intent
 
