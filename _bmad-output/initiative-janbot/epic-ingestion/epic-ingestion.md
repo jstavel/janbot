@@ -8,7 +8,7 @@ covers: ["CAP-4", "CAP-5"]
 after: []
 assignee: ""
 risk: medium
-status: in-progress
+status: done
 ---
 
 # Org-mode ingestion & fail-closed scope

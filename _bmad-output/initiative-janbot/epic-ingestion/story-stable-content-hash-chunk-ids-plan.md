@@ -3,7 +3,7 @@ title: 'Stable content-hash chunk ids'
 type: 'feature'
 ticket: 8
 created: '2026-10-13'
-status: 'built'
+status: 'done'
 baseline_revision: '7904fee265223535f0df03404083f6cc16007503'
 route: 'full'
 route_source: 'auto'

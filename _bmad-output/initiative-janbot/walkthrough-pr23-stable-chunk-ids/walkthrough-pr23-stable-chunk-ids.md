@@ -10,7 +10,7 @@ Target: PR https://github.com/jstavel/janbot/pull/23 · branch `ingest-stable-ch
 
 ## Status
 
-All blocks accepted: 5 of 5. Review complete; wrap-up pending (merge PR #23).
+All blocks accepted: 5 of 5. Review complete: PR #23 squash-merged (`1226379`), story 2.8 marked done; epic-ingestion re-closed as done.
 
 ## Block 1 — Intent
 

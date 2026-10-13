@@ -55,3 +55,12 @@ Session: unavailable · Timestamp: 2026-10-13T20:50:00+02:00
 - Result: accepted as-is. All 5 blocks accepted; no findings raised during the walkthrough.
 - Evidence: narrative Block 5.
 - Open: wrap-up — commit walkthrough artifacts, merge PR #23, mark story 2.8 done (closes epic-ingestion).
+
+## 7 — Wrap-up — merged
+
+Session: unavailable · Timestamp: 2026-10-13T20:55:00+02:00
+
+- Action: committed the walkthrough artifacts; squash-merged PR #23 after CI passed.
+- Result: PR #23 merged as `1226379`; plan 2.8 set to `done`; epic-ingestion re-closed (`done`).
+- Evidence: `1226379`; PR https://github.com/jstavel/janbot/pull/23.
+- Open: none.
