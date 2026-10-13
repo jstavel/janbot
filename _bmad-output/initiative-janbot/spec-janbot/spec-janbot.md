@@ -40,7 +40,7 @@ A **vision to realize**, carrying an **opportunity to capture**. The owner wants
 
 - **CAP-6**
   - **intent:** The system supports two model modes: a locked deterministic snapshot for CI/evaluation and a flexible auto-routed mode for production.
-  - **success:** The same query under the locked snapshot at temperature 0 yields identical output across runs; production routing is selectable by configuration without code change.
+  - **success:** The same query under the locked snapshot at temperature 0 retrieves and cites the same corpus sources across runs (grounding is deterministic; the provider does not guarantee byte-identical answer text); production routing is selectable by configuration without code change.
 
 - **CAP-7**
   - **intent:** CI runs automated endpoint tests on every change.

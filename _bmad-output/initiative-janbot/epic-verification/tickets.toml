@@ -37,8 +37,8 @@ risk = "medium"
 id = 4
 type = "story"
 title = "Determinism at the locked snapshot"
-description = "Runs the same question twice against the service under the locked eval snapshot at temperature=0 and asserts identical response bodies."
-verify = "Two runs of the same query are byte-identical under the locked snapshot at temperature=0."
+description = "Runs the same question twice against the service under the locked eval snapshot at temperature=0 and asserts the two runs ground the answer in the same corpus sources."
+verify = "Two runs of the same query, under the locked snapshot at temperature=0, return 200 and cite the same corpus sources (the provider does not guarantee byte-identical text)."
 covers = ["CAP-7"]
 after = [1, 3]
 hitl = true

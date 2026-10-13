@@ -25,7 +25,7 @@
 - source_plan: `_bmad-output/initiative-janbot/epic-rag-chat/story-determinism-at-the-locked-snapshot-plan.md`
   summary: Keyed eval-mode double-run not performed — real provider-level reproducibility of the locked snapshot is not demonstrated.
   evidence: The plan's `## Verification` lists the keyed manual check but it was never run; the automated determinism rows use the stub `DummyLM`, which proves no per-request nondeterminism but not provider reproducibility (plan `## Design Notes`). It backs the ticket's own `verify` ("two runs … identical under the locked snapshot"). Run: start the app in eval mode with `OPENROUTER_API_KEY` set, post the same question twice, diff the bodies.
-  status: **resolved** — delivered by `epic-verification` story 4.4 (`tests/e2e/test_determinism_e2e.py`): two cache-cold eval service runs (pinned snapshot, temperature `0`, seed `0`), one `POST /chat` each, byte-identical bodies (keyed/hitl).
+  status: **resolved** — delivered by `epic-verification` story 4.4 (`tests/e2e/test_determinism_e2e.py`): two cache-cold eval service runs (pinned snapshot, temperature `0`, seed `0`), one `POST /chat` each, grounding the answer in the same corpus sources (keyed/hitl). Answer *text* is not asserted byte-identical — the provider does not guarantee it at temperature 0.
 
 ## Sweep decisions (2026-10-13, epic-rag-chat story 3.8)
 

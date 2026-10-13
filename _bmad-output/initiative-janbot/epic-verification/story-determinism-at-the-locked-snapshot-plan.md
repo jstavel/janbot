@@ -3,7 +3,7 @@ title: 'Determinism at the locked snapshot'
 type: 'feature'
 ticket: 4
 created: '2026-10-13'
-status: 'done'
+status: 'built'
 baseline_revision: '1a3d45c6d53e9aeec32f9a77f268dd6664a97b9f'
 route: 'full'
 route_source: 'auto'
@@ -21,7 +21,7 @@ context: []
 
 **Problem:** the in-process tests prove the eval LM is *built* with the pinned snapshot, temperature `0.0` and a seed (`tests/test_llm.py`, `tests/test_config.py`), but nothing proves the **running service generates** the same answer for the same question — the determinism CAP-7/Done-when 3 asks for is a property of the shipped HTTP path, not just the adapter. A naive "post twice and compare" cannot prove it: DSPy caches responses by default and the LM is built once per app, so the second identical POST is a **cache hit** and the bodies match even when generation is nondeterministic.
 
-**Approach:** start **two cache-cold service processes** (each with its own `DSPY_CACHEDIR`, exactly **one** POST each) under the locked eval snapshot at temperature `0`, seed `0`. Compare the two first-generation response bodies and assert they are **byte-identical**. Skipped cleanly without a model key.
+**Approach:** start **two cache-cold service processes** (each with its own `DSPY_CACHEDIR`, exactly **one** POST each) under the locked eval snapshot at temperature `0`, seed `0`, and assert the two first-generation runs **ground the answer in the same corpus sources** (a well-formed `{answer, citations}` body each). The provider does **not** guarantee byte-identical answer *text* at temperature `0`, so the row pins the grounding the service controls, not the wording. Skipped cleanly without a model key.
 
 ## Boundaries & Constraints
 
@@ -39,7 +39,7 @@ context: []
 
 | Scenario | Input / State | Expected Output / Behavior | Error Handling |
 |----------|--------------|---------------------------|----------------|
-| HAPPY | two cold eval service runs (temp `0`, seed `0`, pinned snapshot), the same question posted once per run | both `200`; the two response bodies are byte-identical | No error |
+| HAPPY | two cold eval service runs (temp `0`, seed `0`, pinned snapshot), the same question posted once per run | both `200`; the two runs ground the answer in the **same corpus sources** | No error |
 | EDGE | no model key | the row is **skipped**, not failed | clean skip |
 
 </frozen-after-approval>
@@ -47,7 +47,7 @@ context: []
 ## Code Map
 
 - `tests/e2e/conftest.py` — thread an `extra_env` override through `_service_env`/`_serve`, and add a `cold_service` **factory fixture** that starts an eval service with the pinned config and a unique `DSPY_CACHEDIR`, yielding its base URL. Existing helpers: `_serve` (`conftest.py:154`), `_service_env` (`conftest.py:144`), `fixture_index` (`conftest.py:134`).
-- `tests/e2e/test_determinism_e2e.py` (new) — the keyed row: two `cold_service()` runs, one `POST /chat` each, byte-identical bodies.
+- `tests/e2e/test_determinism_e2e.py` (new) — the keyed row: two `cold_service()` runs, one `POST /chat` each, same-source grounding.
 - `README.md` — one line noting the determinism row and its cache-cold property.
 - Do not touch: `src/janbot/**`, existing `tests/*.py`.
 
@@ -59,7 +59,7 @@ context: []
 - [x] `README.md` -- note the determinism row -- docs match behaviour.
 
 **Acceptance Criteria:**
-- Given two cache-cold eval service starts at temperature `0`, seed `0` and the locked snapshot, when the same question is posted once to each, then both return `200` and the two response bodies are byte-identical.
+- Given two cache-cold eval service starts at temperature `0`, seed `0` and the locked snapshot, when the same question is posted once to each, then both return `200` and both ground the answer in the same corpus sources.
 - Given no model key, when the suite runs, then the determinism row is skipped and the rest of the suite is green.
 - Given the e2e modules, when their imports are inspected, then none imports `janbot`.
 - Given the whole suite keyless, when run, then every existing test passes.
@@ -70,16 +70,28 @@ context: []
 
 - 2026-10-13 (replan): the first pass (oneshot) reused the session `service_base_url` and posted twice; review found the second POST is a DSPy cache hit (dspy 3.4.0 defaults `cache=True`; LM built once at `api/main.py:83`), so the row proved cache stability, not generation determinism — and it asserted a temperature/seed premise it never pinned. Gap recorded here; plan re-derived to two cache-cold runs.
 - 2026-10-13 (build): implemented as planned. `_service_env`/`_serve` gained an optional `extra_env` override; `cold_service` returns a factory that starts a fresh subprocess with `extra_env={**DETERMINISM_ENV, "DSPY_CACHEDIR": <unique tmp>}`. `test_determinism_e2e.py` runs `cold_service()` twice, one `POST /chat` each, and compares `response.content` bytes. Verified keyless (`153 passed, 2 skipped`) and keyed (`1 passed`, two cold runs byte-identical).
+- 2026-10-13 (post-merge fix, PR #17 follow-up): the keyed row was **flaky (~4 of 5 runs red)** — `gpt-4o-mini` is not byte-stable at temperature `0`. Captured pair: `…and evaluation before starting JanBot.` vs `…and evaluation.` (same `citations: [profile.org]` in every sampled run). The row now asserts **same-source grounding** (both `200`, well-formed `{answer, citations}`, equal citation-source lists) instead of byte-equality; README/docstring/ticket updated to state the provider limitation. This is a post-merge re-scope of the frozen claim, authorised by the maintainer.
 
 ## Plan Change Log
 
 <!-- Append-only. Populated by step-04 during review loops. -->
 
 - 2026-10-13: **Trigger:** review found the byte-identical assertion was satisfied by DSPy's default response cache (and the premise was ambient). **Amended (route full):** replace "two POSTs to one service" with two cache-cold service processes (distinct `DSPY_CACHEDIR`, one POST each) and pin temperature/seed/snapshot explicitly; add the `cold_service` factory seam. **Known-bad state avoided:** a determinism test that passes regardless of model nondeterminism or sampling settings. **KEEP:** the port-only HTTP harness, the keyed skip-when-no-key behaviour, and the pinned `openai/gpt-4o-mini-2024-07-18` snapshot.
+- 2026-10-13 (post-merge): **Trigger:** the merged row was flaky (~4 of 5 keyed runs red) — the provider does not produce byte-identical text at temperature `0`. **Amended (frozen claim re-scoped, maintainer-authorised):** assert **same-source grounding** (both `200`, well-formed body, equal citation sources) instead of byte-identical bodies; docstring/README/ticket state the provider limitation. **Known-bad state avoided:** a determinism row that fails on ordinary provider wording variance. **KEEP:** the two cache-cold processes, the pinned config, the keyed skip-when-no-key behaviour, and the `DSPY_CACHEDIR` isolation.
 
 ## Review Triage Log
 
 <!-- Append-only. Populated by step-04 on EVERY review pass. -->
+
+### 2026-10-13 — quick lens (post-merge fix review)
+
+- **Verdict counts: 0 high / 1 medium / 4 low / 0 false / 0 maybe-false.** One patched (upstream reconciliation), three patched as doc fixes, one rejected.
+- **The re-scope was not propagated upstream** — **verdict: medium**. Verified: `spec-janbot.md` CAP-6 and `epic-verification.md` Done-when 3 still claimed "identical output across runs", which the grounding row no longer (and, with a live provider, cannot) demonstrate. **route: patch** — CAP-6 success, Done-when 3, and an epic decision note now state grounding determinism + the provider text caveat.
+- **`deferred-work.md:28` still described the delivered row as "byte-identical bodies"** — **verdict: low**. **route: patch** — reworded to same-source grounding + caveat.
+- **README/docstring claimed "generation determinism"; `_answer()` was called only for its side-effect** — **verdict: low**. **route: patch** — README and the module docstring now say grounding determinism; the helper is `_assert_grounded_response`, which validates the body rather than returning a discarded value.
+- **`_sources` docstring overstated its check** — **verdict: low**. **route: patch** — the check now lives in `_assert_grounded_response` with an accurate docstring (non-empty + no leading slash).
+- **Frozen Intent was edited on this change's own attestation, with no independent maintainer artifact** — **verdict: low**, **rejected**. The maintainer explicitly directed the re-scope in-session ("fix 4.4 now" / "proceed"); the Plan Change Log records it. The frozen-marker rule asks for human renegotiation, which occurred.
+- **Correction to the earlier full-route entry below:** it said citations are built in "LM-claim order"; verified they are built in **retrieval order** (`src/janbot/pipeline/chat.py:147-152`, `dict.fromkeys(sources)`), and `chat.py:137` is `retrieved = set(sources)`. The DW4 "citation ordering" deferred item (`deferred-work.md:42`) therefore appears already resolved by the code and is stale.
 
 ### 2026-10-13 — quick lens (full-route re-review)
 
@@ -99,7 +111,7 @@ context: []
 
 - Why two processes, not two POSTs to one: DSPy caches responses (memory + `~/.dspy_cache`) by default and the LM is built once per app, so a second identical POST never re-generates. A distinct `DSPY_CACHEDIR` per process forces each run's one POST to be a cold generation — the property CAP-7 actually cares about.
 - Why the config is pinned explicitly: `load_config` reads temperature/seed/snapshot from the environment, so inheriting ambient values would let the service under test run hot and silently invalidate the premise.
-- Residual risk: provider-side nondeterminism at temperature `0` with a fixed seed can still flake on rare occasions; accepted (this is a keyed/hitl row, per the ticket).
+- Residual risk: the provider does not guarantee byte-identical answer *text* at temperature `0` with a fixed seed (measured: `gpt-4o-mini` varies wording ~half the time), so the row deliberately asserts **same-source grounding**, not body equality. A rarer residual — the model varying *which* sources it claims — would surface as a red row; that is a real grounding instability worth knowing.
 
 ## Verification
 
@@ -108,4 +120,4 @@ context: []
 - `env -u OPENAI_API_KEY uv run pytest -q` -- expected: every existing test passes.
 
 **Manual checks (keyed):**
-- `uv run pytest tests/e2e/test_determinism_e2e.py -q` -- expected: the determinism row passes (two cold runs, byte-identical `200` bodies).
+- `uv run pytest tests/e2e/test_determinism_e2e.py -q` -- expected: the determinism row passes repeatedly (two cold runs, same-source grounding).
