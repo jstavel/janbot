@@ -115,6 +115,8 @@ The suite in `tests/e2e/` proves the *shipped service answers through its HTTP p
 
 The grounding boundary is proven at the port by `tests/e2e/test_grounding_e2e.py`: a crafted index holding an out-of-scope chunk makes the service exit at startup, and a sourceless-only index answers `/chat` with `503`. Those indexes come from `tests/e2e/make_index.py`, a non-test helper run as a subprocess.
 
+Generation determinism at the locked snapshot is proven by `tests/e2e/test_determinism_e2e.py`: two **cache-cold** eval service runs (each a fresh process with its own `DSPY_CACHEDIR`, so its single `POST /chat` is a real generation, not a DSPy response-cache hit) are posted the same question once each, and the two `200` bodies must be byte-identical.
+
 Run the port-only happy path with a key (the `eval` snapshot is served through `dspy`/LiteLLM, which reads `OPENAI_API_KEY`):
 
 ```sh

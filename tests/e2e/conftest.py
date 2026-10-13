@@ -20,8 +20,8 @@ import socket
 import subprocess
 import tempfile
 import time
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import AbstractContextManager, contextmanager
 from pathlib import Path
 
 import httpx
@@ -141,18 +141,33 @@ def fixture_index(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return index_path
 
 
-def _service_env(index_path: Path) -> dict[str, str]:
-    """The environment the service subprocess runs with: fixture corpus, given index."""
-    return {
+def _service_env(
+    index_path: Path, extra_env: Mapping[str, str] | None = None
+) -> dict[str, str]:
+    """The environment the service subprocess runs with: fixture corpus, given index.
+
+    ``extra_env`` overrides the base environment (and any ambient value of the
+    same name), so the determinism fixture can pin model settings and a cache
+    directory the ambient environment cannot leak past.
+    """
+    env = {
         **os.environ,
         "JANBOT_CORPUS_PATH": str(FIXTURE_CORPUS),
         "JANBOT_INDEX_PATH": str(index_path),
         "JANBOT_MODEL_MODE": "eval",
     }
+    if extra_env is not None:
+        env.update(extra_env)
+    return env
 
 
 @contextmanager
-def _serve(index_path: Path, tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
+def _serve(
+    index_path: Path,
+    tmp_path_factory: pytest.TempPathFactory,
+    *,
+    extra_env: Mapping[str, str] | None = None,
+) -> Iterator[str]:
     """Start the service as a subprocess against ``index_path``; yield its base URL."""
     port = _free_port()
     base_url = f"http://{HOST}:{port}"
@@ -171,7 +186,7 @@ def _serve(index_path: Path, tmp_path_factory: pytest.TempPathFactory) -> Iterat
                 str(port),
             ],
             cwd=str(REPO_ROOT),
-            env=_service_env(index_path),
+            env=_service_env(index_path, extra_env),
             stdout=log_file,
             stderr=subprocess.STDOUT,
         )
@@ -269,4 +284,36 @@ def sourceless_service_base_url(
     """The service started against a sourceless-only index (starts, then answers 503)."""
     with _serve(sourceless_index, tmp_path_factory) as base_url:
         yield base_url
+
+
+DETERMINISM_ENV = {
+    "JANBOT_MODEL_MODE": "eval",
+    "JANBOT_TEMPERATURE": "0",
+    "JANBOT_SEED": "0",
+    "JANBOT_MODEL_SNAPSHOT": "openai/gpt-4o-mini-2024-07-18",
+}
+
+
+@pytest.fixture(scope="session")
+def cold_service(
+    fixture_index: Path, tmp_path_factory: pytest.TempPathFactory
+) -> Callable[[], AbstractContextManager[str]]:
+    """Factory for a cache-cold eval service: pinned config, unique ``DSPY_CACHEDIR``.
+
+    Each call starts a fresh subprocess with its own DSPy disk cache, so the
+    first ``POST /chat`` is a real generation rather than a cache hit (DSPy
+    caches responses by default, and the LM is built once per app). The pinned
+    ``DETERMINISM_ENV`` overrides any ambient temperature/seed/snapshot, so the
+    service under test cannot silently run hot.
+    """
+
+    def start() -> AbstractContextManager[str]:
+        cache_dir = tmp_path_factory.mktemp("dspy_cache")
+        return _serve(
+            fixture_index,
+            tmp_path_factory,
+            extra_env={**DETERMINISM_ENV, "DSPY_CACHEDIR": str(cache_dir)},
+        )
+
+    return start
 
