@@ -9,6 +9,7 @@ injected callable. Production uses :func:`default_embedder`.
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any, Protocol
@@ -39,6 +40,27 @@ class ChunkLike(Protocol):
 _COLLECTION_NAME = "janbot"
 
 
+def _within_scope(scope: Path, source_path: str | None) -> bool:
+    """Return ``True`` only when ``source_path`` is *located* inside ``scope``.
+
+    Mirrors :func:`janbot.ingest.scope.within` for an already-resolved root,
+    without importing it (``janbot.ingest`` imports ``janbot.store``; that import
+    would be circular). The containing directory is resolved while the final
+    component is left intact, so containment is judged by where a path sits.
+    Fail-closed: a missing or unjudgeable path returns ``False``.
+    """
+    if not isinstance(source_path, str) or not source_path:
+        return False
+    if ".." in Path(source_path).parts:
+        return False
+    try:
+        absolute = Path(os.path.abspath(source_path))
+        located = absolute.parent.resolve() / absolute.name
+    except (OSError, RuntimeError, TypeError):
+        return False
+    return located == scope or located.is_relative_to(scope)
+
+
 def default_embedder() -> Embedder:
     """Return the production embedder backed by Chroma's default model.
 
@@ -56,9 +78,15 @@ def default_embedder() -> Embedder:
 class VectorStore:
     """A persistent ChromaDB collection written and queried via ``embedder``."""
 
-    def __init__(self, index_path: str | Path, embedder: Embedder) -> None:
+    def __init__(
+        self,
+        index_path: str | Path,
+        embedder: Embedder,
+        scope: str | Path | None = None,
+    ) -> None:
         self.index_path = Path(index_path)
         self.embedder = embedder
+        self.scope = Path(scope).resolve() if scope is not None else None
         self._client = chromadb.PersistentClient(path=str(self.index_path))
         self._collection = self._client.get_or_create_collection(
             name=_COLLECTION_NAME,
@@ -133,10 +161,27 @@ class VectorStore:
         self._collection.delete(ids=id_list)
 
     def query(self, text: str, k: int = 3) -> list[dict[str, Any]]:
-        """Return up to ``k`` chunks most similar to ``text``."""
+        """Return up to ``k`` chunks most similar to ``text``.
+
+        When the store is scoped, only chunks *located* within ``self.scope`` can
+        be returned: ranked candidates are over-fetched (every stored chunk) and
+        filtered to scope before truncating to ``k``, so an out-of-scope chunk
+        can never enter retrieval. An unscoped store is the global top-``k``.
+        """
+        if k <= 0:
+            return []
+
+        if self.scope is not None:
+            count = self._collection.count()
+            if count == 0:
+                return []
+            n_results = count
+        else:
+            n_results = k
+
         result = self._collection.query(
             query_embeddings=self.embedder([text]),
-            n_results=k,
+            n_results=n_results,
             include=["documents", "metadatas"],
         )
 
@@ -147,12 +192,17 @@ class VectorStore:
         matches: list[dict[str, Any]] = []
         for chunk_id, document, metadata in zip(ids, documents, metadatas):
             meta = metadata or {}
+            source_path = meta.get("source_path")
+            if self.scope is not None and not _within_scope(self.scope, source_path):
+                continue
             matches.append(
                 {
                     "id": chunk_id,
                     "text": document,
-                    "source_path": meta.get("source_path"),
+                    "source_path": source_path,
                     "breadcrumb": meta.get("breadcrumb"),
                 }
             )
+            if len(matches) == k:
+                break
         return matches

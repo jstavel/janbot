@@ -4,7 +4,7 @@
 :CREATED:  <2026-10-08>
 :REVIEWED: <2026-10-12>
 :AUTHOR:   goose
-:SYNOPSIS: Contributed a documentation-as-metric idea to a company-wide AI-trust research initiative — working groups formed around it — treating documentation as a first-class test artifact.
+:SYNOPSIS: Contributed a documentation-as-metric idea to a company-wide AI-trust research initiative — working group formed around it — treating documentation as a first-class test artifact.
 :DOMAIN:   projects way-of-working
 :TAGS:     ai shift-left documentation executable-spec metrics jira behaviors cross-team initiative
 :STRENGTHS:  idea-propagation cross-team-initiative shift-left-design ai-trust-question networking

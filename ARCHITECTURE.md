@@ -80,7 +80,7 @@ Settings are environment-driven (`JANBOT_*`, loaded by `janbot.config`) and neve
 
 - Vector database for semantic search
 - Embedding model: `all-MiniLM-L6-v2`
-- Collection per domain scope
+- Retrieval is scoped to the corpus root at the store boundary: only chunks located within `JANBOT_CORPUS_PATH` can be retrieved, so an out-of-corpus chunk never reaches the prompt
 
 ### Ingestion Layer (orgparse)
 

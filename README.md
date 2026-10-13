@@ -21,12 +21,12 @@ Ports-and-adapters: every caller reaches JanBot only through the `POST /chat` JS
 | --- | --- |
 | API | FastAPI, Pydantic (`ChatResponse`, `Citation` as the single contract source) |
 | Pipeline | DSPy program: retrieve → answer + cite |
-| Store | ChromaDB + `all-MiniLM-L6-v2` embeddings |
+| Store | ChromaDB + `all-MiniLM-L6-v2` embeddings; retrieval scoped to `JANBOT_CORPUS_PATH` at the store boundary |
 | Ingestion | `orgparse` — one chunk per org subtree (headings, PROPERTIES, LOGBOOK, tags, parent breadcrumbs) |
 | LLM | OpenRouter — locked deterministic snapshot for CI/eval, `openrouter/auto` for production |
 | Tests | pytest + httpx (Milestone 1); TypeScript/Zod harness (Milestone 1.5) |
 
-Key invariants: fail-closed scope filter (only `public_profile_org/` is indexed), org subtree chunking (no naive text splitters), Pydantic as the single source of truth for the API contract, and a test layer that is never modified to accommodate a change in the AI core.
+Key invariants: fail-closed scope filter (only `public_profile_org/` is indexed) and scoped retrieval (only chunks located within `JANBOT_CORPUS_PATH` can be retrieved, so an out-of-corpus chunk never reaches the prompt or a citation), org subtree chunking (no naive text splitters), Pydantic as the single source of truth for the API contract, and a test layer that is never modified to accommodate a change in the AI core.
 
 `public_profile_org/` is JanBot's source of truth, itself an extract of the wider personal corpus SSOT (`~/org/corpus/views/work-profile/index.org`); it is updated only by re-extraction, never edited in place.
 
@@ -55,7 +55,7 @@ JanBot is configured through environment variables loaded by [`janbot.config`](s
 | `JANBOT_TEMPERATURE` | `0.0` | LM sampling temperature passed to the model in every mode. A value that is not a number fails fast. |
 | `JANBOT_SEED` | `0` | Sampling seed pinning determinism in `eval` mode only. `production` (`openrouter/auto`) is seed-free. A value that is not an integer fails fast. |
 | `JANBOT_TOP_K` | `3` | Retrieval top-k: how many corpus chunks ground an answer. An invalid or non-positive value fails fast. |
-| `JANBOT_CORPUS_PATH` | `public_profile_org` | The only corpus the ingestion pipeline will index (fail-closed). |
+| `JANBOT_CORPUS_PATH` | `public_profile_org` | The corpus root: the only tree the ingestion pipeline will index (fail-closed) and the scope retrieval is bounded to at the store. |
 | `JANBOT_INDEX_PATH` | `chroma_db` | Where the vector index is written. |
 | `JANBOT_PROJECT_ROOT` | the repository root | Base for relative `JANBOT_CORPUS_PATH`/`JANBOT_INDEX_PATH`; override for packaged deployments or tests. |
 | `OPENROUTER_API_KEY` | — | The OpenRouter key, read once at startup by the app (never stored in config). Required in `production` mode — a missing key fails fast at boot — and unused in `eval` mode. |
@@ -85,7 +85,7 @@ curl -s -X POST localhost:8000/chat \
 
 The response is a `ChatResponse` — `{"answer": "...", "citations": [{"source": "<corpus-root-relative path>"}, ...]}` — where every citation is the path of a retrieved corpus chunk the answer is derived from, relative to `JANBOT_CORPUS_PATH` (e.g. `profile.org`): the model names the labeled context blocks it used, the program validates those claims against the retrieved chunks' metadata, and emits citations only from that metadata — one entry per distinct source. An answer that names no sources, or names sources outside the retrieved set, is rejected rather than returned.
 
-Errors use FastAPI's standard `{detail}` envelope: a missing, mistyped, or blank (whitespace-only) `question` is rejected with the default 422; an empty index is refused with 503 naming the missing corpus; a chunk without its `source_path` — or with one outside the corpus root — is refused with 500 naming the integrity failure; an uncited or unverifiable answer is refused with 500 naming the refusal.
+Errors use FastAPI's standard `{detail}` envelope: a missing, mistyped, or blank (whitespace-only) `question` is rejected with the default 422; retrieval is scoped to `JANBOT_CORPUS_PATH` at the store, so a chunk outside the corpus root or without a `source_path` is never retrieved and an index with no in-corpus grounding is refused with 503 naming the missing corpus; an uncited or unverifiable answer is refused with 500 naming the refusal.
 
 ## Development
 
