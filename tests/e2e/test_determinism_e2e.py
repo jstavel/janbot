@@ -27,7 +27,7 @@ from typing import Any
 import httpx
 import pytest
 
-OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
+OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
 
 QUESTION = "What search infrastructure has Jan worked on?"
 
@@ -50,8 +50,8 @@ def _sources(body: dict[str, Any]) -> list[str]:
 
 
 @pytest.mark.skipif(
-    not (os.environ.get(OPENAI_API_KEY_ENV) or "").strip(),
-    reason=f"{OPENAI_API_KEY_ENV} is not set: the determinism e2e row is skipped",
+    not (os.environ.get(OPENROUTER_API_KEY_ENV) or "").strip(),
+    reason=f"{OPENROUTER_API_KEY_ENV} is not set: the determinism e2e row is skipped",
 )
 def test_two_cold_runs_ground_the_answer_in_the_same_sources(
     cold_service: Callable[[], AbstractContextManager[str]],

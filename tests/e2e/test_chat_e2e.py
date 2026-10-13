@@ -7,7 +7,7 @@ internals — ``httpx``, ``pytest`` and the standard library only.
 
 The real-model answer needs a model key (the ``eval`` snapshot
 ``openai/gpt-4o-mini-2024-07-18`` is served through ``dspy``/LiteLLM, which reads
-``OPENAI_API_KEY``). Without one the happy path is *skipped*, never failed, so a
+``OPENROUTER_API_KEY``). Without one the happy path is *skipped*, never failed, so a
 keyless run (CI) stays green.
 """
 
@@ -18,14 +18,14 @@ import os
 import httpx
 import pytest
 
-OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
+OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
 
 QUESTION = "What search infrastructure has Jan worked on?"
 
 
 @pytest.mark.skipif(
-    not (os.environ.get(OPENAI_API_KEY_ENV) or "").strip(),
-    reason=f"{OPENAI_API_KEY_ENV} is not set: the real-model e2e happy path is skipped",
+    not (os.environ.get(OPENROUTER_API_KEY_ENV) or "").strip(),
+    reason=f"{OPENROUTER_API_KEY_ENV} is not set: the real-model e2e happy path is skipped",
 )
 def test_chat_returns_grounded_answer_with_corpus_relative_citation(
     service_base_url: str,

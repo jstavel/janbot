@@ -12,7 +12,7 @@ import dspy
 from janbot.config import load_config
 from janbot.llm import build_lm, resolve_model
 
-DEFAULT_SNAPSHOT = "openai/gpt-4o-mini-2024-07-18"
+DEFAULT_SNAPSHOT = "openrouter/openai/gpt-4o-mini-2024-07-18"
 OPENROUTER_MODEL = "openrouter/auto"
 OPENROUTER_API_BASE = "https://openrouter.ai/api/v1"
 
@@ -61,7 +61,7 @@ def test_resolve_model_routes_by_environment_alone() -> None:
         {"JANBOT_MODEL_SNAPSHOT": "vendor/model-x", "JANBOT_MODEL_MODE": "production"}
     )
 
-    assert resolve_model(eval_config) == "vendor/model-x"
+    assert resolve_model(eval_config) == "openrouter/vendor/model-x"
     assert resolve_model(production_config) == OPENROUTER_MODEL
 
 
@@ -76,6 +76,7 @@ def test_build_lm_eval_uses_snapshot_and_configured_temperature() -> None:
     assert factory.kwargs == {
         "model": DEFAULT_SNAPSHOT,
         "temperature": 0.7,
+        "api_base": OPENROUTER_API_BASE,
         "seed": 0,
     }
 
@@ -89,19 +90,22 @@ def test_build_lm_eval_uses_configured_seed() -> None:
     assert factory.kwargs == {
         "model": DEFAULT_SNAPSHOT,
         "temperature": 0.0,
+        "api_base": OPENROUTER_API_BASE,
         "seed": 42,
     }
 
 
-def test_build_lm_eval_records_no_api_base_or_api_key() -> None:
+def test_build_lm_eval_routes_through_openrouter_with_passed_key() -> None:
     factory = StubLMFactory()
     config = load_config({})
 
-    build_lm(config, "sk-test", lm_factory=factory)
+    build_lm(config, "sk-openrouter", lm_factory=factory)
 
     assert factory.kwargs == {
         "model": DEFAULT_SNAPSHOT,
         "temperature": 0.0,
+        "api_base": OPENROUTER_API_BASE,
+        "api_key": "sk-openrouter",
         "seed": 0,
     }
 

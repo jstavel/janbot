@@ -119,10 +119,10 @@ Grounding determinism at the locked snapshot is proven by `tests/e2e/test_determ
 
 CI (`.github/workflows/ci.yml`) runs the unit/in-process suite and the port-only `tests/e2e` suite as separate named steps, plus a `contract-negative` job that mutates `tests/fixtures/chat_response.json` and requires `tests/test_response_contract.py` to go red — proving the broken-`/chat`-contract check is not vacuous.
 
-Run the port-only happy path with a key (the `eval` snapshot is served through `dspy`/LiteLLM, which reads `OPENAI_API_KEY`):
+Run the port-only happy path with a key (both the `eval` snapshot and `production` are served through OpenRouter; the service reads `OPENROUTER_API_KEY` and passes it to `dspy`/LiteLLM):
 
 ```sh
-OPENAI_API_KEY=... uv run pytest tests/e2e -q
+OPENROUTER_API_KEY=... uv run pytest tests/e2e -q
 ```
 
 ## License
