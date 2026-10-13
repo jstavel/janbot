@@ -109,6 +109,16 @@ tests/          # endpoint tests through the HTTP port only
 
 Planning artifacts live in `_bmad-output/`: `spec-janbot/` (the capability contract), `architecture-janbot/` (the architecture spine with decision records), and the ticket tree for Milestone 1.
 
+### End-to-end tests
+
+The suite in `tests/e2e/` proves the *shipped service answers through its HTTP port*: it starts `uv run uvicorn janbot.api.main:app` as a subprocess against a fixture index and posts to `POST /chat` over HTTP, importing no `janbot` internals. The fixture index is built at session setup by the ingestion CLI (in a subprocess), so it is never committed — a ChromaDB index bakes absolute `source_path` values and would only match the author's checkout. The real-model happy path needs a model key and is skipped cleanly without one, so a keyless run stays green.
+
+Run the port-only happy path with a key (the `eval` snapshot is served through `dspy`/LiteLLM, which reads `OPENAI_API_KEY`):
+
+```sh
+OPENAI_API_KEY=... uv run pytest tests/e2e -q
+```
+
 ## License
 
 [MIT](LICENSE)

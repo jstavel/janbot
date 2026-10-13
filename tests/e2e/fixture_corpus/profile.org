@@ -1,0 +1,8 @@
+#+TITLE: Public Profile
+
+* About
+Jan builds retrieval systems and writes about grounded answers.
+A short public biography lives here.
+
+** Background
+Jan worked on search infrastructure and evaluation before starting JanBot.

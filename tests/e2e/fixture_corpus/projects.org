@@ -1,0 +1,10 @@
+#+TITLE: Projects
+
+* Projects :work:
+:PROPERTIES:
+:CUSTOM_ID: projects
+:END:
+Selected public projects.
+
+** JanBot
+A retrieval-augmented assistant grounded in an org-mode corpus, built with FastAPI and DSPy.
