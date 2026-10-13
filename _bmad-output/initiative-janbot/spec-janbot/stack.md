@@ -18,7 +18,7 @@ Companion to `spec-janbot.md`. Load-bearing technology and boundary decisions. P
 ## Testing layers (phased)
 
 - **Milestone 1:** `pytest` + `httpx` for immediate testing of the FastAPI endpoint. No TypeScript; focus on reaching a working result fast.
-- **Milestone 1.5:** TypeScript test harness (`reactive-testing` models, Zod schemas) — only after the Python pipeline stabilizes.
+- **Milestone 1.5:** thin TypeScript test harness (`janbot-model` Zod schemas via OpenAPI codegen, vitest) — after the Python pipeline stabilizes and after Milestone 2.
 - **CI/CD:** GitHub Actions for Python tests (Milestone 1); extended with Zod validation in Milestone 1.5.
 
 ## Phase 2 — Evolution (Clojure)

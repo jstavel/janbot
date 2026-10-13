@@ -13,14 +13,6 @@ Companion to `spec-janbot.md`. Milestones and clean outputs. Reframes ADR-002 (D
 - **FastAPI endpoint** `/chat` with Pydantic `response_model`.
 - **Testing:** `pytest` + `httpx`; TS harness deferred to Milestone 1.5.
 
-## Milestone 1.5 — TypeScript test harness (after pipeline stabilization)
-
-- Split the `reactive-testing` framework into core and model packages.
-- Define `janbot-model` with Zod schemas for the `/chat` endpoint.
-- Codegen from the FastAPI OpenAPI spec (`openapi-zod-client`) → Zod from Pydantic, zero drift, single source of truth.
-- Extend CI/CD with TypeScript regression tests (vitest).
-- Standalone milestone — does not block Milestone 2.
-
 ## Milestone 2 — AI evaluation + staged optimization
 
 - **Golden Dataset** — recruiter questions with expected answers and sources (ground truth for DSPy optimizers).
@@ -32,6 +24,14 @@ Companion to `spec-janbot.md`. Milestones and clean outputs. Reframes ADR-002 (D
 - **MLFlow Tracking** — experiment tracking and iteration records (introduced here, not earlier).
 - *Optional:* validate SuperOptiX in practice only after the DSPy pipeline stabilizes (never a core dependency).
 
+## Milestone 1.5 — thin TypeScript harness (sequenced after Milestone 2)
+
+- Define `janbot-model` with Zod schemas for the `/chat` endpoint.
+- Codegen from the FastAPI OpenAPI spec (`openapi-zod-client`) → Zod from Pydantic, zero drift, single source of truth.
+- Extend CI/CD with TypeScript regression tests (vitest).
+- **Thin harness only:** the `reactive-testing` core/model split is deferred to a separate project and is not part of JanBot; no reactive-testing is used in any JanBot milestone.
+- Standalone milestone — sequenced after Milestone 2; it blocks nothing.
+
 ## Milestone 3 — Clojure evolution & orchestration
 
 - Design and implement the Clojure layer (Ring/Reitit), move request orchestration there, and verify backward compatibility of the test harness.
@@ -40,7 +40,7 @@ Companion to `spec-janbot.md`. Milestones and clean outputs. Reframes ADR-002 (D
 ## Deliverables
 
 - **Milestone 1:** working FastAPI service in Python with a DSPy RAG pipeline over local data (including the compiled/optimized program).
-- **Milestone 1.5:** TypeScript test harness (`reactive-testing` models, Zod schemas) with a CI/CD pipeline.
+- **Milestone 1.5:** thin TypeScript contract harness (`janbot-model` Zod schemas via OpenAPI codegen, vitest) with a CI/CD pipeline.
 - **Milestone 2:** AI evaluation + Golden Dataset with MLFlow tracking.
 - **Milestone 3:** evolutionary Clojure orchestrator for future event-driven management.
 - **Overall:** a finished portfolio project showing a top-tier intersection of AI engineering, Python, TypeScript and functional programming.

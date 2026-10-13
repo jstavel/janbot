@@ -33,3 +33,11 @@ Companion to `spec-janbot.md`. Historical decision log; older ADRs are not edite
 - **Decision:** Two model modes — CI/CD regression tests (TypeScript) and golden-dataset evaluation use a locked deterministic snapshot at `temperature=0` (recommended `openai/gpt-4o-mini-2024-07-18` or `anthropic/claude-3.5-sonnet`); production `/chat` uses `openrouter/auto` or a defined fallback sequence. Pydantic output signatures (`ChatResponse`, `Citation`) are the source of truth for the JSON contract; FastAPI OpenAPI → Zod codegen (single source of truth, zero drift).
 - **Consequences:** 🟢 deterministic CI/evaluation (metric change = pipeline change); 🟢 no Python↔TS contract drift; 🟡 two model configurations to maintain; 🟢 codegen is one-time then runs in CI.
 - **Fixed:** OpenRouter as provider (only routing strategy changes); test layer stays TypeScript; Pydantic as the single API-contract source of truth.
+
+## ADR-005: Milestone 1.5 re-scope — thin TS harness, reactive-testing deferred — PROPOSED 2026-10-13
+
+- **Status:** Proposed. **Date:** 2026-10-13.
+- **Context:** the SentinelOne MVP needs the `/chat` endpoint, the evaluation pipeline (Milestone 2) and architecture docs — not a TypeScript harness. The `reactive-testing` framework carries Playwright/Kraken coupling (`CollectorFn` typed to `Page`, engine importing Kraken data), so a general core split is expensive and unlikely to be a clean "core vs model" cut.
+- **Decision:** re-scope Milestone 1.5 to a **thin TypeScript harness** — `janbot-model` with Zod schemas for `/chat`, OpenAPI→Zod codegen (`openapi-zod-client`), vitest in CI — and sequence it **after Milestone 2**. The `reactive-testing` core/model split is deferred to a **separate project** (not part of JanBot); no reactive-testing is used in any JanBot milestone.
+- **Supersedes:** ADR-002's "TypeScript reactive-testing as primary verification" framing — JanBot's TypeScript layer is a Zod/vitest contract harness, not reactive-testing.
+- **Consequences:** 🟢 the highest-signal slice (TS contract-testing, zero drift) at ~20% of the effort; 🟢 M1.5 no longer waits on a core refactor and blocks nothing; 🟡 the fuller general core story moves to its own project with two real consumers (Kraken UI + JanBot API).

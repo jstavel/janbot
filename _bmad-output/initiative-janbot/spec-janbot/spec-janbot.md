@@ -44,7 +44,7 @@ A **vision to realize**, carrying an **opportunity to capture**. The owner wants
 
 - **CAP-7**
   - **intent:** CI runs automated endpoint tests on every change.
-  - **success:** A green CI run executes endpoint tests against the service; a deliberately broken response contract turns the run red (Milestone 1: pytest + httpx; Milestone 1.5: TypeScript regression harness).
+  - **success:** A green CI run executes endpoint tests against the service; a deliberately broken response contract turns the run red (Milestone 1: pytest + httpx; Milestone 1.5: TypeScript regression harness — Zod/vitest).
 
 - **CAP-8**
   - **intent:** Evaluation runs against a golden recruiter Q&A dataset with metrics for retrieval accuracy, citation correctness and hallucination detection, and applies cost-staged prompt optimization.
