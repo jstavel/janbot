@@ -53,6 +53,7 @@ JanBot is configured through environment variables loaded by [`janbot.config`](s
 | `JANBOT_MODEL_MODE` | `eval` | `eval` uses the locked deterministic snapshot (CI/evaluation); `production` uses `openrouter/auto`. An unknown value fails fast. |
 | `JANBOT_MODEL_SNAPSHOT` | `openai/gpt-4o-mini-2024-07-18` | The locked model used in `eval` mode. |
 | `JANBOT_TEMPERATURE` | `0.0` | LM sampling temperature passed to the model in every mode. A value that is not a number fails fast. |
+| `JANBOT_SEED` | `0` | Sampling seed pinning determinism in `eval` mode only. `production` (`openrouter/auto`) is seed-free. A value that is not an integer fails fast. |
 | `JANBOT_TOP_K` | `3` | Retrieval top-k: how many corpus chunks ground an answer. An invalid or non-positive value fails fast. |
 | `JANBOT_CORPUS_PATH` | `public_profile_org` | The only corpus the ingestion pipeline will index (fail-closed). |
 | `JANBOT_INDEX_PATH` | `chroma_db` | Where the vector index is written. |
@@ -65,7 +66,7 @@ Path values are `~`-expanded and resolved to absolute paths under the project ro
 JANBOT_MODEL_MODE=production OPENROUTER_API_KEY=... uv run uvicorn janbot.api.main:app
 ```
 
-Model mode is configuration only: switching `eval` ↔ `production` is an environment change, with no code change.
+Model mode is configuration only: switching `eval` ↔ `production` is an environment change, with no code change. In `eval` mode the locked snapshot is paired with a fixed seed (`JANBOT_SEED`, default `0`) and the documented default `temperature=0`; both remain configuration-owned, so a non-zero `JANBOT_TEMPERATURE` is honored rather than overridden. `production` uses `openrouter/auto`, unprefixed by a seed, and stays flexible.
 
 ## Chat
 
