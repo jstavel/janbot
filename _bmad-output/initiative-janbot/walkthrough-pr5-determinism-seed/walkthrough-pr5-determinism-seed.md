@@ -9,6 +9,10 @@ Target: PR https://github.com/jstavel/janbot/pull/5 · branch `story-3.5-determi
 - [x] Block 5 — Slice: determinism proven at the port and seam
 - [x] Block 6 — Periphery
 
+## Status
+
+All blocks accepted: 6 of 6. Review complete: PR #5 merged (`bb09613`), story 3.5 marked done.
+
 ## Block 1 — Intent
 
 Source: pasted verbatim from the plan's frozen Intent section — [story-determinism-at-the-locked-snapshot-plan.md](../epic-rag-chat/story-determinism-at-the-locked-snapshot-plan.md).

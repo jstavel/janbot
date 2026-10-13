@@ -26,3 +26,21 @@ Session: unavailable · Timestamp: 2026-10-13T00:00:00+00:00
 - Result: One orphan found — the keyed eval-mode double-run is unperformed and lived only in the plan's `## Verification`. Decision: pinned as a carry-over in `deferred-work.md` (option 1, user-chosen). The CHANGELOG omission was already deferred there.
 - Evidence: `deferred-work.md` "Carry-over (2026-10-13)"; plan `## Verification` / `## Design Notes`.
 - Open: keyed eval-mode double-run still unperformed.
+
+## 4 — VCS — merged PR #5
+
+Session: unavailable · Timestamp: 2026-10-13T00:00:00+00:00
+
+- Action: PR #5 merged to main via GitHub merge commit `bb09613`.
+- Result: Local main aligned on top.
+- Evidence: commit bb09613
+- Open: none
+
+## 5 — Ticket — story marked done
+
+Session: unavailable · Timestamp: 2026-10-13T00:00:00+00:00
+
+- Action: Flipped plan status per the reviewer's approval.
+- Result: story-determinism-at-the-locked-snapshot (3.5) flipped 'built' → 'done'. Walkthrough files were committed as `fa685d3` before the merge.
+- Evidence: epic-rag-chat/story-determinism-at-the-locked-snapshot-plan.md front matter; commit fa685d3
+- Open: keyed eval-mode double-run pinned in deferred-work.md.
