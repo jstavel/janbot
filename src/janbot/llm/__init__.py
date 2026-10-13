@@ -19,8 +19,9 @@ seed-free because ``openrouter/auto`` routes across providers where a seed is
 meaningless or rejected.
 
 No secrets are read here: the OpenRouter key is an explicit ``api_key``
-argument (its sourcing is decided later, by the ``/chat`` pipeline story) and
-is required, failing fast, in ``production`` mode only.
+argument, sourced by the app from the ``OPENROUTER_API_KEY`` environment
+variable (see ``janbot.api.main``) and required, failing fast, in
+``production`` mode only.
 """
 
 from __future__ import annotations

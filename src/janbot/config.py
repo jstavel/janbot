@@ -24,8 +24,9 @@ any clause fails fast with a ``ValueError`` naming the variable. Paths are
 the project root, then canonicalized to absolute paths, so no path depends on
 the process CWD.
 
-No secrets are read here; the OpenRouter key is a later, separately-managed
-concern. Configuration is environment-only (no ``.env`` or config-file support).
+No secrets are read here; the OpenRouter key (``OPENROUTER_API_KEY``) is read
+by the app, not by config. Configuration is environment-only (no ``.env`` or
+config-file support).
 
 ``load_config`` accepts an optional mapping so tests can supply an environment
 without mutating process state; when omitted it reads ``os.environ``.
