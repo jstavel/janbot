@@ -8,6 +8,10 @@ Target: PR https://github.com/jstavel/janbot/pull/13 · branch `hardening-serve-
 - [x] Block 4 — Slice: the test and docs
 - [x] Block 5 — Periphery
 
+## Status
+
+All blocks accepted: 5 of 5. Review complete: PR #13 squash-merged (`1338643`). Loose follow-up work (retro fix-now goal 5) — no ticket to flip.
+
 ## Block 1 — Intent
 
 Source: pasted verbatim from the plan's frozen Intent section — [plan-serve-ingest-root-alignment.md](../plan-serve-ingest-root-alignment.md).
