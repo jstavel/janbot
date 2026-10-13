@@ -8,6 +8,10 @@ Target: PR https://github.com/jstavel/janbot/pull/9 · branch `hardening-chat-er
 - [x] Block 4 — Slice: response-validation envelope + port-only tests
 - [x] Block 5 — Periphery
 
+## Status
+
+All blocks accepted: 5 of 5. Review complete: PR #9 squash-merged (`236118f`). Loose follow-up work (retro fix-now goal 1) — no ticket to flip.
+
 ## Block 1 — Intent
 
 Source: pasted verbatim from the plan's frozen Intent section — [plan-chat-error-envelope-robustness.md](../plan-chat-error-envelope-robustness.md).

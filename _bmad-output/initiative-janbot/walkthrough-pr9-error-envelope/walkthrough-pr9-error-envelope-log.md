@@ -17,3 +17,12 @@ Session: unavailable · Timestamp: 2026-10-13T00:00:00+00:00
 - Action: Authored the review narrative with five blocks (Intent, Broad strokes, two slices, Periphery).
 - Result: Block 1 presented first; all blocks unaccepted.
 - Evidence: `walkthrough-pr9-error-envelope.md`
+
+## 3 — VCS — squash-merged PR #9
+
+Session: unavailable · Timestamp: 2026-10-13T00:00:00+00:00
+
+- Action: PR #9 squash-merged to main as a single commit `236118f`.
+- Result: Local main aligned on top. Retro fix-now goal 1 delivered; goals 2–6 remain in `deferred-work.md`.
+- Evidence: commit 236118f
+- Open: none
