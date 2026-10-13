@@ -3,11 +3,11 @@
 Target: PR https://github.com/jstavel/janbot/pull/6 · branch `story-3.6-grounding-boundary` · commit `f656020`.
 
 - [x] Block 1 — Intent
-- [ ] Block 2 — Broad strokes (current)
-- [ ] Block 3 — Slice: the store-boundary scope
-- [ ] Block 4 — Slice: wiring the scope from config
-- [ ] Block 5 — Slice: proving the boundary (store + port)
-- [ ] Block 6 — Periphery
+- [x] Block 2 — Broad strokes
+- [x] Block 3 — Slice: the store-boundary scope
+- [x] Block 4 — Slice: wiring the scope from config
+- [x] Block 5 — Slice: proving the boundary (store + port)
+- [x] Block 6 — Periphery
 
 ## Block 1 — Intent
 
