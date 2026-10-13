@@ -8,6 +8,7 @@ covers: ["CAP-1", "CAP-2", "CAP-3", "CAP-6"]
 after: []
 assignee: ""
 risk: high
+status: done
 ---
 
 # DSPy answer + citation pipeline via /chat

@@ -8,6 +8,7 @@ covers: []
 after: []
 assignee: ""
 risk: low
+status: done
 ---
 
 # Workspace, tooling & CI baseline

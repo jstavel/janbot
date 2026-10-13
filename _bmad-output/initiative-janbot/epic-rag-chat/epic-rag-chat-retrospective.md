@@ -91,6 +91,7 @@ Previous epic: `epic-ingestion` — `epic-ingestion-retrospective.md` (verdict a
 7. Per-story reviews validate stories in isolation and again missed cross-story seams (ingest↔serve root, rewriter/store guard divergence, envelope coverage across the real-model path). Add an epic-close cross-ticket lens pass (as done here) as a standing gate.
 8. `git add -A` swept an unrelated corpus edit into the 3.6 PR — stage only intended files per story.
 9. Done-when evidence strength: the epic's own DW1/DW4 live proof is still HITL/keyed — `epic-verification` (CAP-7) is where the real end-to-end evidence must land; do not close the initiative without it.
+10. **Closure hygiene (added 2026-10-13):** closing an epic must also flip the epic's own frontmatter `status:` to `done` — it is a hand-written field, not derived from the child tickets. This epic was closed by a commit that added only the retrospective file, so `epic-rag-chat.md` kept no `status:` until it was reconciled on 2026-10-13 (contrast `epic-verification`, closed with a dedicated "close … (status done)" commit). Add the `status:` flip to the closure checklist alongside the retrospective.
 
 **Defer (tracked):** chunk-id stability; scoped-query over-fetch optimization (`deferred-work.md`); seed-reaches-provider verification; vacuous-output constraints (`answer` empty, `source` `.`).
 

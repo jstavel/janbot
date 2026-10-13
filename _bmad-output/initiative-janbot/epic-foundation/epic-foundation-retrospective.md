@@ -91,6 +91,8 @@ Remediation and spec-reconciliation items; owners in parentheses.
 
 **Process lessons** (prevent the next one): a story's frozen Intent should not lock a data contract (the four `Config` fields) that the architecture spine already says will grow — derive the contract from the spine, not the story. Tests should assert the *documented public* contract (literal names/defaults), not the module's own constants, or they give false confidence. A Done-when that depends on an external observation (a CI run) needs an explicit "observe after first push" item, never an assumed pass.
 
+**Closure-hygiene lesson (added 2026-10-13):** closing an epic must also flip the epic's own frontmatter `status:` to `done` — it is a hand-written field, not derived from the child tickets. This epic was the *first* one closed, before that habit existed, so `epic-foundation.md` carried no `status:` at all until it was reconciled on 2026-10-13. Do not assume "all children done" implies the epic file is marked done.
+
 ## Acceptance verdict
 
 **accepted-with-open-items** — criteria `declared`.
