@@ -46,3 +46,7 @@ Every change to JanBot is verified by an automated, deterministic endpoint suite
 ## Notes
 
 - Decision (2026-10-05, slicing): kept as its own epic rather than folded into `epic-rag-chat`, because verification is the project's stated USP and the closing end-to-end suite spans the whole initiative.
+- Decision (2026-10-13, inception): breakdown of six entries in one lane (they share the e2e harness); entry 1 is the tracer bullet — the port-only harness that starts the service as a subprocess against a fixture index and exercises `/chat` over HTTP. CI is introduced at entry 5, not in the tracer: the tracer proves the port path; CI wiring is a separate concern.
+- Decision (2026-10-13, model/hitl): the service needs a real model for a citation-bearing answer, so entries **1, 3, 4** are **hitl** (keyed runs, recorded); entry **2** is keyless (422 on malformed, 503 on empty index — no model call), and entry 3's foreign-only → 503 part runs keyless too.
+- Decision (2026-10-13, fixture): **entry 1 owns** building and committing the fixture index (a hitl step), so the test modules import no `janbot` internals (Done-when 5, AD-7).
+- Decision (2026-10-13, broken-contract): Done-when 4's negative is test-side — a keyless self-test feeds a deliberately malformed response through the Pydantic contract (asserting rejection), plus a CI job that mutates the response fixture and expects the run to go red; no `api/` change (the epic boundary holds).

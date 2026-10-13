@@ -1,0 +1,67 @@
+# tickets.toml — epic-verification. Planned entries in build order; no leaf file until an entry is pulled.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Port-only e2e harness (tracer bullet)"
+description = "Starts the JanBot service as a subprocess against a fixture index and exercises POST /chat end to end over HTTP with httpx only — the test module imports no janbot internals. This entry also builds and commits the fixture index (a hitl step)."
+verify = "POST /chat returns 200 with {answer, citations} carrying at least one corpus-relative citation, over HTTP only."
+covers = ["CAP-7"]
+after = ["3.3"]
+hitl = true
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Contract & error-envelope coverage through the port"
+description = "Adds HTTP-only cases for a malformed or blank question (422) and an empty index (503), asserting FastAPI's standard {detail} envelope."
+verify = "A malformed question is rejected with 422 and an empty index with 503, both carrying the {detail} envelope, through HTTP only."
+covers = ["CAP-7"]
+after = [1]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Grounding coverage through the port"
+description = "Adds HTTP-only cases proving retrieval is bounded to the corpus: an out-of-corpus chunk is never cited (a keyless foreign-only index returns 503) and an uncited answer is refused."
+verify = "No citation names a source outside the served corpus, and an uncited answer is refused with the {detail} envelope."
+covers = ["CAP-7"]
+after = [1, 2]
+hitl = true
+risk = "medium"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Determinism at the locked snapshot"
+description = "Runs the same question twice against the service under the locked eval snapshot at temperature=0 and asserts identical response bodies."
+verify = "Two runs of the same query are byte-identical under the locked snapshot at temperature=0."
+covers = ["CAP-7"]
+after = [1, 3]
+hitl = true
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "CI wiring + broken-contract negative"
+description = "Extends the existing CI workflow (epic-foundation entry 1.3) to run the end-to-end suite on every push, and adds a keyless self-test that feeds a deliberately malformed response through the Pydantic contract (asserting rejection) plus a CI job that mutates the response fixture and expects the run to go red — no api/ change."
+verify = "CI is green on a good push and red when the response contract is deliberately broken."
+covers = ["CAP-7"]
+after = [1, 4]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Refactor sweep"
+description = "Cleanup-only pass over tests/ and the CI workflow from this epic's plans and any deferred review findings; it touches only the CAP-7 test and CI artifacts, and its scope is set when it starts."
+verify = "The suite is green and no deferred cleanup finding from this epic remains open."
+covers = ["CAP-7"]
+after = [1, 2, 3, 4, 5]
+hitl = false
+risk = "low"
