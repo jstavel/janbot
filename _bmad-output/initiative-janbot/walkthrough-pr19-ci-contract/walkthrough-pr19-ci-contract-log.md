@@ -55,3 +55,12 @@ Session: unavailable · Timestamp: 2026-10-13T18:35:00+02:00
 - Result: accepted as-is. All 5 blocks accepted; no findings raised during the walkthrough.
 - Evidence: narrative Block 5.
 - Open: wrap-up — commit walkthrough artifacts, merge PR #19, mark story 4.5 done.
+
+## 7 — Wrap-up — merged
+
+Session: unavailable · Timestamp: 2026-10-13T18:40:00+02:00
+
+- Action: committed the walkthrough artifacts; squash-merged PR #19 after CI passed.
+- Result: PR #19 merged as `e4b0f2e`; plan 4.5 set to `done`; entry 4.6 unblocked.
+- Evidence: `e4b0f2e`; PR https://github.com/jstavel/janbot/pull/19.
+- Open: none.

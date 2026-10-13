@@ -3,7 +3,7 @@ title: 'CI wiring + broken-contract negative'
 type: 'feature'
 ticket: 5
 created: '2026-10-13'
-status: 'built'
+status: 'done'
 baseline_revision: 'fc33f630abbe42b7fb32c7e0baac7a973150661a'
 route: 'full'
 route_source: 'auto'
