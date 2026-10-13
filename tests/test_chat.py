@@ -529,3 +529,60 @@ def test_chat_citations_leak_no_absolute_paths(
     assert str(Path.home()) not in body
     for citation in response.json()["citations"]:
         assert not citation["source"].startswith("/")
+
+
+def test_chat_dspy_parse_failure_is_mapped_to_500_envelope(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """A real adapter parse failure (a ``DSPyError``, not a ``ValueError``) maps to the envelope.
+
+    The LM is injected through the sanctioned ``lm_factory`` seam and returns an
+    unparseable completion, so ``dspy`` raises a genuine parse error on the real
+    adapter path; it must surface as 500 with the standard ``{detail}`` body.
+    """
+    corpus, index_path = indexed_corpus
+
+    def unparseable(**kwargs: object) -> DummyLM:
+        return DummyLM(["<unparseable raw completion>"])
+
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=unparseable,
+    )
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "the model response could not be processed"
+
+
+def test_chat_unexpected_processing_error_is_mapped_to_500_envelope(
+    indexed_corpus: tuple[Path, Path],
+) -> None:
+    """A non-dspy failure while processing yields a non-leaking ``{detail}`` envelope.
+
+    The failure is injected through the sanctioned ``embedder`` seam (raised during
+    retrieval), so the port sees an unexpected ``RuntimeError``.
+    """
+    corpus, index_path = indexed_corpus
+
+    def exploding_embedder(texts: list[str]) -> list[list[float]]:
+        raise RuntimeError("/secret/internal/path")
+
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=exploding_embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/chat", json={"question": "anything"}
+    )
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "the service failed to process the request"
+    assert "/secret/internal/path" not in response.text

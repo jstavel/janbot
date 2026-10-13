@@ -24,7 +24,9 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import ResponseValidationError
+from fastapi.responses import JSONResponse
 
 from janbot.api.contract import ChatRequest, ChatResponse
 from janbot.config import MODEL_MODE_PRODUCTION, load_config
@@ -91,6 +93,28 @@ def create_app(
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         except ValueError as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
+        except HTTPException:
+            raise
+        except dspy.DSPyError as exc:
+            raise HTTPException(
+                status_code=500,
+                detail="the model response could not be processed",
+            ) from exc
+        except Exception as exc:
+            raise HTTPException(
+                status_code=500,
+                detail="the service failed to process the request",
+            ) from exc
+
+    @app.exception_handler(ResponseValidationError)
+    def _response_validation(
+        request: Request, exc: ResponseValidationError
+    ) -> JSONResponse:
+        # A program that returns a non-conforming body must still carry the envelope.
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "the service failed to process the request"},
+        )
 
     return app
 
