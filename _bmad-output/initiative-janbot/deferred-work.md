@@ -55,13 +55,13 @@
   evidence: Ingestion writes through an unscoped store (`ingest/__init__.py`) while serving scopes to `JANBOT_CORPUS_PATH` (`api/main.py:61`); a mismatched root silently changes the citation form or 503s everything. Recorded in the epic-rag-chat retrospective (open question). Split out; design decision.
 
 - source_plan: none
-  summary: `public_profile_org/ai-fast-failback.org` was edited in-place inside the 3.6 PR — **resolved: accepted deviation** (see "Accepted deviations" below), decided 2026-10-13.
-  evidence: Commit `457bc70` (story 3.6) changed the SYNOPSIS line. The owner accepts the current wording; no re-extraction performed.
+  summary: `public_profile_org/ai-fast-failback.org` was edited in-place inside the 3.6 PR — **resolved: reverted** (the original "working groups formed" is correct), 2026-10-13.
+  evidence: Commit `457bc70` (story 3.6) changed the SYNOPSIS line; the wrong edit has been reverted, so the corpus again matches its pre-3.6 state.
 
 - source_plan: `_bmad-output/initiative-janbot/plan-serve-ingest-root-alignment.md`
   summary: The startup cross-check does not catch a serve corpus root *broader* than the ingest root (all indexed chunks stay in scope; only the citation label shifts).
   evidence: `out_of_scope_sources()` flags only stored chunks outside `config.corpus_path`; the index records no ingest-root provenance. Covering that direction needs persisted provenance (option C, edits `ingest/`). Low harm: the index holds only the public corpus, so no out-of-corpus content can be retrieved; only the label form changes.
 
-## Accepted deviations (2026-10-13)
+## Reverted edits (2026-10-13)
 
-- `public_profile_org/ai-fast-failback.org` — the SYNOPSIS wording ("working group formed") was changed in-place inside the 3.6 commit `457bc70` rather than via re-extraction. **Accepted as-is by the owner** (a one-word grammar fix; no re-extraction performed). Recorded so later retros stop re-flagging it. Source: `epic-rag-chat/epic-rag-chat-retrospective.md` action item 6.
+- `public_profile_org/ai-fast-failback.org` — the in-place SYNOPSIS change that rode into the 3.6 commit `457bc70` ("working group formed") was **reverted**: the original "working groups formed" is correct (initiative-wide, not from the one idea). The corpus again matches its pre-3.6 state. Source: `epic-rag-chat/epic-rag-chat-retrospective.md` action item 6.
