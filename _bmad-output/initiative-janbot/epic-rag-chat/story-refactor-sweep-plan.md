@@ -21,7 +21,7 @@ context: []
 
 **Problem:** The epic's cleanup items are still open. Earlier stories left stale docstrings in `api/`, `pipeline/`, `llm/` that no longer match the code: `llm/__init__.py` still says the OpenRouter key's sourcing is "decided later, by the `/chat` pipeline story" (story 3.2 wired it), and `pipeline/chat.py` describes citations as taken from raw `source_path` metadata "then" rewritten (3.4 rewrites first) and the LM as set "at construction time" (it is set after construction, at startup). Separately, the epic named a cross-cutting review item for this sweep — chunk-id stability — which lives in `ingest/org.py`, outside this epic's edit boundary, so it can only be recorded here.
 
-**Approach:** A cleanup-only pass over `api/`, `pipeline/`, `llm/`: reword the stale docstrings/comments to match the code, keep the import-order guards exactly as-is (they are load-bearing — verified: importing `dspy` before `numpy` breaks numpy with `data type 'bool' not understood`), and record the out-of-boundary items in `deferred-work.md` so none is lost. No behaviour change.
+**Approach:** A cleanup-only pass over `api/`, `pipeline/`, `llm/`: reword the stale docstrings/comments to match the code, keep the import-order guards exactly as-is (they are load-bearing — verified: importing `dspy` before `chromadb` fails with `data type 'bool' not understood`), and record the out-of-boundary items in `deferred-work.md` so none is lost. No behaviour change.
 
 ## Boundaries & Constraints
 
