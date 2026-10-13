@@ -36,13 +36,38 @@ HOST = "127.0.0.1"
 STARTUP_TIMEOUT_SECONDS = 120.0
 BUILD_TIMEOUT_SECONDS = 300.0
 POLL_INTERVAL_SECONDS = 0.25
+PORT_ATTEMPTS = 3
 
 
 def _free_port() -> int:
-    """Ask the OS for an unused TCP port on the loopback interface."""
+    """Ask the OS for an unused TCP port on the loopback interface.
+
+    The socket is closed before the service binds it, so another process can
+    still grab the port in the gap (a bind/close TOCTOU); ``_serve`` retries on a
+    fresh port to absorb that narrow race.
+    """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind((HOST, 0))
         return int(sock.getsockname()[1])
+
+
+def _uvicorn_command(port: int) -> list[str]:
+    """The argv that starts the janbot service on ``port`` (single source)."""
+    return [
+        "uv",
+        "run",
+        "uvicorn",
+        "janbot.api.main:app",
+        "--host",
+        HOST,
+        "--port",
+        str(port),
+    ]
+
+
+def _port_was_taken(log_path: Path) -> bool:
+    """Whether the service could not bind because the port was already in use."""
+    return "address already in use" in _log_text(log_path).lower()
 
 
 def _build_fixture_index(index_path: Path) -> None:
@@ -168,33 +193,39 @@ def _serve(
     *,
     extra_env: Mapping[str, str] | None = None,
 ) -> Iterator[str]:
-    """Start the service as a subprocess against ``index_path``; yield its base URL."""
-    port = _free_port()
-    base_url = f"http://{HOST}:{port}"
-    log_path = tmp_path_factory.mktemp("service") / "service.log"
+    """Start the service as a subprocess against ``index_path``; yield its base URL.
 
-    with open(log_path, "wb") as log_file:
-        process = subprocess.Popen(
-            [
-                "uv",
-                "run",
-                "uvicorn",
-                "janbot.api.main:app",
-                "--host",
-                HOST,
-                "--port",
-                str(port),
-            ],
-            cwd=str(REPO_ROOT),
-            env=_service_env(index_path, extra_env),
-            stdout=log_file,
-            stderr=subprocess.STDOUT,
-        )
+    If the chosen port is grabbed in the ``_free_port`` bind/close gap and the
+    service fails to bind, retries on a fresh port rather than failing the run;
+    any other startup failure surfaces immediately with the captured log.
+    """
+    for attempt in range(1, PORT_ATTEMPTS + 1):
+        port = _free_port()
+        base_url = f"http://{HOST}:{port}"
+        log_path = tmp_path_factory.mktemp("service") / "service.log"
+
+        with open(log_path, "wb") as log_file:
+            process = subprocess.Popen(
+                _uvicorn_command(port),
+                cwd=str(REPO_ROOT),
+                env=_service_env(index_path, extra_env),
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+            )
         try:
             _wait_for_health(base_url, process, log_path)
+        except RuntimeError:
+            taken = _port_was_taken(log_path)
+            _stop(process)
+            if taken and attempt < PORT_ATTEMPTS:
+                continue
+            raise
+
+        try:
             yield base_url
         finally:
             _stop(process)
+        return
 
 
 @pytest.fixture(scope="session")
@@ -229,16 +260,7 @@ def _start_service_expecting_exit(index_path: Path) -> tuple[int, str]:
 
         with open(log_path, "wb") as log_file:
             process = subprocess.Popen(
-                [
-                    "uv",
-                    "run",
-                    "uvicorn",
-                    "janbot.api.main:app",
-                    "--host",
-                    HOST,
-                    "--port",
-                    str(port),
-                ],
+                _uvicorn_command(port),
                 cwd=str(REPO_ROOT),
                 env=_service_env(index_path),
                 stdout=log_file,
