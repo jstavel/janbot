@@ -3,7 +3,7 @@ title: 'Contract & error-envelope coverage through the port'
 type: 'feature'
 ticket: 2
 created: '2026-10-13'
-status: 'built'
+status: 'done'
 baseline_revision: 'd3a067293f92faf46207da07e6b364aadbdcb97b'
 route: 'oneshot'
 route_source: 'auto'

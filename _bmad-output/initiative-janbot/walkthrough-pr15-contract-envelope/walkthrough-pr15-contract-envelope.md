@@ -8,6 +8,10 @@ Target: PR https://github.com/jstavel/janbot/pull/15 · branch `e2e-4.2-contract
 - [x] Block 4 — Slice: the error-envelope tests
 - [x] Block 5 — Periphery
 
+## Status
+
+All blocks accepted: 5 of 5. Review complete: PR #15 squash-merged (`4a82919`), story 4.2 marked done; entry 4.3 unblocked.
+
 ## Block 1 — Intent
 
 Source: pasted verbatim from the plan's frozen Intent section — [story-contract-error-envelope-coverage-through-the-port-plan.md](../epic-verification/story-contract-error-envelope-coverage-through-the-port-plan.md).
