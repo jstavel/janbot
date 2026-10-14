@@ -254,3 +254,20 @@ def test_committed_allow_list_is_a_curated_reference_list() -> None:
     assert "gnome.ldtp" not in committed
     assert "gitlab.cee.redhat.com/rhsm-qe/rhsm-scenarios.git" not in committed
     assert DEFAULT_ALLOW_LIST_PATH.exists()
+
+
+def test_shared_host_is_never_dedicated_even_as_a_single_entry() -> None:
+    # A shared code host stays non-dedicated whatever the list size, so a small
+    # corpus cannot make an invented path under it verify.
+    single = ["https://github.com/jstavel/janbot"]
+
+    assert is_public_reference("https://github.com/jstavel/janbot", single)
+    assert not is_public_reference("https://github.com", single)
+    assert not is_public_reference("https://github.com/someoneelse/other", single)
+
+
+def test_dedicated_host_covers_its_own_paths_but_not_a_lookalike() -> None:
+    single = ["https://www.bazar-cd.cz"]
+
+    assert is_public_reference("https://www.bazar-cd.cz/kniha", single)
+    assert not is_public_reference("https://www.bazar-cd.cz.evil.example/kniha", single)

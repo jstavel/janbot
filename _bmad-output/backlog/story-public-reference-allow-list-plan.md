@@ -72,6 +72,8 @@ context: []
 
 ## Implementation Notes
 
+- 2026-10-14 (walkthrough follow-up): hardened the two review thoughts — an explicit `_SHARED_HOSTS` set so a shared host (`github.com`, …) is never "dedicated" at any list size, closing the pathless-host hole a small corpus could reopen; and `is_public_reference` now reuses `_covers`, so the "unverifiable" and "missing" containment directions cannot drift apart.
+
 ## Plan Change Log
 
 - 2026-10-14 (bad_plan + intent_gap loopback, review pass 1): the plan under-specified the URL contract (normalization, extraction, per-item flagging). Frozen harvest decision resolved with the owner — every explicit corpus reference is valid, `:PUBLIC:` is the top-priority one. Amended the non-frozen plan with the **URL contract** (Design Notes) and tasks for **per-item flagging** and **import isolation**. Reverted the first implementation; re-derived from the amended plan.

@@ -78,6 +78,16 @@ _COMMON_TLDS = frozenset(
     }
 )
 
+# Hosts that many unrelated projects share. They are never a project's own
+# "dedicated" host, whatever the allow-list size — so an invented path under one
+# can never verify. Kept explicit so a small corpus cannot flip the count rule.
+_SHARED_HOSTS = frozenset(
+    {
+        "github.com", "gitlab.com", "bitbucket.org", "codeberg.org",
+        "gist.github.com", "raw.githubusercontent.com",
+    }
+)
+
 # A URL body never contains whitespace, brackets/quotes, or the glue characters
 # (``,`` ``;`` ``:``) that can abut a URL in prose.
 _BODY = r"[^\s<>\[\](){}'\"|,;:]+"
@@ -178,12 +188,21 @@ def extract_urls(text: str, allow_list: Iterable[str] | None = None) -> list[str
 
 
 def _dedicated_hosts(allow_list: Iterable[str]) -> frozenset[str]:
-    """Hosts named by exactly one listed entry — a project's own site, not a shared code host."""
+    """Hosts named by exactly one listed entry and not a known shared code host.
+
+    A host is a project's own site only when a single entry uses it and it is not
+    in :data:`_SHARED_HOSTS`; a shared host stays non-dedicated whatever the list
+    size, so a small corpus cannot reopen the pathless-host hole.
+    """
     counts: dict[str, int] = {}
     for entry in allow_list:
         host = _host_and_path(normalize_reference(entry))[0]
         counts[host] = counts.get(host, 0) + 1
-    return frozenset(host for host, count in counts.items() if count == 1)
+    return frozenset(
+        host
+        for host, count in counts.items()
+        if count == 1 and host not in _SHARED_HOSTS
+    )
 
 
 def is_public_reference(reference: str, allow_list: Iterable[str]) -> bool:
@@ -192,7 +211,8 @@ def is_public_reference(reference: str, allow_list: Iterable[str]) -> bool:
     Valid means it equals a listed entry, is a deeper path under a listed entry
     (or under a listed pathless dedicated host), or is a pathless listed host. A
     pathless candidate is never a prefix of a listed path, so ``github.com`` does
-    not verify against a repo under it.
+    not verify against a repo under it. Containment is the shared :func:`_covers`
+    primitive, so this and :func:`missing_references` cannot drift apart.
     """
     ref = normalize_reference(reference)
     if not ref:
@@ -201,20 +221,16 @@ def is_public_reference(reference: str, allow_list: Iterable[str]) -> bool:
     normalized = [normalize_reference(entry) for entry in allow_list]
     if ref in normalized:
         return True
+    if not path:
+        return host in _dedicated_hosts(normalized)
     dedicated = _dedicated_hosts(normalized)
-    if path:
-        for allowed in normalized:
-            allowed_host, allowed_path = _host_and_path(allowed)
-            if allowed_host != host:
-                continue
-            if not allowed_path:
-                if allowed_host in dedicated:
-                    return True
-                continue
-            if path == allowed_path or path.startswith(allowed_path + "/"):
-                return True
-        return False
-    return host in dedicated
+    for allowed in normalized:
+        if not _covers(allowed, ref):
+            continue
+        allowed_host, allowed_path = _host_and_path(allowed)
+        if allowed_path or allowed_host in dedicated:
+            return True
+    return False
 
 
 def _covers(shorter: str, longer: str) -> bool:
