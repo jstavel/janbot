@@ -3,7 +3,7 @@ title: 'MLflow run records: config, metrics and comparability'
 type: 'feature'
 ticket: 6
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: 'e44ab9b'
 route: 'oneshot'
 route_source: 'auto'
