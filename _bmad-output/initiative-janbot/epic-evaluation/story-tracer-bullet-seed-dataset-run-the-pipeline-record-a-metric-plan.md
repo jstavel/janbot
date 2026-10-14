@@ -3,7 +3,7 @@ title: 'Eval tracer: seed dataset → pipeline → MLflow metric'
 type: 'feature'
 ticket: 1
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: '0cb9d63c793af9c5b2fcad5ef14af3c3e4e1c392'
 route: 'full'
 route_source: 'auto'
