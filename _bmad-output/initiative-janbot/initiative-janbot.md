@@ -14,7 +14,7 @@ risk: high
 
 ## Description
 
-JanBot answers recruiter questions accurately and contextually from the owner's personal org-mode documentation and professional profile, and does so as a rigor-first demonstration of modern AI engineering and SDET practice. The spec owns the capabilities, constraints and non-goals; this initiative delivers them across Milestones 1–3. This ticket tree currently plans **Milestone 1** as its epics.
+JanBot answers recruiter questions accurately and contextually from the owner's personal org-mode documentation and professional profile, and does so as a rigor-first demonstration of modern AI engineering and SDET practice. The spec owns the capabilities, constraints and non-goals; this initiative delivers them across Milestones 1–3. This ticket tree plans **Milestone 1** (epics 1–4, delivered), **Milestone 2** (`epic-evaluation`, CAP-8) and **Milestone 1.5** (`epic-ts-harness`, thin TypeScript harness) as its epics.
 
 ## Outcome
 
@@ -51,3 +51,5 @@ Tracer path across epics: `epic-foundation` scaffold → `epic-ingestion` indexe
 - Decision (2026-10-05): Epics are sequenced foundation → ingestion → rag-chat → verification; each waits on the populated artifact of the one before.
 - Unknown: the deployment/hosting target and the exact locked model snapshot are unresolved; owned at Milestone 1 configuration, neither blocks the epic order.
 - Parked: CAP-8 (evaluation/MLFlow) is Milestone 2; CAP-9 (Clojure orchestrator) is Phase 2 — not placed on any Milestone 1 epic.
+- Decision (2026-10-14, slicing): Milestone 2 is one epic (`epic-evaluation`, CAP-8) — one capability, one owner, evaluation and optimization one loop. Milestone 1.5 is one epic (`epic-ts-harness`, a thin Zod/vitest contract harness) placed right after Milestone 2 in build order; it blocks nothing (ADR-005).
+- Unplanned intakes captured as backlog tickets: Qdrant vector-store migration (`qdrant-used.md`), GCP deployment via Terraform (`gcp-deployment.md`), and a GitHub Pages chat widget (`intake-gh-pages-chat-widget.md`).

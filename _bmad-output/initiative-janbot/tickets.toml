@@ -27,3 +27,19 @@ slug = "epic-verification"
 title = "End-to-end tests & CI"
 covers = ["CAP-7"]
 after = [{ epic = 3, needs = "the running /chat endpoint and its contract" }]
+
+# ---- Milestone 2 and Milestone 1.5 ----
+
+[[epic]]
+id = 5
+slug = "epic-evaluation"
+title = "Evaluation harness & cost-staged optimization"
+covers = ["CAP-8"]
+after = [{ epic = 3, needs = "the running /chat pipeline and its index" }]
+
+[[epic]]
+id = 6
+slug = "epic-ts-harness"
+title = "Thin TypeScript contract harness"
+covers = ["CAP-7"]
+after = [{ epic = 3, needs = "the /chat OpenAPI contract (its Pydantic source of truth)" }]
