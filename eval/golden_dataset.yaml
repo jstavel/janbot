@@ -319,3 +319,16 @@
     - dna-threads.org
     - cpp-memory-allocator.org
     - career-trajectory.org
+
+- question: "What can you offer to junior colleagues?"
+  expected_answer: >-
+    Steady growth is the point, and the mentor owns it: "Extreme Ownership
+    DOWN" means taking responsibility for the mentee's growth environment — a
+    bored mind is the mentor's problem to fix, not the mentee's. In practice
+    that is creating space for any question, listening first, and guiding
+    without judgment so the person discovers their own way rather than
+    following mine. It has a measurable outcome: a mentee promoted from
+    Associate (ASME) to Subject Matter Expert (SME) who credited the
+    mentorship.
+  expected_sources:
+    - mentoring-downchain.org
