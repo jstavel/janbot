@@ -46,7 +46,7 @@ Then open `http://127.0.0.1:8000/health` — you should see `{"status":"ok"}`.
 
 ## Configuration
 
-JanBot is configured through environment variables loaded by [`janbot.config`](src/janbot/config.py): everything prefixed `JANBOT_`, plus one plain operator variable, `OPENROUTER_API_KEY`. Every `JANBOT_` value has a documented default, so the service runs with none set.
+JanBot is configured through environment variables loaded by [`janbot.config`](src/janbot/config.py): everything prefixed `JANBOT_`, plus one plain operator variable, `OPENROUTER_API_KEY`. Every `JANBOT_` value has a documented default (for `JANBOT_PROGRAM_PATH` the default is unset — no compiled program), so the service runs with none set.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -58,6 +58,7 @@ JanBot is configured through environment variables loaded by [`janbot.config`](s
 | `JANBOT_TOP_K` | `4` | Retrieval top-k: how many corpus chunks ground an answer. An invalid or non-positive value fails fast. |
 | `JANBOT_CORPUS_PATH` | `public_profile_org` | The corpus root: the only tree the ingestion pipeline will index (fail-closed) and the scope retrieval is bounded to at the store. |
 | `JANBOT_INDEX_PATH` | `chroma_db` | Where the vector index is written. |
+| `JANBOT_PROGRAM_PATH` | unset | Path to a compiled DSPy program (the `BootstrapFewShot` output). When set, the app loads it instead of the freshly built program; the eval labels such runs `fewshot:<sha>` rather than `baseline`. A set path that does not name a file fails fast. |
 | `JANBOT_PROJECT_ROOT` | the repository root | Base for relative `JANBOT_CORPUS_PATH`/`JANBOT_INDEX_PATH`; override for packaged deployments or tests. |
 | `OPENROUTER_API_KEY` | — | The OpenRouter key, read once at startup by the app (never stored in config). Required in `production` mode — a missing key fails fast at boot — and optional in `eval` mode, where it also authenticates the LLM-as-a-judge (a keyless eval leaves every item unjudged). |
 

@@ -1,7 +1,7 @@
 """Configuration for JanBot, read from ``JANBOT_*`` environment variables.
 
 Per AD-5, model mode is configuration, not code. This module is stdlib-only and
-reads nine variables, each with a documented default:
+reads ten variables, each with a documented default:
 
 - ``JANBOT_MODEL_MODE``      -- ``"eval"`` (default) or ``"production"``
 - ``JANBOT_MODEL_SNAPSHOT``  -- locked model snapshot;
@@ -10,6 +10,8 @@ reads nine variables, each with a documented default:
   in ``JANBOT_MODEL_SNAPSHOT`` (a stronger judge is a config change, not code)
 - ``JANBOT_CORPUS_PATH``     -- indexed corpus root; default ``"public_profile_org"``
 - ``JANBOT_INDEX_PATH``      -- vector index location; default ``"chroma_db"``
+- ``JANBOT_PROGRAM_PATH``    -- compiled DSPy program (BootstrapFewShot output);
+  default unset (no compiled program — the freshly built program runs)
 - ``JANBOT_PROJECT_ROOT``    -- base for relative paths; default is the repository
   root derived from this file's location
 - ``JANBOT_TEMPERATURE``     -- LM sampling temperature; default ``0.0``
@@ -51,6 +53,7 @@ MODEL_SNAPSHOT_ENV = "JANBOT_MODEL_SNAPSHOT"
 JUDGE_MODEL_ENV = "JANBOT_JUDGE_MODEL"
 CORPUS_PATH_ENV = "JANBOT_CORPUS_PATH"
 INDEX_PATH_ENV = "JANBOT_INDEX_PATH"
+PROGRAM_PATH_ENV = "JANBOT_PROGRAM_PATH"
 PROJECT_ROOT_ENV = "JANBOT_PROJECT_ROOT"
 TEMPERATURE_ENV = "JANBOT_TEMPERATURE"
 SEED_ENV = "JANBOT_SEED"
@@ -76,6 +79,7 @@ class Config:
     judge_model: str
     corpus_path: Path
     index_path: Path
+    program_path: Path | None
     temperature: float
     seed: int
     top_k: int
@@ -164,6 +168,7 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
 
     corpus_value = _clean(source.get(CORPUS_PATH_ENV)) or DEFAULT_CORPUS_PATH
     index_value = _clean(source.get(INDEX_PATH_ENV)) or DEFAULT_INDEX_PATH
+    program_value = _clean(source.get(PROGRAM_PATH_ENV))
 
     return Config(
         model_mode=model_mode,
@@ -171,6 +176,11 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
         judge_model=judge_model,
         corpus_path=_resolve_path(corpus_value, project_root),
         index_path=_resolve_path(index_value, project_root),
+        program_path=(
+            _resolve_path(program_value, project_root)
+            if program_value is not None
+            else None
+        ),
         temperature=temperature,
         seed=seed,
         top_k=top_k,

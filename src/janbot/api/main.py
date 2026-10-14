@@ -60,12 +60,18 @@ def create_app(
     absent.
 
     Raises:
-        ValueError: if the resolved configuration is invalid, if the model
+        ValueError: if the resolved configuration is invalid, if
+            ``JANBOT_PROGRAM_PATH`` is set but does not name a file, if the model
             mode is ``production`` and no ``OPENROUTER_API_KEY`` is present, or
             if the index holds chunks whose ``source_path`` lies outside
             ``JANBOT_CORPUS_PATH`` (built from a different corpus root).
     """
     config = load_config(env)
+    if config.program_path is not None and not config.program_path.is_file():
+        raise ValueError(
+            f"JANBOT_PROGRAM_PATH={str(config.program_path)!r} does not name a file; "
+            "the configured compiled program is missing — refusing to start"
+        )
     store = VectorStore(
         config.index_path, embedder or default_embedder(), scope=config.corpus_path
     )
@@ -90,6 +96,10 @@ def create_app(
     program = ChatProgram(
         store, top_k=config.top_k, rewriter=corpus_relative(config.corpus_path)
     )
+    if config.program_path is not None:
+        from janbot.eval.optimize import load_program
+
+        load_program(program, config.program_path)
     program.set_lm(lm)
 
     app = FastAPI(title="JanBot")

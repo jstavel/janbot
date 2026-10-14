@@ -28,6 +28,7 @@ from typing import Any
 from janbot.config import PROJECT_ROOT, Config, load_config
 from janbot.eval.dataset import load_golden_dataset
 from janbot.eval.judge import Judge, build_judge
+from janbot.eval.optimize import program_marker
 from janbot.eval.runner import RunResult, run_eval
 
 DEFAULT_DATASET = PROJECT_ROOT / "eval" / "golden_dataset.yaml"
@@ -46,6 +47,7 @@ def run_params(config: Config) -> dict[str, Any]:
         "temperature": config.temperature,
         "seed": config.seed,
         "top_k": config.top_k,
+        "program": program_marker(config.program_path),
     }
 
 

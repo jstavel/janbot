@@ -22,6 +22,7 @@ def _clear_janbot_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "JANBOT_JUDGE_MODEL",
         "JANBOT_CORPUS_PATH",
         "JANBOT_INDEX_PATH",
+        "JANBOT_PROGRAM_PATH",
         "JANBOT_PROJECT_ROOT",
         "JANBOT_TEMPERATURE",
         "JANBOT_SEED",
@@ -138,6 +139,27 @@ def test_absolute_path_used_as_is() -> None:
     config = load_config({"JANBOT_CORPUS_PATH": "/tmp/x"})
 
     assert config.corpus_path == Path("/tmp/x").resolve()
+
+
+def test_default_program_path_is_none() -> None:
+    assert load_config({}).program_path is None
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_program_path_is_none(blank: str) -> None:
+    assert load_config({"JANBOT_PROGRAM_PATH": blank}).program_path is None
+
+
+def test_relative_program_path_resolves_under_project_root() -> None:
+    config = load_config({"JANBOT_PROGRAM_PATH": "eval/compiled.json"})
+
+    assert config.program_path == (PROJECT_ROOT / "eval" / "compiled.json").resolve()
+
+
+def test_absolute_program_path_used_as_is() -> None:
+    config = load_config({"JANBOT_PROGRAM_PATH": "/tmp/compiled.json"})
+
+    assert config.program_path == Path("/tmp/compiled.json").resolve()
 
 
 def test_project_root_override(tmp_path: Path) -> None:
