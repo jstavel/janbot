@@ -70,3 +70,13 @@
 ## Reverted edits (2026-10-13)
 
 - `public_profile_org/ai-fast-failback.org` — the in-place SYNOPSIS change that rode into the 3.6 commit `457bc70` ("working group formed") was **reverted**: the original "working groups formed" is correct (initiative-wide, not from the one idea). The corpus again matches its pre-3.6 state. Source: `epic-rag-chat/epic-rag-chat-retrospective.md` action item 6.
+
+## Review defers (2026-10-14, epic-evaluation story 5.1 — eval tracer)
+
+- source_plan: `_bmad-output/initiative-janbot/epic-evaluation/story-tracer-bullet-seed-dataset-run-the-pipeline-record-a-metric-plan.md`
+  summary: The new eval tests import `dspy.utils` before `janbot.store`, a latent numpy-proxy hazard that only survives because `mlflow.tracking` loads numpy in between.
+  evidence: `python -c "import pytest, yaml; from dspy.utils import DummyLM; import janbot.store"` fails (`TypeError: data type 'bool' not understood`) while the same sequence with the mlflow import between succeeds. Not introduced here — it mirrors the pre-existing `tests/test_chat.py` pattern.
+
+- source_plan: `_bmad-output/initiative-janbot/epic-evaluation/story-tracer-bullet-seed-dataset-run-the-pipeline-record-a-metric-plan.md`
+  summary: The new `janbot.eval` package, its CLI, `MLFLOW_TRACKING_URI`, and the `mlflow`/`pyyaml` deps are undocumented in README/ARCHITECTURE/CHANGELOG.
+  evidence: `.github/PULL_REQUEST_TEMPLATE.md` requires doc updates; `CHANGELOG.md` `[Unreleased]` is already stale repo-wide (see the 2026-10-13 carry-over above), and the README package layout / Configuration table name no eval entry. Deferred to a docs pass or the epic's closing sweep.
