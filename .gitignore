@@ -17,6 +17,9 @@ mlruns/
 mlflow.db
 mlflow-artifacts/
 
+# compiled DSPy programs (regenerate with: python -m janbot.eval.optimize)
+eval/compiled_*.json
+
 # transient BMad render snapshots
 _bmad/render/
 .aider*

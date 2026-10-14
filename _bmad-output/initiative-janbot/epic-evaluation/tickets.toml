@@ -158,13 +158,24 @@ hitl = true
 risk = "medium"
 
 [[entry]]
+id = 18
+type = "story"
+title = "Pre-registered optimization gate rule"
+description = "Write, before the val re-runs, the decision rule the optimization gate applies, so a stage (5.8/5.9) is judged against a pre-committed rule, not a post-hoc threshold. With the val split (~14 items, p≈0.66) the noise floor 1.5*sigma≈0.19 (~3 items): a stage is accepted only when, on the same val items, it improves a targeted metric beyond the noise floor without regressing the other beyond its own; a change within the noise is recorded as 'no decision', not 'improvement' or 'regression'. 'Breadth gates optimization': a ~5% effect is detectable only once val grows to ~100 items, so dataset growth is the precondition for a decidable gate; a 3-fold (3x12, mean +- variance) is the small-n alternative. The rule is recorded, and the compiles/evals run against it."
+verify = "A pre-registered rule names, per gate stage, the metric(s), the acceptance thresholds beyond the noise floor, and the 'no decision' band; the 5.14 and 5.9 stages are judged against it."
+covers = ["E4"]
+after = [17]
+hitl = true
+risk = "medium"
+
+[[entry]]
 id = 14
 type = "story"
 title = "Multi-objective compile metric (citations + faithfulness)"
 description = "Revise the BootstrapFewShot compile objective so it does not buy citation coverage at the cost of faithfulness — the Goodhart trade entry 8 exposed. Objective: score = w_c*cited_ok + w_f*faithful (default 0.5/0.5, recorded in the compile hyperparams); a demo is accepted only when cited_ok AND faithful, short-circuiting to False without a judge call when cited_ok is false (keeps it near-free). Only program-controlled terms — retrieval_accuracy and answer_coverage (stub) do not belong. Store the (cited_ok, faithful) pair per item, not only the scalar, so a Pareto/GEPA objective needs no recompute, and leave room for a refusal_ok term once entry 13 lands."
 verify = "Compiled over the train split and evaluated on the val split against a val baseline, the multi-objective compiled program holds or improves citations without reducing faithfulness, with the weights in the compile hyperparams."
 covers = ["E4"]
-after = [8, 15, 16, 17]
+after = [8, 15, 16, 17, 18]
 hitl = false
 risk = "medium"
 
