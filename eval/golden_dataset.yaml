@@ -426,3 +426,16 @@
     - corenet-twisted-deferred.org
     - dna-threads.org
     - candlecon-rxpy.org
+
+- question: "Do you know Kubernetes?"
+  expected_answer: >-
+    Yes — OpenShift is Red Hat's Kubernetes distribution, and the
+    container-platform work at Red Hat was Kubernetes work: Jenkins CI/CD on
+    OpenShift (job definitions as code, the seed job, agents built as Podman
+    container images, debugging single jobs on a shared cluster), and the
+    Cockpit / RHSM web-UI tests against the same platform. The corpus names
+    the gap itself — visibility dependency: the word "Kubernetes" never
+    appeared, only OpenShift.
+  expected_sources:
+    - openshift-kubernetes-bridge.org
+    - jenkins-openshift-cicd-operations.org

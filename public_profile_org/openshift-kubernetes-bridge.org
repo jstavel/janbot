@@ -1,0 +1,47 @@
+:PROPERTIES:
+:ID:      20261014-openshift-kubernetes-bridge
+:TITLE:   OpenShift is Kubernetes — the vocabulary bridge
+:CREATED: <2026-10-14>
+:AUTHOR:  jan
+:REVIEWED:
+:DOMAIN:  way-of-working
+:TAGS:    kubernetes openshift containers platform devops vocabulary visibility-dependency
+:SYNOPSIS: OpenShift is Red Hat's Kubernetes distribution, so the OpenShift work recorded here (Jenkins agents, Cockpit tests) is Kubernetes-platform experience — this object names the vocabulary a keyword scan misses.
+:STRENGTHS:  kubernetes-experience platform-operations container-orchestration
+:WEAKNESSES: none-identified
+:END:
+
+# OpenShift is Kubernetes — the vocabulary bridge
+
+**OpenShift is Red Hat's Kubernetes distribution.** The container-platform work
+recorded in this corpus under the name "OpenShift" *is* Kubernetes-platform work
+— the word "Kubernetes" simply never appears, so a keyword scan for it finds
+nothing. This object exists to close that vocabulary gap.
+
+* What the OpenShift work actually was
+
+- **Jenkins CI/CD on OpenShift** (see 20261008-cicd-jenkins-openshift): job
+  definitions as code, the seed job, agents built as Podman container images,
+  debugging single jobs safely on a large shared cluster.
+- **Cockpit (web UI) tests and the RHSM Ansible + Robot Framework architecture**
+  (see 20261007-rhsm-cockpit-qe): end-to-end tests run against services deployed
+  on the same container platform.
+
+So the container-orchestration experience at Red Hat is Kubernetes experience,
+delivered through OpenShift.
+
+* Why it matters
+
+The corpus names this pattern itself — **visibility dependency**: real capability
+that a keyword scan cannot see. This object makes "Kubernetes" retrievable, so a
+question about Kubernetes can reach the OpenShift work instead of finding nothing.
+
+* Sources
+
+- Related object — 20261008-cicd-jenkins-openshift/jenkins-openshift-cicd-operations.org
+  (Jenkins on OpenShift; commits, seed job, container agents).
+  git ref: 3cb656f:corpus/objects/20261008-cicd-jenkins-openshift/jenkins-openshift-cicd-operations.org
+- Related object — 20261007-rhsm-cockpit-qe/rhsm-cockpit-qe.org
+  (Cockpit / RHSM web-UI tests against the platform).
+  git ref: 3cb656f:corpus/objects/20261007-rhsm-cockpit-qe/rhsm-cockpit-qe.org
+- General fact — OpenShift is Red Hat's Kubernetes distribution.
