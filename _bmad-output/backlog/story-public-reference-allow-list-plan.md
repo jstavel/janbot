@@ -3,7 +3,7 @@ title: 'Public-reference allow-list and answer verification'
 type: 'feature'
 ticket: 9
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: 'd18907c3c18d6eda3cb96b7a2d69454d8cdd216c'
 route: 'full'
 route_source: 'auto'
