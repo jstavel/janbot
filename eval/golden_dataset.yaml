@@ -3,8 +3,9 @@
 # Recruiter questions with a short factual expected answer and the
 # corpus-relative source(s) a correct response should cite. Drafted by the
 # builder from public_profile_org/ topics; to be corrected by the owner.
-# Each item: a recruiter question, the expected answer, and the corpus-relative
-# sources a correct response should cite.
+# Each item: a recruiter question, the expected answer, the corpus-relative
+# sources a correct response should cite, the train/val split marker, and a
+# should_refuse flag (reserved for refusal items; false for every current item).
 
 - question: "Can you walk me through your career path and what drove the transitions?"
   expected_answer: >-
@@ -19,6 +20,8 @@
     thinking, testing, and automation.
   expected_sources:
     - career-trajectory.org
+  split: train
+  should_refuse: false
 
 - question: "Why did you leave your last job after so many years there?"
   expected_answer: >-
@@ -31,6 +34,8 @@
     mutual, growth-oriented break at the end of the year.
   expected_sources:
     - departure-narrative.org
+  split: val
+  should_refuse: false
 
 - question: "Can you give a concrete example of mentoring or leadership impact?"
   expected_answer: >-
@@ -41,6 +46,8 @@
     environment as the mentor's own responsibility ("Extreme Ownership DOWN").
   expected_sources:
     - mentoring-downchain.org
+  split: train
+  should_refuse: false
 
 - question: "Tell me about your matching engine project."
   expected_answer: >-
@@ -53,6 +60,8 @@
     multi-level sweeps, and trade record generation.
   expected_sources:
     - matching-engine.org
+  split: train
+  should_refuse: false
 
 - question: "Have you implemented spec-first testing end to end, not just talked about it?"
   expected_answer: >-
@@ -65,6 +74,8 @@
     method, AI agents driving stories from spec through implementation to review.
   expected_sources:
     - reactive-testing-project.org
+  split: val
+  should_refuse: false
 
 - question: "Have you used Clojure in production systems?"
   expected_answer: >-
@@ -76,6 +87,8 @@
     observing librarians' actual daily workflow rather than framework defaults.
   expected_sources:
     - edeposit.org
+  split: train
+  should_refuse: false
 
 - question: "Do you have full-stack experience?"
   expected_answer: >-
@@ -87,6 +100,8 @@
     non-technical retail team over nearly two decades.
   expected_sources:
     - cdbazar.org
+  split: val
+  should_refuse: false
 
 - question: "What experience do you have with event-driven architecture?"
   expected_answer: >-
@@ -98,6 +113,8 @@
     raw SQL via DBD::Pg and no ORM.
   expected_sources:
     - bata-stock-update.org
+  split: train
+  should_refuse: false
 
 - question: "Tell me about your AI agent project, JanBot."
   expected_answer: >-
@@ -111,6 +128,8 @@
     separate from the flexible production mode, with tests from day one.
   expected_sources:
     - janbot-ai-agent.org
+  split: train
+  should_refuse: false
 
 - question: "What model modes does JanBot support and why?"
   expected_answer: >-
@@ -120,6 +139,8 @@
     runs deterministic while production can flex across providers.
   expected_sources:
     - janbot-ai-agent.org
+  split: val
+  should_refuse: false
 
 - question: "What experience do you have operating and debugging CI/CD infrastructure like Jenkins?"
   expected_answer: >-
@@ -135,6 +156,8 @@
     the shared cluster.
   expected_sources:
     - jenkins-openshift-cicd-operations.org
+  split: train
+  should_refuse: false
 
 - question: "How have you designed a test automation architecture at production scale?"
   expected_answer: >-
@@ -147,6 +170,8 @@
     developer could run without the rest of the framework.
   expected_sources:
     - rhsm-ansible-qe.org
+  split: train
+  should_refuse: false
 
 - question: "What Clojure work did you do at Red Hat?"
   expected_answer: >-
@@ -160,6 +185,8 @@
     architecture.
   expected_sources:
     - clojure-testing.org
+  split: val
+  should_refuse: false
 
 - question: "How deep is your Linux knowledge?"
   expected_answer: >-
@@ -171,6 +198,8 @@
     resources.
   expected_sources:
     - linux-from-scratch.org
+  split: train
+  should_refuse: false
 
 - question: "Do you have security or PKI experience?"
   expected_answer: >-
@@ -183,6 +212,8 @@
     for identity verification.
   expected_sources:
     - nepodpis.org
+  split: val
+  should_refuse: false
 
 - question: "What is your testing philosophy?"
   expected_answer: >-
@@ -197,6 +228,8 @@
     "Testing in a Reactive Way" idea.
   expected_sources:
     - spec-first-philosophy.org
+  split: train
+  should_refuse: false
 
 - question: "Which books or ideas have most shaped how you work?"
   expected_answer: >-
@@ -210,6 +243,8 @@
     systematic knowledge management, and habit design.
   expected_sources:
     - foundational-books.org
+  split: train
+  should_refuse: false
 
 - question: "How do you use AI in your day-to-day work?"
   expected_answer: >-
@@ -222,6 +257,8 @@
     that a recruiter can open.
   expected_sources:
     - spec-first-pitch.org
+  split: val
+  should_refuse: false
 
 - question: "How does your personal productivity system demonstrate system design?"
   expected_answer: >-
@@ -231,6 +268,8 @@
     separation of immutable objects, derived outputs and views.
   expected_sources:
     - system-design.org
+  split: train
+  should_refuse: false
 
 - question: "Tell me about yourself."
   expected_answer: >-
@@ -241,6 +280,8 @@
     that remind me I am still growing.
   expected_sources:
     - personal-intro.org
+  split: val
+  should_refuse: false
 
 - question: "What do you prefer - remote, onsite, or hybrid?"
   expected_answer: >-
@@ -250,6 +291,8 @@
     replace — not for commuting to meetings that work better remotely anyway.
   expected_sources:
     - remote-work-conviction.org
+  split: val
+  should_refuse: false
 
 - question: "How do you keep an AI assistant from making things up?"
   expected_answer: >-
@@ -260,6 +303,8 @@
     assistant answers from grounded documentation, not buzzwords.
   expected_sources:
     - janbot-ai-agent.org
+  split: train
+  should_refuse: false
 
 - question: "Where can I find the source for the eDeposit AMQP/pdfbox worker?"
   expected_answer: >-
@@ -269,6 +314,8 @@
     is https://github.com/edeposit).
   expected_sources:
     - edeposit.org
+  split: val
+  should_refuse: false
 
 - question: "Which of your projects can I inspect right now, and where?"
   expected_answer: >-
@@ -282,6 +329,8 @@
     RedHatQE org, and NEPodpis's live brailcom.cz page.
   expected_sources:
     - public-proof-map.org
+  split: val
+  should_refuse: false
 
 - question: "Is there work of yours I can't verify publicly?"
   expected_answer: >-
@@ -294,6 +343,8 @@
     client-gated, or simply never published.
   expected_sources:
     - public-proof-map.org
+  split: train
+  should_refuse: false
 
 - question: "You've been at this a long time - what can you bring that a younger engineer can't?"
   expected_answer: >-
@@ -308,6 +359,8 @@
     - dna-threads.org
     - cpp-memory-allocator.org
     - career-trajectory.org
+  split: val
+  should_refuse: false
 
 - question: "What can you offer to junior colleagues?"
   expected_answer: >-
@@ -321,6 +374,8 @@
     mentorship.
   expected_sources:
     - mentoring-downchain.org
+  split: train
+  should_refuse: false
 
 - question: "What Linux services have you actually run in production?"
   expected_answer: >-
@@ -334,6 +389,8 @@
     was assembled from components that did not quite fit together.
   expected_sources:
     - linux-server-era.org
+  split: train
+  should_refuse: false
 
 - question: "Do you have experience monitoring infrastructure?"
   expected_answer: >-
@@ -348,6 +405,8 @@
   expected_sources:
     - nagios-snmp-monitoring.org
     - insights-health-monitoring.org
+  split: train
+  should_refuse: false
 
 - question: "Have you done Infrastructure as Code?"
   expected_answer: >-
@@ -360,6 +419,8 @@
     Podman, Packer/Terraform) and rootless Podman in CI/CD.
   expected_sources:
     - vagrant-provisioning.org
+  split: val
+  should_refuse: false
 
 - question: "Where did your approach to testing come from?"
   expected_answer: >-
@@ -375,6 +436,8 @@
     individual-contributor level.
   expected_sources:
     - reactive-testing-origin.org
+  split: train
+  should_refuse: false
 
 - question: "How do you design internal tools?"
   expected_answer: >-
@@ -387,6 +450,8 @@
     watching librarians' daily workflow.
   expected_sources:
     - intranet-pattern.org
+  split: train
+  should_refuse: false
 
 - question: "Why Clojure? What led you to it?"
   expected_answer: >-
@@ -398,6 +463,8 @@
     same thread runs Perl → Clojure → spec-first.
   expected_sources:
     - perl-clojure-gateway.org
+  split: val
+  should_refuse: false
 
 - question: "Where have you used Clojure in production and in testing?"
   expected_answer: >-
@@ -412,6 +479,8 @@
   expected_sources:
     - edeposit.org
     - clojure-testing.org
+  split: train
+  should_refuse: false
 
 - question: "How has your thinking on asynchronous systems evolved over the years?"
   expected_answer: >-
@@ -426,6 +495,8 @@
     - corenet-twisted-deferred.org
     - dna-threads.org
     - candlecon-rxpy.org
+  split: train
+  should_refuse: false
 
 - question: "Do you know Kubernetes?"
   expected_answer: >-
@@ -439,3 +510,5 @@
   expected_sources:
     - openshift-kubernetes-bridge.org
     - jenkins-openshift-cicd-operations.org
+  split: train
+  should_refuse: false

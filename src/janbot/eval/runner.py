@@ -33,6 +33,8 @@ from janbot.eval.metrics import (
     retrieval_misses,
 )
 
+SPLIT_MANIFEST_FILENAME = "split_manifest.json"
+
 
 @dataclass(frozen=True)
 class RunResult:
@@ -116,6 +118,7 @@ def _record(
     counts: Mapping[str, int],
     *,
     dataset_path: str | Path | None = None,
+    split_manifest: Mapping[str, Any] | None = None,
 ) -> str:
     """Write one MLflow run holding ``params``, ``metrics`` and their ``counts``; return its run id.
 
@@ -123,6 +126,8 @@ def _record(
     ``<metric>__n``, so it charts with the score. When ``dataset_path`` is given
     its sha256 joins the params and the file is attached as an artifact, so a run
     pins the exact dataset that produced its metrics and two runs are comparable.
+    When ``split_manifest`` is given it is logged as ``split_manifest.json``
+    beside the dataset artifact, pinning which dataset indices were held out.
     """
     logged_params = dict(params)
     dataset_file = Path(dataset_path) if dataset_path is not None else None
@@ -139,6 +144,8 @@ def _record(
             mlflow.log_params(logged_params)
         if dataset_file is not None:
             mlflow.log_artifact(str(dataset_file))
+        if split_manifest is not None:
+            mlflow.log_dict(dict(split_manifest), SPLIT_MANIFEST_FILENAME)
         logged_metrics = {**metrics, **counts}
         if logged_metrics:
             mlflow.log_metrics({name: float(value) for name, value in logged_metrics.items()})
@@ -154,6 +161,7 @@ def run_eval(
     params: Mapping[str, Any] | None = None,
     judge: Judge | None = None,
     dataset_path: str | Path | None = None,
+    split_manifest: Mapping[str, Any] | None = None,
 ) -> RunResult:
     """Run every item through ``program`` and record one MLflow run.
 
@@ -161,7 +169,9 @@ def run_eval(
     snapshot, judge model, temperature, seed, top_k); the metrics are every
     registered metric computed over the outcomes. ``dataset_path`` pins the exact
     dataset (its sha256 as a param, the file as an artifact) so runs are
-    comparable. ``judge`` is the optional LLM-as-a-judge: when supplied it is run
+    comparable. ``split_manifest`` is logged as ``split_manifest.json`` beside
+    the dataset artifact, so the run records which indices were held out.
+    ``judge`` is the optional LLM-as-a-judge: when supplied it is run
     once per answered item and its verdict recorded, so the ``faithfulness``
     metric has something to aggregate; when omitted every item stays unjudged and
     the run remains keyless.
@@ -187,6 +197,7 @@ def run_eval(
             metrics,
             counts,
             dataset_path=dataset_path,
+            split_manifest=split_manifest,
         )
     except Exception as exc:
         raise RuntimeError(

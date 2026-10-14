@@ -10,6 +10,7 @@ Every test is offline and keyless: a stub embedder and a ``DummyLM`` factory.
 from __future__ import annotations
 
 import hashlib
+import json
 from collections.abc import Callable
 from pathlib import Path
 from types import SimpleNamespace
@@ -108,7 +109,32 @@ def _write_dataset(tmp_path: Path) -> Path:
                     "question": _item().question,
                     "expected_answer": _item().expected_answer,
                     "expected_sources": _item().expected_sources,
+                    "split": "train",
                 }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return dataset
+
+
+def _write_split_dataset(tmp_path: Path) -> Path:
+    dataset = tmp_path / "split_dataset.yaml"
+    dataset.write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "question": "train question",
+                    "expected_answer": "Search infrastructure.",
+                    "expected_sources": ["profile.org"],
+                    "split": "train",
+                },
+                {
+                    "question": "val question",
+                    "expected_answer": "Search infrastructure.",
+                    "expected_sources": ["profile.org"],
+                    "split": "val",
+                },
             ]
         ),
         encoding="utf-8",
@@ -341,12 +367,78 @@ def test_optimize_cli_compiles_saves_and_logs_an_artifact(
         dataset.read_bytes()
     ).hexdigest()
     assert run.data.params["program"] == program_marker(out)
+    assert run.data.params["split"] == "train"
+    assert run.data.params["trainset_size"] == "1"
     assert run.data.params["max_bootstrapped_demos"] == "4"
     assert run.data.params["max_labeled_demos"] == "0"
     assert run.data.params["demos"] == "1"
     artifacts = {a.path for a in client.list_artifacts(run.info.run_id)}
     assert out.name in artifacts
     assert dataset.name in artifacts
+    assert "split_manifest.json" in artifacts
+    manifest_path = client.download_artifacts(run.info.run_id, "split_manifest.json")
+    assert json.loads(Path(manifest_path).read_text(encoding="utf-8")) == {"train": [0]}
+
+
+@pytest.mark.parametrize("split", ["val", "all"])
+def test_optimize_cli_refuses_a_non_train_split(
+    tmp_path: Path,
+    split: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from janbot.eval.optimize import main as optimize_main
+
+    dataset = _write_dataset(tmp_path)
+
+    with pytest.raises(SystemExit):
+        optimize_main(["--dataset", str(dataset), "--split", split], env={})
+
+    assert "train" in capsys.readouterr().err
+
+
+def test_eval_scores_only_val_and_records_the_split_manifest(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    corpus, index_path = _corpus(tmp_path, embedder, write_org)
+    dataset = _write_split_dataset(tmp_path)
+    uri = _tracking_uri(tmp_path)
+    env = {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(index_path),
+        "MLFLOW_TRACKING_URI": uri,
+    }
+
+    code = eval_cli.main(
+        ["--dataset", str(dataset), "--split", "val"],
+        env=env,
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "items: 1" in out
+
+    client = MlflowClient(tracking_uri=uri)
+    experiment = client.get_experiment_by_name("janbot-eval")
+    run = client.search_runs([experiment.experiment_id])[0]
+    assert run.data.params["split"] == "val"
+    assert any(
+        artifact.path == "split_manifest.json"
+        for artifact in client.list_artifacts(run.info.run_id)
+    )
+    manifest_path = client.download_artifacts(run.info.run_id, "split_manifest.json")
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    assert manifest == {"train": [0], "val": [1]}
+
+
+def test_eval_cli_fails_when_the_split_selects_no_items(tmp_path: Path) -> None:
+    dataset = _write_dataset(tmp_path)
+
+    assert eval_cli.main(["--dataset", str(dataset), "--split", "val"], env={}) == 2
 
 
 def test_api_import_pulls_neither_mlflow_nor_the_eval_layer() -> None:

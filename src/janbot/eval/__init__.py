@@ -6,7 +6,7 @@ here: the CLI injects the ``ChatProgram`` built by ``create_app`` and tests
 inject a stub, so the harness is usable without a model key.
 """
 
-from janbot.eval.dataset import GoldenItem, load_golden_dataset
+from janbot.eval.dataset import GoldenItem, load_golden_dataset, split_manifest
 from janbot.eval.judge import (
     FAITHFUL,
     HALLUCINATED,
@@ -72,4 +72,5 @@ __all__ = [
     "retrieval_misses",
     "retrieval_mrr",
     "run_eval",
+    "split_manifest",
 ]

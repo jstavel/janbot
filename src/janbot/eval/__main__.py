@@ -1,11 +1,14 @@
-"""CLI: ``python -m janbot.eval [--dataset PATH] [--experiment NAME]``.
+"""CLI: ``python -m janbot.eval [--dataset PATH] [--experiment NAME] [--split all|train|val]``.
 
 Builds the app with ``create_app`` (config -> store -> LM -> ``ChatProgram``),
-loads the golden dataset, runs every question through the pipeline and records
-one MLflow run at ``MLFLOW_TRACKING_URI`` (default ``sqlite:///mlflow.db``, the
-epic's SQLite backend; MLflow 3.x refuses the filesystem backend by default).
-Eval mode needs no key, so the CLI starts without ``OPENROUTER_API_KEY`` rather
-than failing on one. The run parameters are read from the resolved ``Config``
+loads the golden dataset, runs every item in the selected split (``all`` by
+default) through the pipeline and records one MLflow run at
+``MLFLOW_TRACKING_URI`` (default ``sqlite:///mlflow.db``, the epic's SQLite
+backend; MLflow 3.x refuses the filesystem backend by default). The run records
+the selected ``split`` plus a ``split_manifest.json`` artifact mapping each split
+to its dataset indices, so the held-out val set stays auditable. Eval mode needs
+no key, so the CLI starts without ``OPENROUTER_API_KEY`` rather than failing on
+one. The run parameters are read from the resolved ``Config``
 (model mode, snapshot, judge model, temperature, seed, top_k), keeping model
 selection configuration-only (AD-5), and the dataset is pinned as an artifact so
 runs are comparable. When ``OPENROUTER_API_KEY`` is present the CLI also
@@ -22,11 +25,12 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 from collections.abc import Mapping
 from typing import Any
 
 from janbot.config import PROJECT_ROOT, Config, load_config
-from janbot.eval.dataset import load_golden_dataset
+from janbot.eval.dataset import load_golden_dataset, split_manifest
 from janbot.eval.judge import Judge, build_judge
 from janbot.eval.optimize import program_marker
 from janbot.eval.runner import RunResult, run_eval
@@ -108,6 +112,12 @@ def main(
         default=DEFAULT_EXPERIMENT,
         help=f"MLflow experiment name (default: {DEFAULT_EXPERIMENT})",
     )
+    parser.add_argument(
+        "--split",
+        choices=("all", "train", "val"),
+        default="all",
+        help="dataset split to evaluate: all, train or val (default: all)",
+    )
     args = parser.parse_args(argv)
 
     source = os.environ if env is None else env
@@ -117,16 +127,31 @@ def main(
     api_key = (source.get(OPENROUTER_API_KEY_ENV) or "").strip() or None
     judge = _resolve_judge(config, api_key, lm_factory, judge)
 
+    all_items = load_golden_dataset(args.dataset)
+    items = (
+        all_items
+        if args.split == "all"
+        else [item for item in all_items if item.split == args.split]
+    )
+    if not items:
+        print(
+            f"no golden items for split {args.split!r} in {args.dataset}",
+            file=sys.stderr,
+        )
+        return 2
+
     app = create_app(env=source, **_app_kwargs(embedder, lm_factory))
-    items = load_golden_dataset(args.dataset)
+    params = run_params(config)
+    params["split"] = args.split
     result: RunResult = run_eval(
         items,
         app.state.program,
         tracking_uri=tracking_uri,
         experiment=args.experiment,
-        params=run_params(config),
+        params=params,
         judge=judge,
         dataset_path=args.dataset,
+        split_manifest=split_manifest(all_items),
     )
 
     print(f"MLflow tracking URI: {tracking_uri}")

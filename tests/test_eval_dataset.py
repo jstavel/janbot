@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from janbot.eval.dataset import GoldenItem, load_golden_dataset
+from janbot.eval.dataset import GoldenItem, load_golden_dataset, split_manifest
 
 SEED_DATASET = Path(__file__).resolve().parents[1] / "eval" / "golden_dataset.yaml"
 
@@ -49,7 +49,12 @@ def test_item_missing_question_names_its_index(tmp_path: Path) -> None:
     path = _write(
         tmp_path / "dataset.yaml",
         [
-            {"question": "ok?", "expected_answer": "a", "expected_sources": ["a.org"]},
+            {
+                "question": "ok?",
+                "expected_answer": "a",
+                "expected_sources": ["a.org"],
+                "split": "train",
+            },
             {"expected_answer": "a", "expected_sources": ["b.org"]},
         ],
     )
@@ -115,3 +120,150 @@ def test_empty_document_is_rejected(tmp_path: Path) -> None:
         load_golden_dataset(path)
 
     assert str(path) in str(excinfo.value)
+
+
+def test_seed_dataset_is_a_22_train_14_val_stratified_split() -> None:
+    everything = load_golden_dataset(SEED_DATASET)
+    train = load_golden_dataset(SEED_DATASET, split="train")
+    val = load_golden_dataset(SEED_DATASET, split="val")
+
+    assert len(everything) == 36
+    assert {item.split for item in everything} == {"train", "val"}
+    assert len(train) == 22
+    assert len(val) == 14
+    assert train == [item for item in everything if item.split == "train"]
+    assert val == [item for item in everything if item.split == "val"]
+
+
+def test_split_manifest_maps_each_split_to_its_indices() -> None:
+    manifest = split_manifest(load_golden_dataset(SEED_DATASET))
+
+    val = [1, 4, 6, 9, 12, 14, 17, 19, 20, 22, 23, 25, 29, 32]
+    assert manifest["val"] == val
+    assert manifest["train"] == [i for i in range(36) if i not in set(val)]
+
+
+def test_split_filter_none_is_all_and_unknown_split_is_empty(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path / "dataset.yaml",
+        [
+            {
+                "question": "q1",
+                "expected_answer": "a",
+                "expected_sources": ["a.org"],
+                "split": "val",
+            },
+            {
+                "question": "q2",
+                "expected_answer": "a",
+                "expected_sources": ["b.org"],
+                "split": "train",
+            },
+        ],
+    )
+
+    assert len(load_golden_dataset(path)) == 2
+    assert [item.question for item in load_golden_dataset(path, split="val")] == ["q1"]
+    assert [item.question for item in load_golden_dataset(path, split="train")] == ["q2"]
+
+
+def test_unknown_split_filter_is_rejected(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path / "dataset.yaml",
+        [
+            {
+                "question": "q1",
+                "expected_answer": "a",
+                "expected_sources": ["a.org"],
+                "split": "val",
+            }
+        ],
+    )
+
+    with pytest.raises(ValueError) as excinfo:
+        load_golden_dataset(path, split="validation")
+
+    assert "validation" in str(excinfo.value)
+    assert "split" in str(excinfo.value)
+
+
+def test_item_fields_are_split_and_should_refuse_aware(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path / "dataset.yaml",
+        [
+            {
+                "question": "q1",
+                "expected_answer": "a",
+                "expected_sources": ["a.org"],
+                "split": "val",
+                "should_refuse": True,
+            },
+            {
+                "question": "q2",
+                "expected_answer": "a",
+                "expected_sources": ["b.org"],
+                "split": "train",
+            },
+        ],
+    )
+
+    items = load_golden_dataset(path)
+
+    assert items[0].split == "val"
+    assert items[0].should_refuse is True
+    assert items[1].split == "train"
+    assert items[1].should_refuse is False
+
+
+def test_missing_split_marker_names_its_index(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path / "dataset.yaml",
+        [{"question": "ok?", "expected_answer": "a", "expected_sources": ["a.org"]}],
+    )
+
+    with pytest.raises(ValueError) as excinfo:
+        load_golden_dataset(path)
+
+    assert "index 0" in str(excinfo.value)
+    assert "split" in str(excinfo.value)
+
+
+def test_unknown_split_marker_names_its_index(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path / "dataset.yaml",
+        [
+            {
+                "question": "ok?",
+                "expected_answer": "a",
+                "expected_sources": ["a.org"],
+                "split": "test",
+            }
+        ],
+    )
+
+    with pytest.raises(ValueError) as excinfo:
+        load_golden_dataset(path)
+
+    assert "index 0" in str(excinfo.value)
+    assert "split" in str(excinfo.value)
+
+
+def test_non_boolean_should_refuse_is_rejected(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path / "dataset.yaml",
+        [
+            {
+                "question": "ok?",
+                "expected_answer": "a",
+                "expected_sources": ["a.org"],
+                "split": "train",
+                "should_refuse": "yes",
+            }
+        ],
+    )
+
+    with pytest.raises(ValueError) as excinfo:
+        load_golden_dataset(path)
+
+    assert "index 0" in str(excinfo.value)
+    assert "should_refuse" in str(excinfo.value)

@@ -335,6 +335,7 @@ def test_cli_scores_with_an_injected_judge(
                     "question": "What search infrastructure have you built?",
                     "expected_answer": "Search infrastructure.",
                     "expected_sources": ["profile.org"],
+                    "split": "train",
                 }
             ]
         ),

@@ -234,6 +234,7 @@ def test_cli_keyless_run_reads_dataset_and_reports_tracking_uri(
                     "question": "What search infrastructure have you built?",
                     "expected_answer": "Search infrastructure.",
                     "expected_sources": ["profile.org"],
+                    "split": "train",
                 }
             ]
         ),
@@ -273,6 +274,7 @@ def test_cli_all_failed_items_returns_nonzero(
                     "question": "What search infrastructure have you built?",
                     "expected_answer": "Search infrastructure.",
                     "expected_sources": ["profile.org"],
+                    "split": "train",
                 }
             ]
         ),
@@ -329,6 +331,7 @@ def test_cli_flags_off_list_reference_per_item(
                     "question": "What search infrastructure have you built?",
                     "expected_answer": "Search infrastructure.",
                     "expected_sources": ["profile.org"],
+                    "split": "train",
                 }
             ]
         ),
@@ -373,6 +376,7 @@ def test_cli_flags_a_citation_miss_per_item(
                     "question": "What search infrastructure have you built?",
                     "expected_answer": "Search infrastructure.",
                     "expected_sources": ["projects.org"],
+                    "split": "train",
                 }
             ]
         ),
@@ -483,6 +487,7 @@ def test_cli_pins_the_dataset_in_the_recorded_run(
                     "question": "What search infrastructure have you built?",
                     "expected_answer": "Search infrastructure.",
                     "expected_sources": ["profile.org"],
+                    "split": "train",
                 }
             ]
         ),

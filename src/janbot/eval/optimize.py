@@ -34,7 +34,8 @@ from typing import Any
 import mlflow
 
 from janbot.config import PROJECT_ROOT, load_config
-from janbot.eval.dataset import GoldenItem, load_golden_dataset
+from janbot.eval.dataset import GoldenItem, load_golden_dataset, split_manifest
+from janbot.eval.runner import SPLIT_MANIFEST_FILENAME
 
 DEFAULT_DATASET = PROJECT_ROOT / "eval" / "golden_dataset.yaml"
 DEFAULT_OUT = PROJECT_ROOT / "eval" / "compiled_fewshot.json"
@@ -207,6 +208,7 @@ def record_compile(
     *,
     dataset_path: str | Path | None = None,
     hyperparams: Mapping[str, Any] | None = None,
+    split_manifest: Mapping[str, Any] | None = None,
 ) -> str:
     """Record one MLflow run holding the compile's config and its program artifact.
 
@@ -215,6 +217,8 @@ def record_compile(
     program itself, so the durable asset is retrievable from the run that made
     it. ``hyperparams`` carries the compile hyperparameters and the produced demo
     count, so a productive compile is distinguishable from a zero-bootstrap one.
+    When ``split_manifest`` is given it is logged as ``split_manifest.json``
+    beside the dataset artifact, pinning which dataset indices were held out.
     Returns the run id.
     """
     program_file = Path(program_path)
@@ -237,6 +241,8 @@ def record_compile(
             mlflow.log_params(logged_params)
         for artifact in _program_artifacts(program_file, dataset_path):
             mlflow.log_artifact(str(artifact))
+        if split_manifest is not None:
+            mlflow.log_dict(dict(split_manifest), SPLIT_MANIFEST_FILENAME)
         return run.info.run_id
 
 
@@ -253,7 +259,9 @@ def main(
     supplied (tests inject stubs so the CLI runs offline and keyless). The compile
     runs the builder's ``ChatProgram`` against the golden trainset (the program's
     own LM is the teacher), saves the JSON state to ``--out`` and logs it as an
-    MLflow artifact with the compile's config and hyperparameters.
+    MLflow artifact with the compile's config and hyperparameters. ``--split`` is
+    train-only and fails fast otherwise, so a compile can never train on the
+    held-out val items; the run records ``split`` and ``trainset_size``.
     """
     from janbot.api.main import create_app
     from janbot.eval.__main__ import _app_kwargs, run_params
@@ -274,7 +282,18 @@ def main(
         default=DEFAULT_EXPERIMENT,
         help=f"MLflow experiment name (default: {DEFAULT_EXPERIMENT})",
     )
+    parser.add_argument(
+        "--split",
+        default="train",
+        help="dataset split to compile over; only 'train' is accepted (default: train)",
+    )
     args = parser.parse_args(argv)
+
+    if args.split != "train":
+        parser.error(
+            f"compile is train-only; got --split {args.split!r}. "
+            "Compiling over val (or all) would train on the held-out set."
+        )
 
     source = os.environ if env is None else env
     tracking_uri = source.get(TRACKING_URI_ENV) or DEFAULT_TRACKING_URI
@@ -283,7 +302,8 @@ def main(
     app = create_app(env=source, **_app_kwargs(embedder, lm_factory))
     program = app.state.program
 
-    items = load_golden_dataset(args.dataset)
+    all_items = load_golden_dataset(args.dataset)
+    items = [item for item in all_items if item.split == args.split]
     trainset = trainset_from(items)
 
     compiled = compile_fewshot(program, trainset, compile_metric)
@@ -291,6 +311,8 @@ def main(
 
     params = run_params(config)
     params["program"] = program_marker(out_path)
+    params["split"] = args.split
+    params["trainset_size"] = len(trainset)
     run_id = record_compile(
         tracking_uri,
         args.experiment,
@@ -302,6 +324,7 @@ def main(
             "max_labeled_demos": MAX_LABELED_DEMOS,
             "demos": _demo_count(compiled),
         },
+        split_manifest=split_manifest(all_items),
     )
 
     print(f"MLflow tracking URI: {tracking_uri}")
