@@ -153,7 +153,7 @@ title = "Multi-objective compile metric (citations + faithfulness)"
 description = "Revise the BootstrapFewShot compile objective so it does not buy citation coverage at the cost of faithfulness — the Goodhart trade entry 8 exposed. Objective: score = w_c*cited_ok + w_f*faithful (default 0.5/0.5, recorded in the compile hyperparams); a demo is accepted only when cited_ok AND faithful, short-circuiting to False without a judge call when cited_ok is false (keeps it near-free). Only program-controlled terms — retrieval_accuracy and answer_coverage (stub) do not belong. Store the (cited_ok, faithful) pair per item, not only the scalar, so a Pareto/GEPA objective needs no recompute, and leave room for a refusal_ok term once entry 13 lands."
 verify = "Re-compiling over the golden set with the multi-objective objective yields a compiled program whose recorded run holds or improves citations without reducing faithfulness versus the entry-7 baseline, with the weights in the compile hyperparams."
 covers = ["E4"]
-after = [8]
+after = [8, 15, 16]
 hitl = false
 risk = "medium"
 
