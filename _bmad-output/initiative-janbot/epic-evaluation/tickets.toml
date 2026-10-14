@@ -147,13 +147,24 @@ hitl = false
 risk = "medium"
 
 [[entry]]
+id = 17
+type = "story"
+title = "Golden dataset train/val split and a val baseline"
+description = "Compilation and evaluation run over the same 36 items, so 'compiled vs baseline' is train-on-test — a gain may be memorization. Add a per-item `split: train|val` marker ({GoldenItem.split}; loader validates it fail-closed, `load_golden_dataset(path, split=None)` filters, None = all and stays backward compatible). The compile CLI takes `--split` and refuses anything but `train` (never `all`); the eval CLI takes `--split {all,train,val}` (default keeps historical runs; gate runs are explicitly `val`). Annotate all items in one stratified pass (~60/40 → 22 train / 14 val; stratify by source and item class so val is not all-JanBot). Record `split` and `trainset_size` in run params plus a split-manifest artifact. Re-measure the baseline on the val split — the entry-7 baseline (all 36) is not a valid gate reference. Do the GoldenItem per-item-field change in one schema pass together with entry 13's should_refuse marker."
+verify = "The dataset carries a per-item split; the compile CLI refuses a non-train split; the eval CLI accepts train|val|all; a recorded compile+eval pair carries the split, a split-manifest artifact and '<metric>__n'; and a val baseline run exists, so compiled-vs-baseline is measured on the same held-out items."
+covers = ["E1"]
+after = [12]
+hitl = true
+risk = "medium"
+
+[[entry]]
 id = 14
 type = "story"
 title = "Multi-objective compile metric (citations + faithfulness)"
 description = "Revise the BootstrapFewShot compile objective so it does not buy citation coverage at the cost of faithfulness — the Goodhart trade entry 8 exposed. Objective: score = w_c*cited_ok + w_f*faithful (default 0.5/0.5, recorded in the compile hyperparams); a demo is accepted only when cited_ok AND faithful, short-circuiting to False without a judge call when cited_ok is false (keeps it near-free). Only program-controlled terms — retrieval_accuracy and answer_coverage (stub) do not belong. Store the (cited_ok, faithful) pair per item, not only the scalar, so a Pareto/GEPA objective needs no recompute, and leave room for a refusal_ok term once entry 13 lands."
-verify = "Re-compiling over the golden set with the multi-objective objective yields a compiled program whose recorded run holds or improves citations without reducing faithfulness versus the entry-7 baseline, with the weights in the compile hyperparams."
+verify = "Compiled over the train split and evaluated on the val split against a val baseline, the multi-objective compiled program holds or improves citations without reducing faithfulness, with the weights in the compile hyperparams."
 covers = ["E4"]
-after = [8, 15, 16]
+after = [8, 15, 16, 17]
 hitl = false
 risk = "medium"
 
