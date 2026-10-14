@@ -171,9 +171,9 @@ risk = "low"
 [[entry]]
 id = 16
 type = "story"
-title = "Metric hygiene: polarity, denominators, one eligibility"
-description = "Harden the metric layer before refusals land: (1) register_metric(name, fn, higher_is_better) so polarity is explicit (faithfulness must never read inverted); (2) log each metric's denominator in the run record (<metric>__n) so runs are comparable across different bases; (3) one eligibility(item, outcome) — treating a declined response (status=insufficient) as excluded from citation/faithfulness scoring — threaded through every metric, so a correct refusal is never scored as an uncited or incomplete answer; (4) faithfulness computed only over answered and judged items, a refusal judged by the refusal metrics (entry 13), never as unfaithful."
-verify = "Each metric reports its denominator in the run; polarity is declared; the metrics share one eligibility; a declined response is not penalized by citation_correctness or faithfulness."
+title = "Metric hygiene: numerator contracts (polarity, denominators, one eligibility)"
+description = "Harden the metric layer in one change (one signature, one test pass). (1) register_metric(name, metric, *, denominator) — denominator is keyword-only and required; a metric without one is refused (fail fast). (2) metric_counts(outcomes) -> dict[str,int] returning {f'{name}__n': ...} for every registered metric; the runner logs '<metric>__n' beside each score in the same MLflow run (in log_metrics, numeric so it charts with the score); RunResult gains counts, and the CLI prints 'name: 0.5430 (n=35)'. (3) polarity: register_metric gains higher_is_better so a metric's direction is explicit (faithfulness must never read inverted). (4) one eligibility(item, outcome) — treating a declined response (status=insufficient) as excluded — extracted from today's inline comprehensions into named helpers, threaded through every metric (values must not move), with faithfulness computed only over answered and judged items. An invariant test asserts every registered metric has a '<name>__n' in metric_counts."
+verify = "Every run records '<metric>__n' beside every score, each n matching that metric's own population (e.g. faithfulness over judged items only); registering a metric without a denominator fails; metric values are unchanged from before the refactor."
 covers = ["E2"]
 after = [3, 4, 5]
 hitl = false
