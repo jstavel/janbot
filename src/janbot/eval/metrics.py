@@ -262,6 +262,35 @@ def retrieval_accuracy(outcomes: list[ItemOutcome]) -> float:
     return passed / len(eligible)
 
 
+def retrieval_mrr(outcomes: list[ItemOutcome]) -> float:
+    """Mean reciprocal rank of the first expected source in the retrieved list.
+
+    Over the same eligible items as :func:`retrieval_accuracy`, each item scores
+    ``1 / rank`` of the first expected source found in the retrieved set (rank is
+    1-based, in retrieval order), or ``0.0`` when none is retrieved. Data-level
+    and judge-free, it distinguishes a source at rank 1 from one at rank 4 — which
+    the binary :func:`retrieval_accuracy` cannot.
+    """
+    eligible = [outcome for outcome in outcomes if _retrieval_eligible(outcome)]
+    if not eligible:
+        return 0.0
+    total = 0.0
+    for outcome in eligible:
+        retrieved = outcome.retrieved_sources or []
+        expected = set(outcome.item.expected_sources)
+        rank = next(
+            (
+                index
+                for index, source in enumerate(retrieved, start=1)
+                if source in expected
+            ),
+            None,
+        )
+        if rank is not None:
+            total += 1.0 / rank
+    return total / len(eligible)
+
+
 def _cited_sources(outcome: ItemOutcome) -> set[str]:
     """The corpus sources the answer cited, or the empty set when there is no response."""
     if outcome.response is None:
@@ -390,6 +419,7 @@ register_metric("public_references", _public_references, denominator=_all_eligib
 register_metric(
     "retrieval_accuracy", retrieval_accuracy, denominator=_retrieval_eligible
 )
+register_metric("retrieval_mrr", retrieval_mrr, denominator=_retrieval_eligible)
 register_metric(
     "citation_correctness", citation_correctness, denominator=_citation_eligible
 )

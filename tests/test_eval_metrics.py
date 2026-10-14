@@ -1,10 +1,13 @@
-"""Unit tests for the retrieval-accuracy and citation-correctness metrics.
+"""Unit tests for the retrieval-accuracy, retrieval-MRR and citation-correctness metrics.
 
 They prove each story's matrix. Retrieval: an item whose expected sources were
 all retrieved passes and counts in the aggregate; an item whose expected source
 was missed fails and the miss is named per item; a declined item still resolves
 against what was retrieved; and an item with no expected sources (or no observed
-retrieval) is excluded from the aggregate. Citation: containment (expected
+retrieval) is excluded from the aggregate. MRR is the mean reciprocal rank of the
+first expected source in the retrieved list over the same eligible items: rank 1
+scores 1.0, rank 4 scores 0.25, an unretrieved expected source scores 0.0, and
+items without a retrieval claim are excluded. Citation: containment (expected
 subset of cited) passes, a missed expected source fails and is named, a
 retrieved-but-unexpected citation still passes and only lowers precision, and a
 declined response is excluded from the population. No model, no network, no
@@ -29,6 +32,7 @@ from janbot.eval.metrics import (
     register_metric,
     registered_metrics,
     retrieval_accuracy,
+    retrieval_mrr,
     retrieval_misses,
 )
 
@@ -329,3 +333,31 @@ def test_every_registered_metric_declares_a_count_and_a_direction() -> None:
     for name in names:
         assert isinstance(metrics_module._METRICS[name].higher_is_better, bool)
     assert metrics_module._METRICS["faithfulness"].higher_is_better is True
+
+
+def test_retrieval_mrr_scores_rank_one() -> None:
+    assert retrieval_mrr([_outcome(["a.org"], ["a.org", "b.org"])]) == 1.0
+
+
+def test_retrieval_mrr_scores_rank_four() -> None:
+    outcomes = [_outcome(["d.org"], ["a.org", "b.org", "c.org", "d.org"])]
+
+    assert retrieval_mrr(outcomes) == 0.25
+
+
+def test_retrieval_mrr_is_zero_when_the_expected_source_is_not_retrieved() -> None:
+    assert retrieval_mrr([_outcome(["z.org"], ["a.org", "b.org"])]) == 0.0
+
+
+def test_retrieval_mrr_excludes_items_without_a_retrieval_claim() -> None:
+    no_expected = _outcome([], ["a.org"])
+    unobserved = _outcome(["a.org"], None)
+
+    assert retrieval_mrr([_outcome(["a.org"], ["a.org"]), no_expected]) == 1.0
+    assert retrieval_mrr([unobserved]) == 0.0
+
+
+def test_retrieval_mrr_averages_over_eligible_items() -> None:
+    outcomes = [_outcome(["a.org"], ["a.org"]), _outcome(["a.org"], ["x.org", "a.org"])]
+
+    assert retrieval_mrr(outcomes) == 0.75
