@@ -9,8 +9,8 @@ JanBot parses an org-mode corpus into semantically intact units, indexes them, a
 Work in progress, built with the [BMad Method](https://github.com/bmad-code-org/BMAD-METHOD). The contract for every capability, constraint and decision lives in `_bmad-output/` — the spec is the source of truth, not the code.
 
 - **Milestone 1** — DSPy core + FastAPI MVP (in progress; project scaffold and configuration landed)
-- **Milestone 1.5** — TypeScript test harness (Zod schemas, codegen from OpenAPI)
 - **Milestone 2** — AI evaluation, golden dataset, staged prompt optimization
+- **Milestone 1.5** — thin TypeScript harness (Zod schemas via OpenAPI codegen, vitest; sequenced after Milestone 2)
 - **Milestone 3** — Clojure orchestrator (Ring/Reitit)
 
 ## Architecture
@@ -24,7 +24,7 @@ Ports-and-adapters: every caller reaches JanBot only through the `POST /chat` JS
 | Store | ChromaDB + `all-MiniLM-L6-v2` embeddings; retrieval scoped to `JANBOT_CORPUS_PATH` at the store boundary |
 | Ingestion | `orgparse` — one chunk per org subtree (headings, PROPERTIES, LOGBOOK, tags, parent breadcrumbs) |
 | LLM | OpenRouter — locked deterministic snapshot for CI/eval, `openrouter/auto` for production |
-| Tests | pytest + httpx (Milestone 1); TypeScript/Zod harness (Milestone 1.5) |
+| Tests | pytest + httpx (Milestone 1); thin TypeScript/Zod contract harness (Milestone 1.5) |
 
 Key invariants: fail-closed scope filter (only `public_profile_org/` is indexed) and scoped retrieval (only chunks located within `JANBOT_CORPUS_PATH` can be retrieved, so an out-of-corpus chunk never reaches the prompt or a citation), org subtree chunking (no naive text splitters), Pydantic as the single source of truth for the API contract, and a test layer that is never modified to accommodate a change in the AI core.
 

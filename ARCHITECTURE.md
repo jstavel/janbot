@@ -99,7 +99,7 @@ Settings are environment-driven (`JANBOT_*`, loaded by `janbot.config`) and neve
 | Milestone | Layer | Tooling |
 |-----------|-------|---------|
 | M1 | API smoke + integration | `pytest` + `httpx` |
-| M1.5 | Contract verification | TypeScript + Zod (codegen) |
+| M1.5 | Contract verification (thin harness) | TypeScript + Zod (OpenAPI codegen) + vitest |
 | M2 | AI evaluation | Golden dataset + metrics |
 
 ## Future Evolution

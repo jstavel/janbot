@@ -23,8 +23,8 @@ A clear and concise description of any alternative solutions or features you've 
 How does this feature align with the project's milestones?
 
 - [ ] Milestone 1 (DSPy core + FastAPI MVP)
-- [ ] Milestone 1.5 (TypeScript test harness)
 - [ ] Milestone 2 (AI evaluation / golden dataset)
+- [ ] Milestone 1.5 (thin TypeScript harness — Zod/vitest, after Milestone 2)
 - [ ] Milestone 3 (Clojure orchestrator)
 - [ ] Beyond roadmap
 

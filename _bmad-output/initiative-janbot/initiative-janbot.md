@@ -34,7 +34,7 @@ The requirement source is the spec: `_bmad-output/initiative-janbot/spec-janbot/
 
 ## Boundaries
 
-Milestone 1 is one vertical slice: org-mode corpus → ingestion/scope → DSPy retrieval + answer → `/chat` contract → endpoint tests. Not in M1: the TypeScript/Zod harness (M1.5), evaluation and MLFlow (M2), Clojure orchestration (M3), anonymization/guardrails (pre-deployment). See the spec's Non-goals and `_bmad-output/initiative-janbot/spec-janbot/roadmap.md`.
+Milestone 1 is one vertical slice: org-mode corpus → ingestion/scope → DSPy retrieval + answer → `/chat` contract → endpoint tests. Not in M1: evaluation and MLFlow (Milestone 2), the thin TypeScript/Zod harness (Milestone 1.5), Clojure orchestration (M3), anonymization/guardrails (pre-deployment). See the spec's Non-goals and `_bmad-output/initiative-janbot/spec-janbot/roadmap.md`.
 
 Tracer path across epics: `epic-foundation` scaffold → `epic-ingestion` indexes one public org file into ChromaDB → `epic-rag-chat` answers one question with a citation through `/chat` → `epic-verification` runs the end-to-end test green in CI.
 
