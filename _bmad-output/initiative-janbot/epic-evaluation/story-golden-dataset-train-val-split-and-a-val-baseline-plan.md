@@ -3,7 +3,7 @@ title: 'Golden dataset train/val split and a val baseline'
 type: 'feature'
 ticket: 17
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: '4a68e8b'
 route: 'full'
 route_source: 'auto'
