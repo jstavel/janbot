@@ -13,6 +13,11 @@ __pycache__/
 # derived vector index (rebuild with: uv run python -m janbot.ingest)
 chroma_db/
 
+# MLflow eval runs (local tracking store + artifacts)
+mlruns/
+mlflow.db
+mlflow-artifacts/
+
 # transient BMad render snapshots
 _bmad/render/
 .aider*

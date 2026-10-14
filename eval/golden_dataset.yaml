@@ -1,0 +1,77 @@
+# Seed golden dataset for the JanBot evaluation harness (epic-evaluation entry 1).
+#
+# Drafted by the builder from public_profile_org/ topics with expected sources;
+# to be corrected by the owner. The full golden set is completed in entry 2.
+# Each item: a recruiter question, the expected answer, and the corpus-relative
+# sources a correct response should cite.
+
+- question: "What is JanBot and what architecture is it built on?"
+  expected_answer: >-
+    JanBot is a spec-first autonomous AI career assistant that answers recruiter
+    questions from an org-mode corpus. It uses a ports-and-adapters architecture:
+    a FastAPI/Pydantic API boundary over an isolated Python core (DSPy pipeline,
+    ChromaDB retrieval, OpenRouter LLM), built spec-first and verified by tests.
+  expected_sources:
+    - "janbot-ai-agent.org"
+
+- question: "What model modes does JanBot support and why?"
+  expected_answer: >-
+    JanBot has an eval mode using a locked deterministic snapshot
+    (openai/gpt-4o-mini-2024-07-18 at temperature 0) for CI and evaluation, and a
+    production mode using openrouter/auto. The split keeps test and evaluation
+    runs deterministic while production can flex across providers.
+  expected_sources:
+    - "janbot-ai-agent.org"
+
+- question: "What is the Krakatoa matching engine and why is Rust used for its hot path?"
+  expected_answer: >-
+    Krakatoa is a high-throughput polyglot matching engine. Rust handles the
+    matching hot path for zero-allocation, pre-allocated pools, static dispatch
+    and no GC pauses, while Clojure handles orchestration, transport, event
+    sourcing and infrastructure.
+  expected_sources:
+    - "matching-engine.org"
+
+- question: "Tell me about your career trajectory and what drives your moves."
+  expected_answer: >-
+    The arc from teacher to systems administrator to developer to senior QE to
+    architect is a spiral: each move enters a new domain as a novice and goes
+    deeper, not broader, extending the same systems-thinking, testing and
+    automation skills.
+  expected_sources:
+    - "career-trajectory.org"
+
+- question: "What is the Reactive Testing project?"
+  expected_answer: >-
+    Reactive Testing is a TypeScript monorepo that implements Spec-First testing
+    as an executable architecture: a formal model is the single source of truth,
+    a deterministic orchestrator records evidence from a live browser, and pure
+    validators verify that evidence offline without a browser.
+  expected_sources:
+    - "reactive-testing-project.org"
+
+- question: "What was eDeposit and where did you first use Clojure in production?"
+  expected_answer: >-
+    eDeposit was a digital archiving and long-term preservation system for the
+    National Library of the Czech Republic (2013-2015), where Clojure first ran
+    in production: Clojure workers processed XML metadata over RabbitMQ in an
+    event-driven architecture behind a Plone UI.
+  expected_sources:
+    - "edeposit.org"
+
+- question: "How does your personal productivity system demonstrate system design?"
+  expected_answer: >-
+    The gtd-org personal operating system applies production-grade rigor:
+    ADRs recorded before code, contracts defining data shapes and error
+    variants, error modeling as data instead of exceptions, and CQRS-style
+    separation of immutable objects, derived outputs and views.
+  expected_sources:
+    - "system-design.org"
+
+- question: "What is your spec-first philosophy and how did it evolve?"
+  expected_answer: >-
+    Spec-first evolved from Simulation-First: the human writes and reviews the
+    specification as a contract, AI writes the code, and verification runs over
+    collected evidence — the spec is the source of truth, not the code.
+  expected_sources:
+    - "spec-first-philosophy.org"

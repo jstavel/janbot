@@ -1,0 +1,198 @@
+"""Unit tests for the eval runner and CLI.
+
+They prove the runner writes exactly one MLflow run (params + the stub metric)
+against a ``tmp_path`` store, records per-item failures without aborting, fails
+naming an unreachable tracking URI, and that the CLI reads the dataset and
+reports the tracking URI on a keyless eval configuration. A stub embedder and a
+``DummyLM`` factory keep the whole suite offline and keyless.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from pathlib import Path
+
+import pytest
+import yaml
+from dspy.utils import DummyLM
+from mlflow.tracking import MlflowClient
+
+from janbot.api.contract import ChatResponse, Citation
+from janbot.eval import __main__ as eval_cli
+from janbot.eval.dataset import GoldenItem
+from janbot.eval.runner import run_eval
+from janbot.ingest import index_corpus
+
+Embedder = Callable[[list[str]], list[list[float]]]
+
+
+def _tracking_uri(tmp_path: Path) -> str:
+    return f"sqlite:///{tmp_path / 'mlflow.db'}"
+
+
+def _items() -> list[GoldenItem]:
+    return [
+        GoldenItem(question="q1", expected_answer="a1", expected_sources=["profile.org"]),
+        GoldenItem(question="q2", expected_answer="a2", expected_sources=["projects.org"]),
+    ]
+
+
+def _stub_program(answer: str = "Grounded.", source: str = "profile.org") -> Callable[..., ChatResponse]:
+    def program(*, question: str) -> ChatResponse:
+        return ChatResponse(answer=answer, citations=[Citation(source=source)])
+
+    return program
+
+
+class StubLMFactory:
+    """Recording LM factory yielding a canned-answer ``DummyLM`` (no real model)."""
+
+    def __init__(self, citations: list[str] | None = None) -> None:
+        self.citations = list(citations or ["profile.org"])
+
+    def __call__(self, **kwargs: object) -> DummyLM:
+        answer = {"answer": "Grounded.", "citations": list(self.citations)}
+        return DummyLM([dict(answer) for _ in range(16)])
+
+
+def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) -> None:
+    uri = _tracking_uri(tmp_path)
+    params = {
+        "model_mode": "eval",
+        "model_snapshot": "openai/gpt-4o-mini-2024-07-18",
+        "temperature": 0.0,
+        "seed": 0,
+    }
+
+    result = run_eval(
+        _items(), _stub_program(), tracking_uri=uri, experiment="janbot-eval", params=params
+    )
+
+    assert result.metrics == {"answer_coverage": 1.0}
+    assert result.run_id
+
+    client = MlflowClient(tracking_uri=uri)
+    experiment = client.get_experiment_by_name("janbot-eval")
+    assert experiment is not None
+    runs = client.search_runs([experiment.experiment_id])
+    assert len(runs) == 1
+    run = runs[0]
+    assert run.info.run_id == result.run_id
+    assert run.data.params == {
+        "model_mode": "eval",
+        "model_snapshot": "openai/gpt-4o-mini-2024-07-18",
+        "temperature": "0.0",
+        "seed": "0",
+    }
+    assert run.data.metrics == {"answer_coverage": 1.0}
+
+
+def test_run_eval_records_per_item_failure_without_aborting(tmp_path: Path) -> None:
+    uri = _tracking_uri(tmp_path)
+
+    def program(*, question: str) -> ChatResponse:
+        if question == "q2":
+            raise ValueError("retrieval returned 0 chunks")
+        return ChatResponse(answer="ok", citations=[Citation(source="profile.org")])
+
+    result = run_eval(_items(), program, tracking_uri=uri, experiment="janbot-eval")
+
+    assert result.metrics["answer_coverage"] == 0.5
+    assert result.outcomes[0].error is None
+    assert result.outcomes[1].error is not None
+    assert "ValueError" in result.outcomes[1].error
+    client = MlflowClient(tracking_uri=uri)
+    experiment = client.get_experiment_by_name("janbot-eval")
+    assert len(client.search_runs([experiment.experiment_id])) == 1
+
+
+def test_run_eval_fails_naming_the_tracking_uri_when_unreachable(tmp_path: Path) -> None:
+    with pytest.raises(RuntimeError) as excinfo:
+        run_eval(
+            _items(),
+            _stub_program(),
+            tracking_uri="bogus-scheme://nope",
+            experiment="janbot-eval",
+        )
+
+    assert "bogus-scheme://nope" in str(excinfo.value)
+
+
+def test_cli_keyless_run_reads_dataset_and_reports_tracking_uri(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+) -> None:
+    corpus = tmp_path / "public_profile_org"
+    write_org(corpus / "profile.org", heading="About", body="Search infrastructure engineer.")
+    index_path = tmp_path / "index"
+    index_corpus(corpus, index_path, embedder)
+
+    dataset = tmp_path / "dataset.yaml"
+    dataset.write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "question": "What search infrastructure have you built?",
+                    "expected_answer": "Search infrastructure.",
+                    "expected_sources": ["profile.org"],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    uri = _tracking_uri(tmp_path)
+    env = {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(index_path),
+        "MLFLOW_TRACKING_URI": uri,
+    }
+
+    code = eval_cli.main(
+        ["--dataset", str(dataset)],
+        env=env,
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    assert code == 0
+
+
+def test_cli_all_failed_items_returns_nonzero(
+    tmp_path: Path,
+    embedder: Embedder,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dataset = tmp_path / "dataset.yaml"
+    dataset.write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "question": "What search infrastructure have you built?",
+                    "expected_answer": "Search infrastructure.",
+                    "expected_sources": ["profile.org"],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    env = {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(tmp_path / "empty-index"),
+        "MLFLOW_TRACKING_URI": _tracking_uri(tmp_path),
+    }
+
+    code = eval_cli.main(
+        ["--dataset", str(dataset)],
+        env=env,
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    out = capsys.readouterr().out
+    assert code != 0
+    assert "failed:" in out
+    assert "What search infrastructure have you built?" in out
