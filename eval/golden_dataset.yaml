@@ -1,63 +1,226 @@
-# Seed golden dataset for the JanBot evaluation harness (epic-evaluation entry 1).
+# Golden dataset for the JanBot evaluation harness (epic-evaluation).
 #
-# Drafted by the builder from public_profile_org/ topics with expected sources;
-# to be corrected by the owner. The full golden set is completed in entry 2.
+# Recruiter questions with a short factual expected answer and the
+# corpus-relative source(s) a correct response should cite. Drafted by the
+# builder from public_profile_org/ topics; to be corrected by the owner.
 # Each item: a recruiter question, the expected answer, and the corpus-relative
 # sources a correct response should cite.
 
-- question: "What is JanBot and what architecture is it built on?"
+- question: "Can you walk me through your career path and what drove the transitions?"
   expected_answer: >-
-    JanBot is a spec-first autonomous AI career assistant that answers recruiter
-    questions from an org-mode corpus. It uses a ports-and-adapters architecture:
-    a FastAPI/Pydantic API boundary over an isolated Python core (DSPy pipeline,
-    ChromaDB retrieval, OpenRouter LLM), built spec-first and verified by tests.
+    The arc runs teacher, systems administrator, developer, senior QE, architect,
+    with each move going deeper into a technical domain rather than broader:
+    teaching and PC-lab administration (1997-2001), C++ and then Python development
+    (2001-2007), quality engineering at enterprise scale (2007-2026), and architecture
+    work in 2026 (matching engines, reactive testing frameworks, AI-assisted workflows).
+    Each transition entered a new domain as a novice and built depth, extending the
+    same underlying skills of systems thinking, testing, and automation.
   expected_sources:
-    - "janbot-ai-agent.org"
+    - career-trajectory.org
 
-- question: "What model modes does JanBot support and why?"
+- question: "Why did you leave your last job after so many years there?"
   expected_answer: >-
-    JanBot has an eval mode using a locked deterministic snapshot
-    (openai/gpt-4o-mini-2024-07-18 at temperature 0) for CI and evaluation, and a
-    production mode using openrouter/auto. The split keeps test and evaluation
-    runs deterministic while production can flex across providers.
+    After more than a decade in one team (2015-2026), a personal crisis coincided
+    with a leadership change; the new manager saw the leftover "Evolving" Workday
+    status and asked for proof of Senior QE. The response was over-delivery (a full
+    Grafana/Prometheus/Ansible monitoring stack instead of the requested proof-of-concept)
+    and estimates that ignored multi-day review waits, ending in an "estimating
+    deficiency" verdict. The departure was initiated by the engineer as a clean,
+    mutual, growth-oriented break at the end of the year.
   expected_sources:
-    - "janbot-ai-agent.org"
+    - departure-narrative.org
 
-- question: "What is the Krakatoa matching engine and why is Rust used for its hot path?"
+- question: "Can you give a concrete example of mentoring or leadership impact?"
   expected_answer: >-
-    Krakatoa is a high-throughput polyglot matching engine. Rust handles the
-    matching hot path for zero-allocation, pre-allocated pools, static dispatch
-    and no GC pauses, while Clojure handles orchestration, transport, event
-    sourcing and infrastructure.
+    In Red Hat's formal mentoring program, a mentee based in India (an Associate
+    Software Maintenance Engineer) reported in writing that the mentorship "played
+    a big role" in the promotion to SME. The approach was to create space for any
+    question, listen first, and guide without judgment, treating the mentee's growth
+    environment as the mentor's own responsibility ("Extreme Ownership DOWN").
   expected_sources:
-    - "matching-engine.org"
+    - mentoring-downchain.org
 
-- question: "Tell me about your career trajectory and what drives your moves."
+- question: "Tell me about your matching engine project."
   expected_answer: >-
-    The arc from teacher to systems administrator to developer to senior QE to
-    architect is a spiral: each move enters a new domain as a novice and goes
-    deeper, not broader, extending the same systems-thinking, testing and
-    automation skills.
+    Krakatoa is a high-throughput, polyglot Clojure/Rust matching engine built
+    spec-first with spec-kit as proof-of-work: the Clojure/Polylith layer handles
+    orchestration, ZeroMQ transport, Kafka event sourcing, and KVM/Terraform chaos
+    testing, while the Rust engine implements a zero-allocation matching hot path
+    with pre-allocated memory pools (ADR 0003). It implements real exchange
+    mechanics — price-time priority, taker-maker crossing, partial fills,
+    multi-level sweeps, and trade record generation.
   expected_sources:
-    - "career-trajectory.org"
+    - matching-engine.org
 
-- question: "What is the Reactive Testing project?"
+- question: "Have you implemented spec-first testing end to end, not just talked about it?"
   expected_answer: >-
-    Reactive Testing is a TypeScript monorepo that implements Spec-First testing
-    as an executable architecture: a formal model is the single source of truth,
-    a deterministic orchestrator records evidence from a live browser, and pure
-    validators verify that evidence offline without a browser.
+    Yes — Reactive Testing is a TypeScript monorepo (149 commits, 50 specification
+    documents, 4 completed epics) implementing Spec-First against the Kraken Pro
+    trading UI's read-only critical path. A formal model (FSM, contracts, Zod
+    schemas) is the single source of truth; an orchestrator records evidence from
+    a live browser via Chrome DevTools Protocol, and pure validators verify that
+    evidence offline without any browser. All four epics were built with the BMad
+    method, AI agents driving stories from spec through implementation to review.
   expected_sources:
-    - "reactive-testing-project.org"
+    - reactive-testing-project.org
 
-- question: "What was eDeposit and where did you first use Clojure in production?"
+- question: "Have you used Clojure in production systems?"
   expected_answer: >-
-    eDeposit was a digital archiving and long-term preservation system for the
-    National Library of the Czech Republic (2013-2015), where Clojure first ran
-    in production: Clojure workers processed XML metadata over RabbitMQ in an
-    event-driven architecture behind a Plone UI.
+    Yes: eDeposit (2013-2015) was a long-term digital preservation system for the
+    National Library of the Czech Republic and the first Clojure in production in
+    this career. Clojure AMQP workers processed XML/LTP metadata and validated
+    PDFs (pdfbox) and EPUBs (epubcheck), with RabbitMQ connecting a Plone librarian
+    UI to roughly twenty-plus Python microservices. The architecture was shaped by
+    observing librarians' actual daily workflow rather than framework defaults.
   expected_sources:
-    - "edeposit.org"
+    - edeposit.org
+
+- question: "Do you have full-stack experience?"
+  expected_answer: >-
+    cdbazar is a Django e-commerce platform for a Prague CD retailer, built and
+    maintained solo since around 2007 and still in production in 2026 — 18+ years
+    of continuous operation. It covers catalogue, order workflow, payments,
+    competitive pricing intelligence, and an internal intranet, on Django/MySQL
+    with Xapian full-text search. Requirements were elicited in person with a
+    non-technical retail team over nearly two decades.
+  expected_sources:
+    - cdbazar.org
+
+- question: "What experience do you have with event-driven architecture?"
+  expected_answer: >-
+    In 2007, an architecture for real-time stock synchronisation across a retail
+    chain used PostgreSQL triggers as change data capture and RabbitMQ persistent
+    queues as the event log — years before event streaming became a named pattern;
+    it was built as a working proof of concept, not deployed to production. The
+    same period included the corporate intranet in Perl/Mojolicious with years of
+    raw SQL via DBD::Pg and no ORM.
+  expected_sources:
+    - bata-stock-update.org
+
+- question: "Tell me about your AI agent project, JanBot."
+  expected_answer: >-
+    JanBot is a deployed AI career assistant (FastAPI, DSPy, ChromaDB, OpenRouter)
+    that answers recruiter questions from a personal org-mode corpus, built
+    spec-first with the BMad Method. Key design points: ports-and-adapters with
+    the FastAPI/Pydantic API contract as the single boundary, fail-closed
+    whitelist ingestion where only public_profile_org/ is ever indexed, org-mode
+    AST-aware chunking instead of naive text splitting, and deterministic
+    evaluation via a locked eval mode (a gpt-4o-mini snapshot at temperature=0)
+    separate from the flexible production mode, with tests from day one.
+  expected_sources:
+    - janbot-ai-agent.org
+
+- question: "What experience do you have operating and debugging CI/CD infrastructure like Jenkins?"
+  expected_answer: >-
+    At Red Hat, hands-on ownership of a shared Jenkins instance on OpenShift:
+    job definitions as code (Groovy/job DSL, Configuration as Code), the seed job,
+    agent/container images built with Podman keeping tooling versioned in images,
+    plus GitHub CI for an upstream project and an Ansible repository with dynamic
+    inventories. To debug single jobs safely on the large shared system, a
+    "mini-seed" pattern was used — a small separate repository with a seed job
+    updating only one job, giving fast, low-risk feedback. A formative lesson came
+    from orphaned agent pods left by repeated Jenkins relaunches nearly filling
+    the shared cluster.
+  expected_sources:
+    - jenkins-openshift-cicd-operations.org
+
+- question: "How have you designed a test automation architecture at production scale?"
+  expected_answer: >-
+    For Red Hat Subscription Management, a two-layer architecture used Ansible as
+    orchestrator for CLI and DBus tests and Robot Framework with SeleniumLibrary
+    for Cockpit web UI end-to-end tests, designed for a Python-only team. It ran
+    fully integrated in team CI/CD for years, at a scale of 60+ playbooks, a
+    737-line main playbook, custom plugins, Bugzilla/Polarion integrations, and
+    Beaker test-machine reservation. Each scenario was a standalone .robot file a
+    developer could run without the rest of the framework.
+  expected_sources:
+    - rhsm-ansible-qe.org
+
+- question: "What Clojure work did you do at Red Hat?"
+  expected_answer: >-
+    Hired specifically to maintain and extend Clojure tests for subscription-manager,
+    the work included libraries bridging Clojure functions into the Java TestNG
+    suite (test-clj.testng, verify-testng), a Bugzilla-status TestNG listener that
+    skipped tests for still-open bugs, GNOME LDTP desktop bindings, and
+    Clojure+Selenium tests for the Cockpit web UI. After about five years the team
+    replaced Clojure with pytest for maintainability, and the shift was accepted,
+    leading on to the WebDriver.io proposal and then the Ansible + Robot Framework
+    architecture.
+  expected_sources:
+    - clojure-testing.org
+
+- question: "How deep is your Linux knowledge?"
+  expected_answer: >-
+    As a school IT administrator, a custom Linux From Scratch distribution was
+    built to fit a single 1.44MB floppy containing only netcat and dd, used to
+    clone Windows 95 workstations over the network by streaming disk images with
+    dd and nc. It demonstrates Linux fundamentals — disk I/O, pipes, network
+    streaming, bootable media — and creative problem-solving with minimal
+    resources.
+  expected_sources:
+    - linux-from-scratch.org
+
+- question: "Do you have security or PKI experience?"
+  expected_answer: >-
+    The NEPodpis project (for Brailcom) provisioned state-authorized electronic
+    signature certificates for visually impaired Linux clients. This required
+    researching the then-undocumented Linux smartcard/PKI stack (OpenSC bridging
+    RSA smartcards to OpenSSL), then setting up the full chain — key pair on a
+    smartcard, certificate signing request, certificate issued by a Czech bank as
+    certification authority — at clients' homes, and accompanying them to the bank
+    for identity verification.
+  expected_sources:
+    - nepodpis.org
+
+- question: "What is your testing philosophy?"
+  expected_answer: >-
+    Spec-First: a person writes the specification, AI writes the code, and QE
+    reviews the spec as a contract rather than the code; simulation is decoupled
+    from verification, with verification running as pure assertions over collected
+    evidence (a BASH simulation script, a Gherkin .feature contract, and Python
+    step definitions checking a data bundle). Gherkin was chosen as AI-native,
+    human-reviewable, and machine-executable, with a zero-waste principle that
+    every artifact serves multiple audiences. The core — separating what the
+    system does from how it is verified — has been continuous since the 2019
+    "Testing in a Reactive Way" idea.
+  expected_sources:
+    - spec-first-philosophy.org
+
+- question: "How do you feel about remote and hybrid work?"
+  expected_answer: >-
+    Remote work is a conviction built on 15 years of home office, not an
+    adaptation: routine collaboration such as standups and alignment meetings
+    works fully virtual. In-person time is valued only for unstructured personal
+    contact — the one thing virtual meetings cannot replace — not for commuting to
+    meetings that work better remotely. Flow is treated deliberately as an
+    environment design problem, including long uninterrupted deep-work sessions.
+  expected_sources:
+    - remote-work-conviction.org
+
+- question: "Which books or ideas have most shaped how you work?"
+  expected_answer: >-
+    Eight books form the professional philosophy: David Allen's GTD (applied
+    through Org-mode inbox capture and weekly review), Dweck's Growth Mindset,
+    Newport's Deep Work (AI as a junior, the person as architect), Sinek's Start
+    With Why and Leaders Eat Last, Willink's Extreme Ownership (ownership upward
+    to the manager and downward to mentees), Forte's Building a Second Brain, and
+    Clear's Atomic Habits. Together they combine an organized mind, growth through
+    challenge, focused creation, meaningful direction, full accountability, and
+    habit design.
+  expected_sources:
+    - foundational-books.org
+
+- question: "How do you use AI in your day-to-day work?"
+  expected_answer: >-
+    Spec-first: the specification is kept as the main, up-to-date source of truth
+    (vision, goals, main steps, milestones) and AI generates code from it, using
+    tools like spec-kit and the BMad Method, so the work has direction and does
+    not drift. The human role is architect — maintain direction, steer, review,
+    and plan in small bounded steps ("AI as junior, me as architect"). Personal
+    projects such as reactive-testing and JanBot are built as public proof of work
+    that a recruiter can open.
+  expected_sources:
+    - spec-first-pitch.org
 
 - question: "How does your personal productivity system demonstrate system design?"
   expected_answer: >-
@@ -66,12 +229,4 @@
     variants, error modeling as data instead of exceptions, and CQRS-style
     separation of immutable objects, derived outputs and views.
   expected_sources:
-    - "system-design.org"
-
-- question: "What is your spec-first philosophy and how did it evolve?"
-  expected_answer: >-
-    Spec-first evolved from Simulation-First: the human writes and reviews the
-    specification as a contract, AI writes the code, and verification runs over
-    collected evidence — the spec is the source of truth, not the code.
-  expected_sources:
-    - "spec-first-philosophy.org"
+    - system-design.org
