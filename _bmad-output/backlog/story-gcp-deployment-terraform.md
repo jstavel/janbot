@@ -26,7 +26,7 @@ Verify: `terraform apply` yields a public Cloud Run URL where `GET /health` retu
 
 ## References
 
-- source — `gcp-deployment.md`
+- source — `gcp-deployment.md` (raw intake deleted 2026-10-14; harvested into this ticket in `529296a`)
 - spec — `_bmad-output/initiative-janbot/spec-janbot/spec-janbot.md`, Open Questions (deployment/hosting target)
 - architecture — `_bmad-output/initiative-janbot/architecture-janbot/architecture-janbot.md`, Deferred (deployment & hosting)
 

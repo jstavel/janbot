@@ -26,7 +26,7 @@ Verify: the podman-compose stack starts Qdrant and the API, the corpus is ingest
 
 ## References
 
-- source — `qdrant-used.md`
+- source — `qdrant-used.md` (raw intake deleted 2026-10-14; harvested into this ticket in `529296a`)
 - stack — `_bmad-output/initiative-janbot/spec-janbot/stack.md` (ChromaDB as vector store)
 - architecture — `_bmad-output/initiative-janbot/architecture-janbot/architecture-janbot.md`, AD-2 (isolated AI/vector core)
 

@@ -27,7 +27,7 @@ Verify: the published Pages page posts a question to the deployed `/chat` and re
 
 ## References
 
-- source — `intake-gh-pages-chat-widget.md`
+- source — `intake-gh-pages-chat-widget.md` (raw intake deleted 2026-10-14; harvested into this ticket in `529296a`)
 - architecture — `_bmad-output/initiative-janbot/architecture-janbot/architecture-janbot.md`, AD-1 (no other public interface without a superseding decision)
 - spec — `_bmad-output/initiative-janbot/spec-janbot/spec-janbot.md`, Assumptions (guardrails before recruiter deployment)
 
