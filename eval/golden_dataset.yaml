@@ -280,3 +280,28 @@
     is https://github.com/edeposit).
   expected_sources:
     - edeposit.org
+
+- question: "Which of your projects can I inspect right now, and where?"
+  expected_answer: >-
+    The public ones, each under its real owner: JanBot
+    (github.com/jstavel/janbot), Krakatoa (github.com/jstavel/krakatoa),
+    Reactive Testing (github.com/jstavel/reactive_testing), gtd-org
+    (github.com/jstavel/gtd-org), cdbazar (github.com/jstavel/cdbazar, live
+    bazar-cd.cz), the Clojure testing libraries (test-clj.testng,
+    verify-testng, bugzilla-testng, gnome.ldtp), python-audio-transcription,
+    the eDeposit libraries under the edeposit org, rhsm-cockpit-qe under the
+    RedHatQE org, and NEPodpis's live brailcom.cz page.
+  expected_sources:
+    - public-proof-map.org
+
+- question: "Is there work of yours I can't verify publicly?"
+  expected_answer: >-
+    Yes, and that is normal: most of it has no public reference — the
+    CoreNet/Twisted PDF-merge work, the Jenkins/OpenShift CI/CD operations,
+    the RHSM Ansible + Robot Framework architecture, the 2007
+    PostgreSQL + RabbitMQ stock sync, the intranet, Nagios/SNMP monitoring,
+    Vagrant/Infrastructure-as-Code, Insights monitoring, Linux From Scratch,
+    the C++ memory allocator, and others — because it was internal,
+    client-gated, or simply never published.
+  expected_sources:
+    - public-proof-map.org

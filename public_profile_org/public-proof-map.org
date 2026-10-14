@@ -1,0 +1,25 @@
+:PROPERTIES:
+:ID:       20261014-public-proof-map
+:TITLE:    Public proof map — what a recruiter can inspect, and what stays private
+:DOMAIN:   way-of-working
+:TAGS:     proof public references github allow-list recruiter verifiability
+:SYNOPSIS: Maps every project to the public reference (GitHub URL or live site) that proves it, and names honestly which work has no public proof because it is internal, client-gated, or never published.
+:END:
+
+# Public proof map — what a recruiter can inspect, and what stays private
+
+Public references a recruiter (or their AI agent) can open, by project:
+
+- JanBot — https://github.com/jstavel/janbot
+- Krakatoa matching engine — https://github.com/jstavel/krakatoa
+- Reactive Testing — https://github.com/jstavel/reactive_testing
+- Personal OS / system design (gtd-org) — https://github.com/jstavel/gtd-org
+- cdbazar — https://github.com/jstavel/cdbazar (live: https://www.bazar-cd.cz)
+- Clojure testing era — https://github.com/jstavel/test-clj.testng, verify-testng, bugzilla-testng, gnome.ldtp
+- Audio transcription pipeline — https://github.com/jstavel/python-audio-transcription
+- eDeposit — https://github.com/edeposit (libraries: clj-amqp, amqp.pdfbox, amqp.kramerius) — the edeposit org, not a personal account
+- rhsm-cockpit-qe — https://github.com/RedHatQE/rhsm-cockpit-qe — the RedHatQE org
+- NEPodpis — https://www.brailcom.cz/projects (live site; no repository)
+
+Everything else has no public reference — internal, client-gated, or unpublished.
+That is normal: an answer should say so rather than invent a link.
