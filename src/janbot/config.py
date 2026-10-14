@@ -1,11 +1,13 @@
 """Configuration for JanBot, read from ``JANBOT_*`` environment variables.
 
 Per AD-5, model mode is configuration, not code. This module is stdlib-only and
-reads eight variables, each with a documented default:
+reads nine variables, each with a documented default:
 
 - ``JANBOT_MODEL_MODE``      -- ``"eval"`` (default) or ``"production"``
 - ``JANBOT_MODEL_SNAPSHOT``  -- locked model snapshot;
   default ``"openai/gpt-4o-mini-2024-07-18"``
+- ``JANBOT_JUDGE_MODEL``     -- LLM-as-a-judge model; default the locked snapshot
+  in ``JANBOT_MODEL_SNAPSHOT`` (a stronger judge is a config change, not code)
 - ``JANBOT_CORPUS_PATH``     -- indexed corpus root; default ``"public_profile_org"``
 - ``JANBOT_INDEX_PATH``      -- vector index location; default ``"chroma_db"``
 - ``JANBOT_PROJECT_ROOT``    -- base for relative paths; default is the repository
@@ -46,6 +48,7 @@ MODEL_MODES = (MODEL_MODE_EVAL, MODEL_MODE_PRODUCTION)
 
 MODEL_MODE_ENV = "JANBOT_MODEL_MODE"
 MODEL_SNAPSHOT_ENV = "JANBOT_MODEL_SNAPSHOT"
+JUDGE_MODEL_ENV = "JANBOT_JUDGE_MODEL"
 CORPUS_PATH_ENV = "JANBOT_CORPUS_PATH"
 INDEX_PATH_ENV = "JANBOT_INDEX_PATH"
 PROJECT_ROOT_ENV = "JANBOT_PROJECT_ROOT"
@@ -70,6 +73,7 @@ class Config:
 
     model_mode: str
     model_snapshot: str
+    judge_model: str
     corpus_path: Path
     index_path: Path
     temperature: float
@@ -112,6 +116,7 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
         )
 
     model_snapshot = _clean(source.get(MODEL_SNAPSHOT_ENV)) or DEFAULT_MODEL_SNAPSHOT
+    judge_model = _clean(source.get(JUDGE_MODEL_ENV)) or model_snapshot
 
     raw_temperature = _clean(source.get(TEMPERATURE_ENV))
     if raw_temperature is None:
@@ -163,6 +168,7 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
     return Config(
         model_mode=model_mode,
         model_snapshot=model_snapshot,
+        judge_model=judge_model,
         corpus_path=_resolve_path(corpus_value, project_root),
         index_path=_resolve_path(index_value, project_root),
         temperature=temperature,

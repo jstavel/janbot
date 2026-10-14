@@ -135,6 +135,7 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "retrieval_accuracy": 0.0,
         "citation_correctness": 0.5,
         "citation_precision": 0.5,
+        "hallucination": 0.0,
     }
     assert result.run_id
     assert result.reference_failures == []
@@ -161,6 +162,7 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "retrieval_accuracy": 0.0,
         "citation_correctness": 0.5,
         "citation_precision": 0.5,
+        "hallucination": 0.0,
     }
 
 

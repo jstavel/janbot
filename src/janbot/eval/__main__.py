@@ -6,12 +6,15 @@ one MLflow run at ``MLFLOW_TRACKING_URI`` (default ``sqlite:///mlflow.db``, the
 epic's SQLite backend; MLflow 3.x refuses the filesystem backend by default).
 Eval mode needs no key, so the CLI starts without ``OPENROUTER_API_KEY`` rather
 than failing on one. The run parameters are read from the resolved ``Config``
-(model mode, snapshot, temperature, seed), keeping model selection
-configuration-only (AD-5).
+(model mode, snapshot, judge model, temperature, seed), keeping model selection
+configuration-only (AD-5). When ``OPENROUTER_API_KEY`` is present the CLI also
+builds the LLM-as-a-judge from ``JANBOT_JUDGE_MODEL`` (through the same key) so
+the ``hallucination`` metric is scored; without a key the run stays keyless and
+every item is unjudged.
 
-``embedder`` and ``lm_factory`` are optional seams forwarded to ``create_app``;
-production leaves them unset (the real adapters), tests inject stubs so the CLI
-runs offline and keyless.
+``embedder``, ``lm_factory`` and ``judge`` are optional seams forwarded to
+``create_app``/``run_eval``; production leaves them unset (the real adapters),
+tests inject stubs so the CLI runs offline and keyless.
 """
 
 from __future__ import annotations
@@ -23,12 +26,14 @@ from typing import Any
 
 from janbot.config import PROJECT_ROOT, Config, load_config
 from janbot.eval.dataset import load_golden_dataset
+from janbot.eval.judge import Judge, build_judge
 from janbot.eval.runner import RunResult, run_eval
 
 DEFAULT_DATASET = PROJECT_ROOT / "eval" / "golden_dataset.yaml"
 DEFAULT_EXPERIMENT = "janbot-eval"
 TRACKING_URI_ENV = "MLFLOW_TRACKING_URI"
 DEFAULT_TRACKING_URI = "sqlite:///mlflow.db"
+OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
 
 
 def run_params(config: Config) -> dict[str, Any]:
@@ -36,6 +41,7 @@ def run_params(config: Config) -> dict[str, Any]:
     return {
         "model_mode": config.model_mode,
         "model_snapshot": config.model_snapshot,
+        "judge_model": config.judge_model,
         "temperature": config.temperature,
         "seed": config.seed,
     }
@@ -51,14 +57,40 @@ def _app_kwargs(embedder: Any, lm_factory: Any) -> dict[str, Any]:
     return kwargs
 
 
+def _resolve_judge(
+    config: Config, api_key: str | None, lm_factory: Any, judge: Judge | None
+) -> Judge | None:
+    """Return the injected judge, or build one from config when a key is present.
+
+    A keyless run has no judge (every item stays unjudged). The ``lm_factory``
+    seam is forwarded only when supplied, so its own default is not overridden
+    with ``None``.
+    """
+    if judge is not None or not api_key:
+        return judge
+
+    from janbot.llm import build_judge_lm
+
+    kwargs = {} if lm_factory is None else {"lm_factory": lm_factory}
+    return build_judge(build_judge_lm(config, api_key=api_key, **kwargs))
+
+
 def main(
     argv: list[str] | None = None,
     env: Mapping[str, str] | None = None,
     *,
     embedder: Any = None,
     lm_factory: Any = None,
+    judge: Judge | None = None,
 ) -> int:
-    """Run the eval end to end and print the tracking URI, run id and metrics."""
+    """Run the eval end to end and print the tracking URI, run id and metrics.
+
+    ``judge`` is the injectable LLM-as-a-judge seam. When omitted, a real judge is
+    built from configuration (``JANBOT_JUDGE_MODEL``) only if
+    ``OPENROUTER_API_KEY`` is present: a keyless eval run has no judge, so every
+    item is unjudged and the ``hallucination`` metric stays at ``0`` over no
+    eligible items rather than calling an unauthenticated model.
+    """
     from janbot.api.main import create_app
 
     parser = argparse.ArgumentParser(prog="python -m janbot.eval")
@@ -78,6 +110,9 @@ def main(
     tracking_uri = source.get(TRACKING_URI_ENV) or DEFAULT_TRACKING_URI
 
     config = load_config(source)
+    api_key = (source.get(OPENROUTER_API_KEY_ENV) or "").strip() or None
+    judge = _resolve_judge(config, api_key, lm_factory, judge)
+
     app = create_app(env=source, **_app_kwargs(embedder, lm_factory))
     items = load_golden_dataset(args.dataset)
     result: RunResult = run_eval(
@@ -86,6 +121,7 @@ def main(
         tracking_uri=tracking_uri,
         experiment=args.experiment,
         params=run_params(config),
+        judge=judge,
     )
 
     print(f"MLflow tracking URI: {tracking_uri}")
@@ -102,6 +138,17 @@ def main(
 
     for miss in result.citation_misses:
         print(f"citation: {miss}")
+
+    judged = [outcome for outcome in result.outcomes if outcome.judge_verdict is not None]
+    print(f"judged: {len(judged)}/{len(result.outcomes)}")
+    for outcome in judged:
+        verdict = outcome.judge_verdict
+        if verdict is None:
+            continue
+        print(f"judge: {outcome.item.question} — {verdict.label}")
+
+    for failure in result.judge_failures:
+        print(f"judge: {failure}")
 
     failures = [outcome for outcome in result.outcomes if outcome.response is None]
     for outcome in failures:

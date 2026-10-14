@@ -17,6 +17,7 @@ from dataclasses import dataclass
 
 from janbot.api.contract import ChatResponse
 from janbot.eval.dataset import GoldenItem
+from janbot.eval.judge import FAITHFUL, Verdict
 from janbot.eval.public_urls import (
     extract_urls,
     is_public_reference,
@@ -32,12 +33,18 @@ class ItemOutcome:
     ``retrieved_sources`` is the corpus-relative set the program retrieved for the
     item, or ``None`` when the run exposed no retrieval claim (a stub program).
     It is read from the retrieval step, never from the answer's citations.
+
+    ``judge_verdict`` is the LLM-as-a-judge's verdict for the item, or ``None``
+    when the item was unjudged — no judge was configured, the program produced no
+    answer, or the judge call failed. Only judged items count in the
+    ``hallucination`` aggregate.
     """
 
     item: GoldenItem
     response: ChatResponse | None
     error: str | None
     retrieved_sources: list[str] | None = None
+    judge_verdict: Verdict | None = None
 
 
 Metric = Callable[[list[ItemOutcome]], float]
@@ -279,8 +286,28 @@ def citation_precision(outcomes: list[ItemOutcome]) -> float:
     return sum(precisions) / len(precisions)
 
 
+def hallucination(outcomes: list[ItemOutcome]) -> float:
+    """Fraction of judged items the judge found faithful to the golden expected answer.
+
+    An item counts only when it carries a judge verdict; an unjudged item — no
+    judge configured, no answer to judge, or a failed judge call — is excluded.
+    The metric is pure: it never calls the judge (the runner runs it per item and
+    stores the verdict). With no judged items the aggregate is ``0.0``.
+    """
+    judged: list[Verdict] = [
+        outcome.judge_verdict
+        for outcome in outcomes
+        if outcome.judge_verdict is not None
+    ]
+    if not judged:
+        return 0.0
+    faithful = sum(1 for verdict in judged if verdict.label == FAITHFUL)
+    return faithful / len(judged)
+
+
 register_metric("answer_coverage", stub_metric)
 register_metric("public_references", _public_references)
 register_metric("retrieval_accuracy", retrieval_accuracy)
 register_metric("citation_correctness", citation_correctness)
 register_metric("citation_precision", citation_precision)
+register_metric("hallucination", hallucination)

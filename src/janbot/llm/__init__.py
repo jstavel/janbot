@@ -36,6 +36,8 @@ from janbot.config import MODEL_MODE_EVAL, MODEL_MODE_PRODUCTION, Config
 
 OPENROUTER_MODEL = "openrouter/auto"
 OPENROUTER_API_BASE = "https://openrouter.ai/api/v1"
+JUDGE_TEMPERATURE = 0.0
+"""The judge LM samples at temperature 0 so verdicts are as stable as the provider allows."""
 
 LMFactory = Callable[..., Any]
 
@@ -82,6 +84,33 @@ def build_lm(
             f"api_key is required in {MODEL_MODE_PRODUCTION!r} model mode; "
             "pass the OpenRouter key explicitly to build_lm"
         )
+
+    if api_key:
+        kwargs["api_key"] = api_key
+
+    return lm_factory(**kwargs)
+
+
+def build_judge_lm(
+    config: Config,
+    api_key: str | None = None,
+    *,
+    lm_factory: LMFactory = dspy.LM,
+) -> Any:
+    """Build the LLM-as-a-judge LM from configuration via the same ``lm_factory`` seam.
+
+    The judge is configuration only (AD-5): it routes ``openrouter/`` + the
+    ``config.judge_model`` snapshot through the single OpenRouter host and the
+    same ``api_key``, pinned to ``temperature=0`` (a verdict should not wander)
+    and the eval ``seed``. It never branches on model mode: a stronger judge is a
+    change to ``JANBOT_JUDGE_MODEL``, not code.
+    """
+    kwargs: dict[str, Any] = {
+        "model": f"openrouter/{config.judge_model}",
+        "temperature": JUDGE_TEMPERATURE,
+        "api_base": OPENROUTER_API_BASE,
+        "seed": config.seed,
+    }
 
     if api_key:
         kwargs["api_key"] = api_key

@@ -19,6 +19,7 @@ def _clear_janbot_env(monkeypatch: pytest.MonkeyPatch) -> None:
     for name in (
         "JANBOT_MODEL_MODE",
         "JANBOT_MODEL_SNAPSHOT",
+        "JANBOT_JUDGE_MODEL",
         "JANBOT_CORPUS_PATH",
         "JANBOT_INDEX_PATH",
         "JANBOT_PROJECT_ROOT",

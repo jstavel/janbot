@@ -21,6 +21,7 @@ import mlflow
 
 from janbot.api.contract import ChatResponse
 from janbot.eval.dataset import GoldenItem
+from janbot.eval.judge import Judge, Verdict
 from janbot.eval.metrics import (
     ItemOutcome,
     citation_misses,
@@ -40,6 +41,7 @@ class RunResult:
     reference_failures: list[str]
     retrieval_misses: list[str]
     citation_misses: list[str]
+    judge_failures: list[str]
 
 
 def _retrieved_sources(program: Callable[..., ChatResponse]) -> list[str] | None:
@@ -53,9 +55,20 @@ def _retrieved_sources(program: Callable[..., ChatResponse]) -> list[str] | None
     return None if retrieved is None else list(retrieved)
 
 
-def _evaluate(items: list[GoldenItem], program: Callable[..., ChatResponse]) -> list[ItemOutcome]:
-    """Call ``program`` for every item, recording a per-item failure as an outcome."""
+def _evaluate(
+    items: list[GoldenItem],
+    program: Callable[..., ChatResponse],
+    judge: Judge | None,
+) -> tuple[list[ItemOutcome], list[str]]:
+    """Call ``program`` for every item, recording a per-item failure as an outcome.
+
+    When a ``judge`` is supplied it is called per answered item and its verdict
+    stored; a judge that raises marks that item unjudged (a ``judge_failures``
+    line) without aborting the run. An item the program failed to answer has no
+    text to judge, so it is unjudged too.
+    """
     outcomes: list[ItemOutcome] = []
+    judge_failures: list[str] = []
     for item in items:
         try:
             response = program(question=item.question)
@@ -66,18 +79,29 @@ def _evaluate(items: list[GoldenItem], program: Callable[..., ChatResponse]) -> 
                     response=None,
                     error=f"{type(exc).__name__}: {exc}",
                     retrieved_sources=_retrieved_sources(program),
+                    judge_verdict=None,
                 )
             )
-        else:
-            outcomes.append(
-                ItemOutcome(
-                    item=item,
-                    response=response,
-                    error=None,
-                    retrieved_sources=_retrieved_sources(program),
+            continue
+
+        verdict: Verdict | None = None
+        if judge is not None:
+            try:
+                verdict = judge(item.expected_answer, response.answer)
+            except Exception as exc:
+                judge_failures.append(
+                    f"{item.question} — judge failed: {type(exc).__name__}: {exc}"
                 )
+        outcomes.append(
+            ItemOutcome(
+                item=item,
+                response=response,
+                error=None,
+                retrieved_sources=_retrieved_sources(program),
+                judge_verdict=verdict,
             )
-    return outcomes
+        )
+    return outcomes, judge_failures
 
 
 def _record(
@@ -104,19 +128,23 @@ def run_eval(
     tracking_uri: str,
     experiment: str,
     params: Mapping[str, Any] | None = None,
+    judge: Judge | None = None,
 ) -> RunResult:
     """Run every item through ``program`` and record one MLflow run.
 
     ``params`` carries the configuration that produced the run (model mode,
     snapshot, temperature, seed); the metrics are every registered metric
-    computed over the outcomes.
+    computed over the outcomes. ``judge`` is the optional LLM-as-a-judge: when
+    supplied it is run once per answered item and its verdict recorded, so the
+    ``hallucination`` metric has something to aggregate; when omitted every item
+    stays unjudged and the run remains keyless.
 
     Raises:
         RuntimeError: if the MLflow run cannot be written, naming the tracking
             URI and chaining the underlying error (no partial silent success).
     """
     item_list = list(items)
-    outcomes = _evaluate(item_list, program)
+    outcomes, judge_failures = _evaluate(item_list, program, judge)
     metrics = {
         name: float(metric(outcomes)) for name, metric in registered_metrics().items()
     }
@@ -133,4 +161,5 @@ def run_eval(
         reference_failures=registered_public_reference_failures(outcomes),
         retrieval_misses=retrieval_misses(outcomes),
         citation_misses=citation_misses(outcomes),
+        judge_failures=judge_failures,
     )

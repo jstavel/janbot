@@ -52,13 +52,14 @@ JanBot is configured through environment variables loaded by [`janbot.config`](s
 | --- | --- | --- |
 | `JANBOT_MODEL_MODE` | `eval` | `eval` uses the locked deterministic snapshot (CI/evaluation); `production` uses `openrouter/auto`. An unknown value fails fast. |
 | `JANBOT_MODEL_SNAPSHOT` | `openai/gpt-4o-mini-2024-07-18` | The locked model used in `eval` mode. |
+| `JANBOT_JUDGE_MODEL` | the locked snapshot | The LLM-as-a-judge model used by the eval to score answer faithfulness (routed through OpenRouter at `temperature=0`). Defaults to `JANBOT_MODEL_SNAPSHOT`; a stronger judge is a change here, not code. |
 | `JANBOT_TEMPERATURE` | `0.0` | LM sampling temperature passed to the model in every mode. A value that is not a finite number fails fast. |
 | `JANBOT_SEED` | `0` | Sampling seed pinning determinism in `eval` mode only. `production` (`openrouter/auto`) is seed-free. A value that is not an integer fails fast. |
 | `JANBOT_TOP_K` | `4` | Retrieval top-k: how many corpus chunks ground an answer. An invalid or non-positive value fails fast. |
 | `JANBOT_CORPUS_PATH` | `public_profile_org` | The corpus root: the only tree the ingestion pipeline will index (fail-closed) and the scope retrieval is bounded to at the store. |
 | `JANBOT_INDEX_PATH` | `chroma_db` | Where the vector index is written. |
 | `JANBOT_PROJECT_ROOT` | the repository root | Base for relative `JANBOT_CORPUS_PATH`/`JANBOT_INDEX_PATH`; override for packaged deployments or tests. |
-| `OPENROUTER_API_KEY` | — | The OpenRouter key, read once at startup by the app (never stored in config). Required in `production` mode — a missing key fails fast at boot — and unused in `eval` mode. |
+| `OPENROUTER_API_KEY` | — | The OpenRouter key, read once at startup by the app (never stored in config). Required in `production` mode — a missing key fails fast at boot — and optional in `eval` mode, where it also authenticates the LLM-as-a-judge (a keyless eval leaves every item unjudged). |
 
 Path values are `~`-expanded and resolved to absolute paths under the project root, so they do not depend on the process working directory. A blank or whitespace-only value for any variable counts as unset and takes its documented default. At startup the app verifies that every indexed chunk which records a source lies within `JANBOT_CORPUS_PATH` and fails fast otherwise, so an index built from a different corpus root cannot be served silently.
 
