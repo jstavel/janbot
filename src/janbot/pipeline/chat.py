@@ -105,7 +105,15 @@ def _normalize_claim(claim: str) -> str:
 
 
 class ChatProgram(dspy.Module):
-    """Retrieve ``top_k`` chunks, answer over them, and cite the sources the answer derived from."""
+    """Retrieve ``top_k`` chunks, answer over them, and cite the sources the answer derived from.
+
+    The corpus-relative sources the last ``forward`` retrieved are recorded on the
+    program as ``last_retrieved_sources`` — an additive observation seam for the
+    eval harness. It is ``None`` until a call observes retrieval, an empty list
+    when the query returned no chunks, and the rewritten sources otherwise; it
+    reflects the *retrieved* set, never the citations. The ``/chat`` contract and
+    behavior are unchanged.
+    """
 
     def __init__(self, store: VectorStore, top_k: int, rewriter: Callable[[str], str]) -> None:
         super().__init__()
@@ -113,10 +121,13 @@ class ChatProgram(dspy.Module):
         self._top_k = top_k
         self._rewriter = rewriter
         self._answer = dspy.Predict(GroundedAnswer)
+        self.last_retrieved_sources: list[str] | None = None
 
     def forward(self, question: str) -> ChatResponse:
+        self.last_retrieved_sources = None
         chunks = self._store.query(question, k=self._top_k)
         if not chunks:
+            self.last_retrieved_sources = []
             raise EmptyRetrieval(
                 f"retrieval returned 0 chunks for question {question!r}; "
                 "refusing to answer without corpus context"
@@ -129,6 +140,7 @@ class ChatProgram(dspy.Module):
             )
 
         sources = [self._rewriter(chunk["source_path"]) for chunk in chunks]
+        self.last_retrieved_sources = list(sources)
         context = "\n\n".join(
             f"[{source}]\n{chunk['text'] or ''}" for source, chunk in zip(sources, chunks, strict=True)
         )

@@ -55,6 +55,38 @@ class StubLMFactory:
         return DummyLM([dict(answer) for _ in range(16)])
 
 
+class _RetrievingProgram:
+    """Program exposing the additive ``last_retrieved_sources`` seam the runner reads."""
+
+    def __init__(self, sources: list[str]) -> None:
+        self.last_retrieved_sources = list(sources)
+
+    def __call__(self, *, question: str) -> ChatResponse:
+        return ChatResponse(answer="Grounded.", citations=[Citation(source="profile.org")])
+
+
+def test_run_eval_captures_retrieved_sources_and_records_accuracy(tmp_path: Path) -> None:
+    uri = _tracking_uri(tmp_path)
+    program = _RetrievingProgram(["profile.org", "projects.org"])
+
+    result = run_eval(_items(), program, tracking_uri=uri, experiment="janbot-eval")
+
+    assert result.outcomes[0].retrieved_sources == ["profile.org", "projects.org"]
+    assert result.metrics["retrieval_accuracy"] == 1.0
+    assert result.retrieval_misses == []
+
+
+def test_run_eval_reports_a_retrieval_miss_per_item(tmp_path: Path) -> None:
+    uri = _tracking_uri(tmp_path)
+    program = _RetrievingProgram(["profile.org"])
+
+    result = run_eval(_items(), program, tracking_uri=uri, experiment="janbot-eval")
+
+    assert result.metrics["retrieval_accuracy"] == 0.5
+    assert len(result.retrieval_misses) == 1
+    assert "missing retrieved source(s): projects.org" in result.retrieval_misses[0]
+
+
 def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) -> None:
     uri = _tracking_uri(tmp_path)
     params = {
@@ -68,9 +100,14 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         _items(), _stub_program(), tracking_uri=uri, experiment="janbot-eval", params=params
     )
 
-    assert result.metrics == {"answer_coverage": 1.0, "public_references": 1.0}
+    assert result.metrics == {
+        "answer_coverage": 1.0,
+        "public_references": 1.0,
+        "retrieval_accuracy": 0.0,
+    }
     assert result.run_id
     assert result.reference_failures == []
+    assert result.retrieval_misses == []
 
     client = MlflowClient(tracking_uri=uri)
     experiment = client.get_experiment_by_name("janbot-eval")
@@ -85,7 +122,11 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "temperature": "0.0",
         "seed": "0",
     }
-    assert run.data.metrics == {"answer_coverage": 1.0, "public_references": 1.0}
+    assert run.data.metrics == {
+        "answer_coverage": 1.0,
+        "public_references": 1.0,
+        "retrieval_accuracy": 0.0,
+    }
 
 
 def test_run_eval_records_per_item_failure_without_aborting(tmp_path: Path) -> None:

@@ -14,6 +14,8 @@ from janbot.eval.metrics import (
     public_references_metric,
     register_metric,
     registered_metrics,
+    retrieval_accuracy,
+    retrieval_misses,
 )
 from janbot.eval.public_urls import (
     extract_urls,
@@ -41,5 +43,7 @@ __all__ = [
     "public_references_metric",
     "register_metric",
     "registered_metrics",
+    "retrieval_accuracy",
+    "retrieval_misses",
     "run_eval",
 ]

@@ -27,11 +27,17 @@ from janbot.eval.public_urls import (
 
 @dataclass(frozen=True)
 class ItemOutcome:
-    """One golden item's outcome: the program's response, or the failure that prevented one."""
+    """One golden item's outcome: the program's response, or the failure that prevented one.
+
+    ``retrieved_sources`` is the corpus-relative set the program retrieved for the
+    item, or ``None`` when the run exposed no retrieval claim (a stub program).
+    It is read from the retrieval step, never from the answer's citations.
+    """
 
     item: GoldenItem
     response: ChatResponse | None
     error: str | None
+    retrieved_sources: list[str] | None = None
 
 
 Metric = Callable[[list[ItemOutcome]], float]
@@ -133,5 +139,55 @@ def registered_public_reference_failures(outcomes: list[ItemOutcome]) -> list[st
     return public_reference_failures(outcomes, load_public_urls())
 
 
+def _item_retrieval_misses(outcome: ItemOutcome) -> list[str]:
+    """Return the human-readable retrieval misses for one item (empty = pass).
+
+    An item makes a retrieval claim only when it names expected sources and the
+    run recorded what was retrieved. The golden ``expected_sources`` must be a
+    subset of the retrieved set; every expected source the retriever never
+    returned is named. The miss is read from the retrieved set, not the citations,
+    so a declined answer still resolves against what was retrieved.
+    """
+    expected = outcome.item.expected_sources
+    if not expected or outcome.retrieved_sources is None:
+        return []
+    retrieved = set(outcome.retrieved_sources)
+    missing = [source for source in expected if source not in retrieved]
+    if not missing:
+        return []
+    return [
+        f"{outcome.item.question} — missing retrieved source(s): {', '.join(missing)}"
+    ]
+
+
+def retrieval_misses(outcomes: list[ItemOutcome]) -> list[str]:
+    """Return every retrieval miss across ``outcomes``, one line per failure."""
+    return [
+        miss
+        for outcome in outcomes
+        for miss in _item_retrieval_misses(outcome)
+    ]
+
+
+def retrieval_accuracy(outcomes: list[ItemOutcome]) -> float:
+    """Fraction of claim-making items whose expected sources were all retrieved.
+
+    An item counts only when it names expected sources and the run recorded the
+    retrieved set; an item with no expected sources is excluded (no retrieval
+    claim), as is an item whose retrieval was never observed. The item passes when
+    its expected sources are a subset of the retrieved set.
+    """
+    eligible = [
+        outcome
+        for outcome in outcomes
+        if outcome.item.expected_sources and outcome.retrieved_sources is not None
+    ]
+    if not eligible:
+        return 0.0
+    passed = sum(1 for outcome in eligible if not _item_retrieval_misses(outcome))
+    return passed / len(eligible)
+
+
 register_metric("answer_coverage", stub_metric)
 register_metric("public_references", _public_references)
+register_metric("retrieval_accuracy", retrieval_accuracy)

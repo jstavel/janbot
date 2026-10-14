@@ -155,6 +155,33 @@ def test_chat_happy_path_returns_answer_and_citations(
     ]
 
 
+def test_chat_program_exposes_the_retrieved_set_not_the_cited_set(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """The seam mirrors retrieval, not citations: a retrieved-but-uncited source still appears."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["profile.org"]),
+    )
+    program = app.state.program
+    assert program.last_retrieved_sources is None
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 200
+    cited = [citation["source"] for citation in response.json()["citations"]]
+    assert cited == ["profile.org"]
+    inferred = program.last_retrieved_sources
+    assert inferred is not None
+    assert "projects.org" not in cited
+    assert "projects.org" in inferred
+
+
 def test_openapi_exposes_status_from_the_contract(
     indexed_corpus: tuple[Path, Path],
     embedder: Embedder,

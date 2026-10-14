@@ -25,6 +25,7 @@ from janbot.eval.metrics import (
     ItemOutcome,
     registered_metrics,
     registered_public_reference_failures,
+    retrieval_misses,
 )
 
 
@@ -36,6 +37,18 @@ class RunResult:
     metrics: dict[str, float]
     run_id: str
     reference_failures: list[str]
+    retrieval_misses: list[str]
+
+
+def _retrieved_sources(program: Callable[..., ChatResponse]) -> list[str] | None:
+    """The corpus-relative sources the program last retrieved, or ``None`` if it exposes none.
+
+    The ``ChatProgram`` records what it retrieved on ``last_retrieved_sources``
+    (an additive attribute); a stub program without it makes no retrieval claim,
+    so its items are excluded from the retrieval-accuracy aggregate.
+    """
+    retrieved = getattr(program, "last_retrieved_sources", None)
+    return None if retrieved is None else list(retrieved)
 
 
 def _evaluate(items: list[GoldenItem], program: Callable[..., ChatResponse]) -> list[ItemOutcome]:
@@ -50,10 +63,18 @@ def _evaluate(items: list[GoldenItem], program: Callable[..., ChatResponse]) -> 
                     item=item,
                     response=None,
                     error=f"{type(exc).__name__}: {exc}",
+                    retrieved_sources=_retrieved_sources(program),
                 )
             )
         else:
-            outcomes.append(ItemOutcome(item=item, response=response, error=None))
+            outcomes.append(
+                ItemOutcome(
+                    item=item,
+                    response=response,
+                    error=None,
+                    retrieved_sources=_retrieved_sources(program),
+                )
+            )
     return outcomes
 
 
@@ -108,4 +129,5 @@ def run_eval(
         metrics=metrics,
         run_id=run_id,
         reference_failures=registered_public_reference_failures(outcomes),
+        retrieval_misses=retrieval_misses(outcomes),
     )
