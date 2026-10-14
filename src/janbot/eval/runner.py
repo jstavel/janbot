@@ -13,8 +13,10 @@ rather than reporting a partial success.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import mlflow
@@ -109,13 +111,30 @@ def _record(
     experiment: str,
     params: Mapping[str, Any],
     metrics: Mapping[str, float],
+    *,
+    dataset_path: str | Path | None = None,
 ) -> str:
-    """Write one MLflow run holding ``params`` and ``metrics``; return its run id."""
+    """Write one MLflow run holding ``params`` and ``metrics``; return its run id.
+
+    When ``dataset_path`` is given its sha256 joins the params and the file is
+    attached as an artifact, so a run pins the exact dataset that produced its
+    metrics and two runs are comparable.
+    """
+    logged_params = dict(params)
+    dataset_file = Path(dataset_path) if dataset_path is not None else None
+    if dataset_file is not None:
+        logged_params["dataset_sha256"] = hashlib.sha256(
+            dataset_file.read_bytes()
+        ).hexdigest()
+    run_name = f"{logged_params.get('model_mode', 'eval')}-{str(logged_params.get('dataset_sha256', 'nodataset'))[:8]}"
+
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(experiment)
-    with mlflow.start_run() as run:
-        if params:
-            mlflow.log_params(dict(params))
+    with mlflow.start_run(run_name=run_name) as run:
+        if logged_params:
+            mlflow.log_params(logged_params)
+        if dataset_file is not None:
+            mlflow.log_artifact(str(dataset_file))
         if metrics:
             mlflow.log_metrics(dict(metrics))
         return run.info.run_id
@@ -129,27 +148,35 @@ def run_eval(
     experiment: str,
     params: Mapping[str, Any] | None = None,
     judge: Judge | None = None,
+    dataset_path: str | Path | None = None,
 ) -> RunResult:
     """Run every item through ``program`` and record one MLflow run.
 
     ``params`` carries the configuration that produced the run (model mode,
-    snapshot, temperature, seed); the metrics are every registered metric
-    computed over the outcomes. ``judge`` is the optional LLM-as-a-judge: when
-    supplied it is run once per answered item and its verdict recorded, so the
-    ``hallucination`` metric has something to aggregate; when omitted every item
-    stays unjudged and the run remains keyless.
+    snapshot, judge model, temperature, seed, top_k); the metrics are every
+    registered metric computed over the outcomes. ``dataset_path`` pins the exact
+    dataset (its sha256 as a param, the file as an artifact) so runs are
+    comparable. ``judge`` is the optional LLM-as-a-judge: when supplied it is run
+    once per answered item and its verdict recorded, so the ``hallucination``
+    metric has something to aggregate; when omitted every item stays unjudged and
+    the run remains keyless.
 
     Raises:
+        FileNotFoundError: if ``dataset_path`` is given but does not exist.
         RuntimeError: if the MLflow run cannot be written, naming the tracking
             URI and chaining the underlying error (no partial silent success).
     """
     item_list = list(items)
+    if dataset_path is not None and not Path(dataset_path).is_file():
+        raise FileNotFoundError(f"golden dataset not found: {Path(dataset_path)}")
     outcomes, judge_failures = _evaluate(item_list, program, judge)
     metrics = {
         name: float(metric(outcomes)) for name, metric in registered_metrics().items()
     }
     try:
-        run_id = _record(tracking_uri, experiment, params or {}, metrics)
+        run_id = _record(
+            tracking_uri, experiment, params or {}, metrics, dataset_path=dataset_path
+        )
     except Exception as exc:
         raise RuntimeError(
             f"MLflow logging to tracking URI {tracking_uri!r} failed: {exc}"

@@ -6,8 +6,9 @@ one MLflow run at ``MLFLOW_TRACKING_URI`` (default ``sqlite:///mlflow.db``, the
 epic's SQLite backend; MLflow 3.x refuses the filesystem backend by default).
 Eval mode needs no key, so the CLI starts without ``OPENROUTER_API_KEY`` rather
 than failing on one. The run parameters are read from the resolved ``Config``
-(model mode, snapshot, judge model, temperature, seed), keeping model selection
-configuration-only (AD-5). When ``OPENROUTER_API_KEY`` is present the CLI also
+(model mode, snapshot, judge model, temperature, seed, top_k), keeping model
+selection configuration-only (AD-5), and the dataset is pinned as an artifact so
+runs are comparable. When ``OPENROUTER_API_KEY`` is present the CLI also
 builds the LLM-as-a-judge from ``JANBOT_JUDGE_MODEL`` (through the same key) so
 the ``hallucination`` metric is scored; without a key the run stays keyless and
 every item is unjudged.
@@ -44,6 +45,7 @@ def run_params(config: Config) -> dict[str, Any]:
         "judge_model": config.judge_model,
         "temperature": config.temperature,
         "seed": config.seed,
+        "top_k": config.top_k,
     }
 
 
@@ -122,6 +124,7 @@ def main(
         experiment=args.experiment,
         params=run_params(config),
         judge=judge,
+        dataset_path=args.dataset,
     )
 
     print(f"MLflow tracking URI: {tracking_uri}")

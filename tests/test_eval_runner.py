@@ -373,3 +373,115 @@ def test_cli_flags_a_citation_miss_per_item(
     assert code == 0
     assert "citation:" in out
     assert "missing cited source(s): projects.org" in out
+
+
+def test_run_eval_pins_the_dataset_as_a_param_and_artifact(tmp_path: Path) -> None:
+    import hashlib
+
+    dataset = tmp_path / "dataset.yaml"
+    dataset.write_text("[]\n", encoding="utf-8")
+    uri = _tracking_uri(tmp_path)
+
+    run_eval(
+        _items(),
+        _stub_program(),
+        tracking_uri=uri,
+        experiment="janbot-eval",
+        params={"model_mode": "eval", "top_k": 3},
+        dataset_path=dataset,
+    )
+
+    client = MlflowClient(tracking_uri=uri)
+    experiment = client.get_experiment_by_name("janbot-eval")
+    run = client.search_runs([experiment.experiment_id])[0]
+    assert run.data.params["dataset_sha256"] == hashlib.sha256(dataset.read_bytes()).hexdigest()
+    assert run.data.params["top_k"] == "3"
+    assert any(a.path == dataset.name for a in client.list_artifacts(run.info.run_id))
+
+
+def test_two_runs_expose_config_and_metrics_side_by_side(tmp_path: Path) -> None:
+    uri = _tracking_uri(tmp_path)
+
+    run_eval(
+        _items(),
+        _stub_program(),
+        tracking_uri=uri,
+        experiment="janbot-eval",
+        params={"model_mode": "eval", "top_k": 3},
+    )
+    run_eval(
+        _items(),
+        _stub_program(),
+        tracking_uri=uri,
+        experiment="janbot-eval",
+        params={"model_mode": "production", "top_k": 4},
+    )
+
+    client = MlflowClient(tracking_uri=uri)
+    experiment = client.get_experiment_by_name("janbot-eval")
+    runs = client.search_runs([experiment.experiment_id])
+    assert len(runs) == 2
+    assert {r.data.params["model_mode"] for r in runs} == {"eval", "production"}
+    assert {r.data.params["top_k"] for r in runs} == {"3", "4"}
+    assert all(r.data.metrics for r in runs)
+
+
+def test_run_params_carries_every_run_affecting_config() -> None:
+    from janbot.config import load_config
+    from janbot.eval.__main__ import run_params
+
+    assert set(run_params(load_config({}))) == {
+        "model_mode",
+        "model_snapshot",
+        "judge_model",
+        "temperature",
+        "seed",
+        "top_k",
+    }
+
+
+def test_cli_pins_the_dataset_in_the_recorded_run(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+) -> None:
+    import hashlib
+
+    corpus = tmp_path / "public_profile_org"
+    write_org(corpus / "profile.org", heading="About", body="Search infrastructure engineer.")
+    index_path = tmp_path / "index"
+    index_corpus(corpus, index_path, embedder)
+
+    dataset = tmp_path / "dataset.yaml"
+    dataset.write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "question": "What search infrastructure have you built?",
+                    "expected_answer": "Search infrastructure.",
+                    "expected_sources": ["profile.org"],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    uri = _tracking_uri(tmp_path)
+    env = {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(index_path),
+        "MLFLOW_TRACKING_URI": uri,
+    }
+
+    assert (
+        eval_cli.main(
+            ["--dataset", str(dataset)], env=env, embedder=embedder, lm_factory=StubLMFactory()
+        )
+        == 0
+    )
+
+    client = MlflowClient(tracking_uri=uri)
+    experiment = client.get_experiment_by_name("janbot-eval")
+    run = client.search_runs([experiment.experiment_id])[0]
+    assert run.data.params["dataset_sha256"] == hashlib.sha256(dataset.read_bytes()).hexdigest()
+    assert any(a.path == dataset.name for a in client.list_artifacts(run.info.run_id))
