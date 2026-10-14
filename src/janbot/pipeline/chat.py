@@ -9,8 +9,10 @@ names the source labels it derived the answer from; the program rewrites each
 retrieved chunk's ``source_path`` to its corpus-root-relative label, treats
 those names as claims, validates them against the rewritten labels, and emits
 citations only from them, in retrieval order — so no absolute path can leave the port.
-An answer claiming no sources, or naming sources outside the retrieved set, is
-rejected rather than returned.
+An answer claiming no sources is the decline signal (:class:`UncitedAnswer`): the
+pipeline cannot ground it, so the port answers with an insufficiency reply. An
+answer naming sources outside the retrieved set is a fabricated cited answer and
+is refused (:class:`FabricatedCitation`) rather than declined.
 
 The LM is set once at startup by the caller via ``set_lm``, so a request is a
 single program call.
@@ -42,7 +44,11 @@ class UnattributableContext(ValueError):
 
 
 class UncitedAnswer(ValueError):
-    """The model claimed no verifiable sources: the answer is not provably derived from the retrieved context."""
+    """The model claimed no sources: the pipeline cannot ground the answer, so it declines."""
+
+
+class FabricatedCitation(ValueError):
+    """The model named a source outside the retrieved set: a fabricated cited answer, refused."""
 
 
 class GroundedAnswer(dspy.Signature):
@@ -138,7 +144,7 @@ class ChatProgram(dspy.Module):
         normalized = [_normalize_claim(claim) for claim in claims]
         unknown = [claim for claim in normalized if claim not in retrieved]
         if unknown:
-            raise UncitedAnswer(
+            raise FabricatedCitation(
                 f"the model made {len(unknown)} unverifiable source claim(s) for question {question!r}; "
                 "the claims name sources outside the retrieved chunks — "
                 "refusing to return the unverifiable answer"

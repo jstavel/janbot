@@ -17,7 +17,7 @@ import pytest
 from dspy.utils import DummyLM
 from fastapi.testclient import TestClient
 
-from janbot.api.contract import ChatResponse
+from janbot.api.contract import INSUFFICIENT_ANSWER, ChatResponse
 from janbot.api.main import create_app
 from janbot.ingest import index_corpus
 from janbot.store import VectorStore
@@ -30,6 +30,16 @@ OPENROUTER_API_BASE = "https://openrouter.ai/api/v1"
 
 CANNED_ANSWER = "I work on search infrastructure."
 DEFAULT_CITATIONS = ["profile.org", "projects.org"]
+
+
+def _assert_insufficiency(response) -> None:
+    """Assert a 200 insufficiency reply: the fixed line, no citations, no answer leak."""
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["status"] == "insufficient"
+    assert body["citations"] == []
+    assert body["answer"] == INSUFFICIENT_ANSWER
+    assert CANNED_ANSWER not in response.text
 
 
 class StubLMFactory:
@@ -135,6 +145,7 @@ def test_chat_happy_path_returns_answer_and_citations(
 
     assert response.status_code == 200
     data = response.json()
+    assert data["status"] == "answered"
     assert ChatResponse.model_validate(data).citations
     assert data["answer"] == CANNED_ANSWER
     sources = [citation["source"] for citation in data["citations"]]
@@ -142,6 +153,24 @@ def test_chat_happy_path_returns_answer_and_citations(
     assert factory.history == [
         {"model": DEFAULT_SNAPSHOT, "temperature": 0.0, "api_base": OPENROUTER_API_BASE, "seed": 0}
     ]
+
+
+def test_openapi_exposes_status_from_the_contract(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """The OpenAPI derives the decline shape from Pydantic — no hand-written schema."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    schema = app.openapi()["components"]["schemas"]["ChatResponse"]
+
+    assert set(schema["properties"]["status"]["enum"]) == {"answered", "insufficient"}
+    assert schema["properties"]["status"]["default"] == "answered"
 
 
 def test_chat_missing_mistyped_or_blank_question_is_rejected_with_422(
@@ -274,7 +303,7 @@ def test_chat_two_identical_env_apps_return_identical_json(
     ]
 
 
-def test_chat_empty_index_returns_503_with_detail_envelope(
+def test_chat_empty_index_declines_with_200_insufficiency(
     tmp_path: Path,
     embedder: Embedder,
 ) -> None:
@@ -285,21 +314,16 @@ def test_chat_empty_index_returns_503_with_detail_envelope(
     )
     assert VectorStore(tmp_path / "empty", embedder).ids() == set()
 
-    response = TestClient(app, raise_server_exceptions=False).post(
-        "/chat", json={"question": "anything"}
-    )
+    response = TestClient(app).post("/chat", json={"question": "anything"})
 
-    assert response.status_code == 503
-    detail = response.json()["detail"]
-    assert "0 chunks" in detail
-    assert "corpus" in detail
+    _assert_insufficiency(response)
 
 
-def test_chat_sourceless_chunk_is_excluded_from_retrieval_with_503(
+def test_chat_sourceless_chunk_is_excluded_from_retrieval_with_200_insufficiency(
     tmp_path: Path,
     embedder: Embedder,
 ) -> None:
-    """The store scope excludes a chunk with no ``source_path``: retrieval is empty, 503."""
+    """The store scope excludes a chunk with no ``source_path``: retrieval is empty, a decline."""
     index_path = tmp_path / "index"
     app = create_app(
         env={"JANBOT_INDEX_PATH": str(index_path)},
@@ -308,12 +332,9 @@ def test_chat_sourceless_chunk_is_excluded_from_retrieval_with_503(
     )
     VectorStore(index_path, embedder).upsert([SourcelessChunk()])
 
-    response = TestClient(app, raise_server_exceptions=False).post(
-        "/chat", json={"question": "anything"}
-    )
+    response = TestClient(app).post("/chat", json={"question": "anything"})
 
-    assert response.status_code == 503
-    assert "0 chunks" in response.json()["detail"]
+    _assert_insufficiency(response)
 
 
 def test_chat_cites_only_the_retrieved_source(
@@ -380,11 +401,11 @@ def test_chat_bracketed_claim_label_is_normalized(
     assert sources == ["profile.org", "projects.org"]
 
 
-def test_chat_uncited_answer_is_rejected_with_500_envelope(
+def test_chat_uncited_answer_declines_with_200_insufficiency(
     indexed_corpus: tuple[Path, Path],
     embedder: Embedder,
 ) -> None:
-    """The model claims no sources: the answer is rejected, never returned."""
+    """The model claims no sources: the pipeline declines, so the port answers insufficient."""
     corpus, index_path = indexed_corpus
     app = create_app(
         env=_chat_env(corpus, index_path),
@@ -392,13 +413,11 @@ def test_chat_uncited_answer_is_rejected_with_500_envelope(
         lm_factory=StubLMFactory(citations=[]),
     )
 
-    response = TestClient(app, raise_server_exceptions=False).post(
+    response = TestClient(app).post(
         "/chat", json={"question": "What search infrastructure have you built?"}
     )
 
-    assert response.status_code == 500
-    assert "claimed no sources" in response.json()["detail"]
-    assert CANNED_ANSWER not in response.text
+    _assert_insufficiency(response)
 
 
 def test_chat_unknown_source_claim_is_rejected_with_500_envelope(
@@ -425,11 +444,11 @@ def test_chat_unknown_source_claim_is_rejected_with_500_envelope(
     assert CANNED_ANSWER not in response.text
 
 
-def test_chat_foreign_only_index_returns_503_with_detail_envelope(
+def test_chat_foreign_only_index_declines_with_200_insufficiency(
     tmp_path: Path,
     embedder: Embedder,
 ) -> None:
-    """The store scope excludes the out-of-root chunk, so retrieval is empty: 503."""
+    """The store scope excludes the out-of-root chunk, so retrieval is empty: a decline."""
     index_path = tmp_path / "index"
     app = create_app(
         env={"JANBOT_INDEX_PATH": str(index_path)},
@@ -438,12 +457,9 @@ def test_chat_foreign_only_index_returns_503_with_detail_envelope(
     )
     VectorStore(index_path, embedder).upsert([ForeignChunk()])
 
-    response = TestClient(app, raise_server_exceptions=False).post(
-        "/chat", json={"question": "anything"}
-    )
+    response = TestClient(app).post("/chat", json={"question": "anything"})
 
-    assert response.status_code == 503
-    assert "0 chunks" in response.json()["detail"]
+    _assert_insufficiency(response)
     assert "/srv/elsewhere" not in response.text
 
 

@@ -300,7 +300,7 @@ def sourceless_index(tmp_path_factory: pytest.TempPathFactory) -> Path:
 def sourceless_service_base_url(
     sourceless_index: Path, tmp_path_factory: pytest.TempPathFactory
 ) -> Iterator[str]:
-    """The service started against a sourceless-only index (starts, then answers 503)."""
+    """The service started against a sourceless-only index (starts, then declines at 200)."""
     with _serve(sourceless_index, tmp_path_factory) as base_url:
         yield base_url
 

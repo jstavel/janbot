@@ -5,15 +5,14 @@
 id = 1
 type = "story"
 title = "Tracer: an insufficiency reply through the port"
-description = "Decides the decline shape with the owner (empty citations allowed on a decline, a status field, or a distinct response type), pins it in the Pydantic contract so FastAPI derives the OpenAPI, and returns the insufficiency reply from /chat for a question the pipeline cannot ground — the thinnest decline path end to end. Entry 2 consumes this shape."
-verify = "An out-of-corpus question through the port returns the contract-conforming insufficiency reply, and the OpenAPI derives from the Pydantic shape with no drift."
+description = "Pins the owner's decline shape — a `status: \"answered\" | \"insufficient\"` field on ChatResponse, with citations required when answered and allowed empty when insufficient — in the Pydantic contract (FastAPI derives the OpenAPI), and returns the insufficiency reply from /chat at HTTP 200 for a question the pipeline cannot ground — the thinnest decline path end to end. Entry 2 consumes this shape."
+verify = "An out-of-corpus question through the port returns HTTP 200 with status=insufficient and empty citations, a cited answer carries status=answered, and the OpenAPI derives from the Pydantic shape with no drift."
 covers = ["E1"]
 after = ["epic-rag-chat"]
 hitl = false
 risk = "high"
 plan_checkpoint = true
 references = ["architecture-janbot/architecture-janbot.md#ad-4"]
-unknown = "the decline shape - empty citations allowed on a decline, a status field, or a distinct response type; settled with the owner at build"
 
 [[entry]]
 id = 2

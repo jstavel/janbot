@@ -28,14 +28,19 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import ResponseValidationError
 from fastapi.responses import JSONResponse
 
-from janbot.api.contract import ChatRequest, ChatResponse
+from janbot.api.contract import INSUFFICIENT_ANSWER, ChatRequest, ChatResponse
 from janbot.config import MODEL_MODE_PRODUCTION, load_config
 from janbot.store import Embedder, VectorStore, default_embedder
 
 import dspy
 
 from janbot.llm import LMFactory, build_lm
-from janbot.pipeline.chat import ChatProgram, EmptyRetrieval, corpus_relative
+from janbot.pipeline.chat import (
+    ChatProgram,
+    EmptyRetrieval,
+    UncitedAnswer,
+    corpus_relative,
+)
 
 OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
 
@@ -98,8 +103,12 @@ def create_app(
     def chat(request: ChatRequest) -> ChatResponse:
         try:
             return app.state.program(question=request.question)
-        except EmptyRetrieval as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        except (EmptyRetrieval, UncitedAnswer):
+            return ChatResponse(
+                status="insufficient",
+                answer=INSUFFICIENT_ANSWER,
+                citations=[],
+            )
         except ValueError as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
         except HTTPException:

@@ -4,11 +4,11 @@ Two rows prove at the port what the in-process tests prove inside:
 
 - an index built from a different corpus root holds an out-of-scope chunk, so
   the goal-5 startup check refuses to serve it — the process exits non-zero and
-  its log names the out-of-scope count (a served ``503`` would not prove the
-  boundary, because the service never gets to serve);
+  its log names the out-of-scope count (a served insufficiency reply would not
+  prove the boundary, because the service never gets to serve);
 - a sourceless-only index starts, but every question retrieves nothing *in*
-  corpus, so ``POST /chat`` answers ``503`` with a ``{detail}`` string naming the
-  corpus (empty retrieval, before any model call).
+  corpus, so ``POST /chat`` answers ``200`` with ``status="insufficient"`` and no
+  citations (empty retrieval, before any model call).
 
 The crafted indexes come from ``make_index.py`` run as a subprocess, so this
 module imports no ``janbot`` internals — ``httpx``, ``pytest`` and the standard
@@ -21,8 +21,6 @@ from collections.abc import Callable
 from pathlib import Path
 
 import httpx
-
-from e2e._support import assert_detail_string
 
 
 def test_foreign_index_refuses_to_start(
@@ -38,7 +36,7 @@ def test_foreign_index_refuses_to_start(
     assert "refusing to start" in log_text, f"log:\n{log_text}"
 
 
-def test_sourceless_index_returns_503_with_detail_envelope(
+def test_sourceless_index_returns_200_insufficiency(
     sourceless_service_base_url: str,
 ) -> None:
     response = httpx.post(
@@ -47,5 +45,8 @@ def test_sourceless_index_returns_503_with_detail_envelope(
         timeout=30.0,
     )
 
-    detail = assert_detail_string(response, 503)
-    assert "corpus" in detail
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["status"] == "insufficient"
+    assert body["citations"] == []
+    assert body["answer"]

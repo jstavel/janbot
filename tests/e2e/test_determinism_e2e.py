@@ -12,7 +12,7 @@ starting JanBot.`` vs ``…and evaluation.``). Determinism is therefore asserted
 the layer the service controls — the same question is **grounded in the same
 corpus sources** (retrieval is deterministic; citations are emitted in retrieval
 order, ``pipeline/chat.py``) and each run returns a well-formed
-``{answer, citations}`` body — not on the wording the model does not fix. It
+``{status, answer, citations}`` body — not on the wording the model does not fix. It
 imports no ``janbot`` internals — ``httpx``, ``pytest`` and the standard library
 only.
 """

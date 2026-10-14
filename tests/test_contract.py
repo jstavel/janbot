@@ -9,7 +9,12 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from janbot.api.contract import ChatRequest, ChatResponse, Citation
+from janbot.api.contract import (
+    INSUFFICIENT_ANSWER,
+    ChatRequest,
+    ChatResponse,
+    Citation,
+)
 
 
 def test_chat_request_strips_surrounding_whitespace() -> None:
@@ -38,11 +43,39 @@ def test_chat_request_mistyped_question_is_rejected() -> None:
         ChatRequest(question=123)
 
 
-def test_chat_response_rejects_zero_citations() -> None:
+def test_chat_response_answered_without_citations_is_rejected() -> None:
     with pytest.raises(ValidationError) as excinfo:
         ChatResponse(answer="An answer.", citations=[])
 
-    assert "citations" in str(excinfo.value)
+    assert "an answered response requires at least one citation" in str(excinfo.value)
+
+
+def test_chat_response_insufficient_without_citations_is_valid() -> None:
+    response = ChatResponse(
+        status="insufficient",
+        answer=INSUFFICIENT_ANSWER,
+        citations=[],
+    )
+
+    assert response.status == "insufficient"
+    assert response.answer == INSUFFICIENT_ANSWER
+    assert response.citations == []
+
+
+def test_chat_response_insufficient_with_citations_is_rejected() -> None:
+    with pytest.raises(ValidationError) as excinfo:
+        ChatResponse(
+            status="insufficient",
+            answer=INSUFFICIENT_ANSWER,
+            citations=[Citation(source="profile.org")],
+        )
+
+    assert "an insufficient response must not carry citations" in str(excinfo.value)
+
+
+def test_chat_response_unknown_status_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        ChatResponse(status="maybe", answer="An answer.", citations=[Citation(source="profile.org")])
 
 
 def test_chat_response_valid_construction_conforms() -> None:
@@ -51,10 +84,13 @@ def test_chat_response_valid_construction_conforms() -> None:
         citations=[Citation(source="profile.org")],
     )
 
+    assert response.status == "answered"
     assert response.answer == "Search infrastructure."
     assert response.citations[0].source == "profile.org"
 
 
-def test_chat_response_missing_field_is_rejected() -> None:
-    with pytest.raises(ValidationError):
+def test_answered_response_without_citations_is_rejected() -> None:
+    with pytest.raises(ValidationError) as excinfo:
         ChatResponse(answer="An answer.")
+
+    assert "an answered response requires at least one citation" in str(excinfo.value)
