@@ -20,7 +20,7 @@ from janbot.eval.metrics import (
     citation_correctness,
     citation_misses,
     citation_precision,
-    hallucination,
+    faithfulness,
     registered_metrics,
     retrieval_accuracy,
     retrieval_misses,
@@ -259,36 +259,36 @@ def _judged(label: str, question: str = "q") -> ItemOutcome:
 
 
 def test_faithful_verdict_passes_and_counts() -> None:
-    assert hallucination([_judged(FAITHFUL)]) == 1.0
+    assert faithfulness([_judged(FAITHFUL)]) == 1.0
 
 
 def test_hallucinated_verdict_fails_and_is_recorded() -> None:
     outcomes = [_judged(HALLUCINATED)]
 
-    assert hallucination(outcomes) == 0.0
+    assert faithfulness(outcomes) == 0.0
     assert outcomes[0].judge_verdict is not None
     assert outcomes[0].judge_verdict.label == HALLUCINATED
 
 
-def test_hallucination_averages_faithful_and_hallucinated() -> None:
+def test_faithfulness_averages_faithful_and_hallucinated() -> None:
     outcomes = [_judged(FAITHFUL), _judged(HALLUCINATED)]
 
-    assert hallucination(outcomes) == 0.5
+    assert faithfulness(outcomes) == 0.5
 
 
 def test_unjudged_items_are_excluded_from_the_aggregate() -> None:
     unjudged = ItemOutcome(item=_item(["a.org"]), response=_answered(), error=None)
     outcomes = [_judged(FAITHFUL), unjudged]
 
-    assert hallucination(outcomes) == 1.0
+    assert faithfulness(outcomes) == 1.0
 
 
 def test_no_judged_items_aggregate_to_zero() -> None:
     unjudged = ItemOutcome(item=_item(["a.org"]), response=_answered(), error=None)
 
-    assert hallucination([unjudged]) == 0.0
-    assert hallucination([]) == 0.0
+    assert faithfulness([unjudged]) == 0.0
+    assert faithfulness([]) == 0.0
 
 
-def test_hallucination_is_registered() -> None:
-    assert "hallucination" in registered_metrics()
+def test_faithfulness_is_registered() -> None:
+    assert "faithfulness" in registered_metrics()

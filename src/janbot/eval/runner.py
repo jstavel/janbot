@@ -157,7 +157,7 @@ def run_eval(
     registered metric computed over the outcomes. ``dataset_path`` pins the exact
     dataset (its sha256 as a param, the file as an artifact) so runs are
     comparable. ``judge`` is the optional LLM-as-a-judge: when supplied it is run
-    once per answered item and its verdict recorded, so the ``hallucination``
+    once per answered item and its verdict recorded, so the ``faithfulness``
     metric has something to aggregate; when omitted every item stays unjudged and
     the run remains keyless.
 

@@ -10,7 +10,7 @@ than failing on one. The run parameters are read from the resolved ``Config``
 selection configuration-only (AD-5), and the dataset is pinned as an artifact so
 runs are comparable. When ``OPENROUTER_API_KEY`` is present the CLI also
 builds the LLM-as-a-judge from ``JANBOT_JUDGE_MODEL`` (through the same key) so
-the ``hallucination`` metric is scored; without a key the run stays keyless and
+the ``faithfulness`` metric is scored; without a key the run stays keyless and
 every item is unjudged.
 
 ``embedder``, ``lm_factory`` and ``judge`` are optional seams forwarded to
@@ -92,7 +92,7 @@ def main(
     ``judge`` is the injectable LLM-as-a-judge seam. When omitted, a real judge is
     built from configuration (``JANBOT_JUDGE_MODEL``) only if
     ``OPENROUTER_API_KEY`` is present: a keyless eval run has no judge, so every
-    item is unjudged and the ``hallucination`` metric stays at ``0`` over no
+    item is unjudged and the ``faithfulness`` metric stays at ``0`` over no
     eligible items rather than calling an unauthenticated model.
     """
     from janbot.api.main import create_app

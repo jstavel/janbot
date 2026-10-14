@@ -1,4 +1,4 @@
-"""Unit tests for the LLM-as-a-judge, its config routing, and the ``hallucination`` metric.
+"""Unit tests for the LLM-as-a-judge, its config routing, and the ``faithfulness`` metric.
 
 They prove the story's matrix without a model or a network: a stub judge returning
 ``faithful`` passes an item and counts in the aggregate; one returning
@@ -243,7 +243,7 @@ def test_run_eval_faithful_judge_passes_and_counts(tmp_path: Path) -> None:
         judge=_faithful_judge,
     )
 
-    assert result.metrics["hallucination"] == 1.0
+    assert result.metrics["faithfulness"] == 1.0
     assert all(
         outcome.judge_verdict is not None
         and outcome.judge_verdict.label == FAITHFUL
@@ -261,7 +261,7 @@ def test_run_eval_hallucinated_verdict_fails_and_is_recorded(tmp_path: Path) -> 
         judge=_hallucinated_judge,
     )
 
-    assert result.metrics["hallucination"] == 0.0
+    assert result.metrics["faithfulness"] == 0.0
     labels = [
         outcome.judge_verdict.label
         for outcome in result.outcomes
@@ -285,7 +285,7 @@ def test_run_eval_records_a_judge_failure_and_continues(tmp_path: Path) -> None:
         judge=judge,
     )
 
-    assert result.metrics["hallucination"] == 1.0
+    assert result.metrics["faithfulness"] == 1.0
     assert result.outcomes[0].judge_verdict is not None
     assert result.outcomes[1].judge_verdict is None
     assert len(result.judge_failures) == 1
@@ -301,7 +301,7 @@ def test_run_eval_without_a_judge_leaves_items_unjudged(tmp_path: Path) -> None:
         experiment="janbot-eval",
     )
 
-    assert result.metrics["hallucination"] == 0.0
+    assert result.metrics["faithfulness"] == 0.0
     assert all(outcome.judge_verdict is None for outcome in result.outcomes)
     assert result.judge_failures == []
 
@@ -357,7 +357,7 @@ def test_cli_scores_with_an_injected_judge(
 
     out = capsys.readouterr().out
     assert code == 0
-    assert "hallucination: 1.0000" in out
+    assert "faithfulness: 1.0000" in out
     assert "judged: 1/1" in out
     assert (
         "judge: What search infrastructure have you built? — faithful" in out

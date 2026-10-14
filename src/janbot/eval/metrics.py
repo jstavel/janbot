@@ -3,7 +3,7 @@
 A metric is a pure callable over the list of per-item outcomes, returning one
 float for the whole run. Metrics self-register by name, and the runner logs every
 registered metric into the MLflow run — so entries 3-5 (retrieval accuracy,
-citation correctness, hallucination detection) add their metrics here without
+citation correctness, faithfulness detection) add their metrics here without
 touching the runner or the recorder.
 
 This package ships a single stub metric so the tracer bullet records a real
@@ -37,7 +37,7 @@ class ItemOutcome:
     ``judge_verdict`` is the LLM-as-a-judge's verdict for the item, or ``None``
     when the item was unjudged — no judge was configured, the program produced no
     answer, or the judge call failed. Only judged items count in the
-    ``hallucination`` aggregate.
+    ``faithfulness`` aggregate.
     """
 
     item: GoldenItem
@@ -75,7 +75,7 @@ def registered_metrics() -> Mapping[str, Metric]:
 def stub_metric(outcomes: list[ItemOutcome]) -> float:
     """Stub metric: the fraction of items the program answered without raising.
 
-    A placeholder for the real retrieval/citation/hallucination metrics, it lets
+    A placeholder for the real retrieval/citation/faithfulness metrics, it lets
     the tracer bullet prove the dataset -> pipeline -> MLflow path end to end
     without a judge or a golden-source comparison.
     """
@@ -286,7 +286,7 @@ def citation_precision(outcomes: list[ItemOutcome]) -> float:
     return sum(precisions) / len(precisions)
 
 
-def hallucination(outcomes: list[ItemOutcome]) -> float:
+def faithfulness(outcomes: list[ItemOutcome]) -> float:
     """Fraction of judged items the judge found faithful to the golden expected answer.
 
     An item counts only when it carries a judge verdict; an unjudged item — no
@@ -310,4 +310,4 @@ register_metric("public_references", _public_references)
 register_metric("retrieval_accuracy", retrieval_accuracy)
 register_metric("citation_correctness", citation_correctness)
 register_metric("citation_precision", citation_precision)
-register_metric("hallucination", hallucination)
+register_metric("faithfulness", faithfulness)
