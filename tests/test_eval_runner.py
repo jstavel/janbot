@@ -87,6 +87,35 @@ def test_run_eval_reports_a_retrieval_miss_per_item(tmp_path: Path) -> None:
     assert "missing retrieved source(s): projects.org" in result.retrieval_misses[0]
 
 
+def test_run_eval_reports_a_citation_miss_per_item(tmp_path: Path) -> None:
+    uri = _tracking_uri(tmp_path)
+
+    result = run_eval(
+        _items(), _stub_program(source="profile.org"), tracking_uri=uri, experiment="janbot-eval"
+    )
+
+    assert result.metrics["citation_correctness"] == 0.5
+    assert len(result.citation_misses) == 1
+    assert "missing cited source(s): projects.org" in result.citation_misses[0]
+
+
+def test_run_eval_citation_containment_ignores_an_extra_source(tmp_path: Path) -> None:
+    uri = _tracking_uri(tmp_path)
+
+    def program(*, question: str) -> ChatResponse:
+        expected = "profile.org" if question == "q1" else "projects.org"
+        return ChatResponse(
+            answer="Grounded.",
+            citations=[Citation(source=expected), Citation(source="other.org")],
+        )
+
+    result = run_eval(_items(), program, tracking_uri=uri, experiment="janbot-eval")
+
+    assert result.metrics["citation_correctness"] == 1.0
+    assert result.citation_misses == []
+    assert result.metrics["citation_precision"] == 0.5
+
+
 def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) -> None:
     uri = _tracking_uri(tmp_path)
     params = {
@@ -104,10 +133,14 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "answer_coverage": 1.0,
         "public_references": 1.0,
         "retrieval_accuracy": 0.0,
+        "citation_correctness": 0.5,
+        "citation_precision": 0.5,
     }
     assert result.run_id
     assert result.reference_failures == []
     assert result.retrieval_misses == []
+    assert len(result.citation_misses) == 1
+    assert "missing cited source(s): projects.org" in result.citation_misses[0]
 
     client = MlflowClient(tracking_uri=uri)
     experiment = client.get_experiment_by_name("janbot-eval")
@@ -126,6 +159,8 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "answer_coverage": 1.0,
         "public_references": 1.0,
         "retrieval_accuracy": 0.0,
+        "citation_correctness": 0.5,
+        "citation_precision": 0.5,
     }
 
 
@@ -293,3 +328,46 @@ def test_cli_flags_off_list_reference_per_item(
     assert "reference:" in out
     assert "github.com/jstavel/evil" in out
     assert "What search infrastructure have you built?" in out
+
+
+def test_cli_flags_a_citation_miss_per_item(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    corpus = tmp_path / "public_profile_org"
+    write_org(corpus / "profile.org", heading="About", body="Search infrastructure engineer.")
+    index_path = tmp_path / "index"
+    index_corpus(corpus, index_path, embedder)
+
+    dataset = tmp_path / "dataset.yaml"
+    dataset.write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "question": "What search infrastructure have you built?",
+                    "expected_answer": "Search infrastructure.",
+                    "expected_sources": ["projects.org"],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    env = {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(index_path),
+        "MLFLOW_TRACKING_URI": _tracking_uri(tmp_path),
+    }
+
+    code = eval_cli.main(
+        ["--dataset", str(dataset)],
+        env=env,
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["profile.org"]),
+    )
+
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "citation:" in out
+    assert "missing cited source(s): projects.org" in out

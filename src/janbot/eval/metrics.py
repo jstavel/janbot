@@ -188,6 +188,99 @@ def retrieval_accuracy(outcomes: list[ItemOutcome]) -> float:
     return passed / len(eligible)
 
 
+def _cited_sources(outcome: ItemOutcome) -> set[str]:
+    """The corpus sources the answer cited, or the empty set when there is no response."""
+    if outcome.response is None:
+        return set()
+    return {citation.source for citation in outcome.response.citations}
+
+
+def _citation_eligible(outcome: ItemOutcome) -> bool:
+    """Whether the item makes a citation claim: it names expected sources and a response was observed.
+
+    A missing response is unobserved (mirrors ``retrieved_sources is None`` for
+    retrieval), so it is excluded. A valid ``insufficient`` decline is still a
+    response and therefore a claim-making item.
+    """
+    return bool(outcome.item.expected_sources) and outcome.response is not None
+
+
+def _item_citation_misses(outcome: ItemOutcome) -> list[str]:
+    """Return the human-readable citation misses for one item (empty = pass).
+
+    The golden ``expected_sources`` must be a subset of the sources the answer
+    actually cites — containment, never exact-set equality, so a legitimately
+    retrieved related source is not an error. Every expected source the answer
+    never cites is named. A valid decline cites nothing and fails containment; a
+    missing response is unobserved and names no miss. The extra,
+    retrieved-but-unexpected citations are not misses:
+    :func:`citation_precision` carries that signal.
+    """
+    if not _citation_eligible(outcome):
+        return []
+    expected = outcome.item.expected_sources
+    cited = _cited_sources(outcome)
+    missing = [source for source in expected if source not in cited]
+    if not missing:
+        return []
+    return [
+        f"{outcome.item.question} — missing cited source(s): {', '.join(missing)}"
+    ]
+
+
+def citation_misses(outcomes: list[ItemOutcome]) -> list[str]:
+    """Return every citation miss across ``outcomes``, one line per failure."""
+    return [
+        miss
+        for outcome in outcomes
+        for miss in _item_citation_misses(outcome)
+    ]
+
+
+def citation_correctness(outcomes: list[ItemOutcome]) -> float:
+    """Fraction of claim-making items whose expected sources were all cited.
+
+    An item counts only when it names expected sources and a response was
+    observed; an item with no expected sources or no observed response is
+    excluded. The item passes when its expected sources are a subset of the
+    sources its answer cites — never exact-set equality, so a related retrieved
+    source the answer also cites is not an error. A valid decline cites nothing
+    and fails containment.
+    """
+    eligible = [outcome for outcome in outcomes if _citation_eligible(outcome)]
+    if not eligible:
+        return 0.0
+    passed = sum(1 for outcome in eligible if not _item_citation_misses(outcome))
+    return passed / len(eligible)
+
+
+def citation_precision(outcomes: list[ItemOutcome]) -> float:
+    """Informational aggregate: the expected share of the sources items cite.
+
+    Over the same eligible items as :func:`citation_correctness` (expected
+    sources named and a response observed), per item precision is the fraction of
+    the cited sources that the golden ``expected_sources`` also names; an item
+    that cites nothing contributes ``0.0``. The aggregate is their mean, so a
+    retrieved-but-unexpected citation lowers this metric without ever failing
+    containment.
+    """
+    precisions: list[float] = []
+    for outcome in outcomes:
+        if not _citation_eligible(outcome):
+            continue
+        cited = _cited_sources(outcome)
+        if not cited:
+            precisions.append(0.0)
+            continue
+        expected = set(outcome.item.expected_sources)
+        precisions.append(len(expected & cited) / len(cited))
+    if not precisions:
+        return 0.0
+    return sum(precisions) / len(precisions)
+
+
 register_metric("answer_coverage", stub_metric)
 register_metric("public_references", _public_references)
 register_metric("retrieval_accuracy", retrieval_accuracy)
+register_metric("citation_correctness", citation_correctness)
+register_metric("citation_precision", citation_precision)

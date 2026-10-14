@@ -23,6 +23,7 @@ from janbot.api.contract import ChatResponse
 from janbot.eval.dataset import GoldenItem
 from janbot.eval.metrics import (
     ItemOutcome,
+    citation_misses,
     registered_metrics,
     registered_public_reference_failures,
     retrieval_misses,
@@ -38,6 +39,7 @@ class RunResult:
     run_id: str
     reference_failures: list[str]
     retrieval_misses: list[str]
+    citation_misses: list[str]
 
 
 def _retrieved_sources(program: Callable[..., ChatResponse]) -> list[str] | None:
@@ -130,4 +132,5 @@ def run_eval(
         run_id=run_id,
         reference_failures=registered_public_reference_failures(outcomes),
         retrieval_misses=retrieval_misses(outcomes),
+        citation_misses=citation_misses(outcomes),
     )

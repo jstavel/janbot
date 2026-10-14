@@ -100,6 +100,9 @@ def main(
     for miss in result.retrieval_misses:
         print(f"retrieval: {miss}")
 
+    for miss in result.citation_misses:
+        print(f"citation: {miss}")
+
     failures = [outcome for outcome in result.outcomes if outcome.response is None]
     for outcome in failures:
         print(f"failed: {outcome.item.question} — {outcome.error}")

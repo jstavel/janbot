@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Milestone 1, epics 2–4: org-mode ingestion with fail-closed scope, the DSPy answer + citation pipeline via `/chat`, and the end-to-end test suite (planned, not yet built).
 - Eval `public_references` metric: a corpus-derived, generated allow-list of valid public URLs (`eval/public_urls.yaml`) verified against every answer — an off-list URL fails as unverifiable and an expected-but-missing URL fails as incomplete, with each failing item/URL flagged in the run output.
 - Eval `retrieval_accuracy` metric: the pipeline exposes the corpus-relative sources it retrieved (`ChatProgram.last_retrieved_sources`), and each golden item passes when its expected sources are a subset of the retrieved set — a retrieved-but-missed source is flagged per item as a `retrieval:` CLI line.
+- Eval `citation_correctness` metric: each golden item passes when its expected sources are a subset of the sources its answer cites (containment, never exact-set equality), with each miss flagged per item as a `citation:` CLI line; a separate informational `citation_precision` metric records the expected share of the cited sources, so a retrieved-but-unexpected citation lowers precision without ever failing correctness.
 
 ### Documentation
 
