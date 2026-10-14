@@ -3,7 +3,7 @@ title: 'Pre-registered optimization gate rule'
 type: 'chore'
 ticket: 18
 created: '2026-10-15'
-status: 'built'
+status: done
 baseline_revision: '51a741f'
 route: 'oneshot'
 route_source: 'auto'
