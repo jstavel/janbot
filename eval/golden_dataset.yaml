@@ -512,3 +512,29 @@
     - jenkins-openshift-cicd-operations.org
   split: train
   should_refuse: false
+
+- question: "What is JanBot for?"
+  expected_answer: >-
+    JanBot's value is not that it knows more than me — it makes what I already
+    know reachable, citation-backed and available at scale, and it refuses
+    rather than fabricates: it answers only from the public corpus, declines
+    when a question lies outside it, and cites the sources that ground every
+    answer. It is also itself the proof that I can build a spec-first AI
+    system with measurement and verification.
+  expected_sources:
+    - janbot-value-proposition.org
+  split: val
+  should_refuse: false
+
+- question: "How do you review the work of an AI agent?"
+  expected_answer: >-
+    Plans, reviews and verification live as frozen, versioned artifacts in
+    git, so I audit AI work through the artifact rather than through chat: I
+    approve the frozen intent, the building agent implements and logs its
+    findings, and an independent reviewer compares the plan's claims against
+    the working tree before and after the build. A claim like "all findings
+    patched" is checkable against the tree, not taken on faith.
+  expected_sources:
+    - spec-first-artifacts-in-git.org
+  split: train
+  should_refuse: false

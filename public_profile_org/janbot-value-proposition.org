@@ -1,0 +1,71 @@
+:PROPERTIES:
+:ID:       20261015-janbot-value-proposition
+:TITLE:    JanBot — what it is for, and what it is not
+:CREATED:  <2026-10-15 Thu 01:05>
+:AUTHOR:   goose
+:REVIEWED: <2026-10-15>
+:DOMAIN:   way-of-working
+:TAGS:     janbot ai-agent value-proposition grounding golden-dataset eval train-val-split spec-conformance anti-hallucination
+:SYNOPSIS: A grounded AI career assistant is valuable not because it knows more than its owner, but because it makes what the owner already knows reachable, cited and at scale — and refuses rather than fabricates; the eval measures spec-conformance, and a train/val split is what keeps its optimization honest.
+:STRENGTHS:  first-principles-clarity honesty-about-limits grounded-representation
+:WEAKNESSES: value-scaled-with-corpus-richness
+:PUBLIC:     https://github.com/jstavel/janbot
+:END:
+
+# JanBot — what it is for, and what it is not
+
+The question behind the project: if JanBot is tuned to reproduce the answers I wrote in the golden dataset, what is it actually *for*? The answer reframes the whole thing.
+
+* Three things that get conflated
+
+| | what it is | used |
+|---|---|---|
+| **Corpus** (`public_profile_org/`, from `~/org/corpus`) | the **content** — the truth it answers from | at runtime — JanBot *reads* it (retrieval) |
+| **Golden dataset** | the **yardstick** — "what a correct answer looks like" + which sources | only the eval + compilation |
+| **LLM** | the language | generates the answer |
+
+At runtime the program is built over the **corpus**, not the golden dataset — so it does not answer *from* the golden set. (In compiled mode the program carries golden examples as few-shot demos, so the *shape* of answers is golden-influenced — worth saying precisely, not hand-waving.)
+
+* The circularity question — the honest limit
+
+The eval and the optimization measure **conformance to the specification I wrote**, not objective goodness. A score of `0.80` means "meets what I declared correct," not "is good in itself." A thin golden set inherits its own blind spots. That limit is real, and naming it is part of the claim.
+
+* Why answering like the golden set is the goal, not redundancy
+
+The golden dataset is not a knowledge base — it is a **specification of correct behaviour** (answer + cited sources). If JanBot answered *differently* from what I specified as correct, that would be **hallucination**, not a feature. Success means: it meets the spec on **new, unpredicted questions and phrasings**.
+
+* What it is for
+
+- **Retrieval + synthesis across the corpus** — an arbitrary question must be mapped to the right sources and answered across several objects; that mapping is the work.
+- **Availability and scale** — a recruiter will not read 40 org files; the agent answers 24/7, with citations, and can drill into sources.
+- **Trustworthiness (guardrails)** — it declines when the question is outside the corpus, cites what it used, and verifies grounding. What it says is *backed*.
+- **A consistent voice** — stance objects (remote conviction, why Clojure, personal intro) are not facts but *how I answer*; a recruiter gets me, in my tone, at 3am.
+- **The system as proof of work** — the artifact itself (spec-first + DSPy + eval + CI + MLflow + determinism + optimization gate) demonstrates engineering.
+
+What it is **not**: an oracle that knows more than I do. Grounding means **no fabrication** — knowing nothing beyond the corpus is the design, not a shortfall.
+
+* The train/val split is the answer to circularity
+
+"Tuning on the thing you measure is just memorization" is exactly why the golden set is split into train and val: the compiler learns on train, and quality is measured on **held-out** val — so a gain means better behaviour on *new* questions, not memorized ones. The split is the mechanism that breaks the circle.
+
+* Lever
+
+Content value scales with **corpus richness and question diversity**. A thin corpus whose golden answers merely restate single objects leaves the dominant value as proof-of-work. The lever is richer corpus and harder questions — which is why the corpus work matters.
+
+* One line
+
+"Its value is not that it knows more — it is that what I already know is **reachable, citation-backed and at scale**, and that it **cannot invent**. And it is itself the proof that I can build a spec-first system with measurement and verification."
+
+* Relation to existing objects
+
+Complements [[id:20261007-janbot-ai-agent][JanBot — spec-first AI agent as a deployed architecture]]: that object is the *architecture / proof of work*; this one is the *value proposition and its honest limits*. Pairs with [[id:20261015-spec-first-artifacts-in-git]] (the mechanism of spec-driven review).
+
+* Sources
+
+- ~/dev/janbot/eval/golden_dataset.yaml — the recruiter Q&A yardstick (expected answers + expected sources), 36 items.
+  external ref: ~/dev/janbot @ 9260ed0:eval/golden_dataset.yaml
+- ~/dev/janbot/src/janbot/api/main.py — runtime builds the program over the corpus store, never over the golden dataset.
+  external ref: ~/dev/janbot @ 9260ed0:src/janbot/api/main.py
+- ~/dev/janbot/_bmad-output/initiative-janbot/epic-evaluation/story-golden-dataset-train-val-split-and-a-val-baseline-plan.md — the train/val split that guards against measuring memorization.
+  external ref: ~/dev/janbot (work tree) : _bmad-output/initiative-janbot/epic-evaluation/story-golden-dataset-train-val-split-and-a-val-baseline-plan.md
+- Living session (2026-10-15) — the question "what is JanBot for, if it just reproduces the golden dataset?" and the resolution above.
