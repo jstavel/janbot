@@ -1,7 +1,8 @@
 """Full org subtree chunker tests.
 
-One chunk is expected per non-root node at any depth; each chunk carries the
-heading, tags, PROPERTIES, body/LOGBOOK and descendant text, with a full
+One chunk is expected per non-root node at any depth, plus one for the file root
+when that root carries a PROPERTIES drawer or text of its own; each chunk carries
+the heading, tags, PROPERTIES, body/LOGBOOK and descendant text, with a full
 heading-path breadcrumb and a per-file unique id.
 """
 
@@ -103,3 +104,54 @@ def test_ancestor_chunk_contains_descendant_text(tmp_path: Path) -> None:
 
     parent = next(chunk for chunk in chunks if chunk.breadcrumb == "Parent")
     assert "Child only text." in parent.text
+
+
+def test_file_root_chunk_carries_drawer_and_lede(tmp_path: Path) -> None:
+    """The approved :SYNOPSIS: and the text above the first heading are retrievable."""
+    chunks = _chunks(
+        tmp_path,
+        ":PROPERTIES:\n"
+        ":TITLE: Sample object\n"
+        ":SYNOPSIS: A one-sentence summary of the whole document.\n"
+        ":END:\n"
+        "\n"
+        "# Sample object — the human title line\n"
+        "\n"
+        "A lede paragraph that sits above the first heading.\n"
+        "\n"
+        "* Section\nBody.\n",
+    )
+
+    root_chunk = next(chunk for chunk in chunks if chunk.breadcrumb == "(file)")
+    assert root_chunk is chunks[0]
+    assert ":SYNOPSIS: A one-sentence summary of the whole document." in root_chunk.text
+    assert "A lede paragraph that sits above the first heading." in root_chunk.text
+    assert {chunk.breadcrumb for chunk in chunks} == {"(file)", "Section"}
+
+
+def test_keyword_only_root_yields_no_root_chunk(tmp_path: Path) -> None:
+    """Org keywords are metadata: they neither create a root chunk nor appear in one."""
+    chunks = _chunks(tmp_path, "#+TITLE: Public Profile\n\n* About\nBody.\n")
+
+    assert [chunk.breadcrumb for chunk in chunks] == ["About"]
+    assert all("#+TITLE" not in chunk.text for chunk in chunks)
+
+
+def test_root_chunk_excludes_keyword_lines(tmp_path: Path) -> None:
+    chunks = _chunks(
+        tmp_path,
+        "#+TITLE: Sample\n"
+        ":PROPERTIES:\n:SYNOPSIS: Summary.\n:END:\n"
+        "Lede text.\n"
+        "* Section\nBody.\n",
+    )
+
+    root_chunk = next(chunk for chunk in chunks if chunk.breadcrumb == "(file)")
+    assert "#+TITLE" not in root_chunk.text
+    assert "Lede text." in root_chunk.text
+
+
+def test_root_chunk_absent_without_drawer_or_text(tmp_path: Path) -> None:
+    chunks = _chunks(tmp_path, "* Only heading\nBody.\n")
+
+    assert [chunk.breadcrumb for chunk in chunks] == ["Only heading"]

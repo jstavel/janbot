@@ -38,7 +38,7 @@ DSPy replaces traditional manual prompt engineering with programmatic module com
 
 Chunking preserves semantic structure:
 
-- One chunk per org subtree (heading + content + PROPERTIES + LOGBOOK + children)
+- One chunk per org subtree (heading + content + PROPERTIES + LOGBOOK + children), plus one file-root chunk per document carrying its PROPERTIES drawer (the approved `:SYNOPSIS:` among it) and the text above the first heading, so a document's own summary is retrievable
 - Breadcrumb of parent headings preserved in metadata
 - No naive text splitters that break semantic boundaries
 

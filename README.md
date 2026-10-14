@@ -22,11 +22,11 @@ Ports-and-adapters: every caller reaches JanBot only through the `POST /chat` JS
 | API | FastAPI, Pydantic (`ChatResponse`, `Citation` as the single contract source) |
 | Pipeline | DSPy program: retrieve → answer + cite |
 | Store | ChromaDB + `all-MiniLM-L6-v2` embeddings; retrieval scoped to `JANBOT_CORPUS_PATH` at the store boundary |
-| Ingestion | `orgparse` — one chunk per org subtree (headings, PROPERTIES, LOGBOOK, tags, parent breadcrumbs) |
+| Ingestion | `orgparse` — one chunk per org subtree (headings, PROPERTIES, LOGBOOK, tags, parent breadcrumbs) plus one file-root chunk per document (drawer with `:SYNOPSIS:` + text above the first heading) |
 | LLM | OpenRouter — locked deterministic snapshot for CI/eval, `openrouter/auto` for production |
 | Tests | pytest + httpx (Milestone 1); thin TypeScript/Zod contract harness (Milestone 1.5) |
 
-Key invariants: fail-closed scope filter (only `public_profile_org/` is indexed) and scoped retrieval (only chunks located within `JANBOT_CORPUS_PATH` can be retrieved, so an out-of-corpus chunk never reaches the prompt or a citation), org subtree chunking (no naive text splitters), Pydantic as the single source of truth for the API contract, and a test layer that is never modified to accommodate a change in the AI core.
+Key invariants: fail-closed scope filter (only `public_profile_org/` is indexed) and scoped retrieval (only chunks located within `JANBOT_CORPUS_PATH` can be retrieved, so an out-of-corpus chunk never reaches the prompt or a citation), org subtree chunking with a retrievable file-root chunk (no naive text splitters), Pydantic as the single source of truth for the API contract, and a test layer that is never modified to accommodate a change in the AI core.
 
 `public_profile_org/` is JanBot's source of truth, itself an extract of the wider personal corpus SSOT (`~/org/corpus/views/work-profile/index.org`); it is updated only by re-extraction, never edited in place.
 
@@ -54,7 +54,7 @@ JanBot is configured through environment variables loaded by [`janbot.config`](s
 | `JANBOT_MODEL_SNAPSHOT` | `openai/gpt-4o-mini-2024-07-18` | The locked model used in `eval` mode. |
 | `JANBOT_TEMPERATURE` | `0.0` | LM sampling temperature passed to the model in every mode. A value that is not a finite number fails fast. |
 | `JANBOT_SEED` | `0` | Sampling seed pinning determinism in `eval` mode only. `production` (`openrouter/auto`) is seed-free. A value that is not an integer fails fast. |
-| `JANBOT_TOP_K` | `3` | Retrieval top-k: how many corpus chunks ground an answer. An invalid or non-positive value fails fast. |
+| `JANBOT_TOP_K` | `4` | Retrieval top-k: how many corpus chunks ground an answer. An invalid or non-positive value fails fast. |
 | `JANBOT_CORPUS_PATH` | `public_profile_org` | The corpus root: the only tree the ingestion pipeline will index (fail-closed) and the scope retrieval is bounded to at the store. |
 | `JANBOT_INDEX_PATH` | `chroma_db` | Where the vector index is written. |
 | `JANBOT_PROJECT_ROOT` | the repository root | Base for relative `JANBOT_CORPUS_PATH`/`JANBOT_INDEX_PATH`; override for packaged deployments or tests. |
