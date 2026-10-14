@@ -159,8 +159,8 @@ def test_default_temperature_is_zero() -> None:
     assert load_config({}).temperature == 0.0
 
 
-def test_default_top_k_is_three() -> None:
-    assert load_config({}).top_k == 3
+def test_default_top_k_is_four() -> None:
+    assert load_config({}).top_k == 4
 
 
 def test_temperature_and_top_k_overrides_are_parsed() -> None:
@@ -177,7 +177,7 @@ def test_blank_temperature_falls_back_to_default(blank: str) -> None:
 
 @pytest.mark.parametrize("blank", ["", "   "])
 def test_blank_top_k_falls_back_to_default(blank: str) -> None:
-    assert load_config({"JANBOT_TOP_K": blank}).top_k == 3
+    assert load_config({"JANBOT_TOP_K": blank}).top_k == 4
 
 
 @pytest.mark.parametrize("value", ["abc", "0,7", "true", "1.2x"])

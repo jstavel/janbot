@@ -12,7 +12,7 @@ reads eight variables, each with a documented default:
   root derived from this file's location
 - ``JANBOT_TEMPERATURE``     -- LM sampling temperature; default ``0.0``
 - ``JANBOT_SEED``            -- eval determinism seed; default ``0``
-- ``JANBOT_TOP_K``           -- retrieval top-k; default ``3``
+- ``JANBOT_TOP_K``           -- retrieval top-k; default ``4``
 
 Values are trimmed, and a blank or whitespace-only value counts as unset (so it
 takes the documented default). The model mode is normalized to lower case before
@@ -59,7 +59,7 @@ DEFAULT_CORPUS_PATH = "public_profile_org"
 DEFAULT_INDEX_PATH = "chroma_db"
 DEFAULT_TEMPERATURE = 0.0
 DEFAULT_SEED = 0
-DEFAULT_TOP_K = 3
+DEFAULT_TOP_K = 4
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 

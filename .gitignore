@@ -6,7 +6,6 @@ __pycache__/
 # agent/IDE config
 .goose/
 .hermes/
-.bmad-output/
 .direnv/
 .env
 
