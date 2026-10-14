@@ -1,0 +1,23 @@
+# Public URL allow-list for the JanBot eval harness.
+#
+# Generated from the public corpus (public_profile_org/): every :PUBLIC:
+# drawer, every explicit reference link and the public proof map. Do not
+# edit by hand; regenerate with `uv run python -m janbot.eval.public_urls`.
+urls:
+- https://www.bazar-cd.cz
+- https://www.brailcom.cz/projects
+- https://github.com/edeposit
+- https://github.com/edeposit/edeposit.amqp.kramerius
+- https://github.com/edeposit/edeposit.amqp.pdfbox
+- https://github.com/edeposit/edeposit.clj-amqp
+- https://github.com/jstavel/bugzilla-testng
+- https://github.com/jstavel/cdbazar
+- https://github.com/jstavel/gnome.ldtp
+- https://github.com/jstavel/gtd-org
+- https://github.com/jstavel/janbot
+- https://github.com/jstavel/krakatoa
+- https://github.com/jstavel/python-audio-transcription
+- https://github.com/jstavel/reactive_testing
+- https://github.com/jstavel/test-clj.testng
+- https://github.com/jstavel/verify-testng
+- https://github.com/RedHatQE/rhsm-cockpit-qe

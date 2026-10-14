@@ -21,16 +21,21 @@ import mlflow
 
 from janbot.api.contract import ChatResponse
 from janbot.eval.dataset import GoldenItem
-from janbot.eval.metrics import ItemOutcome, registered_metrics
+from janbot.eval.metrics import (
+    ItemOutcome,
+    registered_metrics,
+    registered_public_reference_failures,
+)
 
 
 @dataclass(frozen=True)
 class RunResult:
-    """The recorded run: per-item outcomes, the aggregate metrics, and the MLflow run id."""
+    """The recorded run: per-item outcomes, aggregate metrics, MLflow run id, reference flags."""
 
     outcomes: list[ItemOutcome]
     metrics: dict[str, float]
     run_id: str
+    reference_failures: list[str]
 
 
 def _evaluate(items: list[GoldenItem], program: Callable[..., ChatResponse]) -> list[ItemOutcome]:
@@ -98,4 +103,9 @@ def run_eval(
         raise RuntimeError(
             f"MLflow logging to tracking URI {tracking_uri!r} failed: {exc}"
         ) from exc
-    return RunResult(outcomes=outcomes, metrics=metrics, run_id=run_id)
+    return RunResult(
+        outcomes=outcomes,
+        metrics=metrics,
+        run_id=run_id,
+        reference_failures=registered_public_reference_failures(outcomes),
+    )

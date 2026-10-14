@@ -12,11 +12,17 @@ MLflow metric before the real metrics exist.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass
 
 from janbot.api.contract import ChatResponse
 from janbot.eval.dataset import GoldenItem
+from janbot.eval.public_urls import (
+    extract_urls,
+    is_public_reference,
+    load_public_urls,
+    missing_references,
+)
 
 
 @dataclass(frozen=True)
@@ -66,4 +72,66 @@ def stub_metric(outcomes: list[ItemOutcome]) -> float:
     return answered / len(outcomes)
 
 
+def _item_reference_failures(
+    outcome: ItemOutcome, allow_list: Collection[str]
+) -> list[str]:
+    """Return the human-readable public-reference failures for one item (empty = pass).
+
+    The owner's asymmetry: an answer URL off the allow-list is unverifiable, and an
+    expected URL the answer does not surface is incomplete. A missing response
+    surfaces nothing, so any expected URL counts as incomplete.
+    """
+    answer = outcome.response.answer if outcome.response is not None else ""
+    answer_urls = extract_urls(answer, allow_list)
+    unverifiable = [url for url in answer_urls if not is_public_reference(url, allow_list)]
+    expected_urls = extract_urls(outcome.item.expected_answer, allow_list)
+    missing = missing_references(expected_urls, answer_urls)
+
+    failures: list[str] = []
+    if unverifiable:
+        failures.append(
+            f"{outcome.item.question} — unverifiable reference(s): {', '.join(unverifiable)}"
+        )
+    if missing:
+        failures.append(
+            f"{outcome.item.question} — missing expected reference(s): {', '.join(missing)}"
+        )
+    return failures
+
+
+def public_reference_failures(
+    outcomes: list[ItemOutcome], allow_list: Collection[str]
+) -> list[str]:
+    """Return every public-reference failure across ``outcomes``, one line per failure."""
+    return [
+        failure
+        for outcome in outcomes
+        for failure in _item_reference_failures(outcome, allow_list)
+    ]
+
+
+def public_references_metric(
+    outcomes: list[ItemOutcome], allow_list: Collection[str]
+) -> float:
+    """Fraction of items whose public references are sound.
+
+    An item passes when its answer carries no off-list URL and surfaces every URL
+    its expected answer carries; an item with no URLs on either side passes.
+    """
+    if not outcomes:
+        return 0.0
+    passed = sum(1 for outcome in outcomes if not _item_reference_failures(outcome, allow_list))
+    return passed / len(outcomes)
+
+
+def _public_references(outcomes: list[ItemOutcome]) -> float:
+    return public_references_metric(outcomes, load_public_urls())
+
+
+def registered_public_reference_failures(outcomes: list[ItemOutcome]) -> list[str]:
+    """Public-reference failures for ``outcomes`` against the committed allow-list."""
+    return public_reference_failures(outcomes, load_public_urls())
+
+
 register_metric("answer_coverage", stub_metric)
+register_metric("public_references", _public_references)

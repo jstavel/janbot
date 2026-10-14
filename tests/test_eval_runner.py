@@ -68,8 +68,9 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         _items(), _stub_program(), tracking_uri=uri, experiment="janbot-eval", params=params
     )
 
-    assert result.metrics == {"answer_coverage": 1.0}
+    assert result.metrics == {"answer_coverage": 1.0, "public_references": 1.0}
     assert result.run_id
+    assert result.reference_failures == []
 
     client = MlflowClient(tracking_uri=uri)
     experiment = client.get_experiment_by_name("janbot-eval")
@@ -84,7 +85,7 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "temperature": "0.0",
         "seed": "0",
     }
-    assert run.data.metrics == {"answer_coverage": 1.0}
+    assert run.data.metrics == {"answer_coverage": 1.0, "public_references": 1.0}
 
 
 def test_run_eval_records_per_item_failure_without_aborting(tmp_path: Path) -> None:
@@ -195,4 +196,59 @@ def test_cli_all_failed_items_returns_nonzero(
     out = capsys.readouterr().out
     assert code != 0
     assert "failed:" in out
+    assert "What search infrastructure have you built?" in out
+
+
+class OffListLMFactory:
+    """LM factory whose canned answer carries an off-list URL (unverifiable reference)."""
+
+    def __call__(self, **kwargs: object) -> DummyLM:
+        answer = {
+            "answer": "See https://github.com/jstavel/evil for details.",
+            "citations": ["profile.org"],
+        }
+        return DummyLM([dict(answer) for _ in range(16)])
+
+
+def test_cli_flags_off_list_reference_per_item(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    corpus = tmp_path / "public_profile_org"
+    write_org(corpus / "profile.org", heading="About", body="Search infrastructure engineer.")
+    index_path = tmp_path / "index"
+    index_corpus(corpus, index_path, embedder)
+
+    dataset = tmp_path / "dataset.yaml"
+    dataset.write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "question": "What search infrastructure have you built?",
+                    "expected_answer": "Search infrastructure.",
+                    "expected_sources": ["profile.org"],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    env = {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(index_path),
+        "MLFLOW_TRACKING_URI": _tracking_uri(tmp_path),
+    }
+
+    code = eval_cli.main(
+        ["--dataset", str(dataset)],
+        env=env,
+        embedder=embedder,
+        lm_factory=OffListLMFactory(),
+    )
+
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "reference:" in out
+    assert "github.com/jstavel/evil" in out
     assert "What search infrastructure have you built?" in out

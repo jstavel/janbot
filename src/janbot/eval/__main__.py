@@ -94,6 +94,9 @@ def main(
     for name, value in result.metrics.items():
         print(f"{name}: {value:.4f}")
 
+    for failure in result.reference_failures:
+        print(f"reference: {failure}")
+
     failures = [outcome for outcome in result.outcomes if outcome.response is None]
     for outcome in failures:
         print(f"failed: {outcome.item.question} — {outcome.error}")
