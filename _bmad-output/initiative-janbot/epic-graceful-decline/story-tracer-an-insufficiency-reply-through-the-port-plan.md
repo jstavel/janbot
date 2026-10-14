@@ -3,7 +3,7 @@ title: 'Tracer: an insufficiency reply through the port'
 type: 'feature'
 ticket: 1
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: '423d64ada99853c947a13512c6e12fcdf011a04a'
 route: 'full'
 route_source: 'auto'
