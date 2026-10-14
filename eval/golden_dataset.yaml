@@ -198,17 +198,6 @@
   expected_sources:
     - spec-first-philosophy.org
 
-- question: "How do you feel about remote and hybrid work?"
-  expected_answer: >-
-    Remote work is a conviction built on 15 years of home office, not an
-    adaptation: routine collaboration such as standups and alignment meetings
-    works fully virtual. In-person time is valued only for unstructured personal
-    contact — the one thing virtual meetings cannot replace — not for commuting to
-    meetings that work better remotely. Flow is treated deliberately as an
-    environment design problem, including long uninterrupted deep-work sessions.
-  expected_sources:
-    - remote-work-conviction.org
-
 - question: "Which books or ideas have most shaped how you work?"
   expected_answer: >-
     Eight books form the professional philosophy: David Allen's GTD (applied
@@ -332,3 +321,108 @@
     mentorship.
   expected_sources:
     - mentoring-downchain.org
+
+- question: "What Linux services have you actually run in production?"
+  expected_answer: >-
+    Real services, end to end: a qmail mail server with LDAP integration —
+    patching third-party source, since qmail had no official LDAP support;
+    Samba as a Primary Domain Controller over LDAP, the same
+    identity-integration problem as today's SSO/IAM; ClamAV integrated into
+    the Postfix mail pipeline; Apache operated in production; and his own
+    certificate authority (OpenSSL CA.pl) for encrypted tunnels. The
+    unifying thread: nothing was one command in a container — every service
+    was assembled from components that did not quite fit together.
+  expected_sources:
+    - linux-server-era.org
+
+- question: "Do you have experience monitoring infrastructure?"
+  expected_answer: >-
+    Yes, across two eras. In OSVČ-era Linux administration (~2003–2005) I
+    configured Nagios for site monitoring, with stations running shell
+    scripts or Perl modules for SNMPv3, the standard for network-device
+    discovery. And at Red Hat, a complete Prometheus/Grafana stack for a
+    neighbouring team — a Python prometheus_client exporter on test
+    machines, Prometheus collecting fleet metrics, and Grafana dashboards
+    showing Insights Core update behaviour (GA vs Canary, RHSM registration)
+    — built spec-first.
+  expected_sources:
+    - nagios-snmp-monitoring.org
+    - insights-health-monitoring.org
+
+- question: "Have you done Infrastructure as Code?"
+  expected_answer: >-
+    Yes — at Red Hat I used Vagrant + libvirt to orchestrate virtual
+    machines and Packer to build reproducible KVM/libvirt images,
+    provisioning multi-node clusters on a single hypervisor. The principles:
+    environments defined in code rather than manual setup, immutable images
+    rebuilt from scratch (never patched in place), and every test in an
+    identical environment. The same principles continue in Krakatoa (KVM +
+    Podman, Packer/Terraform) and rootless Podman in CI/CD.
+  expected_sources:
+    - vagrant-provisioning.org
+
+- question: "Where did your approach to testing come from?"
+  expected_answer: >-
+    From 2019: the Reactive Testing principle — separate what the system does
+    from how you verify it, splitting a test into scenario (interacts with the
+    system and emits to a broker/log), observations (scan the system under
+    test), and verification (aggregate and validate). The core is unchanged
+    since, though the form evolved (message broker → Data Bundle, RxJava →
+    Python assertions); it is the direct predecessor of today's
+    simulation-first / spec-first. It was validated by a DNS-failover POC
+    ("no dig gap longer than 1s when the master fails") and taught its own
+    lesson: a good idea without change management stays at the
+    individual-contributor level.
+  expected_sources:
+    - reactive-testing-origin.org
+
+- question: "How do you design internal tools?"
+  expected_answer: >-
+    By observing how people actually work — not how they say they work —
+    understanding their domain and rhythm, then building a backend that
+    supports their existing workflow rather than forcing new patterns. It is
+    a recurring 20+-year pattern across four intranets (cdbazar, Bata,
+    eDeposit, gtd-org) in four stacks — platform engineering before the term
+    existed; eDeposit is the clearest example, its architecture drawn from
+    watching librarians' daily workflow.
+  expected_sources:
+    - intranet-pattern.org
+
+- question: "Why Clojure? What led you to it?"
+  expected_answer: >-
+    Through Perl: the core primitives map/grep/sub showed that code can
+    express relations between data without miles of imperative boilerplate —
+    the first encounter with code-as-data — and Perl also gave POE
+    (event-driven async years before Node.js) and Mojolicious (the Bata
+    intranet). When Clojure arrived, code-as-data was already familiar; the
+    same thread runs Perl → Clojure → spec-first.
+  expected_sources:
+    - perl-clojure-gateway.org
+
+- question: "Where have you used Clojure in production and in testing?"
+  expected_answer: >-
+    Production: eDeposit (2013-2015), the National Library's long-term
+    preservation system — the first Clojure in production in this career —
+    with AMQP workers processing XML/LTP metadata and validating PDFs
+    (pdfbox) and EPUBs (epubcheck) over RabbitMQ behind a Plone UI. Testing:
+    at Red Hat I was hired to maintain and extend Clojure tests for
+    subscription-manager — libraries bridging Clojure into the Java TestNG
+    suite (test-clj.testng, verify-testng), a Bugzilla-status TestNG
+    listener, and Clojure + Selenium tests for the Cockpit web UI.
+  expected_sources:
+    - edeposit.org
+    - clojure-testing.org
+
+- question: "How has your thinking on asynchronous systems evolved over the years?"
+  expected_answer: >-
+    It began in 2005 with CoreNet — multi-process asynchronous orchestration
+    with Twisted Deferred, before async was mainstream. The thread has run
+    for over two decades (the DNA-threads meta-analysis): the same
+    async/reactive thinking re-expressed in each era's tools. When a
+    JavaScript stack was rejected, the idea found Python as RxPy — reactive
+    across languages, not tied to one framework. Async is not a feature that
+    was adopted; it is the oldest thread in this work.
+  expected_sources:
+    - corenet-twisted-deferred.org
+    - dna-threads.org
+    - candlecon-rxpy.org
