@@ -305,3 +305,17 @@
     client-gated, or simply never published.
   expected_sources:
     - public-proof-map.org
+
+- question: "You've been at this a long time - what can you bring that a younger engineer can't?"
+  expected_answer: >-
+    A long arc instead of breadth: the same principle finding a new form in
+    each era — asynchronous systems from Perl's POE and Twisted Deferred
+    (2005) through reactive testing to today, memory management from C++
+    canary bytes to Rust's zero-allocation pools two decades later. Long
+    experience brings pattern recognition across eras, judgment about what
+    ages well, and the habit of entering each new domain as a novice without
+    losing the systems thinking.
+  expected_sources:
+    - dna-threads.org
+    - cpp-memory-allocator.org
+    - career-trajectory.org
