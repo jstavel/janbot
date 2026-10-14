@@ -3,7 +3,7 @@ title: 'Golden dataset completed'
 type: 'feature'
 ticket: 2
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: 'ae6f3b0'
 route: 'oneshot'
 route_source: 'auto'
@@ -53,6 +53,8 @@ context: []
 - Given every `expected_sources` entry, when checked against `public_profile_org/`, then the referenced file exists.
 
 ## Implementation Notes
+
+- Decision (2026-10-14, owner sign-off, S6): the owner reviewed the dataset against the re-extracted corpus. The seed's "why Rust" rationale is signed off as covered by the matching-engine item (item 4); the "model modes" question is restored as its own item, so the set is 20 items. See `epic-evaluation.md` Notes.
 
 ## Plan Change Log
 

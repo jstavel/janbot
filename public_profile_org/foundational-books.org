@@ -11,7 +11,7 @@
 :WEAKNESSES: none-identified
 :END:
 
-# Foundational books — the framework behind the work
+* Foundational books — the framework behind the work
 
 Eight books form a coherent professional philosophy that guides every
 aspect of how this person works, leads, and grows. The framework:

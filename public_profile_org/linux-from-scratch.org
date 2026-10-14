@@ -11,13 +11,13 @@
 :WEAKNESSES: visibility-dependency
 :END:
 
-# Linux From Scratch — system cloning with netcat and dd on a single floppy
+* Linux From Scratch — system cloning with netcat and dd on a single floppy
 
 When working as an IT administrator at a high school, this person built a
 custom Linux From Scratch distribution fitting on a single 1.44MB floppy
 disk, containing only two programs: `nc` (netcat) and `dd`.
 
-**The workflow:**
+* The workflow
 - Boot the floppy on the source machine → `dd if=/dev/sda | nc -p PORT IP`
 - Boot the same floppy on the target machine → `nc --listen --wait | dd of=/dev/sda`
 

@@ -12,17 +12,17 @@
 :PUBLIC:     https://github.com/jstavel/krakatoa
 :END:
 
-# Krakatoa Matching Engine — polyglot systems design and the 20-year memory arc
+* Krakatoa Matching Engine — polyglot systems design and the 20-year memory arc
 
 A high-throughput, polyglot matching engine (Clojure/Rust) with zero-allocation hot path, built as proof-of-work for the spec-kit framework. Demonstrates systems-level thinking across languages, low-level memory management, and the intellectual arc from early C++ experimentation to modern Rust.
 
-## The 20-year thread: from canary bytes to zero-allocation
+* The 20-year thread: from canary bytes to zero-allocation
 
 In the early university years, the user discovered that `operator new` could be overloaded. They found an article about a custom memory buffer with pre-allocated items and guard bytes (canary bytes) at the edges — when freeing items, the guard bytes were checked to detect buffer overflow. This was the same technique used by Valgrind and Electric Fence.
 
 Two decades later, ADR 0003 in Krakatoa specifies: "Pre-allocated Memory Pools: All data structures required for order processing will be stored in pre-allocated arrays or custom pool allocators initialized at startup." The technique is the same; the difference is Rust's ownership model provides compile-time safety instead of runtime canary bytes. The question was always the same: *"How does memory really work under the hood?"* — asked at every stage of a career.
 
-## Principles
+* Principles
 
 **Polyglot by design, not by accident.** The architecture is intentionally bimodal:
 
@@ -35,7 +35,7 @@ The boundary is not a seam — it is an architectural decision. The JVM provides
 
 **Chaos engineering as a first-class concern.** The infrastructure layer (KVM + Terraform) is designed to test automated hot-failover under simulated hardware drops — the same "test the system, not the feature" mindset that produced Reactive Testing six years earlier.
 
-## Strengths
+* Strengths
 
 **Deep curiosity across 20+ years.** The thread from C++ operator new overloading through Linux From Scratch on a floppy disk to Rust zero-allocation matching engine is not random — it is a sustained inquiry into how systems work at every level. This is not "full-stack" in the web sense; it is "full-stack" across the memory hierarchy: allocators → operating systems → languages → distributed systems → domain logic.
 
@@ -45,7 +45,7 @@ The boundary is not a seam — it is an architectural decision. The JVM provides
 
 **Trading domain depth.** Matching engine with price-time priority, taker-maker crossing, partial fills, multi-level sweeps, and Trade record generation. This is not a toy order book — it implements real exchange mechanics.
 
-## Risks
+* Risks
 
 **Visibility dependency.** Same pattern as before — Krakatoa is invisible to a keyword scan. "Rust" and "Clojure" on a CV say nothing about the architectural thinking behind them.
 

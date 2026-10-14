@@ -11,19 +11,19 @@
 :WEAKNESSES: none-identified
 :END:
 
-# NEPodpis — PKI certificate provisioning for visually impaired Linux users
+* NEPodpis — PKI certificate provisioning for visually impaired Linux users
 
 An OSVČ project for Brailcom ([[https://www.brailcom.cz/projects]]). Visually
 impared clients using Linux needed state-authorized electronic signatures —
 certificates issued by Czech banks operating as government-certified
 certification authorities.
 
-**What this person did:**
+* What this person did
 - Visited blind clients at their homes (often outside Brno)
 - Set up the full PKI certificate chain on their Linux machines
 - Accompanied clients to the bank for identity verification
 
-**Research phase — how does PKI work on Linux?**
+* Research phase — how does PKI work on Linux?
 Before any client work, this person had to research the full Linux PKI
 stack. Smartcards on Linux were not well documented at the time, and RSA
 cards that worked with Linux were rare. Key findings:
@@ -38,13 +38,15 @@ cards that worked with Linux were rare. Key findings:
 This was genuine exploratory engineering — finding a working path through
 undocumented Linux PKI integration.
 
-**Technical process:**
+* Technical process
 1. Generate asymmetric key pair — private key on an RSA smartcard via USB reader
 2. Generate Certificate Signing Request (CSR) with mandatory personal data
 3. Bank as certification authority signs the request and issues the certificate (PEM format)
 4. Install and verify the certificate on the client's Linux system
 
-**Stack:** OpenSC, OpenSSL, PKI infrastructure, RSA smartcards, USB readers,
+* Stack
+
+OpenSC, OpenSSL, PKI infrastructure, RSA smartcards, USB readers,
 CSR, certification authority protocols, PKCS#11, Linux.
 
 * What this demonstrates

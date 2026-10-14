@@ -11,10 +11,12 @@
     The arc runs teacher, systems administrator, developer, senior QE, architect,
     with each move going deeper into a technical domain rather than broader:
     teaching and PC-lab administration (1997-2001), C++ and then Python development
-    (2001-2007), quality engineering at enterprise scale (2007-2026), and architecture
-    work in 2026 (matching engines, reactive testing frameworks, AI-assisted workflows).
-    Each transition entered a new domain as a novice and built depth, extending the
-    same underlying skills of systems thinking, testing, and automation.
+    (2001-2007), then the 2007-2026 phase — corporate intranets and retail automation
+    (Perl), library messaging systems (Clojure + RabbitMQ), and then quality engineering
+    at enterprise scale — and architecture work in 2026 (matching engines, reactive
+    testing frameworks, AI-assisted workflows). Each transition entered a new domain
+    as a novice and built depth, extending the same underlying skills of systems
+    thinking, testing, and automation.
   expected_sources:
     - career-trajectory.org
 
@@ -110,9 +112,19 @@
   expected_sources:
     - janbot-ai-agent.org
 
+- question: "What model modes does JanBot support and why?"
+  expected_answer: >-
+    JanBot has an eval mode using a locked deterministic snapshot
+    (openai/gpt-4o-mini-2024-07-18 at temperature 0) for CI and evaluation, and a
+    production mode using openrouter/auto. The split keeps test and evaluation
+    runs deterministic while production can flex across providers.
+  expected_sources:
+    - janbot-ai-agent.org
+
 - question: "What experience do you have operating and debugging CI/CD infrastructure like Jenkins?"
   expected_answer: >-
-    At Red Hat, hands-on ownership of a shared Jenkins instance on OpenShift:
+    At Red Hat, hands-on maintenance and extension of a shared Jenkins instance on
+    OpenShift:
     job definitions as code (Groovy/job DSL, Configuration as Code), the seed job,
     agent/container images built with Podman keeping tooling versioned in images,
     plus GitHub CI for an upstream project and an Ansible repository with dynamic
@@ -205,8 +217,8 @@
     With Why and Leaders Eat Last, Willink's Extreme Ownership (ownership upward
     to the manager and downward to mentees), Forte's Building a Second Brain, and
     Clear's Atomic Habits. Together they combine an organized mind, growth through
-    challenge, focused creation, meaningful direction, full accountability, and
-    habit design.
+    challenge, focused creation, meaningful direction, full accountability,
+    systematic knowledge management, and habit design.
   expected_sources:
     - foundational-books.org
 
