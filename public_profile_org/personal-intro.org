@@ -1,0 +1,36 @@
+:PROPERTIES:
+:ID:      20261014-personal-intro
+:TITLE:   Personal intro — motto, stack, and focus
+:CREATED: <2026-10-14>
+:AUTHOR:  jan
+:REVIEWED: <2026-10-14>
+:DOMAIN:  attitudes
+:TAGS:    intro motto values stack clojure async invariant-testing growth
+:SYNOPSIS: A short self-introduction: a motto on stories and shared joy, the language stack (Clojure the true passion), a focus on asynchronous systems & invariant testing, and a note on staying a learner.
+:STRENGTHS:  self-awareness breadth-clarity motivational-framing
+:WEAKNESSES: none-identified
+:END:
+
+# Personal intro — motto, stack, and focus
+
+* The intro (verbatim)
+
+  Stories bring the power to know; success fuels the power to grow.
+  Trust builds joy, and shared joy is twice the joy.
+
+  Professional in Perl and Python, JavaScript, TypeScript, yet Clojure is my true passion.
+  Focus on Asynchronous Systems & Invariant Testing.
+
+  I cherish the fleeting moments that remind me I am still growing.
+
+* What it claims
+
+- Motto: knowledge grows through stories and success; trust and shared joy are the point of collaboration.
+- Stack: professional in Perl, Python, JavaScript and TypeScript; Clojure is the true passion.
+- Focus: asynchronous systems and invariant testing.
+- Stance: a learner — the fleeting moments that prove you are still growing are the ones worth keeping.
+
+* Sources
+
+- ~/dev/cv/cv-en.tex — the `\quote{}` intro block (lines 30–35, English CV)
+  git ref: 562111f:cv-en.tex

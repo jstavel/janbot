@@ -242,3 +242,41 @@
     separation of immutable objects, derived outputs and views.
   expected_sources:
     - system-design.org
+
+- question: "Tell me about yourself."
+  expected_answer: >-
+    Stories bring the power to know; success fuels the power to grow. Trust
+    builds joy, and shared joy is twice the joy. Professional in Perl and
+    Python, JavaScript and TypeScript, yet Clojure is the true passion. Focus
+    on asynchronous systems and invariant testing — and the fleeting moments
+    that remind me I am still growing.
+  expected_sources:
+    - personal-intro.org
+
+- question: "What do you prefer - remote, onsite, or hybrid?"
+  expected_answer: >-
+    Remote by preference: 15 years of home office, and routine collaboration
+    such as standups works fully virtual. Hybrid is welcome, but only for
+    genuinely personal contact — the one thing virtual meetings cannot
+    replace — not for commuting to meetings that work better remotely anyway.
+  expected_sources:
+    - remote-work-conviction.org
+
+- question: "How do you keep an AI assistant from making things up?"
+  expected_answer: >-
+    Fail-closed by design: only the public corpus is ever indexed (a
+    whitelist, not a blocklist, so private notes are provably never touched),
+    the spec is the source of truth rather than the code, and evaluation runs
+    deterministically against a locked snapshot at temperature 0 — so the
+    assistant answers from grounded documentation, not buzzwords.
+  expected_sources:
+    - janbot-ai-agent.org
+
+- question: "Where can I find the source for the eDeposit AMQP/pdfbox worker?"
+  expected_answer: >-
+    The eDeposit libraries live under the edeposit GitHub organization, not a
+    personal account: the PDF-validation worker is
+    https://github.com/edeposit/edeposit.amqp.pdfbox (the organization itself
+    is https://github.com/edeposit).
+  expected_sources:
+    - edeposit.org
