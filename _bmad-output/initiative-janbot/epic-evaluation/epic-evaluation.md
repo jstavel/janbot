@@ -52,6 +52,7 @@ A new `eval/` module, the MLflow tracking setup, the golden dataset, and the com
 
 - Decision (2026-10-14, slicing): Milestone 2 is one epic — CAP-8 is one capability, one owner, and evaluation and optimization are one loop (you cannot decide an optimization stage without the recorded metrics).
 - Decision (2026-10-14): the LLM-as-a-judge is a separate config-driven model (`JANBOT_JUDGE_MODEL`), defaulting to the locked snapshot; a stronger judge is a config change, not code.
-- Decision (2026-10-14): MLflow runs on a tracking server with a config-driven `MLFLOW_TRACKING_URI`, not a bare local file store.
-- Unknown: the MLflow backend (SQLite vs Postgres) and artifact store; entries wait on it.
-- Unknown: the golden-dataset format and where it is version-controlled; entries wait on it.
+- Decision (2026-10-14): MLflow runs on a tracking server with a config-driven `MLFLOW_TRACKING_URI`, not a bare local file store. The backend is SQLite (`sqlite:///mlflow.db`) with a local `mlflow-artifacts/` directory; both are gitignored.
+- Decision (2026-10-14): the golden dataset lives at `eval/golden_dataset.yaml`, version-controlled; each item carries a question, an expected answer and expected sources.
+- Decision (2026-10-14, sequencing): entry 1 is the tracer bullet — the thinnest path from the seed dataset through the pipeline into a recorded MLflow run. Entries 3/4/5 run in parallel because entry 1 owns the metric-registration interface and each metric is its own module; entry 6 completes run records, entry 7 records the baseline and the optimization decision, entries 8/9 are the gated optimization stages; entry 10 is the closing refactor sweep and entry 11 the closing end-to-end suite.
+- Decision (2026-10-14): entry 9 (the `MIPROv2` stage, $6–15) carries `plan_checkpoint` for an unattended run.

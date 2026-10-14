@@ -1,0 +1,125 @@
+# tickets.toml — epic-evaluation. Milestone 2 entries in build order.
+# `id` names a child for good; refer to an entry from another epic as <epic id>.<entry id>.
+# Status never lives here: an entry with no plan and no leaf file is planned.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Tracer bullet: seed dataset, run the pipeline, record a metric in MLflow"
+description = "Stands up the eval skeleton: a version-controlled seed of recruiter Q&As, a runner that puts each question through the pipeline under the locked snapshot, a metric-registration interface (with a stub metric), and a recorded MLflow run carrying that metric. A person starts the MLflow tracking server."
+verify = "An MLflow run recorded from the seed dataset carries one metric produced through the runner under the locked snapshot (the metric may be a stub)."
+covers = ["E1", "E2", "E3"]
+after = ["epic-rag-chat"]
+hitl = true
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Golden dataset completed"
+description = "The full golden dataset of recruiter questions, each with an expected answer and expected sources, authored and reviewed by the owner."
+verify = "Every golden question carries an expected answer and expected sources, and the set is version-controlled."
+covers = ["E1"]
+after = [1]
+hitl = true
+risk = "low"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Retrieval-accuracy metric"
+description = "Per-question and aggregate retrieval accuracy: whether the expected sources are among the sources retrieved for the question."
+verify = "Running the eval emits per-question and aggregate retrieval-accuracy numbers against the golden dataset."
+covers = ["E2"]
+after = [1, 2]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Citation-correctness metric"
+description = "Per-question and aggregate citation correctness: every emitted citation names a source actually used and drawn from the indexed corpus."
+verify = "Running the eval emits per-question and aggregate citation-correctness numbers against the golden dataset."
+covers = ["E2"]
+after = [1, 2]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Hallucination metric via LLM-as-a-judge"
+description = "An LLM-as-a-judge scores each answer against the golden expected answer, using the config-driven judge model (default the locked snapshot); the verdict label and aggregate are recorded."
+verify = "Running the eval emits a per-question judge verdict and an aggregate hallucination score against the golden dataset."
+covers = ["E2"]
+after = [1, 2]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 6
+type = "story"
+title = "MLflow run records: config, metrics and comparability"
+description = "Extends the tracer's MLflow recording: each run logs its config (model, snapshot, temperature, seed) and all metrics, plus the dataset revision as an artifact, so two runs can be compared."
+verify = "Two eval runs recorded in MLflow expose their config and metrics side by side."
+covers = ["E3"]
+after = [2, 3, 4, 5]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 7
+type = "story"
+title = "Baseline recorded + optimization decision"
+description = "The baseline manual program is evaluated and recorded; the recorded metrics decide whether a BootstrapFewShot stage is needed, recorded as a dated decision."
+verify = "A baseline run is recorded with all metrics, and a recorded decision states whether BootstrapFewShot is needed and why."
+covers = ["E4"]
+after = [2, 3, 4, 5, 6]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 8
+type = "story"
+title = "BootstrapFewShot stage"
+description = "Compile the program with BootstrapFewShot only when entry 7 showed a need, and record the resulting run and comparison; when there is no need, the skip is the recorded outcome."
+verify = "Either a recorded run shows the BootstrapFewShot-compiled program's metrics against the baseline with its compilation config, or a recorded decision shows the stage was skipped as unneeded."
+covers = ["E4"]
+after = [7]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 9
+type = "story"
+title = "MIPROv2 stage"
+description = "Compile with MIPROv2 only when the BootstrapFewShot stage showed a need, and record the resulting run and comparison; when there is no need, the skip is the recorded outcome."
+verify = "Either a recorded run shows the MIPROv2-compiled program's metrics against the prior stage with its compilation config, or a recorded decision shows the stage was skipped as unneeded."
+covers = ["E4"]
+after = [8]
+hitl = false
+risk = "high"
+plan_checkpoint = true
+
+[[entry]]
+id = 10
+type = "story"
+title = "Refactor sweep"
+description = "Cleanup of the eval module and its plans, scoped when it starts from the epic's deferred findings."
+verify = "The eval suite passes with no dead code, and the sweep's scope is recorded."
+covers = []
+after = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 11
+type = "story"
+title = "End-to-end eval suite"
+description = "One runnable suite that runs the recorded eval end to end and asserts the deterministic metrics: repeated runs under the locked snapshot agree on retrieval-accuracy and citation-correctness."
+verify = "The suite runs green and fails when a deterministic metric changes between two runs under the locked snapshot."
+covers = ["E2", "E5"]
+after = [10]
+hitl = false
+risk = "medium"
