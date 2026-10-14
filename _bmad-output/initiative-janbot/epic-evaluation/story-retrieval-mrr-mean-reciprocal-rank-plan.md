@@ -3,7 +3,7 @@ title: 'Retrieval MRR (mean reciprocal rank)'
 type: 'feature'
 ticket: 15
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: '8ad9c6d'
 route: 'oneshot'
 route_source: 'auto'
