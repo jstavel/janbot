@@ -97,7 +97,7 @@ title = "MIPROv2 stage"
 description = "Compile with MIPROv2 only when the BootstrapFewShot stage showed a need, and record the resulting run and comparison; when there is no need, the skip is the recorded outcome."
 verify = "Either a recorded run shows the MIPROv2-compiled program's metrics against the prior stage with its compilation config, or a recorded decision shows the stage was skipped as unneeded."
 covers = ["E4"]
-after = [8]
+after = [8, 14]
 hitl = false
 risk = "high"
 plan_checkpoint = true
@@ -142,6 +142,39 @@ title = "Refusal item class and refusal metrics"
 description = "Adds a should-refuse item class to the golden dataset (a per-item marker on GoldenItem) and metrics that score a clean decline as pass for those items while a declined in-corpus question stays a failure; 2-3 refusal items on deliberately out-of-corpus topics (Kubernetes, salary, notice period). Waits on the graceful decline (epic-graceful-decline) so a decline has a defined, contract-conforming shape to score."
 verify = "The dataset marks should-refuse items; running the eval scores a decline as pass for them and a false refusal as failure; the refusal metrics appear in the MLflow run."
 covers = ["E2"]
-after = ["epic-graceful-decline"]
+after = ["epic-graceful-decline", 16]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 14
+type = "story"
+title = "Multi-objective compile metric (citations + faithfulness)"
+description = "Revise the BootstrapFewShot compile objective so it does not buy citation coverage at the cost of faithfulness — the Goodhart trade entry 8 exposed. Objective: score = w_c*cited_ok + w_f*faithful (default 0.5/0.5, recorded in the compile hyperparams); a demo is accepted only when cited_ok AND faithful, short-circuiting to False without a judge call when cited_ok is false (keeps it near-free). Only program-controlled terms — retrieval_accuracy and answer_coverage (stub) do not belong. Store the (cited_ok, faithful) pair per item, not only the scalar, so a Pareto/GEPA objective needs no recompute, and leave room for a refusal_ok term once entry 13 lands."
+verify = "Re-compiling over the golden set with the multi-objective objective yields a compiled program whose recorded run holds or improves citations without reducing faithfulness versus the entry-7 baseline, with the weights in the compile hyperparams."
+covers = ["E4"]
+after = [8]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 15
+type = "story"
+title = "Retrieval MRR (mean reciprocal rank)"
+description = "retrieval_accuracy is binary — it cannot tell rank 1 from rank 4, so it hides the item-5 finding (the expected source sat at rank 4 and top_k=4 barely saved it). Add retrieval_mrr = mean(1 / rank of the first expected source) over the same eligible items as retrieval_accuracy; it is data-level and judge-free, and shows whether chunking/top_k/hybrid search actually help."
+verify = "The eval emits retrieval_mrr alongside retrieval_accuracy over the same eligible items; a source at rank 4 scores lower than at rank 1."
+covers = ["E2"]
+after = [3]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 16
+type = "story"
+title = "Metric hygiene: polarity, denominators, one eligibility"
+description = "Harden the metric layer before refusals land: (1) register_metric(name, fn, higher_is_better) so polarity is explicit (faithfulness must never read inverted); (2) log each metric's denominator in the run record (<metric>__n) so runs are comparable across different bases; (3) one eligibility(item, outcome) — treating a declined response (status=insufficient) as excluded from citation/faithfulness scoring — threaded through every metric, so a correct refusal is never scored as an uncited or incomplete answer; (4) faithfulness computed only over answered and judged items, a refusal judged by the refusal metrics (entry 13), never as unfaithful."
+verify = "Each metric reports its denominator in the run; polarity is declared; the metrics share one eligibility; a declined response is not penalized by citation_correctness or faithfulness."
+covers = ["E2"]
+after = [3, 4, 5]
 hitl = false
 risk = "medium"
