@@ -137,6 +137,14 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "citation_precision": 0.5,
         "faithfulness": 0.0,
     }
+    assert result.counts == {
+        "answer_coverage__n": 2,
+        "public_references__n": 2,
+        "retrieval_accuracy__n": 0,
+        "citation_correctness__n": 2,
+        "citation_precision__n": 2,
+        "faithfulness__n": 0,
+    }
     assert result.run_id
     assert result.reference_failures == []
     assert result.retrieval_misses == []
@@ -158,11 +166,17 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
     }
     assert run.data.metrics == {
         "answer_coverage": 1.0,
+        "answer_coverage__n": 2.0,
         "public_references": 1.0,
+        "public_references__n": 2.0,
         "retrieval_accuracy": 0.0,
+        "retrieval_accuracy__n": 0.0,
         "citation_correctness": 0.5,
+        "citation_correctness__n": 2.0,
         "citation_precision": 0.5,
+        "citation_precision__n": 2.0,
         "faithfulness": 0.0,
+        "faithfulness__n": 0.0,
     }
 
 
@@ -201,6 +215,7 @@ def test_cli_keyless_run_reads_dataset_and_reports_tracking_uri(
     tmp_path: Path,
     embedder: Embedder,
     write_org: Callable[..., None],
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     corpus = tmp_path / "public_profile_org"
     write_org(corpus / "profile.org", heading="About", body="Search infrastructure engineer.")
@@ -235,7 +250,10 @@ def test_cli_keyless_run_reads_dataset_and_reports_tracking_uri(
         lm_factory=StubLMFactory(),
     )
 
+    out = capsys.readouterr().out
     assert code == 0
+    assert "answer_coverage: " in out
+    assert "(n=" in out
 
 
 def test_cli_all_failed_items_returns_nonzero(

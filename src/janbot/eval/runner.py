@@ -27,6 +27,7 @@ from janbot.eval.judge import Judge, Verdict
 from janbot.eval.metrics import (
     ItemOutcome,
     citation_misses,
+    metric_counts,
     registered_metrics,
     registered_public_reference_failures,
     retrieval_misses,
@@ -35,10 +36,11 @@ from janbot.eval.metrics import (
 
 @dataclass(frozen=True)
 class RunResult:
-    """The recorded run: per-item outcomes, aggregate metrics, MLflow run id, reference flags."""
+    """The recorded run: per-item outcomes, aggregate metrics, counts, MLflow run id, reference flags."""
 
     outcomes: list[ItemOutcome]
     metrics: dict[str, float]
+    counts: dict[str, int]
     run_id: str
     reference_failures: list[str]
     retrieval_misses: list[str]
@@ -111,14 +113,16 @@ def _record(
     experiment: str,
     params: Mapping[str, Any],
     metrics: Mapping[str, float],
+    counts: Mapping[str, int],
     *,
     dataset_path: str | Path | None = None,
 ) -> str:
-    """Write one MLflow run holding ``params`` and ``metrics``; return its run id.
+    """Write one MLflow run holding ``params``, ``metrics`` and their ``counts``; return its run id.
 
-    When ``dataset_path`` is given its sha256 joins the params and the file is
-    attached as an artifact, so a run pins the exact dataset that produced its
-    metrics and two runs are comparable.
+    Each metric's population count is logged beside its score as the numeric
+    ``<metric>__n``, so it charts with the score. When ``dataset_path`` is given
+    its sha256 joins the params and the file is attached as an artifact, so a run
+    pins the exact dataset that produced its metrics and two runs are comparable.
     """
     logged_params = dict(params)
     dataset_file = Path(dataset_path) if dataset_path is not None else None
@@ -135,8 +139,9 @@ def _record(
             mlflow.log_params(logged_params)
         if dataset_file is not None:
             mlflow.log_artifact(str(dataset_file))
-        if metrics:
-            mlflow.log_metrics(dict(metrics))
+        logged_metrics = {**metrics, **counts}
+        if logged_metrics:
+            mlflow.log_metrics({name: float(value) for name, value in logged_metrics.items()})
         return run.info.run_id
 
 
@@ -173,9 +178,15 @@ def run_eval(
     metrics = {
         name: float(metric(outcomes)) for name, metric in registered_metrics().items()
     }
+    counts = metric_counts(outcomes)
     try:
         run_id = _record(
-            tracking_uri, experiment, params or {}, metrics, dataset_path=dataset_path
+            tracking_uri,
+            experiment,
+            params or {},
+            metrics,
+            counts,
+            dataset_path=dataset_path,
         )
     except Exception as exc:
         raise RuntimeError(
@@ -184,6 +195,7 @@ def run_eval(
     return RunResult(
         outcomes=outcomes,
         metrics=metrics,
+        counts=counts,
         run_id=run_id,
         reference_failures=registered_public_reference_failures(outcomes),
         retrieval_misses=retrieval_misses(outcomes),

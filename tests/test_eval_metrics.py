@@ -7,12 +7,16 @@ against what was retrieved; and an item with no expected sources (or no observed
 retrieval) is excluded from the aggregate. Citation: containment (expected
 subset of cited) passes, a missed expected source fails and is named, a
 retrieved-but-unexpected citation still passes and only lowers precision, and a
-decline fails containment. No model, no network, no MLflow.
+declined response is excluded from the population. No model, no network, no
+MLflow.
 """
 
 from __future__ import annotations
 
+import pytest
+
 from janbot.api.contract import INSUFFICIENT_ANSWER, ChatResponse, Citation
+from janbot.eval import metrics as metrics_module
 from janbot.eval.dataset import GoldenItem
 from janbot.eval.judge import FAITHFUL, HALLUCINATED, Verdict
 from janbot.eval.metrics import (
@@ -21,6 +25,8 @@ from janbot.eval.metrics import (
     citation_misses,
     citation_precision,
     faithfulness,
+    metric_counts,
+    register_metric,
     registered_metrics,
     retrieval_accuracy,
     retrieval_misses,
@@ -122,20 +128,26 @@ def _citation_outcome(
     expected_sources: list[str],
     cited_sources: list[str],
     *,
-    declined: bool = False,
     question: str = "q",
 ) -> ItemOutcome:
-    if declined:
-        response: ChatResponse | None = ChatResponse(
-            status="insufficient", answer=INSUFFICIENT_ANSWER
-        )
-    else:
-        response = ChatResponse(
-            answer="a", citations=[Citation(source=s) for s in cited_sources]
-        )
+    response = ChatResponse(
+        answer="a", citations=[Citation(source=s) for s in cited_sources]
+    )
     return ItemOutcome(
         item=_item(expected_sources, question),
         response=response,
+        error=None,
+        retrieved_sources=None,
+    )
+
+
+def _declined(expected_sources: list[str], question: str = "Refuse?") -> ItemOutcome:
+    """A hand-built declined response: ``status="insufficient"`` with no citations."""
+    return ItemOutcome(
+        item=_item(expected_sources, question),
+        response=ChatResponse(
+            status="insufficient", answer=INSUFFICIENT_ANSWER, citations=[]
+        ),
         error=None,
         retrieved_sources=None,
     )
@@ -166,13 +178,12 @@ def test_extra_retrieved_source_still_passes_and_only_lowers_precision() -> None
     assert citation_precision(outcomes) == 0.5
 
 
-def test_declined_item_fails_containment() -> None:
-    outcomes = [_citation_outcome(["a.org"], [], declined=True, question="Refuse?")]
+def test_declined_response_is_excluded_from_citation_containment() -> None:
+    outcomes = [_declined(["a.org"], question="Refuse?")]
 
     assert citation_correctness(outcomes) == 0.0
-    misses = citation_misses(outcomes)
-    assert len(misses) == 1
-    assert "missing cited source(s): a.org" in misses[0]
+    assert citation_misses(outcomes) == []
+    assert metric_counts(outcomes)["citation_correctness__n"] == 0
 
 
 def test_crashed_response_is_excluded_and_not_named() -> None:
@@ -217,14 +228,17 @@ def test_citation_precision_is_the_mean_expected_share_of_cited() -> None:
     assert citation_precision(outcomes) == 0.75
 
 
-def test_declined_item_contributes_zero_precision_over_the_same_population() -> None:
+def test_declined_response_leaves_the_citation_population() -> None:
     outcomes = [
         _citation_outcome(["a.org"], ["a.org"]),
-        _citation_outcome(["b.org"], [], declined=True),
+        _declined(["b.org"]),
     ]
 
-    assert citation_correctness(outcomes) == 0.5
-    assert citation_precision(outcomes) == 0.5
+    assert citation_correctness(outcomes) == 1.0
+    assert citation_precision(outcomes) == 1.0
+    assert citation_misses(outcomes) == []
+    assert metric_counts(outcomes)["citation_correctness__n"] == 1
+    assert metric_counts(outcomes)["citation_precision__n"] == 1
 
 
 def test_citation_item_with_no_expected_sources_is_excluded() -> None:
@@ -290,5 +304,28 @@ def test_no_judged_items_aggregate_to_zero() -> None:
     assert faithfulness([]) == 0.0
 
 
+def test_declined_response_is_excluded_from_faithfulness() -> None:
+    outcomes = [_judged(FAITHFUL), _declined(["a.org"])]
+
+    assert faithfulness(outcomes) == 1.0
+    assert metric_counts(outcomes)["faithfulness__n"] == 1
+
+
 def test_faithfulness_is_registered() -> None:
     assert "faithfulness" in registered_metrics()
+
+
+def test_register_metric_requires_a_denominator() -> None:
+    with pytest.raises(TypeError):
+        register_metric("a_metric_without_a_denominator", lambda outcomes: 0.0)  # type: ignore[call-arg]
+
+    assert "a_metric_without_a_denominator" not in registered_metrics()
+
+
+def test_every_registered_metric_declares_a_count_and_a_direction() -> None:
+    names = registered_metrics()
+
+    assert set(metric_counts([])) == {f"{name}__n" for name in names}
+    for name in names:
+        assert isinstance(metrics_module._METRICS[name].higher_is_better, bool)
+    assert metrics_module._METRICS["faithfulness"].higher_is_better is True

@@ -133,7 +133,8 @@ def main(
     print(f"MLflow run: {result.run_id}")
     print(f"items: {len(result.outcomes)}")
     for name, value in result.metrics.items():
-        print(f"{name}: {value:.4f}")
+        count = result.counts.get(f"{name}__n", 0)
+        print(f"{name}: {value:.4f} (n={count})")
 
     for failure in result.reference_failures:
         print(f"reference: {failure}")

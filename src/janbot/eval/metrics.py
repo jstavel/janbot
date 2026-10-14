@@ -48,14 +48,41 @@ class ItemOutcome:
 
 
 Metric = Callable[[list[ItemOutcome]], float]
+Eligibility = Callable[[ItemOutcome], bool]
 
-_METRICS: dict[str, Metric] = {}
+
+@dataclass(frozen=True)
+class _Registration:
+    """A registered metric with its declared population predicate and polarity."""
+
+    metric: Metric
+    denominator: Eligibility
+    higher_is_better: bool
 
 
-def register_metric(name: str, metric: Metric) -> Metric:
-    """Register ``metric`` under ``name`` and return it.
+_METRICS: dict[str, _Registration] = {}
+
+
+def register_metric(
+    name: str,
+    metric: Metric,
+    *,
+    denominator: Eligibility,
+    higher_is_better: bool = True,
+) -> Metric:
+    """Register ``metric`` under ``name`` with its population and polarity, and return it.
+
+    ``denominator`` is the eligibility predicate that selects the metric's
+    population — the very predicate the metric aggregates over, so the recorded
+    ``<name>__n`` can never drift from the metric's actual population. It is
+    keyword-only and required, so a metric that declares no denominator fails
+    fast at registration.
+
+    ``higher_is_better`` declares the metric's polarity (default ``True``) so a
+    direction is explicit rather than implied.
 
     Raises:
+        TypeError: if ``denominator`` is omitted (it is keyword-only and required).
         ValueError: if ``name`` is blank or already registered, so a metric can
             never be silently overwritten.
     """
@@ -63,13 +90,46 @@ def register_metric(name: str, metric: Metric) -> Metric:
         raise ValueError("a metric name must be non-empty")
     if name in _METRICS:
         raise ValueError(f"a metric is already registered as {name!r}")
-    _METRICS[name] = metric
+    _METRICS[name] = _Registration(
+        metric=metric, denominator=denominator, higher_is_better=higher_is_better
+    )
     return metric
 
 
 def registered_metrics() -> Mapping[str, Metric]:
     """Return a snapshot of the registered metrics keyed by name."""
-    return dict(_METRICS)
+    return {name: registration.metric for name, registration in _METRICS.items()}
+
+
+def metric_counts(outcomes: list[ItemOutcome]) -> dict[str, int]:
+    """Return ``{f"{name}__n": population}`` for every registered metric.
+
+    ``population`` is the number of ``outcomes`` the metric's declared
+    denominator selects — the same eligibility its value aggregates over — so
+    each ``n`` matches that metric's own population (e.g. faithfulness over
+    judged-and-answered items only).
+    """
+    return {
+        f"{name}__n": sum(1 for outcome in outcomes if registration.denominator(outcome))
+        for name, registration in _METRICS.items()
+    }
+
+
+def _responded(outcome: ItemOutcome) -> bool:
+    """Whether the run returned an ordinary answer: a response observed and not a decline.
+
+    A declined response (``status="insufficient"``) is not an ordinary answer, so
+    it is excluded from every claim-making population — a refusal is never scored
+    as an uncited or unfaithful answer. Today the eval path's declines raise
+    before a response is returned, so a declined outcome is ``response is None``
+    and this clause is defensively a no-op.
+    """
+    return outcome.response is not None and outcome.response.status != "insufficient"
+
+
+def _all_eligible(outcome: ItemOutcome) -> bool:
+    """Whether the item is in a whole-dataset population (every item is)."""
+    return True
 
 
 def stub_metric(outcomes: list[ItemOutcome]) -> float:
@@ -77,11 +137,12 @@ def stub_metric(outcomes: list[ItemOutcome]) -> float:
 
     A placeholder for the real retrieval/citation/faithfulness metrics, it lets
     the tracer bullet prove the dataset -> pipeline -> MLflow path end to end
-    without a judge or a golden-source comparison.
+    without a judge or a golden-source comparison. Its population is the whole
+    dataset; a declined response counts as unanswered, not as a claim.
     """
     if not outcomes:
         return 0.0
-    answered = sum(1 for outcome in outcomes if outcome.response is not None)
+    answered = sum(1 for outcome in outcomes if _responded(outcome))
     return answered / len(outcomes)
 
 
@@ -176,6 +237,16 @@ def retrieval_misses(outcomes: list[ItemOutcome]) -> list[str]:
     ]
 
 
+def _retrieval_eligible(outcome: ItemOutcome) -> bool:
+    """Whether the item makes a retrieval claim: it names expected sources and retrieval was observed.
+
+    An item with no expected sources is excluded (no retrieval claim), as is an
+    item whose retrieval was never observed. This is the population both the
+    ``retrieval_accuracy`` value and its recorded ``__n`` aggregate over.
+    """
+    return bool(outcome.item.expected_sources) and outcome.retrieved_sources is not None
+
+
 def retrieval_accuracy(outcomes: list[ItemOutcome]) -> float:
     """Fraction of claim-making items whose expected sources were all retrieved.
 
@@ -184,11 +255,7 @@ def retrieval_accuracy(outcomes: list[ItemOutcome]) -> float:
     claim), as is an item whose retrieval was never observed. The item passes when
     its expected sources are a subset of the retrieved set.
     """
-    eligible = [
-        outcome
-        for outcome in outcomes
-        if outcome.item.expected_sources and outcome.retrieved_sources is not None
-    ]
+    eligible = [outcome for outcome in outcomes if _retrieval_eligible(outcome)]
     if not eligible:
         return 0.0
     passed = sum(1 for outcome in eligible if not _item_retrieval_misses(outcome))
@@ -203,13 +270,15 @@ def _cited_sources(outcome: ItemOutcome) -> set[str]:
 
 
 def _citation_eligible(outcome: ItemOutcome) -> bool:
-    """Whether the item makes a citation claim: it names expected sources and a response was observed.
+    """Whether the item makes a citation claim: it names expected sources and the run answered.
 
     A missing response is unobserved (mirrors ``retrieved_sources is None`` for
-    retrieval), so it is excluded. A valid ``insufficient`` decline is still a
-    response and therefore a claim-making item.
+    retrieval), so it is excluded. A declined response (``status="insufficient"``)
+    is excluded too, so a refusal is never scored as an uncited answer. This is
+    the population both the ``citation_correctness``/``citation_precision`` values
+    and their recorded ``__n`` aggregate over.
     """
-    return bool(outcome.item.expected_sources) and outcome.response is not None
+    return bool(outcome.item.expected_sources) and _responded(outcome)
 
 
 def _item_citation_misses(outcome: ItemOutcome) -> list[str]:
@@ -218,8 +287,8 @@ def _item_citation_misses(outcome: ItemOutcome) -> list[str]:
     The golden ``expected_sources`` must be a subset of the sources the answer
     actually cites — containment, never exact-set equality, so a legitimately
     retrieved related source is not an error. Every expected source the answer
-    never cites is named. A valid decline cites nothing and fails containment; a
-    missing response is unobserved and names no miss. The extra,
+    never cites is named. A declined response is excluded from the population and
+    names no miss; a missing response is unobserved and names no miss. The extra,
     retrieved-but-unexpected citations are not misses:
     :func:`citation_precision` carries that signal.
     """
@@ -247,12 +316,11 @@ def citation_misses(outcomes: list[ItemOutcome]) -> list[str]:
 def citation_correctness(outcomes: list[ItemOutcome]) -> float:
     """Fraction of claim-making items whose expected sources were all cited.
 
-    An item counts only when it names expected sources and a response was
-    observed; an item with no expected sources or no observed response is
+    An item counts only when it names expected sources and the run answered it; an
+    item with no expected sources, no observed response, or a declined response is
     excluded. The item passes when its expected sources are a subset of the
     sources its answer cites — never exact-set equality, so a related retrieved
-    source the answer also cites is not an error. A valid decline cites nothing
-    and fails containment.
+    source the answer also cites is not an error.
     """
     eligible = [outcome for outcome in outcomes if _citation_eligible(outcome)]
     if not eligible:
@@ -265,9 +333,9 @@ def citation_precision(outcomes: list[ItemOutcome]) -> float:
     """Informational aggregate: the expected share of the sources items cite.
 
     Over the same eligible items as :func:`citation_correctness` (expected
-    sources named and a response observed), per item precision is the fraction of
-    the cited sources that the golden ``expected_sources`` also names; an item
-    that cites nothing contributes ``0.0``. The aggregate is their mean, so a
+    sources named and the run answered — a declined response is excluded), per
+    item precision is the fraction of the cited sources that the golden
+    ``expected_sources`` also names. The aggregate is their mean, so a
     retrieved-but-unexpected citation lowers this metric without ever failing
     containment.
     """
@@ -286,17 +354,29 @@ def citation_precision(outcomes: list[ItemOutcome]) -> float:
     return sum(precisions) / len(precisions)
 
 
+def _faithfulness_eligible(outcome: ItemOutcome) -> bool:
+    """Whether the item was answered and judged: the population faithfulness aggregates over.
+
+    An unjudged item — no judge configured, no answer to judge, or a failed judge
+    call — is excluded, as is a declined response. This is the population both the
+    ``faithfulness`` value and its recorded ``__n`` aggregate over.
+    """
+    return _responded(outcome) and outcome.judge_verdict is not None
+
+
 def faithfulness(outcomes: list[ItemOutcome]) -> float:
     """Fraction of judged items the judge found faithful to the golden expected answer.
 
-    An item counts only when it carries a judge verdict; an unjudged item — no
-    judge configured, no answer to judge, or a failed judge call — is excluded.
-    The metric is pure: it never calls the judge (the runner runs it per item and
-    stores the verdict). With no judged items the aggregate is ``0.0``.
+    An item counts only when it carries a judge verdict and was answered; an
+    unjudged item — no judge configured, no answer to judge, or a failed judge
+    call — is excluded, as is a declined response. The metric is pure: it never
+    calls the judge (the runner runs it per item and stores the verdict). With no
+    judged items the aggregate is ``0.0``.
     """
+    eligible = [outcome for outcome in outcomes if _faithfulness_eligible(outcome)]
     judged: list[Verdict] = [
         outcome.judge_verdict
-        for outcome in outcomes
+        for outcome in eligible
         if outcome.judge_verdict is not None
     ]
     if not judged:
@@ -305,9 +385,20 @@ def faithfulness(outcomes: list[ItemOutcome]) -> float:
     return faithful / len(judged)
 
 
-register_metric("answer_coverage", stub_metric)
-register_metric("public_references", _public_references)
-register_metric("retrieval_accuracy", retrieval_accuracy)
-register_metric("citation_correctness", citation_correctness)
-register_metric("citation_precision", citation_precision)
-register_metric("faithfulness", faithfulness)
+register_metric("answer_coverage", stub_metric, denominator=_all_eligible)
+register_metric("public_references", _public_references, denominator=_all_eligible)
+register_metric(
+    "retrieval_accuracy", retrieval_accuracy, denominator=_retrieval_eligible
+)
+register_metric(
+    "citation_correctness", citation_correctness, denominator=_citation_eligible
+)
+register_metric(
+    "citation_precision", citation_precision, denominator=_citation_eligible
+)
+register_metric(
+    "faithfulness",
+    faithfulness,
+    denominator=_faithfulness_eligible,
+    higher_is_better=True,
+)
