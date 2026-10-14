@@ -3,7 +3,7 @@ title: 'Citation-correctness metric'
 type: 'feature'
 ticket: 4
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: 'ecada94'
 route: 'full'
 route_source: 'auto'

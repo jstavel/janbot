@@ -3,7 +3,7 @@ title: 'Hallucination metric via LLM-as-a-judge'
 type: 'feature'
 ticket: 5
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: 'd24a62d'
 route: 'full'
 route_source: 'auto'

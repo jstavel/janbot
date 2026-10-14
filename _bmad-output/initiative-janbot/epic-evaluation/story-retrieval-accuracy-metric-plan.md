@@ -3,7 +3,7 @@ title: 'Retrieval-accuracy metric'
 type: 'feature'
 ticket: 3
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: '827ce57f379eb56d65f576bfd060d6411289da00'
 route: 'full'
 route_source: 'auto'
