@@ -28,6 +28,13 @@ title = "End-to-end tests & CI"
 covers = ["CAP-7"]
 after = [{ epic = 3, needs = "the running /chat endpoint and its contract" }]
 
+[[epic]]
+id = 7
+slug = "epic-graceful-decline"
+title = "A graceful insufficiency answer"
+covers = ["CAP-1", "CAP-3"]
+after = [{ epic = 3, needs = "the running /chat pipeline and its contract" }]
+
 # ---- Milestone 2 and Milestone 1.5 ----
 
 [[epic]]
@@ -35,7 +42,10 @@ id = 5
 slug = "epic-evaluation"
 title = "Evaluation harness & cost-staged optimization"
 covers = ["CAP-8"]
-after = [{ epic = 3, needs = "the running /chat pipeline and its index" }]
+after = [
+  { epic = 3, needs = "the running /chat pipeline and its index" },
+  { epic = 7, needs = "a defined insufficiency reply to score" },
+]
 
 [[epic]]
 id = 6

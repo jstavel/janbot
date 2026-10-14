@@ -134,3 +134,14 @@ covers = ["E1"]
 after = [2]
 hitl = false
 risk = "low"
+
+[[entry]]
+id = 13
+type = "story"
+title = "Refusal item class and refusal metrics"
+description = "Adds a should-refuse item class to the golden dataset (a per-item marker on GoldenItem) and metrics that score a clean decline as pass for those items while a declined in-corpus question stays a failure; 2-3 refusal items on deliberately out-of-corpus topics (Kubernetes, salary, notice period). Waits on the graceful decline (epic-graceful-decline) so a decline has a defined, contract-conforming shape to score."
+verify = "The dataset marks should-refuse items; running the eval scores a decline as pass for them and a false refusal as failure; the refusal metrics appear in the MLflow run."
+covers = ["E2"]
+after = ["epic-graceful-decline"]
+hitl = false
+risk = "medium"

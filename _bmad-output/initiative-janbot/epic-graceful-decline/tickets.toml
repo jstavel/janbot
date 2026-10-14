@@ -1,0 +1,29 @@
+# tickets.toml — epic-graceful-decline. Entries in build order.
+# Status never lives here: an entry with no plan and no leaf file is planned.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Tracer: an insufficiency reply through the port"
+description = "Decides the decline shape with the owner (empty citations allowed on a decline, a status field, or a distinct response type), pins it in the Pydantic contract so FastAPI derives the OpenAPI, and returns the insufficiency reply from /chat for a question the pipeline cannot ground — the thinnest decline path end to end. Entry 2 consumes this shape."
+verify = "An out-of-corpus question through the port returns the contract-conforming insufficiency reply, and the OpenAPI derives from the Pydantic shape with no drift."
+covers = ["E1"]
+after = ["epic-rag-chat"]
+hitl = false
+risk = "high"
+plan_checkpoint = true
+references = ["architecture-janbot/architecture-janbot.md#ad-4"]
+unknown = "the decline shape - empty citations allowed on a decline, a status field, or a distinct response type; settled with the owner at build"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Detection and the refusal-gate split"
+description = "Builds the real detection of 'not answerable from the public corpus' on top of entry 1's decline shape, and splits the refusal gate so an explicit decline is sanctioned while a fabricated cited answer is still refused; the decline stays deterministic under the locked snapshot."
+verify = "An in-corpus question still cites, a fabricated cited answer is refused, and the same out-of-corpus question declines the same way across runs under the locked snapshot."
+covers = ["E2", "E3"]
+after = [1]
+hitl = false
+risk = "high"
+references = ["architecture-janbot/architecture-janbot.md#ad-2", "architecture-janbot/architecture-janbot.md#ad-5"]
+unknown = "the detection method - a prompt-level instruction, a retrieval relevance threshold, or a classifier"
