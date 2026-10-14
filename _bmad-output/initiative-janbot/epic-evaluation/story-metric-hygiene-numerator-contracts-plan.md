@@ -3,7 +3,7 @@ title: 'Metric hygiene: numerator contracts (polarity, denominators, one eligibi
 type: 'feature'
 ticket: 16
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: '9260ed0'
 route: 'full'
 route_source: 'auto'
