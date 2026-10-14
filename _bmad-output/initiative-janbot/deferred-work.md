@@ -80,3 +80,13 @@
 - source_plan: `_bmad-output/initiative-janbot/epic-evaluation/story-tracer-bullet-seed-dataset-run-the-pipeline-record-a-metric-plan.md`
   summary: The new `janbot.eval` package, its CLI, `MLFLOW_TRACKING_URI`, and the `mlflow`/`pyyaml` deps are undocumented in README/ARCHITECTURE/CHANGELOG.
   evidence: `.github/PULL_REQUEST_TEMPLATE.md` requires doc updates; `CHANGELOG.md` `[Unreleased]` is already stale repo-wide (see the 2026-10-13 carry-over above), and the README package layout / Configuration table name no eval entry. Deferred to a docs pass or the epic's closing sweep.
+
+## Deferred from the golden-question brainstorm (2026-10-14)
+
+- source_plan: `_bmad-output/initiative-janbot/brainstorm-golden-dataset-questions/.memlog.md`
+  summary: Four proposed golden items are not yet corpus-grounded: (1) a proof-map — "which projects can I inspect, and where" with the full URLs; (2) a self-proving JanBot item — "anything I can use right now"; (3) a weakest-proof/honesty item naming the CoreNet/Twisted work as having no public artifact; (4) a remote-stance item carrying the customer-facing nuance (Brno 1–2×/week, Prague 1×/month, "customers pay our bills").
+  evidence: The corpus is immutable per `~/org/corpus/README.org` (update = new object), and none of these facts exists in `public_profile_org/` — each needs a new corpus object before an item can be grounded. The owner is still adding questions.
+
+- source_plan: `_bmad-output/initiative-janbot/brainstorm-golden-dataset-questions/.memlog.md`
+  summary: Two public-surface backlog items raised by the brainstorm — complete the LinkedIn profile as a JanBot-citable reference (backlog 7) and publish the CV publicly via a git-crypt repo + Pages (backlog 8) — plus the URL allow-list (backlog 9) they feed.
+  evidence: recorded so the family is visible; the LinkedIn/CV URLs become allow-list entries once live.

@@ -123,3 +123,14 @@ covers = ["E2", "E5"]
 after = [10]
 hitl = false
 risk = "medium"
+
+[[entry]]
+id = 12
+type = "story"
+title = "Golden dataset expansion: public-reference and stance items"
+description = "Adds four corpus-grounded items from the golden-question brainstorm: a 'Tell me about yourself' intro item (new personal-intro corpus object, re-extracted), a remote/onsite/hybrid stance item (the conviction, not the customer nuance), a fail-closed anti-hallucination item, and an eDeposit public-URL ownership trap. The URL allow-list and further items are deferred (see deferred-work)."
+verify = "eval/golden_dataset.yaml holds 24 items; every expected_sources path exists in public_profile_org/ and load_golden_dataset parses it."
+covers = ["E1"]
+after = [2]
+hitl = false
+risk = "low"
