@@ -3,7 +3,7 @@ title: 'End-to-end eval suite'
 type: 'feature'
 ticket: 11
 created: '2026-10-15'
-status: 'built'
+status: done
 baseline_revision: '338e953'
 route: 'oneshot'
 route_source: 'auto'
