@@ -63,6 +63,16 @@ def _retrieved_sources(program: Callable[..., ChatResponse]) -> list[str] | None
     return None if retrieved is None else list(retrieved)
 
 
+def _retrieved_context(program: Callable[..., ChatResponse]) -> str | None:
+    """The exact context the program last gave the model, or ``None`` if it exposes none.
+
+    The ``ChatProgram`` records it on ``last_retrieved_context`` (an additive
+    attribute); it is the window the judge checks an answer against.
+    """
+    context = getattr(program, "last_retrieved_context", None)
+    return None if context is None else str(context)
+
+
 def _evaluate(
     items: list[GoldenItem],
     program: Callable[..., ChatResponse],
@@ -101,6 +111,7 @@ def _evaluate(
                     ),
                     error=None,
                     retrieved_sources=_retrieved_sources(program),
+                    retrieved_context=_retrieved_context(program),
                     judge_verdict=None,
                 )
             )
@@ -112,6 +123,7 @@ def _evaluate(
                     response=None,
                     error=f"{type(exc).__name__}: {exc}",
                     retrieved_sources=_retrieved_sources(program),
+                    retrieved_context=_retrieved_context(program),
                     judge_verdict=None,
                 )
             )
@@ -120,7 +132,7 @@ def _evaluate(
         verdict: Verdict | None = None
         if judge is not None and not item.should_refuse:
             try:
-                verdict = judge(item.expected_answer, response.answer)
+                verdict = judge(_retrieved_context(program) or "", response.answer)
             except Exception as exc:
                 judge_failures.append(
                     f"{item.question} — judge failed: {type(exc).__name__}: {exc}"
@@ -131,6 +143,7 @@ def _evaluate(
                 response=response,
                 error=None,
                 retrieved_sources=_retrieved_sources(program),
+                retrieved_context=_retrieved_context(program),
                 judge_verdict=verdict,
             )
         )

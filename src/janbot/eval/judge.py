@@ -28,13 +28,13 @@ FAITHFUL = "faithful"
 HALLUCINATED = "hallucinated"
 
 JUDGE_INSTRUCTION = """\
-Judge whether the candidate answer is faithful to the reference answer.
+Judge whether the candidate answer is faithful to the CONTEXT the model was given.
 
 Return "faithful" when every factual claim in the candidate answer is supported
-by the reference answer: paraphrase, summarising and omission are all fine.
-Return "hallucinated" when the candidate answer invents a fact, name, number,
-date, source or relationship the reference answer does not support — including
-a confident claim that contradicts the reference.
+by the CONTEXT. Return "hallucinated" when the candidate invents a fact, name,
+number, date, source or relationship NOT supported by the CONTEXT — regardless
+of the reference answer. The reference answer is metadata; the check is against
+the CONTEXT alone.
 Return exactly one label: faithful or hallucinated."""
 
 JUDGE_RATIONALE_HINT = "one short sentence justifying the verdict"
@@ -49,7 +49,13 @@ class Verdict:
 
 
 Judge = Callable[[str, str], Verdict]
-"""An injectable judge: ``judge(expected_answer, answer) -> Verdict``."""
+"""An injectable judge: ``judge(context, answer) -> Verdict``.
+
+``context`` is the evidence the answer is judged against — the eval runner passes
+the retrieved window the model actually saw (the definition of hallucination is
+"asserting a fact not in the input the model saw"), while the compile's objective
+passes the golden expected answer as its context (its faithful term keeps its
+reference-based semantics)."""
 
 
 _NEGATIONS = ("not", "no", "non", "never", "without", "un")
@@ -90,8 +96,8 @@ def _faithfulness_signature() -> type:
     class Faithfulness(dspy.Signature):
         __doc__ = JUDGE_INSTRUCTION
 
-        expected_answer: str = dspy.InputField(
-            desc="the golden reference answer the candidate is judged against"
+        context: str = dspy.InputField(
+            desc="the evidence the answer is judged against (the retrieved window)"
         )
         answer: str = dspy.InputField(desc="the candidate answer to judge")
         verdict: str = dspy.OutputField(
@@ -117,8 +123,8 @@ def build_judge(lm: Any, *, predictor_factory: Callable[..., Any] | None = None)
     predict = factory(_faithfulness_signature())
     predict.set_lm(lm)
 
-    def judge(expected_answer: str, answer: str) -> Verdict:
-        prediction = predict(expected_answer=expected_answer, answer=answer)
+    def judge(context: str, answer: str) -> Verdict:
+        prediction = predict(context=context, answer=answer)
         label = parse_verdict(str(prediction.verdict))
         rationale = str(getattr(prediction, "rationale", "") or "").strip()
         return Verdict(label=label, rationale=rationale)

@@ -142,12 +142,15 @@ class ChatProgram(dspy.Module):
         self._relevance_threshold = relevance_threshold
         self._answer = dspy.Predict(GroundedAnswer)
         self.last_retrieved_sources: list[str] | None = None
+        self.last_retrieved_context: str | None = None
 
     def forward(self, question: str) -> ChatResponse:
         self.last_retrieved_sources = None
+        self.last_retrieved_context = None
         chunks = self._store.query(question, k=self._top_k)
         if not chunks:
             self.last_retrieved_sources = []
+            self.last_retrieved_context = ""
             raise EmptyRetrieval(
                 f"retrieval returned 0 chunks for question {question!r}; "
                 "refusing to answer without corpus context"
@@ -174,6 +177,7 @@ class ChatProgram(dspy.Module):
         context = "\n\n".join(
             f"[{source}]\n{chunk['text'] or ''}" for source, chunk in zip(sources, chunks, strict=True)
         )
+        self.last_retrieved_context = context
         prediction = self._answer(question=question, context=context)
 
         claims = list(prediction.citations or [])

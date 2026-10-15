@@ -211,11 +211,11 @@ def test_resolve_judge_forwards_an_injected_factory(
     assert captured == {"lm_factory": factory}
 
 
-def _faithful_judge(expected_answer: str, answer: str) -> Verdict:
+def _faithful_judge(context: str, answer: str) -> Verdict:
     return Verdict(label=FAITHFUL, rationale="supported")
 
 
-def _hallucinated_judge(expected_answer: str, answer: str) -> Verdict:
+def _hallucinated_judge(context: str, answer: str) -> Verdict:
     return Verdict(label=HALLUCINATED, rationale="invented")
 
 
@@ -272,8 +272,11 @@ def test_run_eval_hallucinated_verdict_fails_and_is_recorded(tmp_path: Path) -> 
 
 
 def test_run_eval_records_a_judge_failure_and_continues(tmp_path: Path) -> None:
-    def judge(expected_answer: str, answer: str) -> Verdict:
-        if expected_answer == "a2":
+    calls = {"n": 0}
+
+    def judge(context: str, answer: str) -> Verdict:
+        calls["n"] += 1
+        if calls["n"] == 2:
             raise RuntimeError("judge exploded")
         return Verdict(label=FAITHFUL, rationale="supported")
 

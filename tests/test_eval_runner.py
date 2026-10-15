@@ -676,6 +676,7 @@ def test_run_params_carries_every_run_affecting_config() -> None:
         "retrieval_window",
         "relevance_threshold",
         "program",
+        "judge_input",
     }
 
 

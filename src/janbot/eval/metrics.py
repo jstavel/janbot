@@ -38,12 +38,16 @@ class ItemOutcome:
     when the item was unjudged — no judge was configured, the program produced no
     answer, or the judge call failed. Only judged items count in the
     ``faithfulness`` aggregate.
+
+    ``retrieved_context`` is the exact context the model was given (the window the
+    judge checks the answer against), or ``None`` when the run exposed none.
     """
 
     item: GoldenItem
     response: ChatResponse | None
     error: str | None
     retrieved_sources: list[str] | None = None
+    retrieved_context: str | None = None
     judge_verdict: Verdict | None = None
 
 

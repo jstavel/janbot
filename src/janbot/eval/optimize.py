@@ -142,10 +142,10 @@ def _judge_faithful(
     question = str(getattr(example, "question", "") or "")
     if judge is None:
         return False, False, f"{question} — no judge configured"
-    expected = str(getattr(example, "expected_answer", "") or "")
+    context = str(getattr(example, "expected_answer", "") or "")
     answer = str(getattr(prediction, "answer", "") or "")
     try:
-        verdict = judge(expected, answer)
+        verdict = judge(context, answer)
     except Exception as exc:  # noqa: BLE001 - fail closed on any judge error
         return False, False, f"{question} — judge failed: {type(exc).__name__}: {exc}"
     return verdict.label == FAITHFUL, True, None
