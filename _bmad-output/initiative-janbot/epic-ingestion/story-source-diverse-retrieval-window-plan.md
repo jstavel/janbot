@@ -3,7 +3,7 @@ title: 'Source-diverse retrieval window'
 type: 'feature'
 ticket: 11
 created: '2026-10-15'
-status: 'built'
+status: done
 baseline_revision: 'e5d6b97'
 route: 'full'
 route_source: 'auto'

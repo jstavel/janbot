@@ -3,7 +3,7 @@ title: 'Retrieval recall at the top_k boundary (the val near-misses)'
 type: 'feature'
 ticket: 9
 created: '2026-10-15'
-status: 'built'
+status: done
 baseline_revision: 'c9d0620'
 route: 'oneshot'
 route_source: 'auto'

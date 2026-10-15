@@ -3,7 +3,7 @@ title: 'Retrieval recall: the embedding/query-side lever (the distant val misses
 type: 'feature'
 ticket: 10
 created: '2026-10-15'
-status: 'built'
+status: done
 baseline_revision: '0699535'
 route: 'full'
 route_source: 'auto'
