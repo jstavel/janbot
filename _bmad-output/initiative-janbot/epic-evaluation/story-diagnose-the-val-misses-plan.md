@@ -3,7 +3,7 @@ title: 'Diagnose the val misses'
 type: 'feature'
 ticket: 19
 created: '2026-10-15'
-status: 'built'
+status: done
 baseline_revision: 'cc2df67'
 route: 'oneshot'
 route_source: 'auto'
