@@ -3,7 +3,7 @@ title: 'BootstrapFewShot stage'
 type: 'feature'
 ticket: 8
 created: '2026-10-14'
-status: 'built'
+status: done
 baseline_revision: 'c137a72'
 route: 'full'
 route_source: 'auto'
