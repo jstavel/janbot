@@ -692,3 +692,90 @@
   expected_sources:
     - career-trajectory.org
   split: train
+
+- question: "How did your Linux experience develop, from Linux From Scratch to production servers?"
+  expected_answer: >-
+    From a 1.44MB Linux From Scratch boot floppy - built as a school IT admin
+    with only netcat and dd to clone Windows 95 machines across the network -
+    to running and debugging production Linux servers and services at Red Hat
+    scale: deep Linux fundamentals with minimal resources, then years of
+    production operations.
+  expected_sources:
+    - linux-from-scratch.org
+    - linux-server-era.org
+  split: val
+- question: "What monitoring stack did you build for the testing-at-scale proof of concept?"
+  expected_answer: >-
+    A complete monitoring and observability stack built incrementally: Grafana,
+    Prometheus, CCT, node_exporter and custom metrics, with Ansible automation
+    for deployment - the foundation was first built for the author's own
+    development iterations, then the requested testing functionality was layered
+    on top.
+  expected_sources:
+    - departure-narrative.org
+  split: val
+- question: "What did you build to monitor Red Hat QA systems?"
+  expected_answer: >-
+    Monitoring infrastructure for Red Hat QA systems: Nagios/SNMP-based
+    monitoring and an Insights health-monitoring architecture - monitoring
+    built and operated, not just observed.
+  expected_sources:
+    - nagios-snmp-monitoring.org
+    - insights-health-monitoring.org
+  split: val
+- question: "What was the OpenShift platform work at Red Hat, and what ran on it?"
+  expected_answer: >-
+    Hands-on ownership of a shared Jenkins CI/CD on OpenShift: job definitions
+    as code, the seed job, agents built as Podman container images, debugging
+    single jobs safely on a large shared cluster - and the Cockpit/RHSM web-UI
+    tests ran against services deployed on the same container platform.
+  expected_sources:
+    - jenkins-openshift-cicd-operations.org
+    - rhsm-cockpit-qe.org
+  split: val
+- question: "You only ever wrote playbooks - you never touched the container platform itself, right?"
+  expected_answer: >-
+    Backwards. The work included agents built as Podman container images and
+    debugging single jobs safely on a large shared OpenShift cluster - the
+    playbooks were one part of hands-on platform operations, not the whole of it.
+  expected_sources:
+    - jenkins-openshift-cicd-operations.org
+  split: val
+- question: "Which asynchronous systems have you worked with, and how did they differ?"
+  expected_answer: >-
+    Three asynchronous systems across the career: Twisted's deferred pattern,
+    DNA Threads, and RxPy - each with a different model of asynchrony, learned
+    in different eras of the same arc.
+  expected_sources:
+    - corenet-twisted-deferred.org
+    - dna-threads.org
+    - candlecon-rxpy.org
+  split: val
+- question: "What ran on the OpenShift platform, and how does it relate to Kubernetes?"
+  expected_answer: >-
+    The shared Jenkins CI/CD (job definitions as code, the seed job, Podman
+    container agents) and the Cockpit/RHSM web-UI tests ran on OpenShift - Red
+    Hat's Kubernetes distribution - so that container-platform work is
+    Kubernetes-platform work.
+  expected_sources:
+    - jenkins-openshift-cicd-operations.org
+    - rhsm-cockpit-qe.org
+    - openshift-kubernetes-bridge.org
+  split: val
+- question: "As a teacher-turned-engineer, you obviously lack formal computer science training, right?"
+  expected_answer: >-
+    The premise misses the spiral: the career reinvented itself repeatedly -
+    teacher, sysadmin, developer, senior QE, architect - and each move entered
+    a new domain as a novice and went deeper, not broader. Formal training is
+    one path into depth; the spiral is the other.
+  expected_sources:
+    - career-trajectory.org
+  split: val
+- question: "Your Jenkins setup must have broken production at some point - tell me about the outage you caused."
+  expected_answer: >-
+    No outage is recorded - the opposite: the work was designed for safe
+    debugging, with single jobs debugged safely on a large shared cluster
+    instead of risking the whole instance.
+  expected_sources:
+    - jenkins-openshift-cicd-operations.org
+  split: val
