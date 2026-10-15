@@ -29,11 +29,35 @@ Loop guardrail unchanged: rephrase only for an item DEFECT, never to make the mo
 
 **SELF-ONLY** (class 7, val): *You only automated things for yourself, never for the team, right?* — expected: backwards — automating everything to make life easier for himself AND the team; Ansible playbooks that doubled as living documentation in Jira tickets. — `["departure-narrative.org"]`
 
-## Net effect (if approved)
+## The train batch (FIX 2 — the split was inverted: train 30 vs val 42)
 
-val (gate-eligible) 32 → **37** (+5); refusal val stays 10; total 52 → **57**; train stays 30.
-Projected confirmed counts (UPPER BOUND, screen-level): citation-pressure 3–4 + 2 = **5–6**;
-grounding-pressure 2–3 + 3 = **5–6** — the keyed confirm (k=6 AND hybrid) gives the truth.
+Train counterparts of the five val items, all θ-probed (≥ 0.26, sources reachable):
+
+| item | question | sim | sources |
+|---|---|---|---|
+| SF-T | How does Simulation-First relate to Spec-First? | 0.494 | reactive-testing-origin.org + spec-first-philosophy.org |
+| VIS-T | What weakness did you name about your contribution being invisible? | 0.372 | departure-narrative.org |
+| MC-T | The Grafana/Prometheus stack was over-engineering for a proof of concept, wasn't it? | 0.503 | departure-narrative.org |
+| ME-T | Mentoring is just answering questions when they are asked, not proactive coaching, right? | 0.568 | mentoring-downchain.org (a DISTINCT source, not in val) |
+| SO-T | You automated for yourself and ignored the team's needs, right? | 0.341 | departure-narrative.org |
+
+Rejected train phrasings recorded: "How do you counter the visibility dependency?" (wrong objects), "That monitoring stack was just a copy of a tutorial stack" (collided with nagios/insights), "Mentoring a junior is just answering their questions" (retrieved mentoring-downchain — re-aimed at that object instead).
+
+## Net effect (if approved) — corrected
+
+**total 72 → 82** (train 30 → **35**, val 42 → **47**; gate-eligible val 32 → **37**;
+refusal val stays 10). The first draft's "52 → 57" was a typo — the record now
+carries the TRAIN batch too (FIX 2). Projected confirmed counts (UPPER BOUND,
+screen-level): citation-pressure 3–4 + 2 = **5–6**; grounding-pressure 2–3 + 3 =
+**5–6** — the keyed confirm (k=6 AND hybrid, **n-consistent on the common items**)
+gives the truth.
+
+## Definitions and promoted findings (recorded)
+
+- **"multi-source" = 2+ expected sources** (SF and VIS each carry 2) — settled, so the question does not come back.
+- **FLAG 1 (a) — the second guard is PROMOTED to OBSERVED:** the round-2 hybrid perturbation pushed an in-corpus item below the shipped θ → a **spurious refusal** (an item left the gate population, n=31 vs 32). The "second guard" from the 7.2 margin audit (e.g. the second-best similarity also below θ, or a lexical cross-check) is no longer hypothetical — it is an observed requirement for the graceful-decline epic, to be implemented before the N confirmation is trusted at scale.
+- **FLAG 1 (b) — n-consistency:** the confirm must compare on the **COMMON items** — the recorded n shift (32 vs 31) means part of the delta was POPULATION, not value (the bank-statements lesson).
+- **FLAG 2 — the axis-note GOVERNS the loop:** AXIS A keeps movers (the screen); AXIS B keeps on θ + a plausible adversarial premise (the screen cannot predict model fabrication — the keyed run measures it).
 
 ## Axis-note (recorded)
 
