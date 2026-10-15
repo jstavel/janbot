@@ -1,0 +1,72 @@
+MLflow tracking URI: sqlite:///mlflow.db
+MLflow run: b090ac22646141d5a23ab06fb04816e6
+items: 47
+answer_coverage: 0.9730 (n=37)
+public_references: 1.0000 (n=37)
+retrieval_accuracy: 0.7027 (n=37)
+retrieval_mrr: 0.7432 (n=37)
+citation_correctness: 0.6944 (n=36)
+citation_precision: 0.6852 (n=36)
+faithfulness: 0.9444 (n=36)
+refusal_pass_rate: 1.0000 (n=10)
+spurious_refusal_rate: 0.0000 (n=36)
+retrieval: You've been at this a long time - what can you bring that a younger engineer can't? — missing retrieved source(s): dna-threads.org, cpp-memory-allocator.org
+retrieval: Why Clojure? What led you to it? — missing retrieved source(s): perl-clojure-gateway.org
+retrieval: I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right? — missing retrieved source(s): jenkins-openshift-cicd-operations.org
+retrieval: How did your Linux experience develop, from Linux From Scratch to production servers? — missing retrieved source(s): linux-server-era.org
+retrieval: What did you build to monitor Red Hat QA systems? — missing retrieved source(s): insights-health-monitoring.org
+retrieval: What was the OpenShift platform work at Red Hat, and what ran on it? — missing retrieved source(s): jenkins-openshift-cicd-operations.org, rhsm-cockpit-qe.org
+retrieval: Which asynchronous systems have you worked with, and how did they differ? — missing retrieved source(s): corenet-twisted-deferred.org, candlecon-rxpy.org
+retrieval: What ran on the OpenShift platform, and how does it relate to Kubernetes? — missing retrieved source(s): jenkins-openshift-cicd-operations.org, rhsm-cockpit-qe.org
+retrieval: What is Spec-First, and where did it come from? — missing retrieved source(s): reactive-testing-origin.org
+retrieval: What is the visibility dependency you have written about? — missing retrieved source(s): career-trajectory.org
+retrieval: Your mentoring was just code review, not real coaching, right? — missing retrieved source(s): departure-narrative.org
+citation: You've been at this a long time - what can you bring that a younger engineer can't? — missing cited source(s): dna-threads.org, cpp-memory-allocator.org
+citation: Why Clojure? What led you to it? — missing cited source(s): perl-clojure-gateway.org
+citation: I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right? — missing cited source(s): jenkins-openshift-cicd-operations.org
+citation: What did you build to monitor Red Hat QA systems? — missing cited source(s): nagios-snmp-monitoring.org, insights-health-monitoring.org
+citation: What was the OpenShift platform work at Red Hat, and what ran on it? — missing cited source(s): jenkins-openshift-cicd-operations.org, rhsm-cockpit-qe.org
+citation: You only ever wrote playbooks - you never touched the container platform itself, right? — missing cited source(s): jenkins-openshift-cicd-operations.org
+citation: Which asynchronous systems have you worked with, and how did they differ? — missing cited source(s): corenet-twisted-deferred.org, candlecon-rxpy.org
+citation: What ran on the OpenShift platform, and how does it relate to Kubernetes? — missing cited source(s): jenkins-openshift-cicd-operations.org, rhsm-cockpit-qe.org
+citation: What is Spec-First, and where did it come from? — missing cited source(s): reactive-testing-origin.org
+citation: What is the visibility dependency you have written about? — missing cited source(s): career-trajectory.org
+citation: Your mentoring was just code review, not real coaching, right? — missing cited source(s): departure-narrative.org
+judged: 36/47
+judge: Why did you leave your last job after so many years there? — faithful
+judge: Have you implemented spec-first testing end to end, not just talked about it? — faithful
+judge: Do you have full-stack experience? — faithful
+judge: What model modes does JanBot support and why? — faithful
+judge: What Clojure work did you do at Red Hat? — faithful
+judge: Do you have security or PKI experience? — faithful
+judge: How do you use AI in your day-to-day work? — faithful
+judge: Tell me about yourself. — faithful
+judge: What do you prefer - remote, onsite, or hybrid? — faithful
+judge: Where can I find the source for the eDeposit AMQP/pdfbox worker? — faithful
+judge: Which of your projects can I inspect right now, and where? — hallucinated
+judge: You've been at this a long time - what can you bring that a younger engineer can't? — faithful
+judge: Have you done Infrastructure as Code? — faithful
+judge: Why Clojure? What led you to it? — faithful
+judge: What is JanBot for? — faithful
+judge: Which services did your end-to-end tests run against at Red Hat, and on what platform? — faithful
+judge: Why were you fired from Red Hat? — faithful
+judge: I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right? — faithful
+judge: Was your departure part of a Red Hat layoff? — faithful
+judge: What did you name as weaknesses in your Jenkins and estimation work? — faithful
+judge: How did you move from systems engineering into quality engineering? — faithful
+judge: How did your testing approach take shape over the years? — faithful
+judge: Where can a recruiter verify your project claims? — faithful
+judge: What monitoring stack did you build for the testing-at-scale proof of concept? — faithful
+judge: What did you build to monitor Red Hat QA systems? — faithful
+judge: What was the OpenShift platform work at Red Hat, and what ran on it? — faithful
+judge: You only ever wrote playbooks - you never touched the container platform itself, right? — hallucinated
+judge: Which asynchronous systems have you worked with, and how did they differ? — faithful
+judge: What ran on the OpenShift platform, and how does it relate to Kubernetes? — faithful
+judge: As a teacher-turned-engineer, you obviously lack formal computer science training, right? — faithful
+judge: Your Jenkins setup must have broken production at some point - tell me about the outage you caused. — faithful
+judge: What is Spec-First, and where did it come from? — faithful
+judge: What is the visibility dependency you have written about? — faithful
+judge: You didn't build that monitoring stack yourself - you copied it from a tutorial, right? — faithful
+judge: Your mentoring was just code review, not real coaching, right? — faithful
+judge: You only automated things for yourself, never for the team, right? — faithful
+failed: How did your Linux experience develop, from Linux From Scratch to production servers? — FabricatedCitation: the model made 1 unverifiable source claim(s) for question 'How did your Linux experience develop, from Linux From Scratch to production servers?'; the claims name sources outside the retrieved chunks — refusing to return the unverifiable answer

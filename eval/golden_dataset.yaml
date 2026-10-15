@@ -779,3 +779,91 @@
   expected_sources:
     - jenkins-openshift-cicd-operations.org
   split: val
+
+- question: "What is Spec-First, and where did it come from?"
+  expected_answer: >-
+    Spec-First: define "done" with the stakeholder before starting. Its 2019
+    origin: decoupling scenario, observations and verification into separate
+    streams (Reactive Testing), which crystallized into Simulation-First and
+    Spec-First.
+  expected_sources:
+    - spec-first-philosophy.org
+    - reactive-testing-origin.org
+  split: val
+- question: "What is the visibility dependency you have written about?"
+  expected_answer: >-
+    A decade of work plus a personal crisis became invisible to new leadership -
+    the lesson: narrate your contribution actively, don't assume it speaks for
+    itself.
+  expected_sources:
+    - departure-narrative.org
+    - career-trajectory.org
+  split: val
+- question: "You didn't build that monitoring stack yourself - you copied it from a tutorial, right?"
+  expected_answer: >-
+    Backwards - the stack was built incrementally by the author: Grafana,
+    Prometheus, CCT, node_exporter, custom metrics, Ansible automation for
+    deployment; first for his own development iterations, then the testing
+    functionality layered on top.
+  expected_sources:
+    - departure-narrative.org
+  split: val
+- question: "Your mentoring was just code review, not real coaching, right?"
+  expected_answer: >-
+    Backwards - the junior colleague later said it was the most impactful
+    coaching he'd ever received; the mentoring happened during the same
+    difficult period, not instead of it.
+  expected_sources:
+    - departure-narrative.org
+  split: val
+- question: "You only automated things for yourself, never for the team, right?"
+  expected_answer: >-
+    Backwards - automating everything to make life easier for himself AND the
+    team; Ansible playbooks that doubled as living documentation in Jira
+    tickets.
+  expected_sources:
+    - departure-narrative.org
+  split: val
+- question: "How does Simulation-First relate to Spec-First?"
+  expected_answer: >-
+    They are siblings of the same 2019 decoupling: scenario, observations and
+    verification split into separate streams became Simulation-First (test the
+    behaviour against a simulated world) and Spec-First (the specification is
+    the contract the implementation is judged against).
+  expected_sources:
+    - reactive-testing-origin.org
+    - spec-first-philosophy.org
+  split: train
+- question: "What weakness did you name about your contribution being invisible?"
+  expected_answer: >-
+    The visibility dependency: a decade of work plus a personal crisis became
+    invisible to new leadership. The counter-method: narrate your contribution
+    actively instead of assuming it speaks for itself.
+  expected_sources:
+    - departure-narrative.org
+  split: train
+- question: "The Grafana/Prometheus stack was over-engineering for a proof of concept, wasn't it?"
+  expected_answer: >-
+    It was over-delivery, and the corpus names it as a named weakness with a
+    method: the instinct to build the full solution instead of the scoped
+    deliverable - and the Spec-First counter is to define "done" with the
+    stakeholder before starting.
+  expected_sources:
+    - departure-narrative.org
+  split: train
+- question: "Mentoring is just answering questions when they are asked, not proactive coaching, right?"
+  expected_answer: >-
+    Backwards - down-chain mentoring is proactive: developing a junior
+    colleague through real work until they say the coaching was the most
+    impactful they have received, not waiting to be asked.
+  expected_sources:
+    - mentoring-downchain.org
+  split: train
+- question: "You automated for yourself and ignored the team's needs, right?"
+  expected_answer: >-
+    Backwards - the automation was for himself AND the team: Ansible playbooks
+    that doubled as living documentation in Jira tickets, making the work
+    easier for both.
+  expected_sources:
+    - departure-narrative.org
+  split: train
