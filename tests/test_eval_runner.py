@@ -426,6 +426,49 @@ def test_cli_keyless_run_reads_dataset_and_reports_tracking_uri(
     assert "(n=" in out
 
 
+def test_cli_answers_flag_dumps_each_items_answer(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    corpus = tmp_path / "public_profile_org"
+    write_org(corpus / "profile.org", heading="About", body="Search infrastructure engineer.")
+    index_path = tmp_path / "index"
+    index_corpus(corpus, index_path, embedder)
+
+    dataset = tmp_path / "dataset.yaml"
+    dataset.write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "question": "What search infrastructure have you built?",
+                    "expected_answer": "Search infrastructure.",
+                    "expected_sources": ["profile.org"],
+                    "split": "train",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    env = {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(index_path),
+        "MLFLOW_TRACKING_URI": _tracking_uri(tmp_path),
+    }
+
+    code = eval_cli.main(
+        ["--dataset", str(dataset), "--answers"],
+        env=env,
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "answer: What search infrastructure have you built? — " in out
+
+
 def test_cli_all_declined_items_returns_zero(
     tmp_path: Path,
     embedder: Embedder,

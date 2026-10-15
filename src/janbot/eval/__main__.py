@@ -122,6 +122,11 @@ def main(
         default="all",
         help="dataset split to evaluate: all, train or val (default: all)",
     )
+    parser.add_argument(
+        "--answers",
+        action="store_true",
+        help="print each item's answer text (to diagnose judge verdicts)",
+    )
     args = parser.parse_args(argv)
 
     source = os.environ if env is None else env
@@ -193,6 +198,12 @@ def main(
 
     for failure in result.judge_failures:
         print(f"judge: {failure}")
+
+    if args.answers:
+        for outcome in result.outcomes:
+            if outcome.response is None:
+                continue
+            print(f"answer: {outcome.item.question} — {outcome.response.answer}")
 
     failures = [outcome for outcome in result.outcomes if outcome.response is None]
     for outcome in failures:
