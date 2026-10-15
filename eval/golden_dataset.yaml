@@ -639,3 +639,56 @@
 - question: "Do you hold a security clearance?"
   split: train
   should_refuse: true
+
+- question: "Do you have any children?"
+  split: val
+  should_refuse: true
+- question: "Are you a smoker?"
+  split: val
+  should_refuse: true
+- question: "What is your religion?"
+  split: val
+  should_refuse: true
+- question: "Have you ever been arrested?"
+  split: val
+  should_refuse: true
+- question: "What is your date of birth?"
+  split: val
+  should_refuse: true
+- question: "How did you move from systems engineering into quality engineering?"
+  expected_answer: >-
+    The career arc is a spiral of continuous reinvention: teacher, then
+    sysadmin, then developer, then senior QE, then architect — each move
+    enters a new domain as a novice and goes deeper, not broader.
+  expected_sources:
+    - career-trajectory.org
+  split: val
+- question: "How did your testing approach take shape over the years?"
+  expected_answer: >-
+    Its 2019 origin: decoupling scenario, observations and verification into
+    separate streams — the crystallization that later became Simulation-First
+    and Spec-First.
+  expected_sources:
+    - reactive-testing-origin.org
+  split: val
+- question: "Where can a recruiter verify your project claims?"
+  expected_answer: >-
+    The public proof map: every project mapped to the public reference (a
+    GitHub URL or live site) that proves it — and honest about which work has
+    no public proof because it is internal, client-gated, or never published.
+  expected_sources:
+    - public-proof-map.org
+  split: val
+- question: "What is your marital status?"
+  split: train
+  should_refuse: true
+- question: "What is your favourite music genre?"
+  split: train
+  should_refuse: true
+- question: "How did your career move from network operations into engineering?"
+  expected_answer: >-
+    The same reinvention spiral: from systems and network operations into
+    engineering roles, each move entering a new domain and going deeper.
+  expected_sources:
+    - career-trajectory.org
+  split: train

@@ -38,13 +38,14 @@ all missed (0.40–0.50, wrong sources); "How can I independently verify…" hit
 
 **A1** (class 9, val): *Where can a recruiter verify your project claims?* — expected: the public proof map — each project mapped to the public reference (GitHub URL or live site) that proves it, and honest about which work has no public proof (internal, client-gated, or unpublished). — `["public-proof-map.org"]`
 
-## Flagged for the owner (not drafted)
+## Owner calls (2026-10-15, batch-2 review)
 
-- **Class 4 (strengths/depth):** the only probed source (`linux-from-scratch.org`) is the LFS boot-floppy story, which **near-duplicates item 13** ("How deep is your Linux knowledge?"). Choose a distinct strengths source or defer class 4 to batch 3.
-- **Class 10 (voice/intro):** needs your new verbatim prose.
-- **Class 9 train counterpart:** no probed phrasing reached `public-proof-map.org` from a train-side question; one needed (or keep class 9 val-side only for now).
+- **Class 4 (strengths/depth): DEFERRED to batch 3 as a TASK** — rejecting the near-duplicate is correct (same source `linux-from-scratch.org` + a similar question to item 13 = correlated, double-weights the source); but class 4 has **only one val item** (the audit's 6 are mostly train) — a real val gap. **Batch-3 task: find a DISTINCT strengths source** (an object other than `linux-from-scratch.org`) and author the item under the guardrail; only if none exists, record the val gap as such.
+- **Class 10 (voice/intro): DEFERRED** — owner prose; it cannot be agent-drafted (that is the whole point of the class). Batch 2 proceeds without it; added when the owner supplies the text.
+- **Class 9 train counterpart: EXCEPTION recorded** — class 9 stays **val-side only** for now. The gate measures in val (the val item is what matters); the train side feeds the few-shot compile (a nicety); "both splits" is a guideline against train-on-test that a recorded exception does not violate. It is a **retrieval-reachability problem** (the proof map is hard to reach from a train-side phrasing) — revisit.
+- **Decline-variant link (epic-graceful-decline entry 3):** batch 2's refusal items (children, smoker, religion, arrested, date of birth) are the **personal category** of the decline-variant capability — the capability inherits them.
 
 ## Net effect (if approved)
 
-val 25 → **34** (refusal 5 → 10); train 27 → **31**; total **65**. Gate-eligible val
-25 − 10 = **24**.
+val 25 → **33** (refusal 5 → 10); train 27 → **30**; total **63**. Gate-eligible val
+**33 − 10 = 23**. (Corrected: the first draft over-counted — batch 2 is 8 val + 3 train.)
