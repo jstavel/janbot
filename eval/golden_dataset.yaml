@@ -561,10 +561,17 @@
   split: val
 - question: "Why were you fired from Red Hat?"
   expected_answer: >-
-    I wasn't fired. The departure was a growth-motivated transition after
-    2015-2026 in one team: 9+ years of high-trust alignment, then a leadership
-    change and a personal crisis converging at the same time — a human
-    situation, not a failure story.
+    I wasn't fired — I initiated the departure myself, and it was mutual, clean
+    and growth-oriented. I spent more than a decade (2015-2026) in one team with
+    9+ years of high-trust alignment built on Red Hat's core values. Then two
+    things happened at once: a difficult personal situation temporarily affected
+    my focus - performance suffered from life, not from lack of skill or
+    motivation - and a new manager, seeing the "Evolving" Workday status from
+    that period, decided I needed to prove I was a Senior QE. Neither side was
+    wrong: she had the right to reset expectations, and the role as she defined
+    it no longer fit my mode of contribution. At the end of the year I asked for
+    a clean break - leaving is not failing; it was Extreme Ownership applied to
+    my own career.
   expected_sources:
     - departure-narrative.org
   split: val
