@@ -121,7 +121,7 @@ description = "One runnable suite that runs the recorded eval end to end and ass
 verify = "The suite runs green and fails when a deterministic metric changes between two runs under the locked snapshot."
 covers = ["E2", "E5"]
 after = [10]
-hitl = false
+hitl = true
 risk = "medium"
 
 [[entry]]
