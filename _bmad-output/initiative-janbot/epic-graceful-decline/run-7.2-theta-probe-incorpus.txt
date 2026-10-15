@@ -1,0 +1,43 @@
+extended deterministic probe: best top_k=4 similarity for EVERY in-corpus item
+(should_refuse=False; production embedder; scoped; theta shipped default = 0.26)
+19 [val  ] best_sim=0.2787 margin_to_theta=+0.0187 THIN (<0.03) Tell me about yourself.
+24 [train] best_sim=0.3328 margin_to_theta=+0.0728 ok          Is there work of yours I can't verify publicly?
+22 [val  ] best_sim=0.3961 margin_to_theta=+0.1361 ok          Where can I find the source for the eDeposit AMQP/pdfbox w
+23 [val  ] best_sim=0.3987 margin_to_theta=+0.1387 ok          Which of your projects can I inspect right now, and where?
+25 [val  ] best_sim=0.4040 margin_to_theta=+0.1440 ok          You've been at this a long time - what can you bring that 
+34 [train] best_sim=0.4358 margin_to_theta=+0.1758 ok          How has your thinking on asynchronous systems evolved over
+20 [val  ] best_sim=0.4361 margin_to_theta=+0.1761 ok          What do you prefer - remote, onsite, or hybrid?
+26 [train] best_sim=0.4432 margin_to_theta=+0.1832 ok          What can you offer to junior colleagues?
+29 [val  ] best_sim=0.4668 margin_to_theta=+0.2068 ok          Have you done Infrastructure as Code?
+28 [train] best_sim=0.4695 margin_to_theta=+0.2095 ok          Do you have experience monitoring infrastructure?
+ 1 [val  ] best_sim=0.4726 margin_to_theta=+0.2126 ok          Why did you leave your last job after so many years there?
+ 6 [val  ] best_sim=0.4744 margin_to_theta=+0.2144 ok          Do you have full-stack experience?
+31 [train] best_sim=0.4822 margin_to_theta=+0.2222 ok          How do you design internal tools?
+16 [train] best_sim=0.4867 margin_to_theta=+0.2267 ok          Which books or ideas have most shaped how you work?
+ 3 [train] best_sim=0.4917 margin_to_theta=+0.2317 ok          Tell me about your matching engine project.
+ 4 [val  ] best_sim=0.5084 margin_to_theta=+0.2484 ok          Have you implemented spec-first testing end to end, not ju
+12 [val  ] best_sim=0.5138 margin_to_theta=+0.2538 ok          What Clojure work did you do at Red Hat?
+35 [train] best_sim=0.5200 margin_to_theta=+0.2600 ok          Do you know Kubernetes?
+18 [train] best_sim=0.5276 margin_to_theta=+0.2676 ok          How does your personal productivity system demonstrate sys
+17 [val  ] best_sim=0.5318 margin_to_theta=+0.2718 ok          How do you use AI in your day-to-day work?
+27 [train] best_sim=0.5439 margin_to_theta=+0.2839 ok          What Linux services have you actually run in production?
+ 0 [train] best_sim=0.5497 margin_to_theta=+0.2897 ok          Can you walk me through your career path and what drove th
+ 9 [val  ] best_sim=0.5569 margin_to_theta=+0.2969 ok          What model modes does JanBot support and why?
+15 [train] best_sim=0.5637 margin_to_theta=+0.3037 ok          What is your testing philosophy?
+21 [train] best_sim=0.5653 margin_to_theta=+0.3053 ok          How do you keep an AI assistant from making things up?
+37 [train] best_sim=0.5892 margin_to_theta=+0.3292 ok          How do you review the work of an AI agent?
+13 [train] best_sim=0.5925 margin_to_theta=+0.3325 ok          How deep is your Linux knowledge?
+ 7 [train] best_sim=0.6012 margin_to_theta=+0.3412 ok          What experience do you have with event-driven architecture
+30 [train] best_sim=0.6034 margin_to_theta=+0.3434 ok          Where did your approach to testing come from?
+11 [train] best_sim=0.6319 margin_to_theta=+0.3719 ok          How have you designed a test automation architecture at pr
+ 8 [train] best_sim=0.6341 margin_to_theta=+0.3741 ok          Tell me about your AI agent project, JanBot.
+14 [val  ] best_sim=0.6436 margin_to_theta=+0.3836 ok          Do you have security or PKI experience?
+32 [val  ] best_sim=0.6567 margin_to_theta=+0.3967 ok          Why Clojure? What led you to it?
+36 [val  ] best_sim=0.6782 margin_to_theta=+0.4182 ok          What is JanBot for?
+ 5 [train] best_sim=0.6822 margin_to_theta=+0.4222 ok          Have you used Clojure in production systems?
+10 [train] best_sim=0.6880 margin_to_theta=+0.4280 ok          What experience do you have operating and debugging CI/CD 
+33 [train] best_sim=0.7145 margin_to_theta=+0.4545 ok          Where have you used Clojure in production and in testing?
+ 2 [train] best_sim=0.7366 margin_to_theta=+0.4766 ok          Can you give a concrete example of mentoring or leadership
+
+true minimum: 0.2787 (item 19, val) -> margin to theta=0.26: +0.0187
+items below 0.26: 0; items within 0.03 above: 1
