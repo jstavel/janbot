@@ -3,7 +3,7 @@ title: 'Retrieval recall at the top_k boundary (the val near-misses)'
 type: 'feature'
 ticket: 9
 created: '2026-10-15'
-status: 'draft'
+status: 'built'
 baseline_revision: 'c9d0620'
 route: 'oneshot'
 route_source: 'auto'
@@ -19,7 +19,7 @@ context: []
 
 ## Intent
 
-**Problem:** the 5.19 diagnosis found all four failing val items (union {23, 25, 29, 32}) are retrieval misses — the expected source is in the corpus and indexed but outside the `top_k=4` window. Each recovery lever must be measured against the val reference `e635c2bf` before entry 20 decides on breadth.
+**Problem:** the 5.19 diagnosis found all four failing val items (union {23, 25, 29, 32}) are retrieval misses — the expected source is in the corpus and indexed but outside the `top_k=4` window (for item 25, two of its three expected sources are; its third, `career-trajectory.org`, was retrieved). Each recovery lever must be measured against the val reference `e635c2bf` before entry 20 decides on breadth.
 
 **Approach:** measure the `top_k` lever with a **single keyed val run at k=6** against `e635c2bf`, and record the result in the epic-ingestion Notes. Retrieval is deterministic, so the **k=30 rank probe is the primary evidence**: item 29's expected source (`vagrant-provisioning.org`) ranks 5th — the only miss `top_k` can recover; items 23/32 (`public-proof-map.org` / `perl-clojure-gateway.org`) rank 15th and item 25's two expected sources are absent from the top 30, so k=5/6/8 are **retrieval-identical** (all recover exactly item 29). The probe therefore caps the **retrieval-driven** gain at **+1 item (~0.067)** — below the 1.5σ ≈ 0.17 (3-item) floor — so `top_k` cannot clear the floor **via `citation_correctness`** (the model cannot cite a source it never retrieved). `faithfulness` is **not** bounded by the probe: k=6 changes the context for all 15 items, so it can move either way, including a regression — which is exactly why the single k=6 run exists: it measures the unbounded part. The embedding/query-side lever — the only one that can recover the other three (its result is entry 20's breadth input) — is filed as **epic-ingestion entry 10**, not built here.
 
@@ -47,8 +47,8 @@ context: []
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] run the single keyed val eval at k=6 (real index + operator key; ~15 answers + ~15 judge calls; hitl) -- the measurement: `citation_correctness` / `faithfulness` (+ `citation_precision`) vs `e635c2bf`, confirming no regression.
-- [ ] record the k=30 rank probe as the primary evidence and the k=6 before/after in the epic-ingestion Notes, with the "within the floor, routed to entry 20" outcome and the pointer to entry 10 -- the deliverable.
+- [x] run the single keyed val eval at k=6 (real index + operator key; ~15 answers + ~15 judge calls; hitl) -- the measurement: `citation_correctness` / `faithfulness` (+ `citation_precision`) vs `e635c2bf`, confirming no regression. *(Done: MLflow run `c68a9a3e`; aggregates match `e635c2bf` or improve; the per-item faithfulness set changed {23,25,29,32} → {14,23,25,32} — net zero, recorded in the Notes.)*
+- [x] record the k=30 rank probe as the primary evidence and the k=6 before/after in the epic-ingestion Notes, with the "within the floor, routed to entry 20" outcome and the pointer to entry 10 -- the deliverable. *(Done: the Measurement bullet in `epic-ingestion.md`; the captured run output preserved beside it as `run-c68a9a3e-output.txt`.)*
 
 **Acceptance Criteria:**
 - Given the k=30 probe, when the evidence is written, then it caps the **retrieval-driven** gain at +1 item (only item 29's source enters the window at k ≥ 5), so `top_k` cannot clear the 1.5σ floor **via `citation_correctness`**; and it states that `faithfulness` is unbounded by the probe and is what the k=6 run measures.
@@ -60,6 +60,15 @@ context: []
 ## Plan Change Log
 
 ## Review Triage Log
+
+Review pass 1 (quick, pinned) — 7 findings: 4 patched, 1 deferred, 2 false:
+- per-item evidence for the faithfulness flip is stdout-only (the run persists no per-item artifact; the 5.19 follow-up stays open) — **medium / defer** — fixing `run_eval` is a code change outside this story's frozen "no product code" boundary; the captured CLI output is now preserved beside the Notes as `run-c68a9a3e-output.txt` so THIS measurement's evidence is durable, and entry 10 inherits the artifact follow-up.
+- entry 10 was filed before the k=6 run recorded, and the experiment ran while the plan was still `draft` — **low / false** — entry 10's content rests on the k=30 probe + the 5.19 diagnosis (both committed and reviewer-reproduced), not on the un-run experiment; its wording ("the 2.9 experiment and the k=30 probe") was imprecise, and the process lag is noted here.
+- AC2's "no regression" is undefined at per-item granularity (the recorded outcome — aggregate Δ 0 with a per-item flip — sits in that gap) — **low / defer** — the aggregate-only reading matched the plan's frozen intent; the per-item flip is recorded in the Notes and carried to entry 10's caution; a built story's frozen AC is not reopened post-hoc.
+- both execution task checkboxes unchecked — **low / patch** — ticked with the completion evidence.
+- the evidence chain was uncommitted (the note + status bump existed only in the tree; the run's `mlflow.source.git.commit` tag points at a commit without them) — **low / patch** — this finalize commit ties plan status, the Notes entry, and the captured output to the recorded run.
+- "any `top_k` caps the gain" overreaches the probed range — **low / patch** — reworded to "within the probed range (k ≤ 30)".
+- the Intent's "outside the `top_k=4` window" misstates item 25 (two of three sources out; `career-trajectory.org` retrieved) — **low / patch** — reworded.
 
 ## Verification
 
