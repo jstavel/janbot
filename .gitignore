@@ -19,7 +19,10 @@ mlflow-artifacts/
 
 # compiled DSPy programs (regenerate with: python -m janbot.eval.optimize)
 eval/compiled_*.json
+
+# stray MLflow artifact copies leaked to the repo root
 split_manifest.json
+compile_pairs.json
 
 # transient BMad render snapshots
 _bmad/render/

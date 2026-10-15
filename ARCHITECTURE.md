@@ -94,6 +94,14 @@ Settings are environment-driven (`JANBOT_*`, loaded by `janbot.config`) and neve
 - Flexible routing in production
 - Token usage logged for cost analysis
 
+### Eval Layer (janbot.eval)
+
+- The golden dataset (`eval/golden_dataset.yaml`) is the yardstick — a per-item train/val split, version-controlled
+- Metrics aggregate per-item outcomes, each declaring its own population and polarity; the runner records one MLflow run per eval with the config that produced it, the dataset `sha256`, the split, and each metric's denominator (`<metric>__n`)
+- Faithfulness is scored by an LLM-as-a-judge (`JANBOT_JUDGE_MODEL`), routed through OpenRouter
+- Cost-staged optimization: `BootstrapFewShot` (`python -m janbot.eval.optimize`) compiles against a multi-objective (cited **and** faithful) objective; `MIPROv2` is a latent, evidence-gated next stage, adopted only if the pre-registered `gate-rule.md` shows a decidable gain
+- The harness runs without a model key: the CLI injects the `ChatProgram` built by `create_app` and tests inject a stub
+
 ## Testing Strategy
 
 | Milestone | Layer | Tooling |

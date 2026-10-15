@@ -52,7 +52,7 @@ Eligibility = Callable[[ItemOutcome], bool]
 
 
 @dataclass(frozen=True)
-class _Registration:
+class MetricSpec:
     """A registered metric with its declared population predicate and polarity."""
 
     metric: Metric
@@ -60,7 +60,7 @@ class _Registration:
     higher_is_better: bool
 
 
-_METRICS: dict[str, _Registration] = {}
+_METRICS: dict[str, MetricSpec] = {}
 
 
 def register_metric(
@@ -90,7 +90,7 @@ def register_metric(
         raise ValueError("a metric name must be non-empty")
     if name in _METRICS:
         raise ValueError(f"a metric is already registered as {name!r}")
-    _METRICS[name] = _Registration(
+    _METRICS[name] = MetricSpec(
         metric=metric, denominator=denominator, higher_is_better=higher_is_better
     )
     return metric
@@ -99,6 +99,20 @@ def register_metric(
 def registered_metrics() -> Mapping[str, Metric]:
     """Return a snapshot of the registered metrics keyed by name."""
     return {name: registration.metric for name, registration in _METRICS.items()}
+
+
+def registered_metric_specs() -> Mapping[str, MetricSpec]:
+    """Return a snapshot of the registered specs keyed by name."""
+    return dict(_METRICS)
+
+
+def metric_spec(name: str) -> MetricSpec:
+    """Return the registered spec for ``name``.
+
+    Raises:
+        KeyError: if no metric is registered under ``name``.
+    """
+    return _METRICS[name]
 
 
 def metric_counts(outcomes: list[ItemOutcome]) -> dict[str, int]:
@@ -266,7 +280,7 @@ def retrieval_mrr(outcomes: list[ItemOutcome]) -> float:
     """Mean reciprocal rank of the first expected source in the retrieved list.
 
     Over the same eligible items as :func:`retrieval_accuracy`, each item scores
-    ``1 / rank`` of the first expected source found in the retrieved set (rank is
+    ``1 / rank`` of the first expected source found in the retrieved list (rank is
     1-based, in retrieval order), or ``0.0`` when none is retrieved. Data-level
     and judge-free, it distinguishes a source at rank 1 from one at rank 4 — which
     the binary :func:`retrieval_accuracy` cannot.

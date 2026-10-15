@@ -19,7 +19,6 @@ from __future__ import annotations
 import pytest
 
 from janbot.api.contract import INSUFFICIENT_ANSWER, ChatResponse, Citation
-from janbot.eval import metrics as metrics_module
 from janbot.eval.dataset import GoldenItem
 from janbot.eval.judge import FAITHFUL, HALLUCINATED, Verdict
 from janbot.eval.metrics import (
@@ -29,6 +28,7 @@ from janbot.eval.metrics import (
     citation_precision,
     faithfulness,
     metric_counts,
+    metric_spec,
     register_metric,
     registered_metrics,
     retrieval_accuracy,
@@ -331,8 +331,8 @@ def test_every_registered_metric_declares_a_count_and_a_direction() -> None:
 
     assert set(metric_counts([])) == {f"{name}__n" for name in names}
     for name in names:
-        assert isinstance(metrics_module._METRICS[name].higher_is_better, bool)
-    assert metrics_module._METRICS["faithfulness"].higher_is_better is True
+        assert isinstance(metric_spec(name).higher_is_better, bool)
+    assert metric_spec("faithfulness").higher_is_better is True
 
 
 def test_retrieval_mrr_scores_rank_one() -> None:

@@ -14,14 +14,16 @@ from pathlib import Path
 
 import pytest
 import yaml
-from dspy.utils import DummyLM
 from mlflow.tracking import MlflowClient
+
+from janbot.ingest import index_corpus
+
+from dspy.utils import DummyLM
 
 from janbot.api.contract import ChatResponse, Citation
 from janbot.eval import __main__ as eval_cli
 from janbot.eval.dataset import GoldenItem
 from janbot.eval.runner import run_eval
-from janbot.ingest import index_corpus
 
 Embedder = Callable[[list[str]], list[list[float]]]
 

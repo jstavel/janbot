@@ -89,6 +89,22 @@ The response is a `ChatResponse` carrying a `status` field. An answer grounded i
 
 Errors use FastAPI's standard `{detail}` envelope: a missing, mistyped, or blank (whitespace-only) `question` is rejected with the default 422; retrieval is scoped to `JANBOT_CORPUS_PATH` at the store, so a chunk outside the corpus root or without a `source_path` is never retrieved and an index with no in-corpus grounding yields the `insufficient` reply above (not an error); a fabricated cited answer is refused with 500 naming the refusal; and a model-response or unexpected processing failure is refused with 500 and a fixed (non-leaking) `{detail}` — every `/chat` error response, including the real-model path, carries the envelope.
 
+## Evaluation
+
+Milestone 2 measures the pipeline against a version-controlled golden dataset (`eval/golden_dataset.yaml`, with a per-item train/val split) and records every run in MLflow:
+
+```sh
+uv run python -m janbot.eval --dataset eval/golden_dataset.yaml --split val
+uv run python -m janbot.eval.optimize --dataset eval/golden_dataset.yaml --split train --out eval/compiled_fewshot.json
+uv run python -m janbot.eval.public_urls
+```
+
+`python -m janbot.eval` scores each item and logs the metrics — `answer_coverage`, `public_references`, `retrieval_accuracy`, `retrieval_mrr`, `citation_correctness`, `citation_precision`, `faithfulness` — each with its denominator (`<metric>__n`); `--split {all,train,val}` selects the split (the optimization gate runs `val`). `python -m janbot.eval.optimize` compiles the `/chat` program over the train split against a multi-objective objective (the answer cites its sources **and** the judge finds it faithful) and persists it as a DSPy program pinned by `JANBOT_PROGRAM_PATH`. `python -m janbot.eval.public_urls` regenerates the public-reference allow-list (`eval/public_urls.yaml`), keyless.
+
+`python -m janbot.eval` runs keyless — a keyless run leaves every item unjudged, so `faithfulness` stays `0`. `python -m janbot.eval.optimize` needs a judge for its faithfulness term, so it requires `OPENROUTER_API_KEY` (honoring `JANBOT_JUDGE_MODEL`) and fails fast without one.
+
+The eval reads the full configuration surface — `JANBOT_MODEL_MODE`, `JANBOT_MODEL_SNAPSHOT`, `JANBOT_TEMPERATURE`, `JANBOT_SEED`, `JANBOT_TOP_K`, `JANBOT_CORPUS_PATH`, `JANBOT_INDEX_PATH`, `JANBOT_JUDGE_MODEL`, `JANBOT_PROGRAM_PATH` — and every run records the params that pin it: the model mode, snapshot, judge model, temperature, seed, top-k, and `program`, plus the dataset `sha256`, so runs are comparable. Runs go to the MLflow store at `MLFLOW_TRACKING_URI` (default `sqlite:///mlflow.db`, with artifacts under `mlruns/`); both are gitignored. The optimization gate is judged against a pre-registered rule in `_bmad-output/initiative-janbot/epic-evaluation/gate-rule.md`.
+
 ## Development
 
 ```sh
@@ -106,6 +122,7 @@ src/janbot/
   ingest/       # orgparse reader, subtree chunker, fail-closed scope filter
   store/        # ChromaDB client + embedding adapter
   llm/          # OpenRouter adapter + model-mode config
+  eval/         # golden dataset, metrics, LLM-as-a-judge, MLflow runs, optimization
 tests/          # endpoint tests through the HTTP port only
 ```
 
