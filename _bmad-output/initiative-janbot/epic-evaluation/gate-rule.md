@@ -4,8 +4,10 @@ Committed **before** the optimization stages run, so `5.14` (BootstrapFewShot,
 multi-objective) and `5.9` (MIPROv2) are judged against a fixed rule rather than a
 threshold chosen after seeing the numbers.
 
-Reference: the val baseline **`e635c2bf`** (n=15), judge `anthropic/claude-haiku-4.5`,
-`dataset_sha256` as recorded in that run. A compiled stage is evaluated on the same
+Reference: the val baseline **`9c7260da`** (n=15), judge `anthropic/claude-haiku-4.5`,
+`dataset_sha256` as recorded in that run (a **reference-pointer update** from
+`e635c2bf` — the `5.13` re-baseline; see the epic Notes; the rule body itself is
+unchanged). A compiled stage is evaluated on the same
 15 held-out val items and compared proportion-for-proportion.
 
 ## Metrics
