@@ -25,3 +25,14 @@ after = [1]
 hitl = true
 risk = "high"
 references = ["architecture-janbot/architecture-janbot.md#ad-2", "architecture-janbot/architecture-janbot.md#ad-5"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Decline variants: a personal-question reply"
+description = "Today every decline returns the single INSUFFICIENT_ANSWER (\"I don't have that in the public profile I answer from.\"). The owner wants a VARIANT for some refusal items: personal/HR questions (salary, notice, relocation, security clearance, dietary, driving licence) should say, in effect, \"contact Jan Stavel directly — it is a personal question\", while uncovered TOPICS keep the generic reply. The hard part is the categorisation: the 7.2 relevance gate (theta) declines UNIFORMLY and deterministically, without knowing WHY; a keyword rule is brittle (the EKS/grep lesson) and a model classifier is non-deterministic. Contract-compatible: status stays \"insufficient\", only the answer text differs — so the refusal metrics are unaffected (a decline is a pass regardless of text) and the judge is skipped. E3 is a CONSTANT: the DECISION stays deterministic; the variant selection must too. Two design options to settle in the plan: (a) gate decides, model phrases — theta decides the decline deterministically, the LM writes the sentence (natural, +1 LM call; the status is deterministic, the text is not); (b) structured reason — the decline carries reason: personal | out_of_corpus, the client renders the text (deterministic; but a CONTRACT change: ChatResponse + OpenAPI + the TS harness). Optional dataset side: a per-item decline_category marker (schema + loader, like should_refuse) for documentation and a possible future scoring hook — NOT required for the behaviour. No change to the gate decision or theta; the split (decline sanctioned / FabricatedCitation refused) stays."
+verify = "A personal/HR out-of-corpus question returns status=insufficient with the personal-variant reply and an uncovered-topic question returns the generic reply; both are deterministic across two runs under the locked snapshot; the refusal metrics are unchanged (declines still pass); if option (b), the contract is updated and the TS harness stays in sync."
+covers = ["E2", "E3"]
+after = [2]
+hitl = true
+risk = "medium"

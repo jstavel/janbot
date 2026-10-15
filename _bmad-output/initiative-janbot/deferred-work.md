@@ -94,3 +94,10 @@
   summary: gate-rule.md must be re-pointed at the new reference (run 9c7260da, dataset sha 531186fe…) — the 5.13 re-baseline superseded e635c2bf but the task forbade touching gate-rule.md.
   evidence: the epic-evaluation Notes entry (2026-10-15, entry 13) records the supersession; `_bmad-output/initiative-janbot/epic-evaluation/gate-rule.md:7-9` still names e635c2bf with the old dataset sha 4656f824…, so a future gate comparison against the written rule would use the superseded run.
   status: **resolved** (2026-10-15) — the gate rule's reference pointer now names `9c7260da` (dataset sha `531186fe…`); the rule body is unchanged (a reference-pointer update, not a rule change), justified because the re-baseline reproduced every pre-existing metric identically (`citation_correctness`/`faithfulness`/`retrieval_accuracy` 0.7333 ×3, n=15). See the epic-evaluation Notes entry (2026-10-15, gate reference re-point).
+
+## Someday (2026-10-15)
+
+- source_plan: `_bmad-output/initiative-janbot/epic-ingestion/story-source-diverse-retrieval-window-plan.md` (2.11)
+  summary: Per-source chunk cap <= N (MMR-style relevance/diversity, e.g. N=2) — keeps source diversity WITHOUT strict dedup's within-source depth loss.
+  evidence: 2.11's strict dedup (run 0c01ba33) regressed faithfulness 0.7333 -> 0.4667 (item 22 lost its second edeposit.org subtree -> a new reference failure); the follow-up probe is deterministic (free, no model) — over {23,25,29,32} and the 2.11-destabilised {14,17,19,22,36}.
+  status: **someday** — no blocker; do when there is capacity. Not scheduled.
