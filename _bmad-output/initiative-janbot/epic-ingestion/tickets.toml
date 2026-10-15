@@ -87,3 +87,14 @@ covers = ["CAP-5"]
 after = [7]
 hitl = false
 risk = "medium"
+
+[[entry]]
+id = 9
+type = "story"
+title = "Retrieval recall at the top_k boundary (the val near-misses)"
+description = "Recover the four diagnosed val retrieval misses so the expected sources enter the retrieved window (diagnosis: epic-evaluation entry 19, run 62e44e56 reproduced the reference e635c2bf exactly, val n=15; union {23, 25, 29, 32}, all four are retrieval misses — zero corpus gaps, zero program errors). Levers: (a) raise JANBOT_TOP_K (4 -> 6/8) — the direct lever for item 29 (vagrant-provisioning.org ranks 5th, one slot below the cut) and likely item 25 (a 3-source item needing 3 of the top-4 slots); (b) embedding/query-side work for the semantically distant objects — item 23 (public-proof-map.org, a URL list, ranks 15th) and item 32 (perl-clojure-gateway.org, the \"why\" narrative, ranks 15th while the \"what\" objects crowd the top); (c) multi-source coverage for item 25 (dna-threads.org and cpp-memory-allocator.org are not in the top 15). Measure every candidate change against the val reference e635c2bf — a retrieval change does not touch the dataset, so the reference stays valid. Judge on the TRANSFER metrics citation_correctness and faithfulness, NOT the mechanically inflated retrieval_accuracy (raising k raises recall by construction); watch citation_precision (more context -> the over-citing risk epic-evaluation O2 recorded: 0.69 -> 0.50 in the multi-objective compile, non-gating). Output the measured before/after and whether the change moves a gate metric beyond the 1.5σ floor (>= 3 items at n=15) — this is the input epic-evaluation entry 20 needs before it can decide on breadth. Depends on the epic-evaluation diagnosis (entry 5.19) and the e635c2bf val reference."
+verify = "A retrieval change is measured against e635c2bf on the val split: before/after retrieval_accuracy / retrieval_mrr and the transfer metrics citation_correctness / faithfulness (plus citation_precision) are recorded in MLflow; the change either moves a gate metric beyond the 1.5σ floor (>= 3 items at n=15) or the within-noise result is recorded and routed to entry 20's breadth decision."
+covers = ["CAP-5"]
+after = ["5.19"]
+hitl = true
+risk = "medium"
