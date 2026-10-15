@@ -9,9 +9,9 @@ the selected ``split`` plus a ``split_manifest.json`` artifact mapping each spli
 to its dataset indices, so the held-out val set stays auditable. Eval mode needs
 no key, so the CLI starts without ``OPENROUTER_API_KEY`` rather than failing on
 one. The run parameters are read from the resolved ``Config``
-(model mode, snapshot, judge model, temperature, seed, top_k), keeping model
-selection configuration-only (AD-5), and the dataset is pinned as an artifact so
-runs are comparable. When ``OPENROUTER_API_KEY`` is present the CLI also
+(model mode, snapshot, judge model, temperature, seed, top_k, retrieval mode),
+keeping model selection configuration-only (AD-5), and the dataset is pinned as
+an artifact so runs are comparable. When ``OPENROUTER_API_KEY`` is present the CLI also
 builds the LLM-as-a-judge from ``JANBOT_JUDGE_MODEL`` (through the same key) so
 the ``faithfulness`` metric is scored; without a key the run stays keyless and
 every item is unjudged.
@@ -51,6 +51,7 @@ def run_params(config: Config) -> dict[str, Any]:
         "temperature": config.temperature,
         "seed": config.seed,
         "top_k": config.top_k,
+        "retrieval_mode": config.retrieval_mode,
         "program": program_marker(config.program_path),
     }
 

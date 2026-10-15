@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Golden-dataset train/val split and val gate: each item carries a `split` (`train`/`val`); the compile CLI is train-only and the eval CLI takes `--split {all,train,val}`; a re-measured val baseline is the gate reference, and the optimization gate is pre-registered in `gate-rule.md` before any stage is judged.
 - Eval run records: every run pins the config that produced it (model mode, snapshot, temperature, seed, top-k, judge model, `program`), the dataset `sha256`, and the split, and records each metric's population as its denominator (`<metric>__n`); the metric registry declares each metric's polarity (`higher_is_better`), so runs are comparable and a refusal is never scored as an uncited or unfaithful answer.
 - Eval `retrieval_mrr` metric: over the same claim-making items as `retrieval_accuracy`, each golden item scores `1 / rank` of the first expected source in the retrieved list (0.0 when none is retrieved), so a source at rank 1 and one at rank 4 are distinguished where the binary `retrieval_accuracy` cannot.
+- Hybrid retrieval mode: `JANBOT_RETRIEVAL_MODE` (`dense` default / `hybrid`, unknown values fail fast) adds an opt-in deterministic in-module BM25 lexical ranking over the scope-filtered candidate chunks, fused with the dense ranking by reciprocal-rank fusion inside `VectorStore.query`; the return shape, fail-closed scope filtering and `k` truncation are unchanged, and the shipped default stays `dense`.
 
 ### Documentation
 

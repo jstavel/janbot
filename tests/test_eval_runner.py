@@ -465,6 +465,7 @@ def test_run_params_carries_every_run_affecting_config() -> None:
         "temperature",
         "seed",
         "top_k",
+        "retrieval_mode",
         "program",
     }
 

@@ -73,7 +73,10 @@ def create_app(
             "the configured compiled program is missing — refusing to start"
         )
     store = VectorStore(
-        config.index_path, embedder or default_embedder(), scope=config.corpus_path
+        config.index_path,
+        embedder or default_embedder(),
+        scope=config.corpus_path,
+        retrieval_mode=config.retrieval_mode,
     )
     foreign = store.out_of_scope_sources()
     if foreign:

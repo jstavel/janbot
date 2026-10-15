@@ -9,13 +9,21 @@ injected callable. Production uses :func:`default_embedder`.
 
 from __future__ import annotations
 
+import math
 import os
+import re
 from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any, Protocol
 
 import chromadb
 from chromadb.utils import embedding_functions
+
+from janbot.config import (
+    DEFAULT_RETRIEVAL_MODE,
+    RETRIEVAL_MODE_HYBRID,
+    RETRIEVAL_MODES,
+)
 
 __all__ = ["ChunkLike", "Embedder", "VectorStore", "default_embedder"]
 
@@ -38,6 +46,68 @@ class ChunkLike(Protocol):
     def breadcrumb(self) -> str: ...
 
 _COLLECTION_NAME = "janbot"
+
+_BM25_K1 = 1.5
+_BM25_B = 0.75
+_RRF_K = 60
+
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+
+
+def _tokenize(text: str) -> list[str]:
+    """Lower-case runs of ``[a-z0-9]+`` — the fixed BM25 tokenizer (no stemming)."""
+    return _TOKEN_RE.findall(text.lower())
+
+
+def _bm25_scores(query: str, documents: list[str]) -> list[float]:
+    """Deterministic Okapi BM25 score for ``query`` against each document.
+
+    Fixed parameters (``k1``/``b``) and the fixed :func:`_tokenize` tokenizer, so
+    the lexical ranking is reproducible by specification, not by accident.
+    """
+    tokenized = [_tokenize(document) for document in documents]
+    total = len(tokenized)
+    if total == 0:
+        return []
+    average_length = sum(len(tokens) for tokens in tokenized) / total
+    document_frequency: dict[str, int] = {}
+    for tokens in tokenized:
+        for term in set(tokens):
+            document_frequency[term] = document_frequency.get(term, 0) + 1
+    scores = [0.0] * total
+    for term in _tokenize(query):
+        frequency = document_frequency.get(term, 0)
+        if frequency == 0:
+            continue
+        idf = math.log(1 + (total - frequency + 0.5) / (frequency + 0.5))
+        for index, tokens in enumerate(tokenized):
+            term_frequency = tokens.count(term)
+            if term_frequency == 0:
+                continue
+            length_ratio = (len(tokens) / average_length) if average_length else 0.0
+            denominator = term_frequency + _BM25_K1 * (
+                1 - _BM25_B + _BM25_B * length_ratio
+            )
+            scores[index] += idf * (term_frequency * (_BM25_K1 + 1) / denominator)
+    return scores
+
+
+def _reciprocal_rank_fusion(
+    dense_order: list[int], lexical_order: list[int], size: int
+) -> list[float]:
+    """Fuse two rankings of ``size`` items by reciprocal-rank fusion.
+
+    Each ranking contributes ``1 / (_RRF_K + rank)`` (rank is 1-based) to the
+    item at that position; the fused scores decide the final order. Fixed
+    constant, so the fusion is deterministic.
+    """
+    scores = [0.0] * size
+    for rank, index in enumerate(dense_order, start=1):
+        scores[index] += 1.0 / (_RRF_K + rank)
+    for rank, index in enumerate(lexical_order, start=1):
+        scores[index] += 1.0 / (_RRF_K + rank)
+    return scores
+
 
 
 def _within_scope(scope: Path, source_path: str | None) -> bool:
@@ -109,10 +179,18 @@ class VectorStore:
         index_path: str | Path,
         embedder: Embedder,
         scope: str | Path | None = None,
+        retrieval_mode: str = DEFAULT_RETRIEVAL_MODE,
     ) -> None:
         self.index_path = Path(index_path)
         self.embedder = embedder
         self.scope = Path(scope).resolve() if scope is not None else None
+        if retrieval_mode not in RETRIEVAL_MODES:
+            allowed = ", ".join(repr(mode) for mode in RETRIEVAL_MODES)
+            raise ValueError(
+                f"retrieval_mode={retrieval_mode!r} is invalid; "
+                f"allowed values: {allowed}"
+            )
+        self.retrieval_mode = retrieval_mode
         self._client = chromadb.PersistentClient(path=str(self.index_path))
         self._collection = self._client.get_or_create_collection(
             name=_COLLECTION_NAME,
@@ -228,9 +306,18 @@ class VectorStore:
         be returned: ranked candidates are over-fetched (every stored chunk) and
         filtered to scope before truncating to ``k``, so an out-of-scope chunk
         can never enter retrieval. An unscoped store is the global top-``k``.
+
+        In the default ``dense`` mode the ranking is the embedder's cosine
+        similarity alone. In ``hybrid`` mode the same dense ranking is fused with
+        a deterministic BM25 lexical ranking of the candidate texts by
+        reciprocal-rank fusion; both modes share the scope filter, the return
+        shape and the ``k`` truncation.
         """
         if k <= 0:
             return []
+
+        if self.retrieval_mode == RETRIEVAL_MODE_HYBRID:
+            return self._query_hybrid(text, k)
 
         if self.scope is not None:
             count = self._collection.count()
@@ -267,3 +354,55 @@ class VectorStore:
             if len(matches) == k:
                 break
         return matches
+
+    def _query_hybrid(self, text: str, k: int) -> list[dict[str, Any]]:
+        """Dense+lexical retrieval over the whole candidate set.
+
+        Over-fetches every stored chunk (the scoped path's behaviour, applied to
+        both stores so the unscoped path has candidates to fuse), fails closed on
+        scope *before* ranking, fuses the dense and BM25 rankings by RRF, then
+        truncates to ``k`` with the unchanged return shape.
+        """
+        count = self._collection.count()
+        if count == 0:
+            return []
+
+        result = self._collection.query(
+            query_embeddings=self.embedder([text]),
+            n_results=count,
+            include=["documents", "metadatas"],
+        )
+
+        ids = (result.get("ids") or [[]])[0]
+        documents = (result.get("documents") or [[]])[0]
+        metadatas = (result.get("metadatas") or [[]])[0]
+
+        candidates: list[dict[str, Any]] = []
+        for chunk_id, document, metadata in zip(ids, documents, metadatas):
+            meta = metadata or {}
+            source_path = meta.get("source_path")
+            if self.scope is not None and not _within_scope(self.scope, source_path):
+                continue
+            candidates.append(
+                {
+                    "id": chunk_id,
+                    "text": document,
+                    "source_path": source_path,
+                    "breadcrumb": meta.get("breadcrumb"),
+                }
+            )
+        if not candidates:
+            return []
+
+        dense_order = list(range(len(candidates)))
+        lexical_scores = _bm25_scores(
+            text, [candidate["text"] or "" for candidate in candidates]
+        )
+        lexical_order = sorted(
+            range(len(candidates)), key=lambda index: (-lexical_scores[index], index)
+        )
+        fused = _reciprocal_rank_fusion(dense_order, lexical_order, len(candidates))
+        order = sorted(
+            range(len(candidates)), key=lambda index: (-fused[index], index)
+        )
+        return [candidates[index] for index in order[:k]]

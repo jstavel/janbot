@@ -1,7 +1,7 @@
 """Configuration for JanBot, read from ``JANBOT_*`` environment variables.
 
 Per AD-5, model mode is configuration, not code. This module is stdlib-only and
-reads ten variables, each with a documented default:
+reads eleven variables, each with a documented default:
 
 - ``JANBOT_MODEL_MODE``      -- ``"eval"`` (default) or ``"production"``
 - ``JANBOT_MODEL_SNAPSHOT``  -- locked model snapshot;
@@ -17,10 +17,12 @@ reads ten variables, each with a documented default:
 - ``JANBOT_TEMPERATURE``     -- LM sampling temperature; default ``0.0``
 - ``JANBOT_SEED``            -- eval determinism seed; default ``0``
 - ``JANBOT_TOP_K``           -- retrieval top-k; default ``4``
+- ``JANBOT_RETRIEVAL_MODE``  -- ``"dense"`` (default) or ``"hybrid"``
 
 Values are trimmed, and a blank or whitespace-only value counts as unset (so it
-takes the documented default). The model mode is normalized to lower case before
-validation, so ``"Production"`` and ``" production "`` are accepted.
+takes the documented default). The model mode and the retrieval mode are
+normalized to lower case before validation, so ``"Production"`` and
+``" production "`` (and ``"Hybrid"``) are accepted.
 ``JANBOT_TEMPERATURE`` must parse as a finite number, ``JANBOT_SEED`` must parse
 as an integer, and ``JANBOT_TOP_K`` must be a positive integer; a value that violates
 any clause fails fast with a ``ValueError`` naming the variable. Paths are
@@ -48,6 +50,10 @@ MODEL_MODE_EVAL = "eval"
 MODEL_MODE_PRODUCTION = "production"
 MODEL_MODES = (MODEL_MODE_EVAL, MODEL_MODE_PRODUCTION)
 
+RETRIEVAL_MODE_DENSE = "dense"
+RETRIEVAL_MODE_HYBRID = "hybrid"
+RETRIEVAL_MODES = (RETRIEVAL_MODE_DENSE, RETRIEVAL_MODE_HYBRID)
+
 MODEL_MODE_ENV = "JANBOT_MODEL_MODE"
 MODEL_SNAPSHOT_ENV = "JANBOT_MODEL_SNAPSHOT"
 JUDGE_MODEL_ENV = "JANBOT_JUDGE_MODEL"
@@ -58,6 +64,7 @@ PROJECT_ROOT_ENV = "JANBOT_PROJECT_ROOT"
 TEMPERATURE_ENV = "JANBOT_TEMPERATURE"
 SEED_ENV = "JANBOT_SEED"
 TOP_K_ENV = "JANBOT_TOP_K"
+RETRIEVAL_MODE_ENV = "JANBOT_RETRIEVAL_MODE"
 
 DEFAULT_MODEL_MODE = MODEL_MODE_EVAL
 DEFAULT_MODEL_SNAPSHOT = "openai/gpt-4o-mini-2024-07-18"
@@ -66,6 +73,7 @@ DEFAULT_INDEX_PATH = "chroma_db"
 DEFAULT_TEMPERATURE = 0.0
 DEFAULT_SEED = 0
 DEFAULT_TOP_K = 4
+DEFAULT_RETRIEVAL_MODE = RETRIEVAL_MODE_DENSE
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -83,6 +91,7 @@ class Config:
     temperature: float
     seed: int
     top_k: int
+    retrieval_mode: str
 
 
 def _clean(value: str | None) -> str | None:
@@ -105,8 +114,9 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
     """Load configuration from ``env`` (defaults to ``os.environ``).
 
     Raises:
-        ValueError: if ``JANBOT_MODEL_MODE`` is not one of ``MODEL_MODES``, or
-            if ``JANBOT_TEMPERATURE``/``JANBOT_SEED``/``JANBOT_TOP_K`` is set
+        ValueError: if ``JANBOT_MODEL_MODE`` is not one of ``MODEL_MODES``, if
+            ``JANBOT_RETRIEVAL_MODE`` is not one of ``RETRIEVAL_MODES``, or if
+            ``JANBOT_TEMPERATURE``/``JANBOT_SEED``/``JANBOT_TOP_K`` is set
             to an invalid value.
     """
     source = os.environ if env is None else env
@@ -163,6 +173,19 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
                 f"{TOP_K_ENV}={raw_top_k!r} must be a positive integer"
             )
 
+    raw_retrieval_mode = _clean(source.get(RETRIEVAL_MODE_ENV))
+    retrieval_mode = (
+        DEFAULT_RETRIEVAL_MODE
+        if raw_retrieval_mode is None
+        else raw_retrieval_mode.lower()
+    )
+    if retrieval_mode not in RETRIEVAL_MODES:
+        allowed = ", ".join(repr(mode) for mode in RETRIEVAL_MODES)
+        raise ValueError(
+            f"{RETRIEVAL_MODE_ENV}={raw_retrieval_mode!r} is invalid; "
+            f"allowed values: {allowed}"
+        )
+
     raw_root = _clean(source.get(PROJECT_ROOT_ENV))
     project_root = _resolve_path(raw_root, PROJECT_ROOT) if raw_root else PROJECT_ROOT
 
@@ -184,4 +207,5 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
         temperature=temperature,
         seed=seed,
         top_k=top_k,
+        retrieval_mode=retrieval_mode,
     )

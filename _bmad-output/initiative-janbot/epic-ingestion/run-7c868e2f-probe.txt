@@ -1,0 +1,35 @@
+no-model hybrid window probe (BM25+RRF, top_k=4)
+index: /home/jstavel/dev/janbot/chroma_db
+corpus scope: /home/jstavel/dev/janbot/public_profile_org
+dataset: /home/jstavel/dev/janbot/eval/golden_dataset.yaml
+dataset sha256: 4656f824cd60cb482738c352ee0c09f6d5e5131ce8656da4d4e6e23c1a668df0
+embedder: production default (all-MiniLM-L6-v2)
+
+collection count: 276
+
+=== item 23 (0-based 23) ===
+question: Which of your projects can I inspect right now, and where?
+dense  k=4: ['intranet-pattern.org', 'reactive-testing-project.org', 'system-design.org', 'edeposit.org']
+hybrid k=4: ['public-proof-map.org', 'spec-first-pitch.org', 'career-trajectory.org', 'reactive-testing-framework.org']
+  public-proof-map.org: dense_rank=15 hybrid_rank=1 in_hybrid_k4_window=yes
+
+=== item 25 (0-based 25) ===
+question: You've been at this a long time - what can you bring that a younger engineer can't?
+dense  k=4: ['career-trajectory.org', 'spec-first-pitch.org', 'career-trajectory.org', 'cdbazar.org']
+hybrid k=4: ['departure-narrative.org', 'career-trajectory.org', 'core-values-vs-framework.org', 'departure-narrative.org']
+  dna-threads.org: dense_rank=68 hybrid_rank=103 in_hybrid_k4_window=no
+  cpp-memory-allocator.org: dense_rank=64 hybrid_rank=54 in_hybrid_k4_window=no
+  career-trajectory.org: dense_rank=1 hybrid_rank=2 in_hybrid_k4_window=yes
+
+=== item 29 (0-based 29) ===
+question: Have you done Infrastructure as Code?
+dense  k=4: ['cdbazar.org', 'nagios-snmp-monitoring.org', 'intranet-pattern.org', 'intranet-pattern.org']
+hybrid k=4: ['nagios-snmp-monitoring.org', 'vagrant-provisioning.org', 'edeposit.org', 'departure-narrative.org']
+  vagrant-provisioning.org: dense_rank=5 hybrid_rank=2 in_hybrid_k4_window=yes
+
+=== item 32 (0-based 32) ===
+question: Why Clojure? What led you to it?
+dense  k=4: ['clojure-testing.org', 'edeposit.org', 'spyscope-hotreload.org', 'clojure-testing.org']
+hybrid k=4: ['personal-intro.org', 'clojure-testing.org', 'clojure-testing.org', 'edeposit.org']
+  perl-clojure-gateway.org: dense_rank=15 hybrid_rank=10 in_hybrid_k4_window=no
+

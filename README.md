@@ -56,6 +56,7 @@ JanBot is configured through environment variables loaded by [`janbot.config`](s
 | `JANBOT_TEMPERATURE` | `0.0` | LM sampling temperature passed to the model in every mode. A value that is not a finite number fails fast. |
 | `JANBOT_SEED` | `0` | Sampling seed pinning determinism in `eval` mode only. `production` (`openrouter/auto`) is seed-free. A value that is not an integer fails fast. |
 | `JANBOT_TOP_K` | `4` | Retrieval top-k: how many corpus chunks ground an answer. An invalid or non-positive value fails fast. |
+| `JANBOT_RETRIEVAL_MODE` | `dense` | Retrieval ranking: `dense` (the shipped default — embedder cosine similarity alone) or `hybrid` (dense fused with a deterministic BM25 lexical ranking by reciprocal-rank fusion). An unknown value fails fast. |
 | `JANBOT_CORPUS_PATH` | `public_profile_org` | The corpus root: the only tree the ingestion pipeline will index (fail-closed) and the scope retrieval is bounded to at the store. |
 | `JANBOT_INDEX_PATH` | `chroma_db` | Where the vector index is written. |
 | `JANBOT_PROGRAM_PATH` | unset | Path to a compiled DSPy program (the `BootstrapFewShot` output). When set, the app loads it instead of the freshly built program; the eval labels such runs `fewshot:<sha>` rather than `baseline`. A set path that does not name a file fails fast. |

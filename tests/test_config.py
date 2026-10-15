@@ -27,6 +27,7 @@ def _clear_janbot_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "JANBOT_TEMPERATURE",
         "JANBOT_SEED",
         "JANBOT_TOP_K",
+        "JANBOT_RETRIEVAL_MODE",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -232,6 +233,36 @@ def test_invalid_top_k_raises(value: str) -> None:
     message = str(excinfo.value)
     assert "JANBOT_TOP_K" in message
     assert value in message
+
+
+def test_default_retrieval_mode_is_dense() -> None:
+    assert load_config({}).retrieval_mode == "dense"
+
+
+def test_retrieval_mode_override_is_parsed() -> None:
+    assert load_config({"JANBOT_RETRIEVAL_MODE": "hybrid"}).retrieval_mode == "hybrid"
+
+
+@pytest.mark.parametrize("value", ["Hybrid", " hybrid ", "HYBRID"])
+def test_retrieval_mode_is_normalized(value: str) -> None:
+    assert load_config({"JANBOT_RETRIEVAL_MODE": value}).retrieval_mode == "hybrid"
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_retrieval_mode_falls_back_to_default(blank: str) -> None:
+    assert load_config({"JANBOT_RETRIEVAL_MODE": blank}).retrieval_mode == "dense"
+
+
+@pytest.mark.parametrize("value", ["bogus", "dense2", "lexical"])
+def test_invalid_retrieval_mode_raises(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_RETRIEVAL_MODE": value})
+
+    message = str(excinfo.value)
+    assert "JANBOT_RETRIEVAL_MODE" in message
+    assert value in message
+    assert "dense" in message
+    assert "hybrid" in message
 
 
 def test_default_seed_is_zero() -> None:
