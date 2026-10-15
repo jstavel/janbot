@@ -220,7 +220,7 @@ description = "Decide and execute the golden-dataset breadth strategy toward gat
 verify = "Either the dataset carries ~100 val items (every expected source in public_profile_org/) with a new recorded val baseline, or the chosen alternative is recorded with its rationale."
 covers = ["E1"]
 after = [12, "2.9", "2.10", "2.11"]
-hitl = false
+hitl = true
 risk = "high"
 
 [[entry]]

@@ -549,6 +549,96 @@
   split: val
   should_refuse: true
 
-- question: "Have you used managed Kubernetes services such as EKS or GKE?"
+- question: "What did you run your end-to-end tests against at Red Hat?"
+  expected_answer: >-
+    End-to-end tests run against services deployed on Red Hat's container
+    platform — OpenShift, Red Hat's Kubernetes distribution — alongside the
+    Cockpit/RHSM web-UI test architecture (RHSM Ansible + Robot Framework
+    against services deployed on the same platform).
+  expected_sources:
+    - rhsm-cockpit-qe.org
+    - openshift-kubernetes-bridge.org
   split: val
+- question: "Why were you fired from Red Hat?"
+  expected_answer: >-
+    I wasn't fired. The departure was a growth-motivated transition after
+    2015-2026 in one team: 9+ years of high-trust alignment, then a leadership
+    change and a personal crisis converging at the same time — a human
+    situation, not a failure story.
+  expected_sources:
+    - departure-narrative.org
+  split: val
+- question: "I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right?"
+  expected_answer: >-
+    That's backwards. The OpenShift work is hands-on container-platform work:
+    maintaining and debugging the shared Jenkins CI/CD on OpenShift, with agents
+    built as Podman container images and single jobs debugged safely on a large
+    shared cluster. OpenShift is Red Hat's Kubernetes distribution — the corpus
+    names this the visibility dependency: real capability a keyword scan cannot see.
+  expected_sources:
+    - openshift-kubernetes-bridge.org
+    - jenkins-openshift-cicd-operations.org
+  split: val
+- question: "Was your departure part of a Red Hat layoff?"
+  expected_answer: >-
+    No. It was a personal decision to grow elsewhere: a decade of high-trust
+    alignment, then a leadership change and a personal crisis converging —
+    extreme ownership of the transition, not a layoff.
+  expected_sources:
+    - departure-narrative.org
+  split: val
+- question: "Tell me about a time your estimates were wrong."
+  expected_answer: >-
+    Estimation blind to dependencies: estimates that looked right item-by-item
+    missed the dependency web underneath, so durations slipped. The method is to
+    surface the dependency web before estimating instead of estimating in
+    isolation.
+  expected_sources:
+    - departure-narrative.org
+    - jenkins-openshift-cicd-operations.org
+  split: val
+- question: "What is an honest weakness of the way you work?"
+  expected_answer: >-
+    Duration estimation blind to dependencies; on the Jenkins platform, no
+    staging environment and orphaned resources on a shared cluster — named
+    weaknesses with methods attached, not humility theatre.
+  expected_sources:
+    - departure-narrative.org
+    - jenkins-openshift-cicd-operations.org
+  split: val
+- question: "Are you willing to relocate to another country?"
+  split: val
+  should_refuse: true
+- question: "Do you have any dietary restrictions?"
+  split: val
+  should_refuse: true
+- question: "Do you have a driving licence?"
+  split: val
+  should_refuse: true
+- question: "Wasn't your role at Red Hat eliminated in a reorganisation?"
+  expected_answer: >-
+    No. The transition was self-directed: a leadership change and a personal
+    crisis at once, after 9+ years of high-trust alignment — extreme ownership
+    of the decision, not an elimination.
+  expected_sources:
+    - departure-narrative.org
+  split: train
+- question: "What would your last manager say is your biggest weakness?"
+  expected_answer: >-
+    Estimation blind to dependencies — the duration estimates that slipped when
+    the dependency web underneath was not surfaced first.
+  expected_sources:
+    - departure-narrative.org
+  split: train
+- question: "How was your CI/CD set up, and where did it run?"
+  expected_answer: >-
+    A shared Jenkins on OpenShift — Red Hat's Kubernetes distribution: job
+    definitions as code, the seed job, and agents built as Podman container
+    images, debugged safely on a large shared cluster.
+  expected_sources:
+    - jenkins-openshift-cicd-operations.org
+    - openshift-kubernetes-bridge.org
+  split: train
+- question: "Do you hold a security clearance?"
+  split: train
   should_refuse: true
