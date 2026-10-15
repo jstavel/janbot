@@ -65,3 +65,13 @@ people?" (0.345), "Do you hold any patents?" (0.259 — within 0.001 of θ, too 
 **T3** (class 3, train): *How was your CI/CD set up, and where did it run?* — expected: a shared Jenkins on OpenShift (Red Hat's Kubernetes distribution): job definitions as code, the seed job, agents as Podman container images. — `["jenkins-openshift-cicd-operations.org", "openshift-kubernetes-bridge.org"]`
 
 **TR1** (class 8, train, `should_refuse: true`): *Do you hold a security clearance?*
+
+## Iteration 1 probe (theta=0.26, the acceptance gate — recorded before the confirm)
+
+The changed items re-probed against the shipped gate (a rephrase can push a
+non-refusal below theta -> a false decline); the refusal items are unchanged and
+already probed below theta.
+
+OK  V1 (rephrased): best_sim=0.5198 (>= theta: True)  'Which services did your end-to-end tests run against at Red '
+OK  V5 (sources narrowed; question unchanged): best_sim=0.4964 (>= theta: True)  'Tell me about a time your estimates were wrong.'
+OK  V6 (rephrased): best_sim=0.5198 (>= theta: True)  'What did you name as weaknesses in your Jenkins and estimati'

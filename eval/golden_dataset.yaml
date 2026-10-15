@@ -549,7 +549,7 @@
   split: val
   should_refuse: true
 
-- question: "What did you run your end-to-end tests against at Red Hat?"
+- question: "Which services did your end-to-end tests run against at Red Hat, and on what platform?"
   expected_answer: >-
     End-to-end tests run against services deployed on Red Hat's container
     platform — OpenShift, Red Hat's Kubernetes distribution — alongside the
@@ -602,9 +602,8 @@
     isolation.
   expected_sources:
     - departure-narrative.org
-    - jenkins-openshift-cicd-operations.org
   split: val
-- question: "What is an honest weakness of the way you work?"
+- question: "What did you name as weaknesses in your Jenkins and estimation work?"
   expected_answer: >-
     Duration estimation blind to dependencies; on the Jenkins platform, no
     staging environment and orphaned resources on a shared cluster — named
