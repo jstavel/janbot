@@ -75,3 +75,18 @@ already probed below theta.
 OK  V1 (rephrased): best_sim=0.5198 (>= theta: True)  'Which services did your end-to-end tests run against at Red '
 OK  V5 (sources narrowed; question unchanged): best_sim=0.4964 (>= theta: True)  'Tell me about a time your estimates were wrong.'
 OK  V6 (rephrased): best_sim=0.5198 (>= theta: True)  'What did you name as weaknesses in your Jenkins and estimati'
+
+## V5 — PARKED (2026-10-15), restorable
+
+Removed from `eval/golden_dataset.yaml`: it errored (`FabricatedCitation`, 6
+unverifiable claims) even with its single source (`departure-narrative.org`)
+retrieved — **unscoreable**: the program correctly refuses, the item never
+reaches the judge, and it only depresses `answer_coverage`. **Restore once 7.2's
+candidate (a) (a prompt-level correction instruction) lands.** Parked item:
+
+- question: "Tell me about a time your estimates were wrong."
+- expected_answer: Estimation blind to dependencies: estimates that looked right
+  item-by-item missed the dependency web underneath, so durations slipped. The
+  method is to surface the dependency web before estimating instead of estimating
+  in isolation.
+- expected_sources: [departure-narrative.org] · split: val

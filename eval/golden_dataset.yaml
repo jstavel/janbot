@@ -594,15 +594,6 @@
   expected_sources:
     - departure-narrative.org
   split: val
-- question: "Tell me about a time your estimates were wrong."
-  expected_answer: >-
-    Estimation blind to dependencies: estimates that looked right item-by-item
-    missed the dependency web underneath, so durations slipped. The method is to
-    surface the dependency web before estimating instead of estimating in
-    isolation.
-  expected_sources:
-    - departure-narrative.org
-  split: val
 - question: "What did you name as weaknesses in your Jenkins and estimation work?"
   expected_answer: >-
     Duration estimation blind to dependencies; on the Jenkins platform, no
