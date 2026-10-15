@@ -27,12 +27,14 @@ from janbot.eval.metrics import (
     metric_spec,
     public_reference_failures,
     public_references_metric,
+    refusal_pass_rate,
     register_metric,
     registered_metric_specs,
     registered_metrics,
     retrieval_accuracy,
     retrieval_misses,
     retrieval_mrr,
+    spurious_refusal_rate,
 )
 from janbot.eval.public_urls import (
     extract_urls,
@@ -71,6 +73,7 @@ __all__ = [
     "parse_verdict",
     "public_reference_failures",
     "public_references_metric",
+    "refusal_pass_rate",
     "register_metric",
     "registered_metric_specs",
     "registered_metrics",
@@ -79,4 +82,5 @@ __all__ = [
     "retrieval_mrr",
     "run_eval",
     "split_manifest",
+    "spurious_refusal_rate",
 ]

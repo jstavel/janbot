@@ -32,8 +32,11 @@ def test_seed_dataset_returns_one_item_per_entry() -> None:
     for item in items:
         assert isinstance(item, GoldenItem)
         assert item.question.strip()
-        assert item.expected_sources
-        assert all(source.strip() for source in item.expected_sources)
+        if item.should_refuse:
+            assert item.expected_sources == []
+        else:
+            assert item.expected_sources
+            assert all(source.strip() for source in item.expected_sources)
 
 
 def test_missing_dataset_names_the_path(tmp_path: Path) -> None:
@@ -122,15 +125,15 @@ def test_empty_document_is_rejected(tmp_path: Path) -> None:
     assert str(path) in str(excinfo.value)
 
 
-def test_seed_dataset_is_a_23_train_15_val_stratified_split() -> None:
+def test_seed_dataset_is_a_23_train_18_val_stratified_split() -> None:
     everything = load_golden_dataset(SEED_DATASET)
     train = load_golden_dataset(SEED_DATASET, split="train")
     val = load_golden_dataset(SEED_DATASET, split="val")
 
-    assert len(everything) == 38
+    assert len(everything) == 41
     assert {item.split for item in everything} == {"train", "val"}
     assert len(train) == 23
-    assert len(val) == 15
+    assert len(val) == 18
     assert train == [item for item in everything if item.split == "train"]
     assert val == [item for item in everything if item.split == "val"]
 
@@ -138,9 +141,9 @@ def test_seed_dataset_is_a_23_train_15_val_stratified_split() -> None:
 def test_split_manifest_maps_each_split_to_its_indices() -> None:
     manifest = split_manifest(load_golden_dataset(SEED_DATASET))
 
-    val = [1, 4, 6, 9, 12, 14, 17, 19, 20, 22, 23, 25, 29, 32, 36]
+    val = [1, 4, 6, 9, 12, 14, 17, 19, 20, 22, 23, 25, 29, 32, 36, 38, 39, 40]
     assert manifest["val"] == val
-    assert manifest["train"] == [i for i in range(38) if i not in set(val)]
+    assert manifest["train"] == [i for i in range(41) if i not in set(val)]
 
 
 def test_split_filter_none_is_all_and_unknown_split_is_empty(tmp_path: Path) -> None:
@@ -267,3 +270,75 @@ def test_non_boolean_should_refuse_is_rejected(tmp_path: Path) -> None:
 
     assert "index 0" in str(excinfo.value)
     assert "should_refuse" in str(excinfo.value)
+
+
+def test_should_refuse_item_loads_without_expected_sources(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path / "dataset.yaml",
+        [
+            {
+                "question": "What is your salary expectation?",
+                "split": "val",
+                "should_refuse": True,
+            }
+        ],
+    )
+
+    items = load_golden_dataset(path)
+
+    assert items[0].should_refuse is True
+    assert items[0].expected_sources == []
+
+
+def test_should_refuse_item_allows_an_empty_expected_sources_list(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path / "dataset.yaml",
+        [
+            {
+                "question": "What is your notice period?",
+                "expected_sources": [],
+                "split": "val",
+                "should_refuse": True,
+            }
+        ],
+    )
+
+    items = load_golden_dataset(path)
+
+    assert items[0].should_refuse is True
+    assert items[0].expected_sources == []
+
+
+def test_non_refuse_item_without_sources_still_fails(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path / "dataset.yaml",
+        [
+            {
+                "question": "What is your notice period?",
+                "split": "val",
+                "should_refuse": False,
+            }
+        ],
+    )
+
+    with pytest.raises(ValueError) as excinfo:
+        load_golden_dataset(path)
+
+    assert "index 0" in str(excinfo.value)
+    assert "expected_sources" in str(excinfo.value)
+
+
+def test_should_refuse_defaults_to_false(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path / "dataset.yaml",
+        [
+            {
+                "question": "ok?",
+                "expected_answer": "a",
+                "expected_sources": ["a.org"],
+                "split": "train",
+            }
+        ],
+    )
+
+    assert load_golden_dataset(path)[0].should_refuse is False

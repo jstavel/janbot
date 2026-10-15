@@ -134,30 +134,71 @@ def _responded(outcome: ItemOutcome) -> bool:
 
     A declined response (``status="insufficient"``) is not an ordinary answer, so
     it is excluded from every claim-making population — a refusal is never scored
-    as an uncited or unfaithful answer. Today the eval path's declines raise
-    before a response is returned, so a declined outcome is ``response is None``
-    and this clause is defensively a no-op.
+    as an uncited or unfaithful answer.
     """
     return outcome.response is not None and outcome.response.status != "insufficient"
 
 
-def _all_eligible(outcome: ItemOutcome) -> bool:
-    """Whether the item is in a whole-dataset population (every item is)."""
-    return True
+def _observed(outcome: ItemOutcome) -> bool:
+    """Whether the run returned any response at all — an ordinary answer or a decline.
+
+    The refusal metrics score how the program *behaved* (answered vs declined), so
+    their population is observed responses; an errored item (``response is None``)
+    is unobserved and excluded.
+    """
+    return outcome.response is not None
+
+
+def _declined(outcome: ItemOutcome) -> bool:
+    """Whether the run returned a decline: the contract's ``insufficient`` response."""
+    return outcome.response is not None and outcome.response.status == "insufficient"
+
+
+def _refusal_eligible(outcome: ItemOutcome) -> bool:
+    """Whether the item should be refused and the run observed a response.
+
+    The population :func:`refusal_pass_rate` aggregates over: a should-refuse item
+    whose run produced a response (a clean decline passes; an answer fails). An
+    errored item is unobserved, so it is excluded.
+    """
+    return outcome.item.should_refuse and _observed(outcome)
+
+
+def _in_corpus_eligible(outcome: ItemOutcome) -> bool:
+    """Whether the item is in-corpus and the run observed a response.
+
+    The population :func:`spurious_refusal_rate` aggregates over: an in-corpus item
+    whose run produced a response (a decline is a false refusal). An errored item
+    is unobserved, so it is excluded.
+    """
+    return not outcome.item.should_refuse and _observed(outcome)
+
+
+def _non_refusal_eligible(outcome: ItemOutcome) -> bool:
+    """Whether the item is not a should-refuse item.
+
+    The shared eligibility ``answer_coverage``/``public_references`` switch to
+    (the entry-16 principle applied), so a correctly-declined refusal item is out
+    of their populations entirely and neither value nor denominator is diluted. It
+    is intentionally independent of whether a response was observed — those
+    metrics already treat an unobserved response as a miss over the item.
+    """
+    return not outcome.item.should_refuse
 
 
 def stub_metric(outcomes: list[ItemOutcome]) -> float:
-    """Stub metric: the fraction of items the program answered without raising.
+    """Answer coverage: the fraction of in-corpus items the program answered.
 
-    A placeholder for the real retrieval/citation/faithfulness metrics, it lets
-    the tracer bullet prove the dataset -> pipeline -> MLflow path end to end
-    without a judge or a golden-source comparison. Its population is the whole
-    dataset; a declined response counts as unanswered, not as a claim.
+    A placeholder for program-level metrics, it counts an in-corpus item as
+    covered when a non-decline response was observed. Its population excludes
+    should-refuse items (they are scored by the refusal metrics), so the
+    denominator matches the recorded ``answer_coverage__n``.
     """
-    if not outcomes:
+    eligible = [outcome for outcome in outcomes if _non_refusal_eligible(outcome)]
+    if not eligible:
         return 0.0
-    answered = sum(1 for outcome in outcomes if _responded(outcome))
-    return answered / len(outcomes)
+    answered = sum(1 for outcome in eligible if _responded(outcome))
+    return answered / len(eligible)
 
 
 def _item_reference_failures(
@@ -213,7 +254,9 @@ def public_references_metric(
 
 
 def _public_references(outcomes: list[ItemOutcome]) -> float:
-    return public_references_metric(outcomes, load_public_urls())
+    """Public-reference soundness over the non-refusal population (see ``_non_refusal_eligible``)."""
+    eligible = [outcome for outcome in outcomes if _non_refusal_eligible(outcome)]
+    return public_references_metric(eligible, load_public_urls())
 
 
 def registered_public_reference_failures(outcomes: list[ItemOutcome]) -> list[str]:
@@ -317,11 +360,17 @@ def _citation_eligible(outcome: ItemOutcome) -> bool:
 
     A missing response is unobserved (mirrors ``retrieved_sources is None`` for
     retrieval), so it is excluded. A declined response (``status="insufficient"``)
-    is excluded too, so a refusal is never scored as an uncited answer. This is
-    the population both the ``citation_correctness``/``citation_precision`` values
-    and their recorded ``__n`` aggregate over.
+    is excluded too, so a refusal is never scored as an uncited answer. A
+    should-refuse item is the refusal metrics' population whether it was declined
+    or answered, so it is excluded from this claim-making population entirely.
+    This is the population both the ``citation_correctness``/``citation_precision``
+    values and their recorded ``__n`` aggregate over.
     """
-    return bool(outcome.item.expected_sources) and _responded(outcome)
+    return (
+        not outcome.item.should_refuse
+        and bool(outcome.item.expected_sources)
+        and _responded(outcome)
+    )
 
 
 def _item_citation_misses(outcome: ItemOutcome) -> list[str]:
@@ -401,10 +450,16 @@ def _faithfulness_eligible(outcome: ItemOutcome) -> bool:
     """Whether the item was answered and judged: the population faithfulness aggregates over.
 
     An unjudged item — no judge configured, no answer to judge, or a failed judge
-    call — is excluded, as is a declined response. This is the population both the
-    ``faithfulness`` value and its recorded ``__n`` aggregate over.
+    call — is excluded, as is a declined response. A should-refuse item is the
+    refusal metrics' population whether it was declined or answered, so it is
+    excluded here. This is the population both the ``faithfulness`` value and its
+    recorded ``__n`` aggregate over.
     """
-    return _responded(outcome) and outcome.judge_verdict is not None
+    return (
+        not outcome.item.should_refuse
+        and _responded(outcome)
+        and outcome.judge_verdict is not None
+    )
 
 
 def faithfulness(outcomes: list[ItemOutcome]) -> float:
@@ -428,8 +483,41 @@ def faithfulness(outcomes: list[ItemOutcome]) -> float:
     return faithful / len(judged)
 
 
-register_metric("answer_coverage", stub_metric, denominator=_all_eligible)
-register_metric("public_references", _public_references, denominator=_all_eligible)
+def refusal_pass_rate(outcomes: list[ItemOutcome]) -> float:
+    """Fraction of should-refuse items the program cleanly declined.
+
+    Over the should-refuse items whose run produced a response, an item passes
+    when the response is the contract's ``insufficient`` decline; an answered
+    out-of-corpus question fails. An errored item is unobserved and excluded. With
+    no should-refuse items the aggregate is ``0.0`` (like ``faithfulness`` before
+    a judge exists).
+    """
+    eligible = [outcome for outcome in outcomes if _refusal_eligible(outcome)]
+    if not eligible:
+        return 0.0
+    declined = sum(1 for outcome in eligible if _declined(outcome))
+    return declined / len(eligible)
+
+
+def spurious_refusal_rate(outcomes: list[ItemOutcome]) -> float:
+    """Fraction of in-corpus items the program spuriously declined (a false refusal).
+
+    Over the in-corpus items whose run produced a response, an item counts when
+    the response is a decline — a question the program should have answered. An
+    errored item is unobserved and excluded. Polarity is ``higher_is_better=False``;
+    with no in-corpus observed items the aggregate is ``0.0``.
+    """
+    eligible = [outcome for outcome in outcomes if _in_corpus_eligible(outcome)]
+    if not eligible:
+        return 0.0
+    declined = sum(1 for outcome in eligible if _declined(outcome))
+    return declined / len(eligible)
+
+
+register_metric("answer_coverage", stub_metric, denominator=_non_refusal_eligible)
+register_metric(
+    "public_references", _public_references, denominator=_non_refusal_eligible
+)
 register_metric(
     "retrieval_accuracy", retrieval_accuracy, denominator=_retrieval_eligible
 )
@@ -445,4 +533,16 @@ register_metric(
     faithfulness,
     denominator=_faithfulness_eligible,
     higher_is_better=True,
+)
+register_metric(
+    "refusal_pass_rate",
+    refusal_pass_rate,
+    denominator=_refusal_eligible,
+    higher_is_better=True,
+)
+register_metric(
+    "spurious_refusal_rate",
+    spurious_refusal_rate,
+    denominator=_in_corpus_eligible,
+    higher_is_better=False,
 )

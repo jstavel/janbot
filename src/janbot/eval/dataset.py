@@ -38,10 +38,31 @@ class GoldenItem:
     should_refuse: bool = False
 
 
-def _parse_sources(item: dict[str, Any], index: int) -> list[str]:
-    """Return the item's non-empty ``expected_sources`` list, or fail naming the index."""
+def _parse_sources(
+    item: dict[str, Any], index: int, *, should_refuse: bool
+) -> list[str]:
+    """Return the item's ``expected_sources`` list, or fail naming the index.
+
+    A refusal item makes no retrieval claim, so it may omit ``expected_sources``
+    entirely or carry an empty list; a non-refuse item keeps the non-empty
+    requirement unchanged.
+    """
     sources = item.get("expected_sources")
-    if not isinstance(sources, list) or not sources:
+    if sources is None:
+        if should_refuse:
+            return []
+        raise ValueError(
+            f"golden dataset item at index {index} is missing a non-empty "
+            "'expected_sources' list"
+        )
+    if not isinstance(sources, list):
+        raise ValueError(
+            f"golden dataset item at index {index} is missing a non-empty "
+            "'expected_sources' list"
+        )
+    if not sources:
+        if should_refuse:
+            return []
         raise ValueError(
             f"golden dataset item at index {index} is missing a non-empty "
             "'expected_sources' list"
@@ -82,10 +103,11 @@ def _parse_should_refuse(entry: dict[str, Any], index: int) -> bool:
 def _parse_item(entry: Any, index: int) -> GoldenItem:
     """Validate one raw YAML entry into a :class:`GoldenItem`, failing naming the index.
 
-    The ``split`` marker is checked last — after ``question`` and
-    ``expected_sources`` — so a malformed item keeps naming its structural error
-    rather than a missing split, while a missing or unknown split still fails
-    closed.
+    ``should_refuse`` is parsed before ``expected_sources`` because it selects the
+    source rule: a refusal item may omit ``expected_sources``. The ``split``
+    marker is checked last — after ``question`` and ``expected_sources`` — so a
+    malformed item keeps naming its structural error rather than a missing split,
+    while a missing or unknown split still fails closed.
     """
     if not isinstance(entry, dict):
         raise ValueError(
@@ -104,14 +126,15 @@ def _parse_item(entry: Any, index: int) -> GoldenItem:
             f"golden dataset item at index {index} has a non-string 'expected_answer'"
         )
 
-    sources = _parse_sources(entry, index)
+    should_refuse = _parse_should_refuse(entry, index)
+    sources = _parse_sources(entry, index, should_refuse=should_refuse)
 
     return GoldenItem(
         question=question.strip(),
         expected_answer=expected_answer,
         expected_sources=sources,
         split=_parse_split(entry, index),
-        should_refuse=_parse_should_refuse(entry, index),
+        should_refuse=should_refuse,
     )
 
 

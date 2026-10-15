@@ -57,6 +57,8 @@ KEYLESS_METRICS = (
     "citation_correctness",
     "citation_precision",
     "faithfulness",
+    "refusal_pass_rate",
+    "spurious_refusal_rate",
 )
 
 # The fixed keyed subset — real golden-dataset items (question, expected

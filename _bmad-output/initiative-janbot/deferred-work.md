@@ -90,3 +90,6 @@
 - source_plan: `_bmad-output/initiative-janbot/brainstorm-golden-dataset-questions/.memlog.md`
   summary: Two public-surface backlog items raised by the brainstorm — complete the LinkedIn profile as a JanBot-citable reference (backlog 7) and publish the CV publicly via a git-crypt repo + Pages (backlog 8) — plus the URL allow-list (backlog 9) they feed.
   evidence: recorded so the family is visible; the LinkedIn/CV URLs become allow-list entries once live.
+- source_plan: `_bmad-output/initiative-janbot/epic-evaluation/story-refusal-item-class-and-refusal-metrics-plan.md`
+  summary: gate-rule.md must be re-pointed at the new reference (run 9c7260da, dataset sha 531186fe…) — the 5.13 re-baseline superseded e635c2bf but the task forbade touching gate-rule.md.
+  evidence: the epic-evaluation Notes entry (2026-10-15, entry 13) records the supersession; `_bmad-output/initiative-janbot/epic-evaluation/gate-rule.md:7-9` still names e635c2bf with the old dataset sha 4656f824…, so a future gate comparison against the written rule would use the superseded run.

@@ -5,7 +5,9 @@
 # builder from public_profile_org/ topics; to be corrected by the owner.
 # Each item: a recruiter question, the expected answer, the corpus-relative
 # sources a correct response should cite, the train/val split marker, and a
-# should_refuse flag (reserved for refusal items; false for every current item).
+# should_refuse flag. A should_refuse item (the out-of-corpus refusal class)
+# makes no retrieval claim, so it carries no expected_sources; every other item
+# sets should_refuse: false and names its expected sources.
 
 - question: "Can you walk me through your career path and what drove the transitions?"
   expected_answer: >-
@@ -538,3 +540,15 @@
     - spec-first-artifacts-in-git.org
   split: train
   should_refuse: false
+
+- question: "What is your salary expectation?"
+  split: val
+  should_refuse: true
+
+- question: "What is your notice period?"
+  split: val
+  should_refuse: true
+
+- question: "Have you used managed Kubernetes services such as EKS or GKE?"
+  split: val
+  should_refuse: true

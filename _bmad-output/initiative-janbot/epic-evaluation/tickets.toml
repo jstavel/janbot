@@ -143,7 +143,7 @@ description = "Adds a should-refuse item class to the golden dataset (a per-item
 verify = "The dataset marks should-refuse items; running the eval scores a decline as pass for them and a false refusal as failure; the refusal metrics appear in the MLflow run."
 covers = ["E2"]
 after = ["epic-graceful-decline", 16]
-hitl = false
+hitl = true
 risk = "medium"
 
 [[entry]]

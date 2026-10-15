@@ -20,9 +20,10 @@ from janbot.ingest import index_corpus
 
 from dspy.utils import DummyLM
 
-from janbot.api.contract import ChatResponse, Citation
+from janbot.api.contract import INSUFFICIENT_ANSWER, ChatResponse, Citation
 from janbot.eval import __main__ as eval_cli
 from janbot.eval.dataset import GoldenItem
+from janbot.eval.judge import FAITHFUL, Verdict
 from janbot.eval.runner import run_eval
 
 Embedder = Callable[[list[str]], list[list[float]]]
@@ -139,6 +140,8 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "citation_correctness": 0.5,
         "citation_precision": 0.5,
         "faithfulness": 0.0,
+        "refusal_pass_rate": 0.0,
+        "spurious_refusal_rate": 0.0,
     }
     assert result.counts == {
         "answer_coverage__n": 2,
@@ -148,6 +151,8 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "citation_correctness__n": 2,
         "citation_precision__n": 2,
         "faithfulness__n": 0,
+        "refusal_pass_rate__n": 0,
+        "spurious_refusal_rate__n": 2,
     }
     assert result.run_id
     assert result.reference_failures == []
@@ -183,6 +188,10 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "citation_precision__n": 2.0,
         "faithfulness": 0.0,
         "faithfulness__n": 0.0,
+        "refusal_pass_rate": 0.0,
+        "refusal_pass_rate__n": 0.0,
+        "spurious_refusal_rate": 0.0,
+        "spurious_refusal_rate__n": 2.0,
     }
 
 
@@ -203,6 +212,142 @@ def test_run_eval_records_per_item_failure_without_aborting(tmp_path: Path) -> N
     client = MlflowClient(tracking_uri=uri)
     experiment = client.get_experiment_by_name("janbot-eval")
     assert len(client.search_runs([experiment.experiment_id])) == 1
+
+
+def test_run_eval_maps_a_decline_to_the_contract_insufficient_response(
+    tmp_path: Path,
+) -> None:
+    from janbot.pipeline.chat import UncitedAnswer
+
+    uri = _tracking_uri(tmp_path)
+
+    def program(*, question: str) -> ChatResponse:
+        raise UncitedAnswer("the model claimed no sources")
+
+    result = run_eval(_items(), program, tracking_uri=uri, experiment="janbot-eval")
+
+    outcome = result.outcomes[0]
+    assert outcome.response is not None
+    assert outcome.response.status == "insufficient"
+    assert outcome.response.answer == INSUFFICIENT_ANSWER
+    assert outcome.response.citations == []
+    assert outcome.error is None
+    assert outcome.judge_verdict is None
+    assert all(o.response is not None for o in result.outcomes)
+
+
+def test_run_eval_maps_an_empty_retrieval_to_a_decline(tmp_path: Path) -> None:
+    from janbot.pipeline.chat import EmptyRetrieval
+
+    uri = _tracking_uri(tmp_path)
+
+    def program(*, question: str) -> ChatResponse:
+        raise EmptyRetrieval("retrieval returned 0 chunks")
+
+    result = run_eval(_items(), program, tracking_uri=uri, experiment="janbot-eval")
+
+    for outcome in result.outcomes:
+        assert outcome.response is not None
+        assert outcome.response.status == "insufficient"
+        assert outcome.error is None
+
+
+def test_run_eval_keeps_a_fabricated_citation_as_an_error(tmp_path: Path) -> None:
+    from janbot.pipeline.chat import FabricatedCitation
+
+    uri = _tracking_uri(tmp_path)
+
+    def program(*, question: str) -> ChatResponse:
+        raise FabricatedCitation("source outside the retrieved set")
+
+    result = run_eval(_items(), program, tracking_uri=uri, experiment="janbot-eval")
+
+    outcome = result.outcomes[0]
+    assert outcome.response is None
+    assert outcome.error is not None
+    assert "FabricatedCitation" in outcome.error
+
+
+def test_run_eval_does_not_judge_a_declined_item(tmp_path: Path) -> None:
+    from janbot.pipeline.chat import UncitedAnswer
+
+    uri = _tracking_uri(tmp_path)
+    judged: list[str] = []
+
+    class RecordingJudge:
+        def __call__(self, expected: str, actual: str) -> object:
+            judged.append(actual)
+            raise AssertionError("a decline must not be judged")
+
+    def program(*, question: str) -> ChatResponse:
+        raise UncitedAnswer("the model claimed no sources")
+
+    result = run_eval(
+        _items(),
+        program,
+        tracking_uri=uri,
+        experiment="janbot-eval",
+        judge=RecordingJudge(),  # type: ignore[arg-type]
+    )
+
+    assert judged == []
+    assert result.judge_failures == []
+    assert all(o.judge_verdict is None for o in result.outcomes)
+
+
+def _refusal_items() -> list[GoldenItem]:
+    return [
+        GoldenItem(
+            question="What is your salary expectation?",
+            expected_answer="",
+            expected_sources=[],
+            split="val",
+            should_refuse=True,
+        )
+    ]
+
+
+def test_run_eval_does_not_judge_an_answered_should_refuse_item(
+    tmp_path: Path,
+) -> None:
+    uri = _tracking_uri(tmp_path)
+    calls: list[str] = []
+
+    class RecordingJudge:
+        def __call__(self, expected: str, actual: str) -> Verdict:
+            calls.append(actual)
+            return Verdict(label=FAITHFUL, rationale="because")
+
+    def program(*, question: str) -> ChatResponse:
+        return ChatResponse(answer="x", citations=[Citation(source="profile.org")])
+
+    result = run_eval(
+        _refusal_items(),
+        program,
+        tracking_uri=uri,
+        experiment="janbot-eval",
+        judge=RecordingJudge(),
+    )
+
+    assert calls == []
+    assert result.outcomes[0].judge_verdict is None
+    assert result.judge_failures == []
+
+
+def test_run_eval_excludes_should_refuse_items_from_reference_failures(
+    tmp_path: Path,
+) -> None:
+    uri = _tracking_uri(tmp_path)
+
+    def program(*, question: str) -> ChatResponse:
+        return ChatResponse(
+            answer="See https://github.com/jstavel/evil for details.",
+            citations=[Citation(source="profile.org")],
+        )
+
+    result = run_eval(_refusal_items(), program, tracking_uri=uri, experiment="janbot-eval")
+
+    assert result.reference_failures == []
 
 
 def test_run_eval_fails_naming_the_tracking_uri_when_unreachable(tmp_path: Path) -> None:
@@ -263,7 +408,7 @@ def test_cli_keyless_run_reads_dataset_and_reports_tracking_uri(
     assert "(n=" in out
 
 
-def test_cli_all_failed_items_returns_nonzero(
+def test_cli_all_declined_items_returns_zero(
     tmp_path: Path,
     embedder: Embedder,
     capsys: pytest.CaptureFixture[str],
@@ -298,8 +443,9 @@ def test_cli_all_failed_items_returns_nonzero(
     )
 
     out = capsys.readouterr().out
-    assert code != 0
-    assert "failed:" in out
+    assert code == 0
+    assert "failed:" not in out
+    assert "refusal:" in out
     assert "What search infrastructure have you built?" in out
 
 

@@ -29,17 +29,25 @@ from janbot.eval.metrics import (
     faithfulness,
     metric_counts,
     metric_spec,
+    refusal_pass_rate,
     register_metric,
     registered_metrics,
     retrieval_accuracy,
     retrieval_mrr,
     retrieval_misses,
+    spurious_refusal_rate,
+    stub_metric,
 )
 
 
-def _item(expected_sources: list[str], question: str = "q") -> GoldenItem:
+def _item(
+    expected_sources: list[str], question: str = "q", *, should_refuse: bool = False
+) -> GoldenItem:
     return GoldenItem(
-        question=question, expected_answer="a", expected_sources=expected_sources
+        question=question,
+        expected_answer="a",
+        expected_sources=expected_sources,
+        should_refuse=should_refuse,
     )
 
 
@@ -361,3 +369,174 @@ def test_retrieval_mrr_averages_over_eligible_items() -> None:
     outcomes = [_outcome(["a.org"], ["a.org"]), _outcome(["a.org"], ["x.org", "a.org"])]
 
     assert retrieval_mrr(outcomes) == 0.75
+
+
+def _refusal_outcome(*, declined: bool, question: str = "Refuse?") -> ItemOutcome:
+    """A should-refuse item's outcome: a clean decline, or an answered out-of-corpus question."""
+    response = (
+        ChatResponse(status="insufficient", answer=INSUFFICIENT_ANSWER, citations=[])
+        if declined
+        else _answered()
+    )
+    return ItemOutcome(
+        item=_item([], question, should_refuse=True),
+        response=response,
+        error=None,
+        retrieved_sources=None,
+    )
+
+
+def test_refusal_pass_rate_counts_a_clean_decline_as_a_pass() -> None:
+    outcomes = [_refusal_outcome(declined=True)]
+
+    assert refusal_pass_rate(outcomes) == 1.0
+    assert metric_counts(outcomes)["refusal_pass_rate__n"] == 1
+
+
+def test_refusal_pass_rate_fails_an_answered_out_of_corpus_question() -> None:
+    outcomes = [_refusal_outcome(declined=False)]
+
+    assert refusal_pass_rate(outcomes) == 0.0
+    assert metric_counts(outcomes)["refusal_pass_rate__n"] == 1
+
+
+def test_refusal_pass_rate_averages_declined_and_answered() -> None:
+    outcomes = [_refusal_outcome(declined=True), _refusal_outcome(declined=False)]
+
+    assert refusal_pass_rate(outcomes) == 0.5
+
+
+def test_refusal_pass_rate_excludes_errored_should_refuse_items() -> None:
+    errored = ItemOutcome(
+        item=_item([], "boom?", should_refuse=True),
+        response=None,
+        error="ValueError: boom",
+    )
+
+    assert refusal_pass_rate([errored]) == 0.0
+    assert metric_counts([errored])["refusal_pass_rate__n"] == 0
+
+
+def test_refusal_pass_rate_is_zero_with_no_should_refuse_items() -> None:
+    assert refusal_pass_rate([_citation_outcome(["a.org"], ["a.org"])]) == 0.0
+    assert refusal_pass_rate([]) == 0.0
+
+
+def test_spurious_refusal_rate_counts_a_declined_in_corpus_item() -> None:
+    outcomes = [_declined(["a.org"], question="Should answer")]
+
+    assert spurious_refusal_rate(outcomes) == 1.0
+    assert metric_counts(outcomes)["spurious_refusal_rate__n"] == 1
+
+
+def test_spurious_refusal_rate_ignores_answered_in_corpus_items() -> None:
+    outcomes = [_citation_outcome(["a.org"], ["a.org"])]
+
+    assert spurious_refusal_rate(outcomes) == 0.0
+    assert metric_counts(outcomes)["spurious_refusal_rate__n"] == 1
+
+
+def test_spurious_refusal_rate_averages_declined_and_answered() -> None:
+    outcomes = [_declined(["a.org"]), _citation_outcome(["b.org"], ["b.org"])]
+
+    assert spurious_refusal_rate(outcomes) == 0.5
+
+
+def test_spurious_refusal_rate_excludes_errored_items() -> None:
+    errored = ItemOutcome(
+        item=_item(["a.org"]), response=None, error="ValueError: boom"
+    )
+
+    assert spurious_refusal_rate([errored]) == 0.0
+    assert metric_counts([errored])["spurious_refusal_rate__n"] == 0
+
+
+def test_spurious_refusal_rate_is_zero_with_no_in_corpus_items() -> None:
+    assert spurious_refusal_rate([_refusal_outcome(declined=True)]) == 0.0
+    assert spurious_refusal_rate([]) == 0.0
+
+
+def test_refusal_metrics_declare_their_polarity() -> None:
+    assert metric_spec("refusal_pass_rate").higher_is_better is True
+    assert metric_spec("spurious_refusal_rate").higher_is_better is False
+
+
+def test_should_refuse_items_do_not_dilute_answer_coverage() -> None:
+    outcomes = [
+        _citation_outcome(["a.org"], ["a.org"]),
+        _citation_outcome(["b.org"], ["b.org"]),
+        _refusal_outcome(declined=True),
+    ]
+
+    assert stub_metric(outcomes) == 1.0
+    assert metric_counts(outcomes)["answer_coverage__n"] == 2
+    assert metric_counts(outcomes)["public_references__n"] == 2
+
+
+def test_answer_coverage_still_counts_an_errored_non_refusal_item() -> None:
+    errored = ItemOutcome(
+        item=_item(["a.org"]), response=None, error="ValueError: boom"
+    )
+    outcomes = [_citation_outcome(["a.org"], ["a.org"]), errored]
+
+    assert stub_metric(outcomes) == 0.5
+    assert metric_counts(outcomes)["answer_coverage__n"] == 2
+
+
+def _should_refuse_outcome(
+    *,
+    declined: bool,
+    judged: str | None = None,
+    expected_sources: list[str] | None = None,
+    question: str = "Refuse?",
+) -> ItemOutcome:
+    """A should-refuse item's outcome, optionally answered-with-sources and judged."""
+    response = (
+        ChatResponse(status="insufficient", answer=INSUFFICIENT_ANSWER, citations=[])
+        if declined
+        else _answered()
+    )
+    return ItemOutcome(
+        item=_item(expected_sources or [], question, should_refuse=True),
+        response=response,
+        error=None,
+        retrieved_sources=None,
+        judge_verdict=(
+            Verdict(label=judged, rationale="because") if judged is not None else None
+        ),
+    )
+
+
+def test_answered_should_refuse_item_is_excluded_from_citation_containment() -> None:
+    outcomes = [
+        _should_refuse_outcome(declined=False, expected_sources=["a.org"]),
+        _citation_outcome(["b.org"], ["a.org"], question="In-corpus miss"),
+    ]
+
+    assert citation_correctness(outcomes) == 0.0
+    assert metric_counts(outcomes)["citation_correctness__n"] == 1
+    assert citation_misses(outcomes) == [
+        "In-corpus miss — missing cited source(s): b.org"
+    ]
+
+
+def test_answered_should_refuse_item_is_excluded_from_faithfulness() -> None:
+    outcomes = [
+        _should_refuse_outcome(declined=False, judged=HALLUCINATED),
+        _judged(FAITHFUL, question="In-corpus faithful"),
+    ]
+
+    assert faithfulness(outcomes) == 1.0
+    assert metric_counts(outcomes)["faithfulness__n"] == 1
+
+
+def test_declined_should_refuse_item_is_excluded_from_gate_metrics() -> None:
+    declined = _should_refuse_outcome(declined=True)
+
+    citation_outcomes = [declined, _citation_outcome(["a.org"], ["a.org"])]
+    assert citation_correctness(citation_outcomes) == 1.0
+    assert metric_counts(citation_outcomes)["citation_correctness__n"] == 1
+
+    faith_outcomes = [declined, _judged(FAITHFUL)]
+    assert faithfulness(faith_outcomes) == 1.0
+    assert metric_counts(faith_outcomes)["faithfulness__n"] == 1

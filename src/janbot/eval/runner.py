@@ -2,13 +2,14 @@
 
 ``run_eval`` is the thinnest dataset -> pipeline -> MLflow path (CAP-8 tracer
 bullet). It calls ``program`` once per item, capturing a per-item failure as an
-outcome rather than aborting the run, computes every registered metric over the
-outcomes, then records exactly one MLflow run carrying the run parameters and
-the metrics. It never builds the pipeline itself: the CLI injects the
-``ChatProgram`` produced by ``create_app`` and tests inject a stub program, so
-the core is keyless and offline. MLflow logging happens after every program call
-— off the request path — and a failing tracking backend raises naming the URI
-rather than reporting a partial success.
+outcome rather than aborting the run, maps a program decline to the contract's
+``insufficient`` response (a defined outcome, not a failure), computes every
+registered metric over the outcomes, then records exactly one MLflow run carrying
+the run parameters and the metrics. It never builds the pipeline itself: the CLI
+injects the ``ChatProgram`` produced by ``create_app`` and tests inject a stub
+program, so the core is keyless and offline. MLflow logging happens after every
+program call — off the request path — and a failing tracking backend raises naming
+the URI rather than reporting a partial success.
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ from typing import Any
 
 import mlflow
 
-from janbot.api.contract import ChatResponse
+from janbot.api.contract import INSUFFICIENT_ANSWER, ChatResponse
 from janbot.eval.dataset import GoldenItem
 from janbot.eval.judge import Judge, Verdict
 from janbot.eval.metrics import (
@@ -32,6 +33,7 @@ from janbot.eval.metrics import (
     registered_public_reference_failures,
     retrieval_misses,
 )
+from janbot.pipeline.chat import EmptyRetrieval, UncitedAnswer
 
 SPLIT_MANIFEST_FILENAME = "split_manifest.json"
 
@@ -68,16 +70,41 @@ def _evaluate(
 ) -> tuple[list[ItemOutcome], list[str]]:
     """Call ``program`` for every item, recording a per-item failure as an outcome.
 
-    When a ``judge`` is supplied it is called per answered item and its verdict
-    stored; a judge that raises marks that item unjudged (a ``judge_failures``
-    line) without aborting the run. An item the program failed to answer has no
-    text to judge, so it is unjudged too.
+    A decline is a defined outcome, not an error: the program's decline signal
+    (:class:`EmptyRetrieval`/:class:`UncitedAnswer`) is mapped to the exact
+    production shape the API returns — the contract's ``insufficient``
+    ``ChatResponse`` — so the eval observes what production returns. A declined
+    item is unjudged (there is no answer text to judge) and is not a failure. Every
+    other exception, including the fabricated/unattributable refusals the API maps
+    to 500, is recorded as an error outcome.
+
+    When a ``judge`` is supplied it is called per answered in-corpus item and its
+    verdict stored; a judge that raises marks that item unjudged (a
+    ``judge_failures`` line) without aborting the run. An item the program failed
+    to answer has no text to judge, so it is unjudged too, and a should-refuse item
+    is never judged — it belongs to the refusal metrics' population, not the judged
+    one, whether it was declined or answered.
     """
     outcomes: list[ItemOutcome] = []
     judge_failures: list[str] = []
     for item in items:
         try:
             response = program(question=item.question)
+        except (EmptyRetrieval, UncitedAnswer):
+            outcomes.append(
+                ItemOutcome(
+                    item=item,
+                    response=ChatResponse(
+                        status="insufficient",
+                        answer=INSUFFICIENT_ANSWER,
+                        citations=[],
+                    ),
+                    error=None,
+                    retrieved_sources=_retrieved_sources(program),
+                    judge_verdict=None,
+                )
+            )
+            continue
         except Exception as exc:
             outcomes.append(
                 ItemOutcome(
@@ -91,7 +118,7 @@ def _evaluate(
             continue
 
         verdict: Verdict | None = None
-        if judge is not None:
+        if judge is not None and not item.should_refuse:
             try:
                 verdict = judge(item.expected_answer, response.answer)
             except Exception as exc:
@@ -208,7 +235,9 @@ def run_eval(
         metrics=metrics,
         counts=counts,
         run_id=run_id,
-        reference_failures=registered_public_reference_failures(outcomes),
+        reference_failures=registered_public_reference_failures(
+            [outcome for outcome in outcomes if not outcome.item.should_refuse]
+        ),
         retrieval_misses=retrieval_misses(outcomes),
         citation_misses=citation_misses(outcomes),
         judge_failures=judge_failures,

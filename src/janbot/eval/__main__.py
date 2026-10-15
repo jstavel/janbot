@@ -173,6 +173,15 @@ def main(
     for miss in result.citation_misses:
         print(f"citation: {miss}")
 
+    for outcome in result.outcomes:
+        response = outcome.response
+        if response is None:
+            continue
+        if outcome.item.should_refuse and response.status != "insufficient":
+            print(f"refusal: {outcome.item.question} — answered a should-refuse item")
+        elif not outcome.item.should_refuse and response.status == "insufficient":
+            print(f"refusal: {outcome.item.question} — declined an in-corpus item")
+
     judged = [outcome for outcome in result.outcomes if outcome.judge_verdict is not None]
     print(f"judged: {len(judged)}/{len(result.outcomes)}")
     for outcome in judged:
