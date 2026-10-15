@@ -98,3 +98,14 @@ covers = ["CAP-5"]
 after = ["5.19"]
 hitl = true
 risk = "medium"
+
+[[entry]]
+id = 10
+type = "story"
+title = "Retrieval recall: the embedding/query-side lever (the distant val misses)"
+description = "The 2.9 experiment and the k=30 probe show top_k alone recovers only item 29; items 23 (public-proof-map.org) and 32 (perl-clojure-gateway.org) sit at rank 15 and item 25's two expected sources are absent from the top 30 — all semantically distant from the questions' phrasing. Build the lever that recovers them: the store (src/janbot/store/chroma.py) is plain dense embedding, so this is index-affecting. Candidates: a changed/stronger embedder, hybrid dense+lexical (BM25), or query expansion/rewriting. Rebuild the index and measure against the e635c2bf val reference; judge on the TRANSFER metrics (citation_correctness, faithfulness) and watch citation_precision — NOT the mechanically inflated retrieval_accuracy. This lever targets 3 of the 4 misses, so it is the one that can plausibly move the gate beyond the floor; its result is entry 20's breadth input."
+verify = "A retrieval change (embedder or query-side) rebuilds the index and is measured against e635c2bf on the val split; before/after retrieval_accuracy / retrieval_mrr and citation_correctness / faithfulness (+ citation_precision) are recorded in MLflow; the change either moves a gate metric beyond the 1.5σ floor (>= 3 items at n=15) or the within-noise result is recorded and routed to entry 20's breadth decision."
+covers = ["CAP-5"]
+after = ["5.19"]
+hitl = true
+risk = "high"
