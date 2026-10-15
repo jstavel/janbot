@@ -38,6 +38,7 @@ from janbot.llm import LMFactory, build_lm
 from janbot.pipeline.chat import (
     ChatProgram,
     EmptyRetrieval,
+    LowRelevance,
     UncitedAnswer,
     corpus_relative,
 )
@@ -98,7 +99,10 @@ def create_app(
     lm = build_lm(config, api_key=api_key, lm_factory=lm_factory)
 
     program = ChatProgram(
-        store, top_k=config.top_k, rewriter=corpus_relative(config.corpus_path)
+        store,
+        top_k=config.top_k,
+        rewriter=corpus_relative(config.corpus_path),
+        relevance_threshold=config.relevance_threshold,
     )
     if config.program_path is not None:
         from janbot.eval.optimize import load_program
@@ -117,7 +121,7 @@ def create_app(
     def chat(request: ChatRequest) -> ChatResponse:
         try:
             return app.state.program(question=request.question)
-        except (EmptyRetrieval, UncitedAnswer):
+        except (EmptyRetrieval, LowRelevance, UncitedAnswer):
             return ChatResponse(
                 status="insufficient",
                 answer=INSUFFICIENT_ANSWER,

@@ -10,7 +10,9 @@ retrieved chunk's ``source_path`` to its corpus-root-relative label, treats
 those names as claims, validates them against the rewritten labels, and emits
 citations only from them, in retrieval order — so no absolute path can leave the port.
 An answer claiming no sources is the decline signal (:class:`UncitedAnswer`): the
-pipeline cannot ground it, so the port answers with an insufficiency reply. An
+pipeline cannot ground it, so the port answers with an insufficiency reply. A
+retrieval whose best chunk is below the configured relevance threshold is the
+other decline signal (:class:`LowRelevance`), raised before the LM call. An
 answer naming sources outside the retrieved set is a fabricated cited answer and
 is refused (:class:`FabricatedCitation`) rather than declined.
 
@@ -49,6 +51,10 @@ class UncitedAnswer(ValueError):
 
 class FabricatedCitation(ValueError):
     """The model named a source outside the retrieved set: a fabricated cited answer, refused."""
+
+
+class LowRelevance(ValueError):
+    """The best retrieved chunk is below the relevance threshold: the corpus cannot ground the question."""
 
 
 class GroundedAnswer(dspy.Signature):
@@ -113,13 +119,27 @@ class ChatProgram(dspy.Module):
     when the query returned no chunks, and the rewritten sources otherwise; it
     reflects the *retrieved* set, never the citations. The ``/chat`` contract and
     behavior are unchanged.
+
+    ``relevance_threshold`` is the low-relevance decline gate: when it is
+    non-zero and the best retrieved chunk's ``similarity`` falls below it,
+    ``forward`` raises :class:`LowRelevance` *before* the LM call, so the decline
+    is a deterministic function of the embeddings alone. The constructor default
+    ``0.0`` disables the gate; the shipped configuration default is the measured
+    ``0.26``.
     """
 
-    def __init__(self, store: VectorStore, top_k: int, rewriter: Callable[[str], str]) -> None:
+    def __init__(
+        self,
+        store: VectorStore,
+        top_k: int,
+        rewriter: Callable[[str], str],
+        relevance_threshold: float = 0.0,
+    ) -> None:
         super().__init__()
         self._store = store
         self._top_k = top_k
         self._rewriter = rewriter
+        self._relevance_threshold = relevance_threshold
         self._answer = dspy.Predict(GroundedAnswer)
         self.last_retrieved_sources: list[str] | None = None
 
@@ -141,6 +161,16 @@ class ChatProgram(dspy.Module):
 
         sources = [self._rewriter(chunk["source_path"]) for chunk in chunks]
         self.last_retrieved_sources = list(sources)
+
+        if self._relevance_threshold != 0.0:
+            best_similarity = max(chunk["similarity"] for chunk in chunks)
+            if best_similarity < self._relevance_threshold:
+                raise LowRelevance(
+                    f"the best retrieved chunk has similarity {best_similarity!r} "
+                    f"below the relevance threshold {self._relevance_threshold!r} "
+                    f"for question {question!r}; the corpus cannot ground the question"
+                )
+
         context = "\n\n".join(
             f"[{source}]\n{chunk['text'] or ''}" for source, chunk in zip(sources, chunks, strict=True)
         )

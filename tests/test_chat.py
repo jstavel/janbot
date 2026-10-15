@@ -499,7 +499,11 @@ def test_chat_foreign_and_public_index_cites_only_public_source(
     index_path = tmp_path / "index"
     public_source = str(corpus / "profile.org")
     app = create_app(
-        env={"JANBOT_INDEX_PATH": str(index_path), "JANBOT_CORPUS_PATH": str(corpus)},
+        env={
+            "JANBOT_INDEX_PATH": str(index_path),
+            "JANBOT_CORPUS_PATH": str(corpus),
+            "JANBOT_RELEVANCE_THRESHOLD": "0",
+        },
         embedder=embedder,
         lm_factory=StubLMFactory(citations=["profile.org"]),
     )
@@ -529,7 +533,11 @@ def test_chat_shared_source_is_deduped_to_one_citation(
     index_path = tmp_path / "index"
     shared_source = str(corpus / "shared.org")
     app = create_app(
-        env={"JANBOT_INDEX_PATH": str(index_path), "JANBOT_CORPUS_PATH": str(corpus)},
+        env={
+            "JANBOT_INDEX_PATH": str(index_path),
+            "JANBOT_CORPUS_PATH": str(corpus),
+            "JANBOT_RELEVANCE_THRESHOLD": "0",
+        },
         embedder=embedder,
         lm_factory=StubLMFactory(citations=["shared.org"]),
     )
@@ -686,6 +694,121 @@ def test_chat_repeated_claim_yields_one_citation(
     assert response.status_code == 200
     sources = [citation["source"] for citation in response.json()["citations"]]
     assert sources == ["profile.org", "projects.org"]
+
+
+def _best_similarity(corpus: Path, index_path: Path, embedder: Embedder, question: str) -> float:
+    """The best retrieved similarity the app's store sees for ``question`` (same scope/k)."""
+    probe = VectorStore(index_path, embedder, scope=corpus)
+    return max(row["similarity"] for row in probe.query(question, k=4))
+
+
+def test_chat_low_relevance_gate_declines_below_threshold(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """A threshold above the best retrieved similarity declines with the insufficiency reply."""
+    corpus, index_path = indexed_corpus
+    question_text = "What search infrastructure have you built?"
+    threshold = _best_similarity(corpus, index_path, embedder, question_text) + 0.01
+    app = create_app(
+        env={**_chat_env(corpus, index_path), "JANBOT_RELEVANCE_THRESHOLD": str(threshold)},
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    response = TestClient(app).post("/chat", json={"question": question_text})
+
+    _assert_insufficiency(response)
+
+
+def test_chat_relevance_gate_answers_at_or_above_threshold(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """The gate fires only strictly below theta: at the best similarity the answer stands."""
+    corpus, index_path = indexed_corpus
+    question_text = "What search infrastructure have you built?"
+    best = _best_similarity(corpus, index_path, embedder, question_text)
+
+    for threshold in (best, best - 0.01):
+        app = create_app(
+            env={
+                **_chat_env(corpus, index_path),
+                "JANBOT_RELEVANCE_THRESHOLD": str(threshold),
+            },
+            embedder=embedder,
+            lm_factory=StubLMFactory(),
+        )
+        response = TestClient(app).post("/chat", json={"question": question_text})
+        assert response.status_code == 200
+        assert response.json()["status"] == "answered"
+
+
+def test_chat_relevance_gate_is_deterministic_across_two_calls(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """Two identical calls under a firing gate decline identically (E3 determinism)."""
+    corpus, index_path = indexed_corpus
+    question_text = "What search infrastructure have you built?"
+    threshold = _best_similarity(corpus, index_path, embedder, question_text) + 0.01
+    app = create_app(
+        env={**_chat_env(corpus, index_path), "JANBOT_RELEVANCE_THRESHOLD": str(threshold)},
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+    client = TestClient(app)
+
+    first = client.post("/chat", json={"question": question_text})
+    second = client.post("/chat", json={"question": question_text})
+
+    assert first.text == second.text
+
+
+def test_chat_relevance_gate_is_inert_when_explicitly_zero(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """An explicit ``0.0`` disables the gate: a question a positive threshold declines still answers."""
+    corpus, index_path = indexed_corpus
+    question_text = "What search infrastructure have you built?"
+    positive = _best_similarity(corpus, index_path, embedder, question_text) + 0.01
+
+    disabled_app = create_app(
+        env={**_chat_env(corpus, index_path), "JANBOT_RELEVANCE_THRESHOLD": "0"},
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+    firing_app = create_app(
+        env={**_chat_env(corpus, index_path), "JANBOT_RELEVANCE_THRESHOLD": str(positive)},
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    disabled_response = TestClient(disabled_app).post("/chat", json={"question": question_text})
+    firing_response = TestClient(firing_app).post("/chat", json={"question": question_text})
+
+    assert disabled_response.json()["status"] == "answered"
+    _assert_insufficiency(firing_response)
+
+
+def test_chat_default_relevance_threshold_arms_the_gate(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """The shipped default threshold is non-zero: a low-relevance question declines without config."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "Kubernetes salary negotiation"}
+    )
+
+    _assert_insufficiency(response)
 
 
 def test_create_app_fails_fast_when_index_has_out_of_scope_chunks(

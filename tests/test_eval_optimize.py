@@ -572,6 +572,49 @@ def test_optimize_cli_pairs_cover_every_train_item(
     )
 
 
+def test_optimize_cli_ignores_the_relevance_gate_during_compile(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+) -> None:
+    """An armed runtime gate does not stop the compile: it still attempts every train item.
+
+    The gate is a runtime ``/chat`` behaviour; the compile disables it so the
+    optimizer's learning signal (a metric call per train item) is never starved.
+    """
+    corpus, index_path = _corpus(tmp_path, embedder, write_org)
+    dataset = _write_multi_dataset(tmp_path, count=6)
+    out = tmp_path / "compiled.json"
+    uri = _tracking_uri(tmp_path)
+    env = {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(index_path),
+        "MLFLOW_TRACKING_URI": uri,
+        "JANBOT_RELEVANCE_THRESHOLD": "0.9",
+    }
+
+    from janbot.eval.optimize import main as optimize_main
+
+    code = optimize_main(
+        ["--dataset", str(dataset), "--out", str(out)],
+        env=env,
+        embedder=embedder,
+        lm_factory=lambda **_: _dummy_lm(count=200),
+        judge=StubJudge(FAITHFUL),
+    )
+
+    assert code == 0
+    client = MlflowClient(tracking_uri=uri)
+    experiment = client.get_experiment_by_name("janbot-eval")
+    run = client.search_runs([experiment.experiment_id])[0]
+    pairs_path = client.download_artifacts(run.info.run_id, PAIRS_ARTIFACT_FILENAME)
+    pairs = json.loads(Path(pairs_path).read_text(encoding="utf-8"))
+    assert [pair["index"] for pair in pairs] == list(range(6))
+    assert all(
+        pair["judged"] and pair["cited_ok"] and pair["faithful"] for pair in pairs
+    )
+
+
 def test_optimize_cli_requires_a_judge(
     tmp_path: Path,
     embedder: Embedder,

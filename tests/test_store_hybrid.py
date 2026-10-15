@@ -108,8 +108,9 @@ def test_hybrid_return_shape_is_unchanged(
 
     assert len(rows) == 3
     for row in rows:
-        assert set(row) == {"id", "text", "source_path", "breadcrumb"}
+        assert set(row) == {"id", "text", "source_path", "breadcrumb", "similarity"}
         assert row["source_path"] is not None
+        assert isinstance(row["similarity"], float)
 
 
 def test_hybrid_fuses_dense_and_lexical_rankings(

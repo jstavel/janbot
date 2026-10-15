@@ -33,7 +33,7 @@ from janbot.eval.metrics import (
     registered_public_reference_failures,
     retrieval_misses,
 )
-from janbot.pipeline.chat import EmptyRetrieval, UncitedAnswer
+from janbot.pipeline.chat import EmptyRetrieval, LowRelevance, UncitedAnswer
 
 SPLIT_MANIFEST_FILENAME = "split_manifest.json"
 
@@ -71,7 +71,7 @@ def _evaluate(
     """Call ``program`` for every item, recording a per-item failure as an outcome.
 
     A decline is a defined outcome, not an error: the program's decline signal
-    (:class:`EmptyRetrieval`/:class:`UncitedAnswer`) is mapped to the exact
+    (:class:`EmptyRetrieval`/:class:`LowRelevance`/:class:`UncitedAnswer`) is mapped to the exact
     production shape the API returns — the contract's ``insufficient``
     ``ChatResponse`` — so the eval observes what production returns. A declined
     item is unjudged (there is no answer text to judge) and is not a failure. Every
@@ -90,7 +90,7 @@ def _evaluate(
     for item in items:
         try:
             response = program(question=item.question)
-        except (EmptyRetrieval, UncitedAnswer):
+        except (EmptyRetrieval, LowRelevance, UncitedAnswer):
             outcomes.append(
                 ItemOutcome(
                     item=item,
@@ -193,7 +193,8 @@ def run_eval(
     """Run every item through ``program`` and record one MLflow run.
 
     ``params`` carries the configuration that produced the run (model mode,
-    snapshot, judge model, temperature, seed, top_k); the metrics are every
+    snapshot, judge model, temperature, seed, top_k, retrieval mode, retrieval
+    window, relevance threshold); the metrics are every
     registered metric computed over the outcomes. ``dataset_path`` pins the exact
     dataset (its sha256 as a param, the file as an artifact) so runs are
     comparable. ``split_manifest`` is logged as ``split_manifest.json`` beside

@@ -232,6 +232,21 @@ def make_compile_metric(
     return compile_metric
 
 
+def _disable_relevance_gate(program: Any) -> None:
+    """Disable ``program``'s runtime low-relevance gate for a compile.
+
+    The relevance gate is a runtime ``/chat`` behaviour: it declines a question
+    whose best retrieved chunk is below the threshold. A compile must attempt
+    every train item — that attempt is BootstrapFewShot's learning signal — so a
+    gate left armed would starve the optimizer of demonstrations for any
+    low-similarity item. The gate is set inert (``0.0``) for the compile and the
+    full pairs pass; a served program loads its own configured threshold, so the
+    shipped default is unchanged for ``/chat``.
+    """
+    if getattr(program, "_relevance_threshold", 0.0) != 0.0:
+        program._relevance_threshold = 0.0
+
+
 def _program_lm(program: Any) -> Any:
     """The first language model set on ``program``'s predictors, or ``None``.
 
@@ -435,7 +450,11 @@ def main(
     over the trainset so the per-item pairs cover every train item, saves the
     JSON state to ``--out`` and logs it as an MLflow artifact with the compile's
     config, hyperparameters (weights, judge model id, demo count) and the
-    per-item ``compile_pairs.json``. ``--split`` is train-only and fails fast
+    per-item ``compile_pairs.json``. The relevance gate is a runtime ``/chat``
+    behaviour, so it is disabled for the compile and the full pairs pass: the
+    optimizer must attempt every train item (that attempt is its learning
+    signal), while the shipped default still gates serving. ``--split`` is
+    train-only and fails fast
     otherwise, so a compile can never train on the held-out val items; the run
     records ``split`` and ``trainset_size``.
     """
@@ -502,12 +521,14 @@ def main(
     )
 
     metric = make_compile_metric(judge)
+    _disable_relevance_gate(program)
     compiled = compile_fewshot(program, trainset, metric)
     out_path = save_program(compiled, args.out)
 
     runtime_lm = _program_lm(program)
     if runtime_lm is not None:
         compiled.set_lm(runtime_lm)
+    _disable_relevance_gate(compiled)
     record_train_pairs(compiled, trainset, metric)
 
     params = run_params(config)

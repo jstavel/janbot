@@ -252,6 +252,24 @@ def test_run_eval_maps_an_empty_retrieval_to_a_decline(tmp_path: Path) -> None:
         assert outcome.error is None
 
 
+def test_run_eval_maps_a_low_relevance_gate_to_a_decline(tmp_path: Path) -> None:
+    from janbot.pipeline.chat import LowRelevance
+
+    uri = _tracking_uri(tmp_path)
+
+    def program(*, question: str) -> ChatResponse:
+        raise LowRelevance("the best retrieved chunk is below the relevance threshold")
+
+    result = run_eval(_items(), program, tracking_uri=uri, experiment="janbot-eval")
+
+    for outcome in result.outcomes:
+        assert outcome.response is not None
+        assert outcome.response.status == "insufficient"
+        assert outcome.response.answer == INSUFFICIENT_ANSWER
+        assert outcome.response.citations == []
+        assert outcome.error is None
+
+
 def test_run_eval_keeps_a_fabricated_citation_as_an_error(tmp_path: Path) -> None:
     from janbot.pipeline.chat import FabricatedCitation
 
@@ -613,6 +631,7 @@ def test_run_params_carries_every_run_affecting_config() -> None:
         "top_k",
         "retrieval_mode",
         "retrieval_window",
+        "relevance_threshold",
         "program",
     }
 

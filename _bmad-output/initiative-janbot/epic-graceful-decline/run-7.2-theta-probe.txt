@@ -1,0 +1,19 @@
+deterministic relevance probe (top_k=4 best similarity, production embedder, scoped)
+ 1 refuse=False best_sim=0.4726  Why did you leave your last job after so many years there?
+ 4 refuse=False best_sim=0.5084  Have you implemented spec-first testing end to end, not just talked about it?
+ 6 refuse=False best_sim=0.4744  Do you have full-stack experience?
+ 9 refuse=False best_sim=0.5569  What model modes does JanBot support and why?
+12 refuse=False best_sim=0.5138  What Clojure work did you do at Red Hat?
+14 refuse=False best_sim=0.6436  Do you have security or PKI experience?
+17 refuse=False best_sim=0.5318  How do you use AI in your day-to-day work?
+19 refuse=False best_sim=0.2787  Tell me about yourself.
+20 refuse=False best_sim=0.4361  What do you prefer - remote, onsite, or hybrid?
+22 refuse=False best_sim=0.3961  Where can I find the source for the eDeposit AMQP/pdfbox worker?
+23 refuse=False best_sim=0.3987  Which of your projects can I inspect right now, and where?
+25 refuse=False best_sim=0.4040  You've been at this a long time - what can you bring that a younger engineer can't?
+29 refuse=False best_sim=0.4668  Have you done Infrastructure as Code?
+32 refuse=False best_sim=0.6567  Why Clojure? What led you to it?
+36 refuse=False best_sim=0.6782  What is JanBot for?
+38 refuse=True  best_sim=0.2320  What is your salary expectation?
+39 refuse=True  best_sim=0.2528  What is your notice period?
+40 refuse=True  best_sim=0.5111  Have you used managed Kubernetes services such as EKS or GKE?

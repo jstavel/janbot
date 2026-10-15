@@ -29,6 +29,7 @@ def _clear_janbot_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "JANBOT_TOP_K",
         "JANBOT_RETRIEVAL_MODE",
         "JANBOT_RETRIEVAL_WINDOW",
+        "JANBOT_RELEVANCE_THRESHOLD",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -294,6 +295,56 @@ def test_invalid_retrieval_window_raises(value: str) -> None:
     assert value in message
     assert "chunks" in message
     assert "sources" in message
+
+
+def test_default_relevance_threshold_is_the_measured_value() -> None:
+    assert load_config({}).relevance_threshold == 0.26
+
+
+def test_relevance_threshold_override_is_parsed() -> None:
+    assert load_config({"JANBOT_RELEVANCE_THRESHOLD": "0.35"}).relevance_threshold == 0.35
+
+
+def test_zero_relevance_threshold_is_allowed() -> None:
+    """``0.0`` is a valid operator override that disables the gate."""
+    assert load_config({"JANBOT_RELEVANCE_THRESHOLD": "0"}).relevance_threshold == 0.0
+
+
+@pytest.mark.parametrize("value", ["-0.5", "-1", "-0.26"])
+def test_negative_relevance_threshold_raises(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_RELEVANCE_THRESHOLD": value})
+
+    message = str(excinfo.value)
+    assert "JANBOT_RELEVANCE_THRESHOLD" in message
+    assert value in message
+    assert "negative" in message
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_relevance_threshold_falls_back_to_default(blank: str) -> None:
+    assert load_config({"JANBOT_RELEVANCE_THRESHOLD": blank}).relevance_threshold == 0.26
+
+
+@pytest.mark.parametrize("value", ["abc", "0,7", "true", "1.2x"])
+def test_invalid_relevance_threshold_raises(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_RELEVANCE_THRESHOLD": value})
+
+    message = str(excinfo.value)
+    assert "JANBOT_RELEVANCE_THRESHOLD" in message
+    assert value in message
+
+
+@pytest.mark.parametrize("value", ["nan", "inf", "-inf", "Infinity"])
+def test_non_finite_relevance_threshold_raises(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_RELEVANCE_THRESHOLD": value})
+
+    message = str(excinfo.value)
+    assert "JANBOT_RELEVANCE_THRESHOLD" in message
+    assert value in message
+    assert "finite" in message
 
 
 def test_default_seed_is_zero() -> None:

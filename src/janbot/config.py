@@ -1,7 +1,7 @@
 """Configuration for JanBot, read from ``JANBOT_*`` environment variables.
 
 Per AD-5, model mode is configuration, not code. This module is stdlib-only and
-reads twelve variables, each with a documented default:
+reads thirteen variables, each with a documented default:
 
 - ``JANBOT_MODEL_MODE``      -- ``"eval"`` (default) or ``"production"``
 - ``JANBOT_MODEL_SNAPSHOT``  -- locked model snapshot;
@@ -19,6 +19,9 @@ reads twelve variables, each with a documented default:
 - ``JANBOT_TOP_K``           -- retrieval top-k; default ``4``
 - ``JANBOT_RETRIEVAL_MODE``  -- ``"dense"`` (default) or ``"hybrid"``
 - ``JANBOT_RETRIEVAL_WINDOW`` -- ``"chunks"`` (default) or ``"sources"``
+- ``JANBOT_RELEVANCE_THRESHOLD`` -- the low-relevance decline gate; default
+  ``0.26`` (the measured value that raises ``refusal_pass_rate`` with no
+  ``spurious_refusal_rate`` and no in-corpus regression). ``0.0`` disables the gate.
 
 Values are trimmed, and a blank or whitespace-only value counts as unset (so it
 takes the documented default). The model mode, the retrieval mode and the
@@ -26,7 +29,9 @@ retrieval window are normalized to lower case before validation, so
 ``"Production"`` and ``" production "`` (and ``"Hybrid"``, ``"Sources"``) are
 accepted.
 ``JANBOT_TEMPERATURE`` must parse as a finite number, ``JANBOT_SEED`` must parse
-as an integer, and ``JANBOT_TOP_K`` must be a positive integer; a value that violates
+as an integer, ``JANBOT_TOP_K`` must be a positive integer,
+``JANBOT_RELEVANCE_THRESHOLD`` must parse as a finite number that is not negative,
+and a value that violates
 any clause fails fast with a ``ValueError`` naming the variable. Paths are
 ``~``-expanded and, when still relative, resolved against
 the project root, then canonicalized to absolute paths, so no path depends on
@@ -72,6 +77,7 @@ SEED_ENV = "JANBOT_SEED"
 TOP_K_ENV = "JANBOT_TOP_K"
 RETRIEVAL_MODE_ENV = "JANBOT_RETRIEVAL_MODE"
 RETRIEVAL_WINDOW_ENV = "JANBOT_RETRIEVAL_WINDOW"
+RELEVANCE_THRESHOLD_ENV = "JANBOT_RELEVANCE_THRESHOLD"
 
 DEFAULT_MODEL_MODE = MODEL_MODE_EVAL
 DEFAULT_MODEL_SNAPSHOT = "openai/gpt-4o-mini-2024-07-18"
@@ -82,6 +88,7 @@ DEFAULT_SEED = 0
 DEFAULT_TOP_K = 4
 DEFAULT_RETRIEVAL_MODE = RETRIEVAL_MODE_DENSE
 DEFAULT_RETRIEVAL_WINDOW = RETRIEVAL_WINDOW_CHUNKS
+DEFAULT_RELEVANCE_THRESHOLD = 0.26
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -101,6 +108,7 @@ class Config:
     top_k: int
     retrieval_mode: str
     retrieval_window: str
+    relevance_threshold: float
 
 
 def _clean(value: str | None) -> str | None:
@@ -126,8 +134,8 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
         ValueError: if ``JANBOT_MODEL_MODE`` is not one of ``MODEL_MODES``, if
             ``JANBOT_RETRIEVAL_MODE`` is not one of ``RETRIEVAL_MODES``, if
             ``JANBOT_RETRIEVAL_WINDOW`` is not one of ``RETRIEVAL_WINDOWS``, or
-            if ``JANBOT_TEMPERATURE``/``JANBOT_SEED``/``JANBOT_TOP_K`` is set
-            to an invalid value.
+            if ``JANBOT_TEMPERATURE``/``JANBOT_SEED``/``JANBOT_TOP_K``/
+            ``JANBOT_RELEVANCE_THRESHOLD`` is set to an invalid value.
     """
     source = os.environ if env is None else env
 
@@ -209,6 +217,25 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
             f"allowed values: {allowed}"
         )
 
+    raw_relevance = _clean(source.get(RELEVANCE_THRESHOLD_ENV))
+    if raw_relevance is None:
+        relevance_threshold = DEFAULT_RELEVANCE_THRESHOLD
+    else:
+        try:
+            relevance_threshold = float(raw_relevance)
+        except ValueError as exc:
+            raise ValueError(
+                f"{RELEVANCE_THRESHOLD_ENV}={raw_relevance!r} is not a number"
+            ) from exc
+        if not math.isfinite(relevance_threshold):
+            raise ValueError(
+                f"{RELEVANCE_THRESHOLD_ENV}={raw_relevance!r} must be a finite number"
+            )
+        if relevance_threshold < 0:
+            raise ValueError(
+                f"{RELEVANCE_THRESHOLD_ENV}={raw_relevance!r} must not be negative"
+            )
+
     raw_root = _clean(source.get(PROJECT_ROOT_ENV))
     project_root = _resolve_path(raw_root, PROJECT_ROOT) if raw_root else PROJECT_ROOT
 
@@ -232,4 +259,5 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
         top_k=top_k,
         retrieval_mode=retrieval_mode,
         retrieval_window=retrieval_window,
+        relevance_threshold=relevance_threshold,
     )

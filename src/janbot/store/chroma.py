@@ -113,6 +113,16 @@ def _reciprocal_rank_fusion(
 
 
 
+def _similarity(distance: Any) -> float:
+    """Return the cosine similarity for a Chroma cosine-distance value.
+
+    The collection is created with ``hnsw:space="cosine"``, so Chroma reports
+    ``1 - cosine similarity``; the exposed relevance score is its complement
+    (higher is more relevant).
+    """
+    return 1.0 - float(distance)
+
+
 def _within_scope(scope: Path, source_path: str | None) -> bool:
     """Return ``True`` only when ``source_path`` is *located* inside ``scope``.
 
@@ -349,6 +359,12 @@ class VectorStore:
         reciprocal-rank fusion; both modes share the scope filter, the return
         shape and the ``k`` truncation.
 
+        Every returned chunk carries a ``similarity`` key: the collection is a
+        cosine space, so Chroma's distance is ``1 - cosine similarity`` and the
+        exposed score is ``1 - distance`` (higher is more relevant). The
+        ``hybrid`` ranking reorders the chunks, but each chunk keeps the dense
+        similarity it had in the underlying dense ranking.
+
         The window selected from the ranking is ``chunks`` by default (the top
         ``k`` ranked chunks). With ``retrieval_window == "sources"`` the window
         instead holds up to ``k`` distinct sources, each represented by its
@@ -373,15 +389,18 @@ class VectorStore:
         result = self._collection.query(
             query_embeddings=self.embedder([text]),
             n_results=n_results,
-            include=["documents", "metadatas"],
+            include=["documents", "metadatas", "distances"],
         )
 
         ids = (result.get("ids") or [[]])[0]
         documents = (result.get("documents") or [[]])[0]
         metadatas = (result.get("metadatas") or [[]])[0]
+        distances = (result.get("distances") or [[]])[0]
 
         matches: list[dict[str, Any]] = []
-        for chunk_id, document, metadata in zip(ids, documents, metadatas):
+        for chunk_id, document, metadata, distance in zip(
+            ids, documents, metadatas, distances
+        ):
             meta = metadata or {}
             source_path = meta.get("source_path")
             if self.scope is not None and not _within_scope(self.scope, source_path):
@@ -392,6 +411,7 @@ class VectorStore:
                     "text": document,
                     "source_path": source_path,
                     "breadcrumb": meta.get("breadcrumb"),
+                    "similarity": _similarity(distance),
                 }
             )
         return self._window(matches, k)
@@ -411,15 +431,18 @@ class VectorStore:
         result = self._collection.query(
             query_embeddings=self.embedder([text]),
             n_results=count,
-            include=["documents", "metadatas"],
+            include=["documents", "metadatas", "distances"],
         )
 
         ids = (result.get("ids") or [[]])[0]
         documents = (result.get("documents") or [[]])[0]
         metadatas = (result.get("metadatas") or [[]])[0]
+        distances = (result.get("distances") or [[]])[0]
 
         candidates: list[dict[str, Any]] = []
-        for chunk_id, document, metadata in zip(ids, documents, metadatas):
+        for chunk_id, document, metadata, distance in zip(
+            ids, documents, metadatas, distances
+        ):
             meta = metadata or {}
             source_path = meta.get("source_path")
             if self.scope is not None and not _within_scope(self.scope, source_path):
@@ -430,6 +453,7 @@ class VectorStore:
                     "text": document,
                     "source_path": source_path,
                     "breadcrumb": meta.get("breadcrumb"),
+                    "similarity": _similarity(distance),
                 }
             )
         if not candidates:
