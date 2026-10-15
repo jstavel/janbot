@@ -28,6 +28,7 @@ def _clear_janbot_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "JANBOT_SEED",
         "JANBOT_TOP_K",
         "JANBOT_RETRIEVAL_MODE",
+        "JANBOT_RETRIEVAL_WINDOW",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -263,6 +264,36 @@ def test_invalid_retrieval_mode_raises(value: str) -> None:
     assert value in message
     assert "dense" in message
     assert "hybrid" in message
+
+
+def test_default_retrieval_window_is_chunks() -> None:
+    assert load_config({}).retrieval_window == "chunks"
+
+
+def test_retrieval_window_override_is_parsed() -> None:
+    assert load_config({"JANBOT_RETRIEVAL_WINDOW": "sources"}).retrieval_window == "sources"
+
+
+@pytest.mark.parametrize("value", ["Sources", " sources ", "SOURCES"])
+def test_retrieval_window_is_normalized(value: str) -> None:
+    assert load_config({"JANBOT_RETRIEVAL_WINDOW": value}).retrieval_window == "sources"
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_retrieval_window_falls_back_to_default(blank: str) -> None:
+    assert load_config({"JANBOT_RETRIEVAL_WINDOW": blank}).retrieval_window == "chunks"
+
+
+@pytest.mark.parametrize("value", ["bogus", "chunk", "source", "chunks2"])
+def test_invalid_retrieval_window_raises(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_RETRIEVAL_WINDOW": value})
+
+    message = str(excinfo.value)
+    assert "JANBOT_RETRIEVAL_WINDOW" in message
+    assert value in message
+    assert "chunks" in message
+    assert "sources" in message
 
 
 def test_default_seed_is_zero() -> None:

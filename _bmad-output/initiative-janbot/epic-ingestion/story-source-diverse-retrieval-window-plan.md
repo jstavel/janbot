@@ -3,14 +3,14 @@ title: 'Source-diverse retrieval window'
 type: 'feature'
 ticket: 11
 created: '2026-10-15'
-status: 'draft'
-baseline_revision: '693e0c2'
+status: 'built'
+baseline_revision: 'e5d6b97'
 route: 'full'
 route_source: 'auto'
 risk: 'medium'
-review: ''
-review_source: ''
-lenses_ran: []
+review: 'quick'
+review_source: 'pinned'
+lenses_ran: ['quick']
 review_loop_iteration: 0
 context: []
 ---
@@ -49,14 +49,14 @@ context: []
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `src/janbot/store/chroma.py` -- select the top-`k` distinct sources (best-ranked chunk per source) after ranking, in both the dense and hybrid paths, gated by the window mode -- the lever.
-- [ ] `src/janbot/config.py`, `tests/test_config.py`, `README.md` -- the `JANBOT_RETRIEVAL_WINDOW` knob (`chunks` default / `sources`, fail-fast), orthogonal to the retrieval mode -- the off-by-default seam.
-- [ ] `src/janbot/api/main.py` -- thread the window mode into `VectorStore` -- the wiring.
-- [ ] `src/janbot/eval/__main__.py` -- record the window selection in `run_params` (and update `tests/test_eval_runner.py`'s params key set) -- comparability.
-- [ ] `tests/test_store_*.py` -- the `sources` mode: order, `k` semantics (k distinct sources), scope-filter-before-selection, fewer-distinct-sources-than-k, determinism, both modes; the default `chunks` mode keeps the existing order tests green -- prove the mechanism without a model.
-- [ ] run the no-model window probe over the four diagnosed items (dense and hybrid, `top_k=4`) -- record which enter; the primary evidence, before the keyed run.
-- [ ] run the single keyed val run at `top_k=4` in dense + source-diverse mode against `e635c2bf` (keyed; hitl) -- the measurement.
-- [ ] record the before/after table, per-item effects, and the floor verdict in `epic-ingestion.md` Notes, routed to entry 20 -- the deliverable.
+- [x] `src/janbot/store/chroma.py` -- select the top-`k` distinct sources (best-ranked chunk per source) after ranking, in both the dense and hybrid paths, gated by the window mode -- the lever. *(Done: `_window` shared by both paths; `chunks` short-circuits to `ranked[:k]` — byte-identical; sourceless chunks keyed by id so they do not collapse.)*
+- [x] `src/janbot/config.py`, `tests/test_config.py`, `README.md` -- the `JANBOT_RETRIEVAL_WINDOW` knob (`chunks` default / `sources`, fail-fast), orthogonal to the retrieval mode -- the off-by-default seam. *(Done.)*
+- [x] `src/janbot/api/main.py` -- thread the window mode into `VectorStore` -- the wiring. *(Done.)*
+- [x] `src/janbot/eval/__main__.py` -- record the window selection in `run_params` (and update `tests/test_eval_runner.py`'s params key set) -- comparability. *(Done.)*
+- [x] `tests/test_store_*.py` -- the `sources` mode: order, `k` semantics (k distinct sources), scope-filter-before-selection, fewer-distinct-sources-than-k, determinism, both modes; the default `chunks` mode keeps the existing order tests green -- prove the mechanism without a model. *(Done: `tests/test_store_window.py`, 17 cases incl. the unscoped sourceless-chunk case.)*
+- [x] run the no-model window probe over the four diagnosed items (dense and hybrid, `top_k=4`) -- record which enter; the primary evidence, before the keyed run. *(Done: `run-2.11-window-probe.txt` — dense×sources recovers item 29 exactly as predicted.)*
+- [x] run the single keyed val run at `top_k=4` in dense + source-diverse mode against `e635c2bf` (keyed; hitl) -- the measurement. *(Done: MLflow run `0c01ba33`.)*
+- [x] record the before/after table, per-item effects, and the floor verdict in `epic-ingestion.md` Notes, routed to entry 20 -- the deliverable. *(Done; captured output preserved as `run-0c01ba33-output.txt`.)*
 
 **Acceptance Criteria:**
 - Given a ranked candidate set, when the `sources` window is selected, then it holds up to `k` **distinct** sources with each source's best-ranked chunk, and the fail-closed scope filter still precedes selection.
@@ -67,9 +67,20 @@ context: []
 
 ## Implementation Notes
 
+- The mechanism: `JANBOT_RETRIEVAL_WINDOW` (`chunks` default / `sources`, fail-fast) → `Config.retrieval_window` → `api/main.py` → `VectorStore(retrieval_window=…)`. `_window(ranked, k)` is shared by both query paths: `chunks` short-circuits to `ranked[:k]` (byte-identical to the old truncation); `sources` walks the ranked list keeping the first (best-ranked) chunk per distinct source and stops at `k`. Sourceless chunks (`source_path is None`) are keyed by their `id` so they do not collapse into one slot (scoped paths never see them — the fail-closed filter drops them first). `run_params` records `retrieval_window`.
+- The measurement: the no-model window probe (primary evidence, `run-2.11-window-probe.txt`) then one keyed val run — MLflow `0c01ba33` (judge `anthropic/claude-haiku-4.5`, `top_k=4`, dense + `retrieval_window=sources`, dataset sha `4656f824…` verified) against `e635c2bf`. Result: `retrieval_accuracy` 0.7333 → 0.8000 (**+1 item — item 29**, exactly the prediction); `retrieval_mrr` 0.6667 → 0.7056 (**definitional** — sources became distinct); but **`faithfulness` 0.7333 → 0.4667 — a −4-item regression beyond the 1.5σ ≈ 0.17 floor** (the failing set {23,25,29,32} → {14,17,19,22,23,25,32,36}: items 14, 17, 19, 22, 36 regressed, item 29 fixed), `citation_correctness` flat 0.7333, `citation_precision` → 0.6111, `public_references` → 0.8667 (a new reference failure on item 22). **Verdict: the breadth-vs-depth trade loses on the val set — the dense+sources configuration is NOT adopted; the shipped default stays `chunks`; routed to entry 20's breadth decision.**
+- Captured evidence preserved beside the Notes: `run-2.11-window-probe.txt` and `run-0c01ba33-output.txt`.
+- Full verification after the review patches: `uv run pytest -q` → **379 passed**; the store's order-asserting tests pass unchanged.
+
 ## Plan Change Log
 
 ## Review Triage Log
+
+Review pass 1 (quick, pinned) — 4 findings: 3 patched, 1 patched at commit:
+- `run-0c01ba33-output.txt` was untracked, so the note's per-item-evidence pointer dangled on a clean checkout — **low / patch** — the finalize commit includes the artifact beside the note (the sibling run artifacts are tracked).
+- `tests/test_store_window.py`'s mode-invariant assertion was a tautology for the `chunks` cases (`... or window == "chunks"` is constant True there) — **low / patch** — the distinctness assertion now applies only to the `sources` cases.
+- `src/janbot/eval/__main__.py`'s module docstring omitted `retrieval_window` from the recorded-config enumeration — **low / patch** — added.
+- `_window` collapsed all `None`-source chunks into one slot under the `sources` window (an unscoped store returns sourceless chunks; the scoped paths never do) — **low / patch** — sourceless chunks are now keyed by their `id`, with a test case covering an unscoped store of sourceless chunks.
 
 ## Design Notes
 

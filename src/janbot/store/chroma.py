@@ -21,8 +21,11 @@ from chromadb.utils import embedding_functions
 
 from janbot.config import (
     DEFAULT_RETRIEVAL_MODE,
+    DEFAULT_RETRIEVAL_WINDOW,
     RETRIEVAL_MODE_HYBRID,
     RETRIEVAL_MODES,
+    RETRIEVAL_WINDOW_SOURCES,
+    RETRIEVAL_WINDOWS,
 )
 
 __all__ = ["ChunkLike", "Embedder", "VectorStore", "default_embedder"]
@@ -180,6 +183,7 @@ class VectorStore:
         embedder: Embedder,
         scope: str | Path | None = None,
         retrieval_mode: str = DEFAULT_RETRIEVAL_MODE,
+        retrieval_window: str = DEFAULT_RETRIEVAL_WINDOW,
     ) -> None:
         self.index_path = Path(index_path)
         self.embedder = embedder
@@ -191,11 +195,43 @@ class VectorStore:
                 f"allowed values: {allowed}"
             )
         self.retrieval_mode = retrieval_mode
+        if retrieval_window not in RETRIEVAL_WINDOWS:
+            allowed = ", ".join(repr(window) for window in RETRIEVAL_WINDOWS)
+            raise ValueError(
+                f"retrieval_window={retrieval_window!r} is invalid; "
+                f"allowed values: {allowed}"
+            )
+        self.retrieval_window = retrieval_window
         self._client = chromadb.PersistentClient(path=str(self.index_path))
         self._collection = self._client.get_or_create_collection(
             name=_COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"},
         )
+
+    def _window(self, ranked: list[dict[str, Any]], k: int) -> list[dict[str, Any]]:
+        """Select the retrieval window of up to ``k`` chunks from ``ranked``.
+
+        With the default ``chunks`` window this is the top-``k`` ranked chunks.
+        With the ``sources`` window it is the top-``k`` **distinct** sources,
+        keeping each source's best-ranked (first-seen) chunk: the walk skips a
+        chunk whose source is already selected and stops once ``k`` distinct
+        sources are held. Scope filtering already happened upstream, so only
+        in-scope chunks are ever selected.
+        """
+        if self.retrieval_window != RETRIEVAL_WINDOW_SOURCES:
+            return ranked[:k]
+        selected: list[dict[str, Any]] = []
+        seen: set[Any] = set()
+        for chunk in ranked:
+            source = chunk["source_path"]
+            key = source if source is not None else chunk["id"]
+            if key in seen:
+                continue
+            seen.add(key)
+            selected.append(chunk)
+            if len(selected) == k:
+                break
+        return selected
 
     def upsert(
         self, chunks: Iterable[ChunkLike], *, scope_key: str | None = None
@@ -312,6 +348,13 @@ class VectorStore:
         a deterministic BM25 lexical ranking of the candidate texts by
         reciprocal-rank fusion; both modes share the scope filter, the return
         shape and the ``k`` truncation.
+
+        The window selected from the ranking is ``chunks`` by default (the top
+        ``k`` ranked chunks). With ``retrieval_window == "sources"`` the window
+        instead holds up to ``k`` distinct sources, each represented by its
+        best-ranked chunk, so ``k`` chunks stand for ``k`` sources. Selection
+        happens after the fail-closed scope filter, so an out-of-scope chunk can
+        never enter either window.
         """
         if k <= 0:
             return []
@@ -351,9 +394,7 @@ class VectorStore:
                     "breadcrumb": meta.get("breadcrumb"),
                 }
             )
-            if len(matches) == k:
-                break
-        return matches
+        return self._window(matches, k)
 
     def _query_hybrid(self, text: str, k: int) -> list[dict[str, Any]]:
         """Dense+lexical retrieval over the whole candidate set.
@@ -405,4 +446,5 @@ class VectorStore:
         order = sorted(
             range(len(candidates)), key=lambda index: (-fused[index], index)
         )
-        return [candidates[index] for index in order[:k]]
+        ranked = [candidates[index] for index in order]
+        return self._window(ranked, k)

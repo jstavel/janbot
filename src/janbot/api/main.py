@@ -77,6 +77,7 @@ def create_app(
         embedder or default_embedder(),
         scope=config.corpus_path,
         retrieval_mode=config.retrieval_mode,
+        retrieval_window=config.retrieval_window,
     )
     foreign = store.out_of_scope_sources()
     if foreign:

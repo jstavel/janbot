@@ -1,0 +1,57 @@
+no-model source-diverse window probe (top_k=4)
+index: /home/jstavel/dev/janbot/chroma_db
+corpus scope: /home/jstavel/dev/janbot/public_profile_org
+dataset: /home/jstavel/dev/janbot/eval/golden_dataset.yaml
+dataset sha256: 4656f824cd60cb482738c352ee0c09f6d5e5131ce8656da4d4e6e23c1a668df0
+embedder: production default (all-MiniLM-L6-v2)
+
+collection count: 276
+
+=== item 23 (0-based 23) ===
+question: Which of your projects can I inspect right now, and where?
+dense  chunks  k=4: ['intranet-pattern.org', 'reactive-testing-project.org', 'system-design.org', 'edeposit.org']
+dense  sources k=4: ['intranet-pattern.org', 'reactive-testing-project.org', 'system-design.org', 'edeposit.org']
+  -- dense:
+  public-proof-map.org: chunk_rank=15 source_rank=10 in_chunks_k4=no in_sources_k4=no
+hybrid chunks  k=4: ['public-proof-map.org', 'spec-first-pitch.org', 'career-trajectory.org', 'reactive-testing-framework.org']
+hybrid sources k=4: ['public-proof-map.org', 'spec-first-pitch.org', 'career-trajectory.org', 'reactive-testing-framework.org']
+  -- hybrid:
+  public-proof-map.org: chunk_rank=1 source_rank=1 in_chunks_k4=yes in_sources_k4=yes
+
+=== item 25 (0-based 25) ===
+question: You've been at this a long time - what can you bring that a younger engineer can't?
+dense  chunks  k=4: ['career-trajectory.org', 'spec-first-pitch.org', 'career-trajectory.org', 'cdbazar.org']
+dense  sources k=4: ['career-trajectory.org', 'spec-first-pitch.org', 'cdbazar.org', 'foundational-books.org']
+  -- dense:
+  dna-threads.org: chunk_rank=68 source_rank=30 in_chunks_k4=no in_sources_k4=no
+  cpp-memory-allocator.org: chunk_rank=64 source_rank=28 in_chunks_k4=no in_sources_k4=no
+  career-trajectory.org: chunk_rank=1 source_rank=1 in_chunks_k4=yes in_sources_k4=yes
+hybrid chunks  k=4: ['departure-narrative.org', 'career-trajectory.org', 'core-values-vs-framework.org', 'departure-narrative.org']
+hybrid sources k=4: ['departure-narrative.org', 'career-trajectory.org', 'core-values-vs-framework.org', 'linux-from-scratch.org']
+  -- hybrid:
+  dna-threads.org: chunk_rank=103 source_rank=39 in_chunks_k4=no in_sources_k4=no
+  cpp-memory-allocator.org: chunk_rank=54 source_rank=25 in_chunks_k4=no in_sources_k4=no
+  career-trajectory.org: chunk_rank=2 source_rank=2 in_chunks_k4=yes in_sources_k4=yes
+
+=== item 29 (0-based 29) ===
+question: Have you done Infrastructure as Code?
+dense  chunks  k=4: ['cdbazar.org', 'nagios-snmp-monitoring.org', 'intranet-pattern.org', 'intranet-pattern.org']
+dense  sources k=4: ['cdbazar.org', 'nagios-snmp-monitoring.org', 'intranet-pattern.org', 'vagrant-provisioning.org']
+  -- dense:
+  vagrant-provisioning.org: chunk_rank=5 source_rank=4 in_chunks_k4=no in_sources_k4=yes
+hybrid chunks  k=4: ['nagios-snmp-monitoring.org', 'vagrant-provisioning.org', 'edeposit.org', 'departure-narrative.org']
+hybrid sources k=4: ['nagios-snmp-monitoring.org', 'vagrant-provisioning.org', 'edeposit.org', 'departure-narrative.org']
+  -- hybrid:
+  vagrant-provisioning.org: chunk_rank=2 source_rank=2 in_chunks_k4=yes in_sources_k4=yes
+
+=== item 32 (0-based 32) ===
+question: Why Clojure? What led you to it?
+dense  chunks  k=4: ['clojure-testing.org', 'edeposit.org', 'spyscope-hotreload.org', 'clojure-testing.org']
+dense  sources k=4: ['clojure-testing.org', 'edeposit.org', 'spyscope-hotreload.org', 'personal-intro.org']
+  -- dense:
+  perl-clojure-gateway.org: chunk_rank=15 source_rank=5 in_chunks_k4=no in_sources_k4=no
+hybrid chunks  k=4: ['personal-intro.org', 'clojure-testing.org', 'clojure-testing.org', 'edeposit.org']
+hybrid sources k=4: ['personal-intro.org', 'clojure-testing.org', 'edeposit.org', 'spyscope-hotreload.org']
+  -- hybrid:
+  perl-clojure-gateway.org: chunk_rank=10 source_rank=7 in_chunks_k4=no in_sources_k4=no
+

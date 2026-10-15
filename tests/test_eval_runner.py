@@ -466,6 +466,7 @@ def test_run_params_carries_every_run_affecting_config() -> None:
         "seed",
         "top_k",
         "retrieval_mode",
+        "retrieval_window",
         "program",
     }
 
