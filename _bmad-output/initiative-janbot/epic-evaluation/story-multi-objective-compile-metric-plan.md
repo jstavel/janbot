@@ -3,7 +3,7 @@ title: 'Multi-objective compile metric (citations + faithfulness)'
 type: 'feature'
 ticket: 14
 created: '2026-10-15'
-status: 'built'
+status: done
 baseline_revision: 'adb95dd'
 route: 'full'
 route_source: 'auto'
