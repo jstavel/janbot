@@ -17,9 +17,12 @@ from types import SimpleNamespace
 
 import yaml
 import pytest
+from mlflow.tracking import MlflowClient
+
+from janbot.store import VectorStore
+
 from dspy import Example
 from dspy.utils import DummyLM
-from mlflow.tracking import MlflowClient
 
 from janbot.api.contract import ChatResponse, Citation
 from janbot.api.main import create_app
@@ -39,7 +42,6 @@ from janbot.eval.optimize import (
 )
 from janbot.ingest import index_corpus
 from janbot.pipeline.chat import ChatProgram, corpus_relative
-from janbot.store import VectorStore
 
 Embedder = Callable[[list[str]], list[list[float]]]
 
