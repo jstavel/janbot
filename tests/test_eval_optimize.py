@@ -23,12 +23,15 @@ from mlflow.tracking import MlflowClient
 
 from janbot.api.contract import ChatResponse, Citation
 from janbot.api.main import create_app
+from janbot.config import load_config
 from janbot.eval import __main__ as eval_cli
 from janbot.eval.dataset import GoldenItem
+from janbot.eval.judge import FAITHFUL, HALLUCINATED, Verdict
 from janbot.eval.optimize import (
+    PAIRS_ARTIFACT_FILENAME,
     _demo_count,
     compile_fewshot,
-    compile_metric,
+    make_compile_metric,
     load_program,
     program_marker,
     save_program,
@@ -58,6 +61,21 @@ class StubLMFactory:
 
     def __call__(self, **kwargs: object) -> DummyLM:
         return _dummy_lm(self.citations)
+
+
+class StubJudge:
+    """Recording injectable judge returning a fixed label (or raising)."""
+
+    def __init__(self, label: str = FAITHFUL, *, error: Exception | None = None) -> None:
+        self.label = label
+        self.error = error
+        self.calls: list[tuple[str, str]] = []
+
+    def __call__(self, expected_answer: str, answer: str) -> Verdict:
+        self.calls.append((expected_answer, answer))
+        if self.error is not None:
+            raise self.error
+        return Verdict(label=self.label)
 
 
 def _corpus(
@@ -142,40 +160,142 @@ def _write_split_dataset(tmp_path: Path) -> Path:
     return dataset
 
 
+def _write_multi_dataset(tmp_path: Path, *, count: int) -> Path:
+    dataset = tmp_path / "multi_dataset.yaml"
+    dataset.write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "question": f"train question {index}",
+                    "expected_answer": "Search infrastructure.",
+                    "expected_sources": ["profile.org"],
+                    "split": "train",
+                }
+                for index in range(count)
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return dataset
+
+
 def test_trainset_from_maps_items_to_question_inputs() -> None:
-    trainset = trainset_from([_item()])
+    trainset = trainset_from([_item()], indices=[7])
 
     assert len(trainset) == 1
     example = trainset[0]
+    assert example.index == 7
     assert example.question == _item().question
     assert example.expected_answer == _item().expected_answer
     assert example.expected_sources == ["profile.org"]
     assert set(example.inputs().keys()) == {"question"}
 
 
-def test_compile_metric_requires_an_answer_and_every_source() -> None:
-    example = Example(question="q", expected_sources=["a.org", "b.org"])
-
-    complete = ChatResponse(
-        answer="ok",
-        citations=[Citation(source="a.org"), Citation(source="b.org")],
-    )
-    partial = ChatResponse(answer="ok", citations=[Citation(source="a.org")])
-    empty = ChatResponse(
-        answer="   ",
-        citations=[Citation(source="a.org"), Citation(source="b.org")],
+def test_compile_metric_demo_path_is_cited_and_faithful() -> None:
+    cited = ChatResponse(answer="ok", citations=[Citation(source="a.org")])
+    example = Example(
+        index=0, question="q", expected_answer="a", expected_sources=["a.org"]
     )
 
-    assert compile_metric(example, complete) is True
-    assert compile_metric(example, partial) is False
-    assert compile_metric(example, empty) is False
+    accepted = make_compile_metric(StubJudge(FAITHFUL))
+    assert accepted(example, cited, []) is True
+
+    rejected = make_compile_metric(StubJudge(HALLUCINATED))
+    assert rejected(example, cited, []) is False
+
+
+def test_compile_metric_rejects_a_citation_only_win() -> None:
+    example = Example(
+        index=1, question="q", expected_answer="a", expected_sources=["a.org"]
+    )
+    cited = ChatResponse(answer="ok", citations=[Citation(source="a.org")])
+    judge = StubJudge(HALLUCINATED)
+    metric = make_compile_metric(judge)
+
+    assert metric(example, cited, []) is False
+    assert len(judge.calls) == 1
+    assert metric.pairs == [
+        {
+            "index": 1,
+            "question": "q",
+            "cited_ok": True,
+            "faithful": False,
+            "judged": True,
+        }
+    ]
+
+
+def test_compile_metric_short_circuits_without_a_judge_call() -> None:
+    example = Example(
+        index=2, question="q", expected_answer="a", expected_sources=["a.org"]
+    )
+    uncited = ChatResponse(answer="ok", citations=[Citation(source="other.org")])
+    judge = StubJudge(FAITHFUL)
+    metric = make_compile_metric(judge)
+
+    assert metric(example, uncited, []) is False
+    assert judge.calls == []
+    assert metric.pairs == [
+        {
+            "index": 2,
+            "question": "q",
+            "cited_ok": False,
+            "faithful": None,
+            "judged": False,
+        }
+    ]
+
+
+def test_compile_metric_fails_closed_when_the_judge_raises() -> None:
+    example = Example(
+        index=3, question="q", expected_answer="a", expected_sources=["a.org"]
+    )
+    cited = ChatResponse(answer="ok", citations=[Citation(source="a.org")])
+    judge = StubJudge(error=RuntimeError("boom"))
+    metric = make_compile_metric(judge)
+
+    assert metric(example, cited, []) is False
+    assert len(judge.calls) == 1
+    assert metric.failures and "boom" in metric.failures[0]
+    assert metric.pairs == [
+        {
+            "index": 3,
+            "question": "q",
+            "cited_ok": True,
+            "faithful": False,
+            "judged": False,
+        }
+    ]
+
+
+def test_compile_metric_scalar_path_is_the_weighted_sum() -> None:
+    example = Example(
+        index=4, question="q", expected_answer="a", expected_sources=["a.org"]
+    )
+    cited = ChatResponse(answer="ok", citations=[Citation(source="a.org")])
+    uncited = ChatResponse(answer="ok", citations=[Citation(source="other.org")])
+
+    faithful_metric = make_compile_metric(StubJudge(FAITHFUL), w_c=0.25, w_f=0.75)
+    assert faithful_metric(example, cited, None) == 1.0
+
+    hallucinated_metric = make_compile_metric(
+        StubJudge(HALLUCINATED), w_c=0.6, w_f=0.4
+    )
+    assert hallucinated_metric(example, cited, None) == 0.6
+
+    uncited_judge = StubJudge(FAITHFUL)
+    uncited_metric = make_compile_metric(uncited_judge, w_c=0.6, w_f=0.4)
+    assert uncited_metric(example, uncited, None) == 0.4
+    assert len(uncited_judge.calls) == 1
 
 
 def test_compile_metric_tolerates_bare_string_citations() -> None:
-    example = Example(question="q", expected_sources=["a.org"])
+    example = Example(question="q", expected_answer="a", expected_sources=["a.org"])
+    judge = StubJudge(FAITHFUL)
+    metric = make_compile_metric(judge)
 
-    assert compile_metric(example, SimpleNamespace(answer="ok", citations=[])) is False
-    assert compile_metric(example, SimpleNamespace(answer="ok", citations=["a.org"])) is True
+    assert metric(example, SimpleNamespace(answer="ok", citations=[]), []) is False
+    assert metric(example, SimpleNamespace(answer="ok", citations=["a.org"]), []) is True
 
 
 def test_compile_fewshot_bootstraps_with_a_stub_lm_and_round_trips(
@@ -190,7 +310,7 @@ def test_compile_fewshot_bootstraps_with_a_stub_lm_and_round_trips(
     compiled = compile_fewshot(
         program,
         trainset_from([_item()]),
-        compile_metric,
+        make_compile_metric(StubJudge()),
     )
 
     assert _demo_count(compiled) >= 1
@@ -255,7 +375,7 @@ def test_eval_marks_a_run_with_the_program_marker(
     compiled = compile_fewshot(
         _program(corpus, index_path, embedder, teacher),
         trainset_from([_item()]),
-        compile_metric,
+        make_compile_metric(StubJudge()),
     )
     program_file = save_program(compiled, tmp_path / "compiled.json")
     dataset = _write_dataset(tmp_path)
@@ -315,7 +435,7 @@ def test_create_app_loads_the_pinned_program(
     compiled = compile_fewshot(
         _program(corpus, index_path, embedder, teacher),
         trainset_from([_item()]),
-        compile_metric,
+        make_compile_metric(StubJudge()),
     )
     program_file = save_program(compiled, tmp_path / "compiled.json")
 
@@ -351,15 +471,18 @@ def test_optimize_cli_compiles_saves_and_logs_an_artifact(
 
     from janbot.eval.optimize import main as optimize_main
 
+    judge = StubJudge(FAITHFUL)
     code = optimize_main(
         ["--dataset", str(dataset), "--out", str(out)],
         env=env,
         embedder=embedder,
         lm_factory=StubLMFactory(),
+        judge=judge,
     )
 
     assert code == 0
     assert out.is_file()
+    assert len(judge.calls) == 2
     client = MlflowClient(tracking_uri=uri)
     experiment = client.get_experiment_by_name("janbot-eval")
     run = client.search_runs([experiment.experiment_id])[0]
@@ -372,12 +495,26 @@ def test_optimize_cli_compiles_saves_and_logs_an_artifact(
     assert run.data.params["max_bootstrapped_demos"] == "4"
     assert run.data.params["max_labeled_demos"] == "0"
     assert run.data.params["demos"] == "1"
+    assert run.data.params["w_c"] == "0.5"
+    assert run.data.params["w_f"] == "0.5"
+    assert run.data.params["judge_model_id"] == load_config(env).judge_model
     artifacts = {a.path for a in client.list_artifacts(run.info.run_id)}
     assert out.name in artifacts
     assert dataset.name in artifacts
     assert "split_manifest.json" in artifacts
+    assert PAIRS_ARTIFACT_FILENAME in artifacts
     manifest_path = client.download_artifacts(run.info.run_id, "split_manifest.json")
     assert json.loads(Path(manifest_path).read_text(encoding="utf-8")) == {"train": [0]}
+    pairs_path = client.download_artifacts(run.info.run_id, PAIRS_ARTIFACT_FILENAME)
+    assert json.loads(Path(pairs_path).read_text(encoding="utf-8")) == [
+        {
+            "index": 0,
+            "question": _item().question,
+            "cited_ok": True,
+            "faithful": True,
+            "judged": True,
+        }
+    ]
 
 
 @pytest.mark.parametrize("split", ["val", "all"])
@@ -394,6 +531,70 @@ def test_optimize_cli_refuses_a_non_train_split(
         optimize_main(["--dataset", str(dataset), "--split", split], env={})
 
     assert "train" in capsys.readouterr().err
+
+
+def test_optimize_cli_pairs_cover_every_train_item(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+) -> None:
+    corpus, index_path = _corpus(tmp_path, embedder, write_org)
+    dataset = _write_multi_dataset(tmp_path, count=6)
+    out = tmp_path / "compiled.json"
+    uri = _tracking_uri(tmp_path)
+    env = {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(index_path),
+        "MLFLOW_TRACKING_URI": uri,
+    }
+
+    from janbot.eval.optimize import main as optimize_main
+
+    code = optimize_main(
+        ["--dataset", str(dataset), "--out", str(out)],
+        env=env,
+        embedder=embedder,
+        lm_factory=lambda **_: _dummy_lm(count=200),
+        judge=StubJudge(FAITHFUL),
+    )
+
+    assert code == 0
+    client = MlflowClient(tracking_uri=uri)
+    experiment = client.get_experiment_by_name("janbot-eval")
+    run = client.search_runs([experiment.experiment_id])[0]
+    pairs_path = client.download_artifacts(run.info.run_id, PAIRS_ARTIFACT_FILENAME)
+    pairs = json.loads(Path(pairs_path).read_text(encoding="utf-8"))
+    assert [pair["index"] for pair in pairs] == list(range(6))
+    assert all(
+        pair["judged"] and pair["cited_ok"] and pair["faithful"] for pair in pairs
+    )
+
+
+def test_optimize_cli_requires_a_judge(
+    tmp_path: Path,
+    embedder: Embedder,
+    write_org: Callable[..., None],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    corpus, index_path = _corpus(tmp_path, embedder, write_org)
+    dataset = _write_dataset(tmp_path)
+    env = {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(index_path),
+        "MLFLOW_TRACKING_URI": _tracking_uri(tmp_path),
+    }
+
+    from janbot.eval.optimize import main as optimize_main
+
+    with pytest.raises(SystemExit):
+        optimize_main(
+            ["--dataset", str(dataset), "--out", str(tmp_path / "out.json")],
+            env=env,
+            embedder=embedder,
+            lm_factory=StubLMFactory(),
+        )
+
+    assert "judge" in capsys.readouterr().err
 
 
 def test_eval_scores_only_val_and_records_the_split_manifest(
