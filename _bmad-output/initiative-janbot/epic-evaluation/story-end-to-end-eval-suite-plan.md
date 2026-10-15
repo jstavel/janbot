@@ -3,7 +3,7 @@ title: 'End-to-end eval suite'
 type: 'feature'
 ticket: 11
 created: '2026-10-15'
-status: 'in-progress'
+status: 'built'
 baseline_revision: '338e953'
 route: 'oneshot'
 route_source: 'auto'
@@ -70,6 +70,14 @@ Started oneshot: tests + one small wrapper script, no product code — the actua
 ## Plan Change Log
 
 ## Review Triage Log
+
+Review pass 1 (quick, pinned) — 6 findings: 1 high, 1 medium, 3 low (all patched), 1 false:
+- the keyed tier ran the real CLI at the ambient index path — in CI (no `chroma_db/`) an empty store yields `0.0 == 0.0` vacuously — **high / patch** — the tier now builds a temp index from the real corpus via the ingest CLI subprocess and pins `JANBOT_CORPUS_PATH`/`JANBOT_INDEX_PATH`.
+- `KEYED_QUESTIONS` was dead code (one question not in the dataset, one wrong split) and the tier ran `--split val` (15 items), not the plan's fixed subset — **medium / owner decision** — the owner refined: A's real-corpus index harness + B's subset at ~5 real items, JSON-authored, plus a mandatory non-vacuity guard; the frozen plan text stays ("fixed golden subset").
+- the keyless tier never read the recorded run params the plan task requires — **low / patch** — stdlib `sqlite3` read of the MLflow store: distinct run ids recorded, `model_mode=eval`, config params present.
+- unused `json`/`yaml` imports; `yaml` broke the suite's stdlib-only boundary — **low / patch** — cleaned; the subset dataset is authored as JSON (valid YAML for the loader), so no `yaml` import is needed.
+- `citation_correctness` equality could flake (model-influenced) — **false** — the ticket's verify text explicitly requires failure-on-change between two locked-snapshot runs, and the merged `test_determinism_e2e.py` pins the same assertion class (grounded in source sets, never wording); the risk is documented in the module docstring.
+- the metric parser accepted any `name: value (n=` line — **low / patch** — restricted to the registered metric names.
 
 ## Verification
 
