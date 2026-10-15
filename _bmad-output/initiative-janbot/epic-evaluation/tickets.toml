@@ -200,3 +200,25 @@ covers = ["E2"]
 after = [3, 4, 5]
 hitl = false
 risk = "medium"
+
+[[entry]]
+id = 19
+type = "story"
+title = "Diagnose the val misses"
+description = "From the baseline run e635c2bf, take the failing val items (the `retrieval: ...` misses and the unfaithful judged items) and classify each cause as (a) corpus gap, (b) retrieval miss, or (c) program error. Output a written diagnosis (epic Notes) that routes each class to its owning epic."
+verify = "Every failing item has a named cause; the counts reconcile to 1 - metric (0.73 -> 4/15); the diagnosis routes the fix (data -> epic-evaluation; behavior -> epic-ingestion / epic-rag-chat)."
+covers = ["E2"]
+after = [17]
+hitl = true
+risk = "low"
+
+[[entry]]
+id = 20
+type = "story"
+title = "Golden dataset breadth toward the gate power"
+description = "Grow the golden dataset (stratified by source and item class) so val reaches ~100 — the power gate-rule.md requires (~5% effect). The gap: entry 12 targets 24, the dataset is 38 (23 train / 15 val), the gate rule wants ~100. First task: DECIDE the strategy — (i) grow items (~+85 val / ~250 total), (ii) the gate rule's 3x12 fallback (note: it cures run-variance, not item-level binomial noise), or (iii) consciously accept \"no decision\" for now. Then execute the chosen strategy and record a new val baseline as the gate reference if items were added. Authoring is not hitl; the keyed val run is (it needs the operator key). The optimization stages (8/9) stay gated on a decidable gate — this breadth is their precondition, not a stage restart."
+verify = "Either the dataset carries ~100 val items (every expected source in public_profile_org/) with a new recorded val baseline, or the chosen alternative is recorded with its rationale."
+covers = ["E1"]
+after = [12]
+hitl = false
+risk = "high"
