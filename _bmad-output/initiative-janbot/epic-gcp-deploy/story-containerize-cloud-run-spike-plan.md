@@ -3,7 +3,7 @@ title: 'Containerize and deploy an authenticated Cloud Run spike'
 type: 'feature'
 ticket: 1
 created: '2026-10-16'
-status: 'built'
+status: 'done'
 baseline_revision: '3927d71'
 route: 'full'
 route_source: 'pinned'
@@ -75,6 +75,8 @@ context: []
 ## Implementation Notes
 
 ## Plan Change Log
+
+- **Sequencing renegotiation (2026-10-16, owner):** Terraform moves from E4 to an inserted **E1.5** (Terraform core) and E4 splits into **E1.5 + E4b** (CI/CD + Firestore IaC). Recorded in the epic Notes; supersedes the epic's "E1 → E2 → E3 → E4" sequencing note (left intact, not edited). E1 itself is unchanged and is now **done**.
 
 ## Review Triage Log
 

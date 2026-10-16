@@ -60,9 +60,43 @@ gcloud run deploy janbot-api --region=europe-central2 \
 ## Budget + alert
 
 `gcloud billing budgets create --billing-account=01F9B3-809CD7-82262E --display-name=JanBot-deploy --budget-amount=10 --threshold-rule=percent=0.5 --threshold-rule=percent=0.9`
-→ created **`JanBot-deploy`, 10 CZK** (the billing account's own currency; `--budget-amount`
-with an explicit `USD`/`EUR` is rejected against a CZK account). **Proposed figure: 500 CZK
-(~€20/mo)** — awaiting the owner's confirmed amount; alerts at 50% and 90%.
+→ created `JanBot-deploy` at 10 CZK, then **updated to 500 CZK**:
+`gcloud billing budgets update 3fcb5a77-5170-4a1b-ba05-ee71f6071389 --billing-account=01F9B3-809CD7-82262E --budget-amount=500 --clear-threshold-rules --add-threshold-rule=percent=0.5 --add-threshold-rule=percent=0.9`.
+Final: **`JanBot-deploy`, 500 CZK, alerts at 50% and 90%.** (`--budget-amount` must be in the
+billing account's own currency — CZK; an explicit `USD`/`EUR` is rejected against a CZK account.)
+
+**Honest framing: a GCP budget is an ALERT, not a cap.** It notifies; it does not stop spend.
+The current **real ceiling** is **`--max-instances=2` × `--concurrency=1`** (at most two
+concurrent model calls in flight), plus the model provider's own limits. A **hard total
+ceiling** — a quota that cannot be exceeded regardless of traffic — arrives with **E2's global
+quota** (ADR-009 control 3).
+
+## Close-out details — reviewer-verified plan-vs-reality deltas (not failures)
+
+- **(a) The Cloud Run probe is the DEFAULT TCP startup probe, not `/health`.** Reality:
+  `startupProbe = tcpSocket{port:8080}, periodSeconds=240, timeoutSeconds=240, failureThreshold=1`
+  (Cloud Run's default). The plan claimed `/health` is the probe — corrected here. **Decision:**
+  keep the default TCP probe for E1. It gates on the container **listening on 8080**, and
+  uvicorn binds the port only after app startup completes (including the fail-closed index
+  check), so it is effectively equivalent to an HTTPS `/health` probe here. An explicit HTTPS
+  `/health` probe would only add value if the app bound the port **before** its dependencies
+  were ready (it does not); **not worth configuring now** — revisit only if startup becomes lazy.
+- **(b) Service naming deviation: the spike deployed as `janbot-api`, not `janbot-spike-*`.** The
+  recorded decision wanted the spike stack named `janbot-spike-*` so E4's replacement is
+  unambiguous. Reality: the service is `janbot-api`. **Resolution (E1.5):** the real stack keeps
+  the meaningful name **`janbot-api`**; E1.5 **destroys** the hand-made spike and applies
+  Terraform managing `janbot-api` — fresh, never imported — so after E1.5 there is exactly one
+  `janbot-api` (Terraform-managed) and no lingering spike to confuse. The `janbot-spike-*`
+  naming intent is superseded by the destroy-and-recreate.
+- **(c) IAM policy is EMPTY → authenticated-only, owner/editor can invoke.** Reality: the
+  service's IAM policy has **no bindings**. This is the **intended** E1 posture: only the
+  owner/editor (project-level permissions) can invoke; no anonymous access. **Mechanism to
+  share a demo later:** grant `roles/run.invoker` to a specific principal —
+  `gcloud run services add-iam-policy-binding janbot-api --region=europe-central2 --member=… --role=roles/run.invoker`.
+- **(d) `startup-cpu-boost=true` was enabled** (Cloud Run default annotation
+  `run.googleapis.com/startup-cpu-boost=true`) but was not reported in the first draft. It
+  allocates extra CPU during startup and **likely shaped the measured 19.46 s cold start**;
+  recorded here for an honest cold-start picture.
 
 ## The 7 acceptance criteria — evidence
 
