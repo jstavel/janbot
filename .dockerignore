@@ -1,0 +1,23 @@
+# Build context exclusions (neutral name: Podman reads .containerignore first, then
+# falls back to .dockerignore; Docker reads .dockerignore — one file serves both).
+.git
+.gitignore
+.venv
+.agents
+.agent-shell
+.aider.chat.history.md
+.aider.tags.cache.v4
+.goose
+.hermes
+.pytest_cache
+_bmad
+_bmad-output
+chroma_db
+eval/compiled_*.json
+mlruns
+mlflow.db
+split_manifest.json
+skills-lock.json
+tests
+**/__pycache__
+*.pyc

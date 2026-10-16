@@ -1,11 +1,12 @@
 # tickets.toml — epic-gcp-deploy. Entries in build order.
 # Status never lives here: an entry with no plan and no leaf file is planned.
+# Renegotiated 2026-10-16 (owner): E1.5 inserted (Terraform core); E4 split into E1.5 + E4b.
 
 [[entry]]
 id = 1
 type = "story"
 title = "Containerize and deploy an authenticated Cloud Run spike"
-description = "Bakes python 3.12 + uv, the corpus (public_profile_org), the built vector index (python -m janbot.ingest) and Chroma's ONNX embedding model (all-MiniLM-L6-v2) into a container image — no ingest at startup — and deploys it to Cloud Run in the EU region as --no-allow-unauthenticated: the thinnest authenticated path to a running service with ~zero cost exposure. JANBOT_MODEL_MODE=production; JANBOT_INDEX_PATH points at the baked index; OPENROUTER_API_KEY comes from Secret Manager (never baked/committed/printed); JANBOT_PROGRAM_PATH stays UNSET (the baseline ships; the compiled program was REJECTed by the gate); a GCP budget alert is the financial backstop; Cloud Run runs --min-instances=0 with a hard --max-instances cap and low --concurrency. Proves GET /health = ok and POST /chat answers with citations."
+description = "Bakes python 3.12 + uv, the corpus (public_profile_org), the built vector index (python -m janbot.ingest) and Chroma's ONNX embedding model (all-MiniLM-L6-v2) into a container image — no ingest at startup — and deploys it to Cloud Run in the EU region as --no-allow-unauthenticated: the thinnest authenticated path to a running service with ~zero cost exposure. JANBOT_MODEL_MODE=production; JANBOT_INDEX_PATH points at the baked index; OPENROUTER_API_KEY comes from Secret Manager (never baked/committed/printed); JANBOT_PROGRAM_PATH stays UNSET (the baseline ships; the compiled program was REJECTed by the gate); a GCP budget alert is the financial backstop; Cloud Run runs --min-instances=0 with a hard --max-instances cap and low --concurrency. Proves GET /health = ok and POST /chat answers with citations. DONE 2026-10-16 (see epic-gcp-deploy/run-e1-deploy.md)."
 verify = "An authenticated Cloud Run URL (a verified gcloud identity token) returns {\"status\":\"ok\"} from GET /health and a real cited answer from POST /chat; an unauthenticated request is not served."
 covers = ["E1"]
 after = ["epic-rag-chat", "epic-graceful-decline"]
@@ -15,13 +16,26 @@ plan_checkpoint = true
 references = ["spec-janbot/decisions.md#adr-007"]
 
 [[entry]]
+id = 5
+type = "story"
+title = "Terraform core: Artifact Registry + Cloud Run + Secret Manager + remote state"
+description = "Codifies the E1 spike as Terraform: Artifact Registry, Cloud Run, the Secret Manager CONTAINER (not the version), and a least-privilege service account, with remote state in a versioned GCS backend. Two owner-confirmed safeguards: (i) the secret VALUE never enters Terraform state — `google_secret_manager_secret_version` with the value would put the key in plaintext in the state file, a WIDER exposure than Secret Manager, so the CONTAINER is created by Terraform and the version is added out-of-band (`gcloud secrets versions add`) as a runbook step; (ii) remote state lives in a GCS bucket with object versioning, bootstrapped once by hand (Terraform cannot initialise its own backend); `.gitignore` gets `*.tfstate*`, `.terraform/`, and value-bearing `*.tfvars`, while `.terraform.lock.hcl` is COMMITTED (it pins provider versions, the same discipline as uv.lock). The ordering trap is settled: Terraform creates Cloud Run but does not build images, and Cloud Run needs the image already in Artifact Registry — so a two-phase apply (or documented build+push step between applies) is used; and because `terraform destroy` removes the AR repo (and the image) and the secret container, a fresh apply must re-push the image and re-add the secret version. Replacement proof: destroy the hand-made E1 spike, `apply` from zero, and re-verify all 7 acceptance criteria at the NEW URL (the E1 log's URL becomes historical). Resources are FRESH, never `terraform import`. Real-stack naming: service `janbot-api`, repo `janbot` (resolves the spike-naming deviation)."
+verify = "`terraform destroy` of the hand-made spike then `terraform apply` from zero (artifact registry + Cloud Run + Secret Manager container + least-privilege SA) yields a Cloud Run service that re-passes all 7 acceptance criteria at its new URL; `terraform state` is remote + versioned and contains NO secret value."
+covers = ["E1.5"]
+after = [1]
+hitl = true
+risk = "high"
+plan_checkpoint = true
+references = ["spec-janbot/decisions.md#adr-007", "spec-janbot/decisions.md#adr-009"]
+
+[[entry]]
 id = 2
 type = "story"
 title = "Guardrails and cost protection"
-description = "Implements the minimum guardrail/cost layer that makes going public safe (ADR-009, owner-signed-off): an answer cache over the 91 golden questions (a hit costs zero model calls), a per-IP rate limit, a hard global quota (a ceiling that cannot be exceeded regardless of traffic), input bounds (length caps, rejection of unbounded input), the deterministic over-claiming guard (ADR-009 control 5 — the adopted condition of ADR-009: a narrow lexicon over the answer text refusing explicit first-person commitment/interest claims, e.g. 'making me interested in working for your company'; no model call, no core change), and abuse control (what stops someone scripting the endpoint) — every control carrying its named acceptance test. The cache is a DEMO shield: a build-time artifact baked into the image (static, no runtime store), keyed on the normalized question text; its hit rate for novel phrasings is ~zero, so the general cost control is the quota + rate limit. Only the rate-limit/quota COUNTERS need shared state → Firestore (native mode, europe-central2). The θ=0.26 gate already declines identity/commitment questions pre-LM; this guard closes the residual over-claiming gap (see epic-gcp-deploy/probe_over_claiming.py)."
+description = "Implements the minimum guardrail/cost layer that makes going public safe (ADR-009, owner-signed-off): an answer cache over the 91 golden questions (a hit costs zero model calls), a per-IP rate limit, a hard global quota (a ceiling that cannot be exceeded regardless of traffic), input bounds (length caps, rejection of unbounded input), the deterministic over-claiming guard (ADR-009 control 5 — the adopted condition of ADR-009: a narrow lexicon over the answer text refusing explicit first-person commitment/interest claims, e.g. 'making me interested in working for your company'; no model call, no core change), and abuse control (what stops someone scripting the endpoint) — every control carrying its named acceptance test. The cache is a DEMO shield: a build-time artifact baked into the image (static, no runtime store), keyed on the normalized question text; its hit rate for novel phrasings is ~zero, so the general cost control is the quota + rate limit. Only the rate-limit/quota COUNTERS need shared state → Firestore (native mode, europe-central2); its IaC is E4b's. The θ=0.26 gate already declines identity/commitment questions pre-LM; this guard closes the residual over-claiming gap (see epic-gcp-deploy/probe_over_claiming.py)."
 verify = "Every ADR-009 control passes its named acceptance test: a cache hit costs zero model calls (measured) and is contract-shaped (status/answer/citations/reason); the N+1th request in the rate window is refused; the global quota cannot be exceeded; over-long/unbounded input is rejected; the over-claiming guard refuses 'Would you like to work for our company?' (no first-person commitment/interest assertion reaches the caller) while 'Have you used Clojure in production systems?' still answers with citations; the API key never appears in a response body or a log line."
 covers = ["E2"]
-after = [1, "epic-evaluation"]
+after = [5, "epic-evaluation"]
 hitl = false
 risk = "high"
 plan_checkpoint = true
@@ -43,11 +57,11 @@ references = ["spec-janbot/decisions.md#adr-008", "architecture-janbot/architect
 [[entry]]
 id = 4
 type = "story"
-title = "IaC and CI/CD: Terraform + Workload Identity Federation"
-description = "Codifies the whole deploy as Terraform (Artifact Registry, Cloud Run, Secret Manager, a least-privilege service account for IAM, and the Firestore (native, europe-central2) the guardrail counters use) and a GitHub Actions deploy job that authenticates via Workload Identity Federation (no long-lived keys), so the deploy is reproducible and satisfies backlog ticket 3's 'via Terraform'. Waits on E1-E3. FRESH stack, never `terraform import`: Terraform stands up the real stack from zero (backlog 3's AC is literally `terraform apply` yields the URL), and the E1 spike stack (`janbot-spike-*`) is torn down once E4's stack stands up — match by replacement, not import."
-verify = "terraform apply (from a clean GCP project) provisions Artifact Registry + Cloud Run + Secret Manager + Firestore (native) + the least-privilege SA and the service then answers /health and /chat; a GitHub Actions run deploys a new revision via WIF with no long-lived key."
-covers = ["E4"]
-after = [1, 2, 3]
+title = "E4b — CI/CD (Workload Identity Federation + GitHub Actions) + Firestore IaC"
+description = "The CI/CD half of the old E4: a GitHub Actions deploy job that authenticates via Workload Identity Federation (no long-lived keys) and deploys the service, plus the Terraform for the Firestore (native, europe-central2) the E2 guardrail counters use. Runs after E1.5 (the Terraform core), E2 (which adds the Firestore) and E3. Satisfies backlog ticket 3's 'via Terraform' for the CI/CD path."
+verify = "A GitHub Actions run deploys a new revision via WIF with no long-lived key, and `terraform apply` provisions the Firestore (native) the guardrail counters use; the deployed service answers /health and /chat."
+covers = ["E4b"]
+after = [5, 2, 3]
 hitl = true
 risk = "high"
 plan_checkpoint = true
