@@ -867,3 +867,70 @@
   expected_sources:
     - departure-narrative.org
   split: train
+
+- question: "What is the Beaker CI you worked with?"
+  expected_answer: >-
+    Beaker CI - Red Hat's automation server for installing, configuring and
+    testing systems at scale; the RHSM Ansible + Robot Framework test
+    architecture ran on it.
+  expected_sources:
+    - rhsm-ansible-qe.org
+  split: val
+- question: "What are the custom metrics in your monitoring stack?"
+  expected_answer: >-
+    The monitoring stack's custom metrics alongside CCT and node_exporter, all
+    under Ansible automation - built for the testing-at-scale proof of concept.
+  expected_sources:
+    - departure-narrative.org
+  split: val
+- question: "Your Python work is just glue scripts, not real systems work, right?"
+  expected_answer: >-
+    Backwards - the audio transcription pipeline is a real systems build in
+    Python, not glue.
+  expected_sources:
+    - audio-transcription-pipeline.org
+  split: val
+- question: "The matching engine is a toy, not a real product, right?"
+  expected_answer: >-
+    Backwards - the matching engine is a serious, spec-driven project.
+  expected_sources:
+    - matching-engine.org
+  split: val
+- question: "You learned Kubernetes from a cheat sheet, not from real work, right?"
+  expected_answer: >-
+    Backwards - the OpenShift platform work IS Kubernetes experience delivered
+    through real container-platform work: Jenkins agents as Podman images,
+    debugging jobs on a shared cluster.
+  expected_sources:
+    - openshift-kubernetes-bridge.org
+    - jenkins-openshift-cicd-operations.org
+  split: val
+- question: "The eDeposit work was just one library - not substantial, right?"
+  expected_answer: >-
+    Backwards - the eDeposit work spans libraries (clj-amqp, amqp.pdfbox,
+    amqp.kramerius) and the AMQP/pdfbox worker.
+  expected_sources:
+    - edeposit.org
+  split: val
+- question: "You never actually ran anything in CI - it was just talk, right?"
+  expected_answer: >-
+    Backwards - a test architecture at production scale ran in Beaker CI: 60+
+    playbooks, a 737-line orchestrator, custom plugins.
+  expected_sources:
+    - rhsm-ansible-qe.org
+  split: val
+- question: "What is Beaker CI?"
+  expected_answer: >-
+    Red Hat's automation server for installing, configuring and testing systems
+    - what the production-scale RHSM Ansible + Robot Framework test architecture
+    ran on.
+  expected_sources:
+    - rhsm-ansible-qe.org
+  split: train
+- question: "The audio transcription pipeline was a weekend hobby project, wasn't it?"
+  expected_answer: >-
+    It is a real build, not a hobby: the audio transcription pipeline is a
+    practical systems project, not a weekend experiment.
+  expected_sources:
+    - audio-transcription-pipeline.org
+  split: train
