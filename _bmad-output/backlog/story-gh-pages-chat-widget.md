@@ -37,3 +37,4 @@ Verify: the published Pages page posts a question to the deployed `/chat` and re
 - Unknown: a browser-facing widget plus a CORS allowance is a new public interface; it needs a superseding decision/ADR.
 - Unknown: the anonymization/guardrails gate — a public demo counts as deployment.
 - Open question: CORS origin and the read-only/rate-limit posture.
+- **Incepted (2026-10-16) into `epic-gcp-deploy` as E3** ("Go public: allow-unauthenticated + the GitHub Pages widget"), after the guardrail layer (E2). Do not re-plan it here. The new public interface is authorised by ADR-008 (DRAFT, an AD-1 supersession): CORS origin = `jstavel.github.io`, read-only `POST /chat`-only, no AI logic (AD-2).

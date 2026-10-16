@@ -35,3 +35,4 @@ Verify: `terraform apply` yields a public Cloud Run URL where `GET /health` retu
 - Unknown: the hosting/deployment target is a long-standing spec Open Question; this proposes GCP Cloud Run and needs the decision recorded before it starts.
 - Unknown: the anonymization/guardrails pre-deployment gate must be resolved before any real recruiter deployment.
 - Open question: container base image, and how the vector index and API keys are supplied at runtime.
+- **Incepted (2026-10-16) into `epic-gcp-deploy`** (initiative epic 8, Milestone 4) — this ticket's work is delivered by E1 (authenticated Cloud Run spike), E3 (go public) and E4 (Terraform + WIF). Do not re-plan it here. Deploy target settled by ADR-007; guardrails gate scoped by ADR-009 (both DRAFT, awaiting owner).
