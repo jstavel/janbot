@@ -237,8 +237,8 @@ def test_invalid_top_k_raises(value: str) -> None:
     assert value in message
 
 
-def test_default_retrieval_mode_is_dense() -> None:
-    assert load_config({}).retrieval_mode == "dense"
+def test_default_retrieval_mode_is_hybrid() -> None:
+    assert load_config({}).retrieval_mode == "hybrid"
 
 
 def test_retrieval_mode_override_is_parsed() -> None:
@@ -252,7 +252,7 @@ def test_retrieval_mode_is_normalized(value: str) -> None:
 
 @pytest.mark.parametrize("blank", ["", "   "])
 def test_blank_retrieval_mode_falls_back_to_default(blank: str) -> None:
-    assert load_config({"JANBOT_RETRIEVAL_MODE": blank}).retrieval_mode == "dense"
+    assert load_config({"JANBOT_RETRIEVAL_MODE": blank}).retrieval_mode == "hybrid"
 
 
 @pytest.mark.parametrize("value", ["bogus", "dense2", "lexical"])

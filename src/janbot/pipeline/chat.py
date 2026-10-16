@@ -166,10 +166,14 @@ class ChatProgram(dspy.Module):
         self.last_retrieved_sources = list(sources)
 
         if self._relevance_threshold != 0.0:
-            best_similarity = max(chunk["similarity"] for chunk in chunks)
-            if best_similarity < self._relevance_threshold:
+            best_two = sorted(
+                (chunk["similarity"] for chunk in chunks), reverse=True
+            )[:2]
+            if best_two and all(
+                similarity < self._relevance_threshold for similarity in best_two
+            ):
                 raise LowRelevance(
-                    f"the best retrieved chunk has similarity {best_similarity!r} "
+                    f"the two best retrieved chunks have similarities {best_two!r} "
                     f"below the relevance threshold {self._relevance_threshold!r} "
                     f"for question {question!r}; the corpus cannot ground the question"
                 )

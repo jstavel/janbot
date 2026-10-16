@@ -120,7 +120,7 @@ def test_hybrid_fuses_dense_and_lexical_rankings(
     root = tmp_path / "corpus"
     root.mkdir()
     index_path = tmp_path / "index"
-    dense = VectorStore(index_path, embedder, scope=root)
+    dense = VectorStore(index_path, embedder, scope=root, retrieval_mode="dense")
     hybrid = VectorStore(index_path, embedder, scope=root, retrieval_mode="hybrid")
     corpus = _corpus(root)
     dense.upsert(corpus)
@@ -159,7 +159,7 @@ def test_hybrid_golden_pinned_order(tmp_path: Path, embedder: Embedder) -> None:
         StoredChunk("p3", "beta epsilon zeta", str(root / "p3.org")),
         StoredChunk("p4", "alpha delta", str(root / "p4.org")),
     ]
-    dense = VectorStore(index_path, embedder, scope=root)
+    dense = VectorStore(index_path, embedder, scope=root, retrieval_mode="dense")
     hybrid = VectorStore(index_path, embedder, scope=root, retrieval_mode="hybrid")
     dense.upsert(corpus)
 
@@ -257,7 +257,7 @@ def test_hybrid_unscoped_store_overfetches_to_fuse(
     chunk, dense rank 6); the fused ranking lifts it to rank 4 and returns it.
     """
     index_path = tmp_path / "index"
-    dense = VectorStore(index_path, embedder)
+    dense = VectorStore(index_path, embedder, retrieval_mode="dense")
     hybrid = VectorStore(index_path, embedder, retrieval_mode="hybrid")
     dense.upsert(_corpus(tmp_path))
 
@@ -268,18 +268,18 @@ def test_hybrid_unscoped_store_overfetches_to_fuse(
     assert "d1" in hybrid_ids
 
 
-def test_default_mode_is_dense_and_matches_explicit_dense(
+def test_default_mode_is_hybrid_and_matches_explicit_hybrid(
     tmp_path: Path, embedder: Embedder
 ) -> None:
-    """No knob -> the default store is byte-identical to an explicit dense store."""
+    """No knob -> the default store is byte-identical to an explicit hybrid store."""
     root = tmp_path / "corpus"
     root.mkdir()
     index_path = tmp_path / "index"
     default = VectorStore(index_path, embedder, scope=root)
-    explicit = VectorStore(index_path, embedder, scope=root, retrieval_mode="dense")
+    explicit = VectorStore(index_path, embedder, scope=root, retrieval_mode="hybrid")
     default.upsert(_corpus(root))
 
-    assert default.retrieval_mode == "dense"
+    assert default.retrieval_mode == "hybrid"
     assert default.query("alpha beta", k=4) == explicit.query("alpha beta", k=4)
 
 
