@@ -3,7 +3,7 @@ title: 'Containerize and deploy an authenticated Cloud Run spike'
 type: 'feature'
 ticket: 1
 created: '2026-10-16'
-status: 'draft'
+status: 'built'
 baseline_revision: '3927d71'
 route: 'full'
 route_source: 'pinned'

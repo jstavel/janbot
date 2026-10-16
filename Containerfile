@@ -1,0 +1,48 @@
+# JanBot container (M4/E1 authenticated spike).
+#
+# Build with the file NAMED EXPLICITLY so nothing auto-detects a missing Dockerfile:
+#   podman build -f Containerfile -t janbot:local .
+#   buildah bud -f Containerfile -t janbot:local .
+#   docker build -f Containerfile -t janbot:local .
+# `Containerfile` is the OCI-standard name (identical syntax); the neutral
+# `.dockerignore` is honoured by both Podman (after `.containerignore`) and Docker.
+#
+# Baked at build: the corpus, the vector index (python -m janbot.ingest) and Chroma's
+# ONNX all-MiniLM-L6-v2 embedding model. No ingest at startup; no secret in the image.
+# Dependencies come from uv.lock; the project itself is not installed as a wheel
+# (src/ is placed on PYTHONPATH) so the build needs no package build backend.
+
+FROM python:3.12-slim AS builder
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /app
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
+
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src \
+    JANBOT_PROJECT_ROOT=/app \
+    JANBOT_MODEL_MODE=production \
+    JANBOT_CORPUS_PATH=/app/public_profile_org \
+    JANBOT_INDEX_PATH=/app/index
+
+COPY --from=builder /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:${PATH}"
+
+COPY src/ ./src/
+COPY public_profile_org/ ./public_profile_org/
+COPY README.md ./
+
+# Bake: build the index and download the ONNX MiniLM model. No key; no startup ingest.
+RUN python -m janbot.ingest
+
+EXPOSE 8080
+CMD ["sh", "-c", "uvicorn janbot.api.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
