@@ -101,3 +101,9 @@
   summary: Per-source chunk cap <= N (MMR-style relevance/diversity, e.g. N=2) — keeps source diversity WITHOUT strict dedup's within-source depth loss.
   evidence: 2.11's strict dedup (run 0c01ba33) regressed faithfulness 0.7333 -> 0.4667 (item 22 lost its second edeposit.org subtree -> a new reference failure); the follow-up probe is deterministic (free, no model) — over {23,25,29,32} and the 2.11-destabilised {14,17,19,22,36}.
   status: **someday** — no blocker; do when there is capacity. Not scheduled.
+
+## Review defers (2026-10-16, epic-graceful-decline story 7.3 — decline reason)
+
+- source_plan: `_bmad-output/initiative-janbot/epic-graceful-decline/story-decline-variants-a-personal-question-reply-plan.md`
+  summary: `tickets.toml` entry-3 `verify` still pins the superseded two-variant behaviour ("the personal-variant reply … the generic reply … the TS harness stays in sync") and cannot pass as written.
+  evidence: The RESCOPE note the owner approved was additive to the `description` only ("no restructuring, no other ticket touched"), so the stale `verify` text survives next to a rescope that supersedes it (the code returns one unified constant for both reasons; the TS harness is Milestone 1.5). The fix is an owner-owned ticket edit — rewrite `verify` to the unified-decline + reason-metadata contract.

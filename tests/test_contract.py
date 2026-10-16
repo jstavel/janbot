@@ -14,6 +14,7 @@ from janbot.api.contract import (
     ChatRequest,
     ChatResponse,
     Citation,
+    decline,
 )
 
 
@@ -94,3 +95,52 @@ def test_answered_response_without_citations_is_rejected() -> None:
         ChatResponse(answer="An answer.")
 
     assert "an answered response requires at least one citation" in str(excinfo.value)
+
+
+def test_chat_response_reason_defaults_to_none() -> None:
+    response = ChatResponse(
+        status="insufficient",
+        answer=INSUFFICIENT_ANSWER,
+        citations=[],
+    )
+
+    assert response.reason is None
+
+
+def test_chat_response_rejects_an_unknown_reason() -> None:
+    with pytest.raises(ValidationError):
+        ChatResponse(
+            status="insufficient",
+            answer=INSUFFICIENT_ANSWER,
+            citations=[],
+            reason="coffee",
+        )
+
+
+def test_chat_response_rejects_an_answered_reply_with_a_decline_reason() -> None:
+    with pytest.raises(ValidationError) as excinfo:
+        ChatResponse(
+            status="answered",
+            answer="An answer.",
+            citations=[Citation(source="profile.org")],
+            reason="personal",
+        )
+
+    assert "an answered response must not carry a decline reason" in str(excinfo.value)
+
+
+def test_decline_builds_the_unified_insufficiency_reply() -> None:
+    response = decline("What is your salary expectation?")
+
+    assert response.status == "insufficient"
+    assert response.answer == INSUFFICIENT_ANSWER
+    assert response.citations == []
+    assert response.reason == "personal"
+
+
+def test_decline_falls_open_to_out_of_corpus_for_an_unlisted_question() -> None:
+    response = decline("What is your favourite music genre?")
+
+    assert response.status == "insufficient"
+    assert response.answer == INSUFFICIENT_ANSWER
+    assert response.reason == "out_of_corpus"

@@ -184,6 +184,8 @@ def main(
         response = outcome.response
         if response is None:
             continue
+        if response.status == "insufficient":
+            print(f"decline: {outcome.item.question} — {response.reason}")
         if outcome.item.should_refuse and response.status != "insufficient":
             print(f"refusal: {outcome.item.question} — answered a should-refuse item")
         elif not outcome.item.should_refuse and response.status == "insufficient":

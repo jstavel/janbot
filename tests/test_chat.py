@@ -198,6 +198,12 @@ def test_openapi_exposes_status_from_the_contract(
 
     assert set(schema["properties"]["status"]["enum"]) == {"answered", "insufficient"}
     assert schema["properties"]["status"]["default"] == "answered"
+    assert set(schema["properties"]["reason"]["anyOf"][0]["enum"]) == {
+        "personal",
+        "out_of_corpus",
+    }
+    assert schema["properties"]["reason"]["anyOf"][1]["type"] == "null"
+    assert "reason" not in schema.get("required", [])
 
 
 def test_chat_missing_mistyped_or_blank_question_is_rejected_with_422(
@@ -344,6 +350,32 @@ def test_chat_empty_index_declines_with_200_insufficiency(
     response = TestClient(app).post("/chat", json={"question": "anything"})
 
     _assert_insufficiency(response)
+
+
+@pytest.mark.parametrize(
+    ("question", "reason"),
+    [
+        ("What is your salary expectation?", "personal"),
+        ("What is your favourite music genre?", "out_of_corpus"),
+    ],
+)
+def test_chat_decline_carries_the_classified_reason(
+    tmp_path: Path,
+    embedder: Embedder,
+    question: str,
+    reason: str,
+) -> None:
+    """The port routes the decline through ``decline(question)``, carrying its reason."""
+    app = create_app(
+        env={"JANBOT_INDEX_PATH": str(tmp_path / "empty")},
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    response = TestClient(app).post("/chat", json={"question": question})
+
+    _assert_insufficiency(response)
+    assert response.json()["reason"] == reason
 
 
 def test_chat_sourceless_chunk_is_excluded_from_retrieval_with_200_insufficiency(
