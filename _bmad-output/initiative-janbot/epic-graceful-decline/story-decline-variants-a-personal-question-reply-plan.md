@@ -3,7 +3,7 @@ title: 'Decline variants: a personal-question reply'
 type: 'feature'
 ticket: 3
 created: '2026-10-15'
-status: 'built'
+status: done
 baseline_revision: '805dce9'
 route: 'full'
 route_source: 'pinned'

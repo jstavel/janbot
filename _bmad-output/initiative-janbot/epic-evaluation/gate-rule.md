@@ -59,3 +59,9 @@ N confirmation passed (citation-moved 9 under hybrid vs the floor 5) — the gat
 Threshold note on record: 2σ would be off-spec — chosen after the fact — and would
 weaken the pre-registration; 1.5σ is the value entry 18 pre-registered, re-instantiated
 per-metric at the new n.
+
+## Verdict record
+
+Append-only; the rule above is frozen and never edited by a verdict.
+
+- **2026-10-16 — entry 14 (multi-objective `BootstrapFewShot` compile), vs reference `c6ced445`: REJECT.** Compile `1bd62a51` (`fewshot:ef4f7404a591`, `w_c=w_f=0.5`, 4 demos); val run `707fbef3` (`dataset_sha256` `1c3864bd…`). `citation_correctness` 0.7209 (31/43) → 0.7273 (32/44); `faithfulness` 0.9767 (42/43) → 0.9091 (40/44). Item-level: citation +1/−0; faithfulness +1/−4 (**net −3**) — the guard fell beyond its ≤1-item floor. Keep the baseline; do not adopt; do not escalate to MIPROv2. Evidence: `epic-evaluation/run-707fbef3-output.txt`.

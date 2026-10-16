@@ -173,7 +173,7 @@ id = 14
 type = "story"
 title = "Multi-objective compile metric (citations + faithfulness)"
 description = "Revise the BootstrapFewShot compile objective so it does not buy citation coverage at the cost of faithfulness — the Goodhart trade entry 8 exposed. Objective: score = w_c*cited_ok + w_f*faithful (default 0.5/0.5, recorded in the compile hyperparams); a demo is accepted only when cited_ok AND faithful, short-circuiting to False without a judge call when cited_ok is false (keeps it near-free). Only program-controlled terms — retrieval_accuracy and answer_coverage (stub) do not belong. Store the (cited_ok, faithful) pair per item, not only the scalar, so a Pareto/GEPA objective needs no recompute, and leave room for a refusal_ok term once entry 13 lands."
-verify = "Compiled over the train split and evaluated on the val split against a val baseline, the multi-objective compiled program holds or improves citations without reducing faithfulness, with the weights in the compile hyperparams."
+verify = "Compiled over the train split and evaluated on the val split against a val baseline, the multi-objective compiled program holds or improves citations without reducing faithfulness, with the weights in the compile hyperparams. VERDICT (2026-10-16, scheduled re-judge vs c6ced445): REJECT — citation_correctness 0.7209 (31/43) -> 0.7273 (32/44), faithfulness 0.9767 (42/43) -> 0.9091 (40/44); the guard fell 3 items (net), beyond its <=1-item floor, so the criterion did NOT hold. Not adopted; no MIPROv2 escalation. Compile 1bd62a51, val run 707fbef3; evidence epic-evaluation/run-707fbef3-output.txt."
 covers = ["E4"]
 after = [8, 15, 16, 17, 18]
 hitl = false
