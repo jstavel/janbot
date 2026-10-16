@@ -27,3 +27,11 @@ compile_pairs.json
 # transient BMad render snapshots
 _bmad/render/
 .aider*
+
+# Terraform: state and provider cache are never committed; the lock file IS
+# committed (it pins provider versions, the same discipline as uv.lock).
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+

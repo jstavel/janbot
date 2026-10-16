@@ -3,7 +3,7 @@ title: 'Terraform core: image + Artifact Registry + Cloud Run + Secret Manager +
 type: 'feature'
 ticket: 5
 created: '2026-10-16'
-status: 'draft'
+status: 'built'
 baseline_revision: 'a0b9b87'
 route: 'full'
 route_source: 'pinned'
