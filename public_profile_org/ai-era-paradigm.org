@@ -1,0 +1,71 @@
+:PROPERTIES:
+:ID:      20261016-ai-era-paradigm
+:TITLE:   The AI-era development paradigm — determinism, information density, and the gardener role
+:CREATED: <2026-10-16>
+:AUTHOR:  goose
+:REVIEWED: <2026-10-16>
+:DOMAIN:  way-of-working
+:TAGS:    ai-era paradigm determinism information-density typescript rust clojure functional static-typing gardener juniors abstraction
+:SYNOPSIS: The AI era removes the constraint "we use what the team already knows": since a model handles a wide range of languages, the team should stop slowing it down with its own comfort zone, prefer high-information-density, statically-typed and functional languages (TypeScript, Rust, Clojure) for the determinism they bring to a probabilistic system, move from writing code to cultivating it as a gardener, and let juniors start directly at high abstraction instead of the historical assembler-to-Python ladder.
+:STRENGTHS:  systems-thinking tool-choice-beyond-comfort paradigm-awareness teaching-juniors
+:WEAKNESSES: paradigm-shift-felt-not-yet-fully-articulated
+:END:
+
+# The AI-era development paradigm — determinism, information density, and the gardener role
+
+* The claim
+
+The AI era breaks the **local maximum of "we use what the team already knows"**.
+The argument *"we write Python, so we'll use Python"* loses its relevance: a model
+handles a wide spectrum of languages (specialised and old ones included), and **the
+constraint is now our own comfort zone, not the tool**. Slowing the AI down to the
+languages we happen to know is a self-inflicted limit — the model should not be
+braked by the team's knowledge.
+
+* Determinism and information density gain value
+
+Statically-typed and functional languages — **TypeScript, Rust, Clojure** — become
+*more* valuable, not less, because their strict rules bring **determinism** into the
+broad, probabilistic behaviour of a model:
+
+- fewer **hallucinations** and less noise,
+- less **boilerplate**: higher *information density* means more of the solution is
+  visible in fewer lines, and better orientation for both the human and the model,
+- the trade-off: higher density demands **more conceptual understanding** from the
+  expert — and there will still be moments that need a deep specialist.
+
+* The role shift: from writer to gardener
+
+The engineer moves from writing base code to **cultivating and steering** the
+model's output — an *observer and shaper* ("sadař", the gardener) who gives the
+system room and only **corrects the direction**, instead of micromanaging syntax.
+(Cross-reference: the same gardener model as the *relational* principle in
+`20261016-respectful-partnership`.)
+
+* The junior entry point changes
+
+The historical sequence — assembler, then C/PHP, then Python/Java — **stops being a
+dogma**. A new generation can start **directly at higher abstraction** (Lisp,
+Clojure) and learn **in tandem with the AI**, using it to accelerate their own
+growth. If the ladder's bottom rung no longer exists (who starts with assembler
+today?), why force the next generation to climb it? New juniors stand in an empty
+field — and can be taught from where the AI already is.
+
+* Honest limit
+
+The shift is *felt* more than *fully articulated*: the direction is clear
+(determinism, density, cultivation, higher entry levels), the exact set of changes
+is not yet pinned down — an open question, not a closed conclusion.
+
+* Related
+
+- `20261015-janbot-value-proposition`, `20261015-spec-first-artifacts-in-git` — the
+  AI-collaboration practice this paradigm is the broader frame for.
+- `20261007-spec-first-evolution` — spec-first as the disciplined way to *steer* an
+  AI workflow.
+
+* Sources
+
+- `corpus/texts/20261016-ai-era-paradigm-transcript.txt` — the paradigm claim: tools beyond the team's comfort zone, determinism/density, the gardener role, juniors at higher abstraction
+  git ref: 8107835:corpus/texts/20261016-ai-era-paradigm-transcript.txt
+  sha256: 073478a6c832877e3b0f95b12865989fa845560bbc2da2144cf64775b4e5775d
