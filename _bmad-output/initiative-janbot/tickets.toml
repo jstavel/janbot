@@ -53,3 +53,16 @@ slug = "epic-ts-harness"
 title = "Thin TypeScript contract harness"
 covers = ["CAP-7"]
 after = [{ epic = 3, needs = "the /chat OpenAPI contract (its Pydantic source of truth)" }]
+
+# ---- Milestone 4 ----
+
+[[epic]]
+id = 8
+slug = "epic-gcp-deploy"
+title = "Deploy to GCP (a public, recruiter-facing service)"
+covers = []
+after = [
+  { epic = 3, needs = "the running /chat pipeline, contract and built index" },
+  { epic = 7, needs = "the graceful decline the public service serves" },
+  { epic = 5, needs = "the golden question set the guardrail cache precomputes" },
+]

@@ -1,0 +1,54 @@
+# tickets.toml — epic-gcp-deploy. Entries in build order.
+# Status never lives here: an entry with no plan and no leaf file is planned.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Containerize and deploy an authenticated Cloud Run spike"
+description = "Bakes python 3.12 + uv, the corpus (public_profile_org), the built vector index (python -m janbot.ingest) and Chroma's ONNX embedding model (all-MiniLM-L6-v2) into a container image — no ingest at startup — and deploys it to Cloud Run in the EU region as --no-allow-unauthenticated: the thinnest authenticated path to a running service with ~zero cost exposure. JANBOT_MODEL_MODE=production; JANBOT_INDEX_PATH points at the baked index; OPENROUTER_API_KEY comes from Secret Manager (never baked/committed/printed); JANBOT_PROGRAM_PATH stays UNSET (the baseline ships; the compiled program was REJECTed by the gate); a GCP budget alert is the financial backstop; Cloud Run runs --min-instances=0 with a hard --max-instances cap and low --concurrency. Proves GET /health = ok and POST /chat answers with citations."
+verify = "An authenticated Cloud Run URL (a verified gcloud identity token) returns {\"status\":\"ok\"} from GET /health and a real cited answer from POST /chat; an unauthenticated request is not served."
+covers = ["E1"]
+after = ["epic-rag-chat", "epic-graceful-decline"]
+hitl = true
+risk = "high"
+plan_checkpoint = true
+references = ["spec-janbot/decisions.md#adr-007"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Guardrails and cost protection"
+description = "Implements the minimum guardrail/cost layer that makes going public safe (ADR-009, owner-signed-off): an answer cache over the 91 golden questions (a hit costs zero model calls), a per-IP rate limit, a hard global quota (a ceiling that cannot be exceeded regardless of traffic), input bounds (length caps, rejection of unbounded input), the deterministic over-claiming guard (ADR-009 control 5 — the adopted condition of ADR-009: a narrow lexicon over the answer text refusing explicit first-person commitment/interest claims, e.g. 'making me interested in working for your company'; no model call, no core change), and abuse control (what stops someone scripting the endpoint) — every control carrying its named acceptance test. The cache is a DEMO shield: a build-time artifact baked into the image (static, no runtime store), keyed on the normalized question text; its hit rate for novel phrasings is ~zero, so the general cost control is the quota + rate limit. Only the rate-limit/quota COUNTERS need shared state → Firestore (native mode, europe-central2). The θ=0.26 gate already declines identity/commitment questions pre-LM; this guard closes the residual over-claiming gap (see epic-gcp-deploy/probe_over_claiming.py)."
+verify = "Every ADR-009 control passes its named acceptance test: a cache hit costs zero model calls (measured) and is contract-shaped (status/answer/citations/reason); the N+1th request in the rate window is refused; the global quota cannot be exceeded; over-long/unbounded input is rejected; the over-claiming guard refuses 'Would you like to work for our company?' (no first-person commitment/interest assertion reaches the caller) while 'Have you used Clojure in production systems?' still answers with citations; the API key never appears in a response body or a log line."
+covers = ["E2"]
+after = [1, "epic-evaluation"]
+hitl = false
+risk = "high"
+plan_checkpoint = true
+references = ["spec-janbot/decisions.md#adr-009"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Go public: allow-unauthenticated + the GitHub Pages widget"
+description = "Flips Cloud Run to --allow-unauthenticated and publishes the static GitHub Pages widget that calls POST /chat and renders the cited answer — the new public interface authorised by the superseding AD-1 decision (ADR-008: a CORS allowance for the Pages origin, a read-only POST-only posture). Delivers backlog ticket 4. Only proceeds once E2's guardrail layer is in place and signed off."
+verify = "The published Pages page posts a question to the deployed /chat and renders the answer with its citations; a CORS preflight from the Pages origin succeeds and a request from a different origin is refused."
+covers = ["E3"]
+after = [2]
+hitl = true
+risk = "high"
+plan_checkpoint = true
+references = ["spec-janbot/decisions.md#adr-008", "architecture-janbot/architecture-janbot.md#ad-1"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "IaC and CI/CD: Terraform + Workload Identity Federation"
+description = "Codifies the whole deploy as Terraform (Artifact Registry, Cloud Run, Secret Manager, a least-privilege service account for IAM, and the Firestore (native, europe-central2) the guardrail counters use) and a GitHub Actions deploy job that authenticates via Workload Identity Federation (no long-lived keys), so the deploy is reproducible and satisfies backlog ticket 3's 'via Terraform'. Waits on E1-E3. FRESH stack, never `terraform import`: Terraform stands up the real stack from zero (backlog 3's AC is literally `terraform apply` yields the URL), and the E1 spike stack (`janbot-spike-*`) is torn down once E4's stack stands up — match by replacement, not import."
+verify = "terraform apply (from a clean GCP project) provisions Artifact Registry + Cloud Run + Secret Manager + Firestore (native) + the least-privilege SA and the service then answers /health and /chat; a GitHub Actions run deploys a new revision via WIF with no long-lived key."
+covers = ["E4"]
+after = [1, 2, 3]
+hitl = true
+risk = "high"
+plan_checkpoint = true
+references = ["spec-janbot/decisions.md#adr-007", "spec-janbot/decisions.md#adr-009"]

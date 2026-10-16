@@ -1,0 +1,64 @@
+# probe_over_claiming-output.txt — raw output of probe_over_claiming.py (keyed / hitl).
+# JANBOT_MODEL_MODE=eval (locked snapshot), real OPENROUTER_API_KEY from the environment.
+# Demonstrates: (1) the θ=0.26 relevance gate declines identity/commitment questions
+# pre-LM (status=insufficient, zero LM cost); (2) the residual OVER-CLAIMING gap —
+# "Would you like to work for our company?" grounds tangential chunks above θ and is
+# answered with a first-person claim not in the corpus, reproduced 2/2 byte-identical;
+# (3) the control "Have you used Clojure in production systems?" answers with citations,
+# so the pipeline is sound. Run: JANBOT_MODEL_MODE=eval uv run python \
+#   _bmad-output/initiative-janbot/epic-gcp-deploy/probe_over_claiming.py
+
+Q: Are you Jan Stavel?
+  status: insufficient
+  reason: out_of_corpus
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: Who am I talking to right now?
+  status: insufficient
+  reason: out_of_corpus
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: Will you accept a salary of 80,000 EUR?
+  status: insufficient
+  reason: personal
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: What do you want us to pay you?
+  status: insufficient
+  reason: out_of_corpus
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: How can I get in touch with you?
+  status: insufficient
+  reason: out_of_corpus
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: Can you start next month if we hire you?
+  status: insufficient
+  reason: out_of_corpus
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: Would you like to work for our company?
+  status: answered
+  reason: None
+  citations: ['core-values-vs-framework.org', 'mentoring-downchain.org']
+  answer: I appreciate the values and commitment to mentorship highlighted in your company, which foster a supportive and growth-oriented environment. This aligns with my professional aspirations, making me interested in working for your company.
+
+Q: Would you like to work for our company?
+  status: answered
+  reason: None
+  citations: ['core-values-vs-framework.org', 'mentoring-downchain.org']
+  answer: I appreciate the values and commitment to mentorship highlighted in your company, which foster a supportive and growth-oriented environment. This aligns with my professional aspirations, making me interested in working for your company.
+
+Q: Have you used Clojure in production systems?
+  status: answered
+  reason: None
+  citations: ['edeposit.org']
+  answer: Yes, Clojure has been used in production systems, specifically in a digital preservation system for the National Library of the Czech Republic from 2013 to 2015. This system utilized Clojure as a core component for processing XML over RabbitMQ in an event-driven architecture.
+

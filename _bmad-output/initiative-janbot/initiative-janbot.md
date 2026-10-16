@@ -14,7 +14,7 @@ risk: high
 
 ## Description
 
-JanBot answers recruiter questions accurately and contextually from the owner's personal org-mode documentation and professional profile, and does so as a rigor-first demonstration of modern AI engineering and SDET practice. The spec owns the capabilities, constraints and non-goals; this initiative delivers them across Milestones 1–3. This ticket tree plans **Milestone 1** (epics 1–4, delivered), **a graceful insufficiency answer** (`epic-graceful-decline`, CAP-1/CAP-3), **Milestone 2** (`epic-evaluation`, CAP-8) and **Milestone 1.5** (`epic-ts-harness`, thin TypeScript harness) as its epics.
+JanBot answers recruiter questions accurately and contextually from the owner's personal org-mode documentation and professional profile, and does so as a rigor-first demonstration of modern AI engineering and SDET practice. The spec owns the capabilities, constraints and non-goals; this initiative delivers them across Milestones 1–4. This ticket tree plans **Milestone 1** (epics 1–4, delivered), **a graceful insufficiency answer** (`epic-graceful-decline`, CAP-1/CAP-3), **Milestone 2** (`epic-evaluation`, CAP-8), **Milestone 1.5** (`epic-ts-harness`, thin TypeScript harness) and **Milestone 4** (`epic-gcp-deploy`, a public recruiter-facing GCP deployment) as its epics.
 
 ## Outcome
 
@@ -34,7 +34,7 @@ The requirement source is the spec: `_bmad-output/initiative-janbot/spec-janbot/
 
 ## Boundaries
 
-Milestone 1 is one vertical slice: org-mode corpus → ingestion/scope → DSPy retrieval + answer → `/chat` contract → endpoint tests. Not in M1: evaluation and MLFlow (Milestone 2), the thin TypeScript/Zod harness (Milestone 1.5), Clojure orchestration (M3), anonymization/guardrails (pre-deployment). See the spec's Non-goals and `_bmad-output/initiative-janbot/spec-janbot/roadmap.md`.
+Milestone 1 is one vertical slice: org-mode corpus → ingestion/scope → DSPy retrieval + answer → `/chat` contract → endpoint tests. Not in M1: evaluation and MLFlow (Milestone 2), the thin TypeScript/Zod harness (Milestone 1.5), Clojure orchestration (M3), anonymization/guardrails (pre-deployment). See the spec's Non-goals and `_bmad-output/initiative-janbot/spec-janbot/roadmap.md`. The deployment/hosting target and the pre-recruiter-deployment guardrails/anonymization gate (spec L92, L77/L86) are owned by `epic-gcp-deploy` (Milestone 4) — the GCP service, the GH Pages widget and the guardrail layer are its touch points.
 
 Tracer path across epics: `epic-foundation` scaffold → `epic-ingestion` indexes one public org file into ChromaDB → `epic-rag-chat` answers one question with a citation through `/chat` → `epic-verification` runs the end-to-end test green in CI.
 
@@ -52,5 +52,5 @@ Tracer path across epics: `epic-foundation` scaffold → `epic-ingestion` indexe
 - Unknown: the deployment/hosting target and the exact locked model snapshot are unresolved; owned at Milestone 1 configuration, neither blocks the epic order.
 - Parked: CAP-8 (evaluation/MLFlow) is Milestone 2; CAP-9 (Clojure orchestrator) is Phase 2 — not placed on any Milestone 1 epic.
 - Decision (2026-10-14, slicing): Milestone 2 is one epic (`epic-evaluation`, CAP-8) — one capability, one owner, evaluation and optimization one loop. Milestone 1.5 is one epic (`epic-ts-harness`, a thin Zod/vitest contract harness) placed right after Milestone 2 in build order; it blocks nothing (ADR-005).
-- Unplanned intakes captured as backlog tickets: Qdrant vector-store migration (`qdrant-used.md`), GCP deployment via Terraform (`gcp-deployment.md`), and a GitHub Pages chat widget (`intake-gh-pages-chat-widget.md`).
+- Unplanned intakes captured as backlog tickets: Qdrant vector-store migration (`qdrant-used.md`); GCP deployment via Terraform (`gcp-deployment.md`) and a GitHub Pages chat widget (`intake-gh-pages-chat-widget.md`) — the latter two **incepted 2026-10-16 into `epic-gcp-deploy`** (id 8, Milestone 4) and no longer free-floating.
 - Decision (2026-10-14, from the golden-dataset intake): the refusal gap is split — `epic-graceful-decline` (a graceful, contract-conforming insufficiency reply; contract + pipeline) comes first, and `epic-evaluation` entry 13 adds the refusal item class and metrics once a decline has a defined shape. The decline needs a spec touch-up (CAP-2/CAP-3 wording) and possibly an ADR. Raw intake files deleted 2026-10-14; the tickets were created in `529296a`.
