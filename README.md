@@ -115,6 +115,8 @@ uv run pytest -q          # run the test suite
 uv sync                   # rebuild the environment (pins are locked in uv.lock)
 ```
 
+> **Reproducibility:** the full suite opens more file descriptors than the common default soft limit (`ulimit -n 1024`) allows — on such a shell the store tests fail with `OSError: [Errno 24] Too many open files` and the suite looks red when it is not. Raise the limit for the shell (e.g. `ulimit -n 16384`) before running `uv run pytest -q`. Flagged as a small hygiene item (the store tests may not close their Chroma clients) in `_bmad-output/initiative-janbot/deferred-work.md` — not fixed.
+
 The package layout mirrors the architecture:
 
 ```text
