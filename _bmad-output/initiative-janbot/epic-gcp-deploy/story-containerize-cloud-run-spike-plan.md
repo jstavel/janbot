@@ -50,15 +50,15 @@ context: []
 - `src/janbot/store/chroma.py:155-166` — `default_embedder()` uses Chroma's `DefaultEmbeddingFunction` (ONNX `all-MiniLM-L6-v2`); the model must be **pre-downloaded/baked** or the container cold start fetches it.
 - `src/janbot/ingest/__main__.py` — `python -m janbot.ingest` builds the index from the corpus; run **at image build** to bake the index.
 - `public_profile_org/` (~280K) + the built index — copied/built into the image; `JANBOT_INDEX_PATH` → the baked path.
-- `Dockerfile` + `.dockerignore` — **new** (none exists today): multi-stage python 3.12-slim + uv, install from `uv.lock`, bake the index and the ONNX model, `CMD` uvicorn.
+- `Containerfile` + `.dockerignore` — **new** (none exists today): multi-stage python 3.12-slim + uv, install from `uv.lock`, bake the index and the ONNX model, `CMD` uvicorn. Named **`Containerfile`** (OCI-standard, identical syntax; matches the owner's Red Hat/Podman-buildah workflow), so every build passes `-f Containerfile` explicitly (see the task).
 - `tests/test_smoke.py` — existing `/health` coverage; `tests/e2e/` — keyed e2e (not run in this entry).
 - `_bmad-output/initiative-janbot/epic-gcp-deploy/` — the epic, its `tickets.toml`, and this plan; the deploy runbook/evidence land here.
 
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `Dockerfile` — new multi-stage image: python 3.12-slim + uv, deps from `uv.lock`; copy `src/` and `public_profile_org/`; run `python -m janbot.ingest` at build to bake the index; pre-download Chroma's ONNX MiniLM model; set `JANBOT_MODEL_MODE=production`, `JANBOT_INDEX_PATH`/`JANBOT_CORPUS_PATH` to the baked paths; `CMD` uvicorn on `$PORT`. No key, no startup ingest.
-- [ ] `.dockerignore` — exclude `.git`, `.venv`, `tests/`, `mlruns/`, `mlflow.db`, `eval/compiled_*.json`, `__pycache__`, and the local `chroma_db/` (rebuilt in-image).
+- [ ] `Containerfile` — new multi-stage image: python 3.12-slim + uv, deps from `uv.lock`; copy `src/` and `public_profile_org/`; run `python -m janbot.ingest` at build to bake the index; pre-download Chroma's ONNX MiniLM model; set `JANBOT_MODEL_MODE=production`, `JANBOT_INDEX_PATH`/`JANBOT_CORPUS_PATH` to the baked paths; `CMD` uvicorn on `$PORT`. No key, no startup ingest. **Every build invocation is explicit so nothing auto-detects a missing `Dockerfile`:** `podman build -f Containerfile` / `buildah bud -f Containerfile` / `docker build -f Containerfile`; for Cloud Run/Cloud Build pin the path explicitly (`gcloud run deploy --source . --dockerfile=Containerfile`, or a Cloud Build config naming it).
+- [ ] `.dockerignore` — exclude `.git`, `.venv`, `tests/`, `mlruns/`, `mlflow.db`, `eval/compiled_*.json`, `__pycache__`, and the local `chroma_db/` (rebuilt in-image). Keep the **neutral name** `.dockerignore` — Podman reads `.containerignore` first then falls back to `.dockerignore`, and Docker reads `.dockerignore`, so one file serves both.
 - [ ] Build + push to Artifact Registry and deploy to Cloud Run (`--no-allow-unauthenticated`, region `europe-central2`, `--min-instances=0`, hard `--max-instances`, low `--concurrency`, sized `--memory`/`--timeout`), mounting `OPENROUTER_API_KEY` from Secret Manager (hitl).
 - [ ] Attach a **GCP budget + alert** as the financial backstop.
 - [ ] `_bmad-output/initiative-janbot/epic-gcp-deploy/run-e1-deploy.md` — a short runbook + the evidence: the image digest, the revision, the region, and the authenticated probe transcript (hitl).
@@ -89,6 +89,7 @@ context: []
 
 **Commands:**
 - `ulimit -n 16384 && uv run pytest -q` -- expected: green (the full suite needs a raised file-descriptor limit; the default soft limit 1024 makes the store tests fail with EMFILE — see README "Development").
+- Containerfile honour check (hitl — **measure, do not assume**): `gcloud run deploy --help`, and a `--source`/Cloud Build run probing how the current CLI picks the build file (e.g. `gcloud run deploy <svc> --source . --dockerfile=Containerfile` / a Cloud Build config naming `Containerfile`). **Record the flag or config that makes it use `Containerfile`.** If the current CLI does **not** honour a Containerfile path, **record that finding in this plan** and fall back to `podman build -f Containerfile` + push, then `gcloud run deploy --image <ref>`.
 - Authenticated probe (hitl): `curl -s -H "Authorization: Bearer $(gcloud auth print-identity-token)" https://<url>/health` → `{"status":"ok"}`; `POST /chat` → a cited answer.
 - Unauthenticated check: `curl -s -o /dev/null -w '%{http_code}' https://<url>/health` → `403`.
 - Config check: `gcloud run services describe <svc> --region europe-central2` → min/max instances, concurrency, and the mounted secret as intended; the run's `program` param is `baseline`.
