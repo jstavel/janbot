@@ -3,7 +3,7 @@ title: 'Refusal item class and refusal metrics'
 type: 'feature'
 ticket: 13
 created: '2026-10-15'
-status: 'built'
+status: done
 baseline_revision: '3bb97ce'
 route: 'full'
 route_source: 'auto'

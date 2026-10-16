@@ -3,7 +3,7 @@ title: 'Golden dataset class audit'
 type: 'feature'
 ticket: 21
 created: '2026-10-15'
-status: 'built'
+status: done
 baseline_revision: 'd8b1b1a'
 route: 'oneshot'
 route_source: 'auto'

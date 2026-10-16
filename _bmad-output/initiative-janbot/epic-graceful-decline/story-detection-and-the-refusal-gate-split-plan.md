@@ -3,7 +3,7 @@ title: 'Detection and the refusal-gate split'
 type: 'feature'
 ticket: 2
 created: '2026-10-15'
-status: 'built'
+status: done
 baseline_revision: 'd9c4711'
 route: 'full'
 route_source: 'auto'

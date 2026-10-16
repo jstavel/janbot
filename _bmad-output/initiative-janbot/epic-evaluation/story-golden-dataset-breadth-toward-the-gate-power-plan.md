@@ -3,7 +3,7 @@ title: 'Golden dataset breadth toward the gate power'
 type: 'feature'
 ticket: 20
 created: '2026-10-15'
-status: 'draft'
+status: done
 baseline_revision: '134509b'
 route: 'full'
 route_source: 'auto'
