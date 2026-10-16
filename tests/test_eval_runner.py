@@ -236,6 +236,49 @@ def test_run_eval_maps_a_decline_to_the_contract_insufficient_response(
     assert all(o.response is not None for o in result.outcomes)
 
 
+def test_run_eval_carries_the_classified_reason_on_a_decline(tmp_path: Path) -> None:
+    from janbot.pipeline.chat import UncitedAnswer
+
+    uri = _tracking_uri(tmp_path)
+
+    def program(*, question: str) -> ChatResponse:
+        raise UncitedAnswer("the model claimed no sources")
+
+    result = run_eval(
+        _refusal_items(), program, tracking_uri=uri, experiment="janbot-eval"
+    )
+
+    outcome = result.outcomes[0]
+    assert outcome.response is not None
+    assert outcome.response.reason == "personal"
+
+
+def test_run_eval_falls_open_to_out_of_corpus_for_an_unlisted_question(
+    tmp_path: Path,
+) -> None:
+    from janbot.pipeline.chat import UncitedAnswer
+
+    uri = _tracking_uri(tmp_path)
+
+    def program(*, question: str) -> ChatResponse:
+        raise UncitedAnswer("the model claimed no sources")
+
+    items = [
+        GoldenItem(
+            question="What is your favourite music genre?",
+            expected_answer="",
+            expected_sources=[],
+            split="train",
+            should_refuse=True,
+        )
+    ]
+    result = run_eval(items, program, tracking_uri=uri, experiment="janbot-eval")
+
+    outcome = result.outcomes[0]
+    assert outcome.response is not None
+    assert outcome.response.reason == "out_of_corpus"
+
+
 def test_run_eval_maps_an_empty_retrieval_to_a_decline(tmp_path: Path) -> None:
     from janbot.pipeline.chat import EmptyRetrieval
 
@@ -508,6 +551,50 @@ def test_cli_all_declined_items_returns_zero(
     assert "failed:" not in out
     assert "refusal:" in out
     assert "What search infrastructure have you built?" in out
+    assert (
+        "decline: What search infrastructure have you built? — out_of_corpus" in out
+    )
+
+
+def test_cli_renders_the_personal_decline_reason(
+    tmp_path: Path,
+    embedder: Embedder,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dataset = tmp_path / "dataset.yaml"
+    dataset.write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "question": "What is your salary expectation?",
+                    "expected_answer": "",
+                    "expected_sources": [],
+                    "split": "val",
+                    "should_refuse": True,
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    env = {
+        "JANBOT_CORPUS_PATH": str(corpus),
+        "JANBOT_INDEX_PATH": str(tmp_path / "empty-index"),
+        "MLFLOW_TRACKING_URI": _tracking_uri(tmp_path),
+    }
+
+    code = eval_cli.main(
+        ["--dataset", str(dataset)],
+        env=env,
+        embedder=embedder,
+        lm_factory=StubLMFactory(),
+    )
+
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "decline: What is your salary expectation? — personal" in out
+    assert "refusal:" not in out
 
 
 class OffListLMFactory:

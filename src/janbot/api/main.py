@@ -28,7 +28,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import ResponseValidationError
 from fastapi.responses import JSONResponse
 
-from janbot.api.contract import INSUFFICIENT_ANSWER, ChatRequest, ChatResponse
+from janbot.api.contract import ChatRequest, ChatResponse, decline
 from janbot.config import MODEL_MODE_PRODUCTION, load_config
 from janbot.store import Embedder, VectorStore, default_embedder
 
@@ -122,11 +122,7 @@ def create_app(
         try:
             return app.state.program(question=request.question)
         except (EmptyRetrieval, LowRelevance, UncitedAnswer):
-            return ChatResponse(
-                status="insufficient",
-                answer=INSUFFICIENT_ANSWER,
-                citations=[],
-            )
+            return decline(question=request.question)
         except ValueError as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
         except HTTPException:

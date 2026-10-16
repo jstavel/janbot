@@ -22,7 +22,7 @@ from typing import Any
 
 import mlflow
 
-from janbot.api.contract import INSUFFICIENT_ANSWER, ChatResponse
+from janbot.api.contract import ChatResponse, decline
 from janbot.eval.dataset import GoldenItem
 from janbot.eval.judge import Judge, Verdict
 from janbot.eval.metrics import (
@@ -104,11 +104,7 @@ def _evaluate(
             outcomes.append(
                 ItemOutcome(
                     item=item,
-                    response=ChatResponse(
-                        status="insufficient",
-                        answer=INSUFFICIENT_ANSWER,
-                        citations=[],
-                    ),
+                    response=decline(item.question),
                     error=None,
                     retrieved_sources=_retrieved_sources(program),
                     retrieved_context=_retrieved_context(program),

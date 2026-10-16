@@ -101,3 +101,9 @@
   summary: Per-source chunk cap <= N (MMR-style relevance/diversity, e.g. N=2) — keeps source diversity WITHOUT strict dedup's within-source depth loss.
   evidence: 2.11's strict dedup (run 0c01ba33) regressed faithfulness 0.7333 -> 0.4667 (item 22 lost its second edeposit.org subtree -> a new reference failure); the follow-up probe is deterministic (free, no model) — over {23,25,29,32} and the 2.11-destabilised {14,17,19,22,36}.
   status: **someday** — no blocker; do when there is capacity. Not scheduled.
+
+## Review defers (2026-10-16, epic-graceful-decline story 7.3 — decline reason)
+
+- source_plan: `_bmad-output/initiative-janbot/epic-graceful-decline/story-decline-variants-a-personal-question-reply-plan.md`
+  summary: The full test suite needs more open file descriptors than the common default soft limit (1024); on such a shell the store tests fail with `OSError: [Errno 24] Too many open files` and the suite looks red when it is not. The store tests may not be closing their Chroma clients.
+  evidence: Reproduced — `ulimit -n 1024` gives EMFILE failures in `tests/test_store_similarity.py` / `tests/test_store_window.py` (plus an EMFILE during pytest's temp-dir cleanup); `ulimit -n 16384` (and the dev default 524288) gives **464 passed / 0 failed**. This is **not** a correctness defect and **not** order-sensitivity — a reproducibility/hygiene item (hypothesis: unclosed Chroma clients in the store tests). Do not fix in 7.3.
