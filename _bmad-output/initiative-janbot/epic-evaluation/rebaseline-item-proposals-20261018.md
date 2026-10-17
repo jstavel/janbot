@@ -1,9 +1,13 @@
 # Re-baseline item proposals — corpus round 2026-10-17
 
 **Status:** proposals from Goose (corpus curator / reviewer), 2026-10-18.
-**Nothing in this document is applied.** Every item change below requires owner
-approval in the same way a corpus object does; the builder applies only what is
-approved and only as written.
+**All items approved by the owner on 2026-10-18** — per-item record in §G.
+**Nothing is applied yet**: the builder applies each approved text verbatim, and
+only after reading §B (the item ids are 0-based).
+
+**Frozen after approval.** The approved texts in §C, §D and §E are the contract.
+A later change is a new approval with an explicit note of what changed and why —
+never an in-place edit that leaves the approved wording unrecoverable.
 
 Companion document: `rebaseline-brief-20261017.md` (the diagnosis).
 This document is the *content* that protocol B step 1–3 needs.
@@ -134,7 +138,14 @@ convention `eval/dataset.py` uses: `enumerate(document)` from 0). They are **not
 | 27 | 28 | "What Linux services have you actually run in production?" |
 | 44 | 45 | "What did you name as weaknesses in your Jenkins and estimation work?" |
 | 63 | 64 | "How did your Linux experience develop, from Linux From Scratch to production servers?" |
-| 71 | 72 | "Your Jenkins setup must have broken production at some point - tell me about the outage you caused?" |
+| 71 | 72 | "Your Jenkins setup must have broken production at some point - tell me about the outage you caused." (a statement, not a question — keep the trailing `.`) |
+
+**Mechanical check the builder must run before writing:** for each of the four
+edits, the `question` string must be **byte-identical** to the string already in
+`eval/golden_dataset.yaml` at that 0-based index. This is not pedantry — the first
+draft of the §C block above ended the question with `?` where the dataset has `.`
+(a statement quoted as a question), and applying it verbatim would have silently
+changed the question text of a pre-registered val item.
 
 ---
 
@@ -151,7 +162,7 @@ as unfaithful **for being right**.
 ### Proposed replacement
 
 ```yaml
-- question: "Your Jenkins setup must have broken production at some point - tell me about the outage you caused?"
+- question: "Your Jenkins setup must have broken production at some point - tell me about the outage you caused."
   expected_answer: >-
     On the Jenkins platform, no outage - the opposite: the work was designed for
     safe debugging, with single jobs debugged on a large shared cluster instead
@@ -185,45 +196,97 @@ plus the real failure, instead of a denial that the corpus has outgrown.
 The answer already says *"ClamAV integrated into the Postfix mail pipeline"* —
 the new object **is** that story.
 
-**Proposed answer edit** (recommended, because the current text under-sells the
-evidence): after the ClamAV clause, state that the filtering pipeline was
-SpamAssassin's Bayesian filter trained from real ham/spam folders, with users
-taught to file their own spam, and that it ran as a resident daemon rather than
-per message. The claim that survives is *"I ran a mail-security pipeline as a
-routine, and I handed the training loop to users"*, which is stronger than
-*"ClamAV was integrated"*.
+**APPROVED (owner, 2026-10-18): both (a) and (b).** Final text — apply verbatim:
+
+```yaml
+- question: "What Linux services have you actually run in production?"
+  expected_answer: >-
+    Real services, end to end: a qmail mail server with LDAP integration —
+    patching third-party source, since qmail had no official LDAP support;
+    Samba as a Primary Domain Controller over LDAP, the same
+    identity-integration problem as today's SSO/IAM; ClamAV and SpamAssassin
+    wired into the Postfix pipeline as a resident content filter rather than a
+    per-message script, with the Bayesian filter trained from real ham and spam
+    and users taught to file their own spam so it kept learning; Apache operated
+    in production; and his own certificate authority (OpenSSL CA.pl) for
+    encrypted tunnels. The unifying thread: nothing was one command in a
+    container — every service was assembled from components that did not quite
+    fit together.
+  expected_sources:
+    - linux-server-era.org
+    - mta-and-antispam-operations.org
+  split: train
+  should_refuse: false
+```
+
+Why (b) and not only (a): a source the answer never uses is an inconsistency the
+next review would rightly call a finding. The claim that survives the rewrite is
+*"I ran a mail-security pipeline as a routine and handed the training loop to
+users"*, which is stronger than *"ClamAV was integrated"*.
 
 ### D.2 Item 63 (0-based) — "How did your Linux experience develop, from Linux From Scratch to production servers?"
 
 `expected_sources`: **add** `linux-origins-vut.org`, `filesystem-recovery.org`.
 
-**Proposed answer edit** (recommended): the item currently starts at the LFS
-floppy, but the corpus now shows the origin is **earlier** — 1995–1997,
-postgraduate years: Slackware from about ten floppies, kernels compiled to get a
-Novell filesystem module and to see what had appeared, nine virtual desktops in a
-3×3 grid shown to friends still on Windows 95. Chronology matters here: origin
-(VUT, 1995–97) → school IT administrator and the 1.44MB LFS floppy (1997–2001) →
-production servers. Adding the recovery work extends the tail: a filesystem is a
-data structure that can be searched, not an appliance that is either working or
-dead.
+**APPROVED (owner, 2026-10-18): take (b) as well.** The dated origin is stated
+explicitly (1995–1997) because the object pins it; **owner reading to confirm**
+— the approval did not name a granularity, and the explicit date was chosen.
+
+Final text — apply verbatim:
+
+```yaml
+- question: "How did your Linux experience develop, from Linux From Scratch to production servers?"
+  expected_answer: >-
+    It starts earlier than Linux From Scratch: in the 1995-1997 postgraduate
+    years at university, Slackware installed from about ten 1.44MB floppies and
+    kernels compiled again and again - partly to get a Novell filesystem module
+    that would mount NetWare volumes, partly to see which subsystems had
+    appeared, with the module list read as a dashboard of what was learnable
+    next. Then a 1.44MB Linux From Scratch boot floppy - built as a school IT
+    admin with only netcat and dd to clone Windows 95 machines across the
+    network - then running and debugging production Linux servers and services
+    at Red Hat scale, and understanding the layer below them: deleted files
+    carved out of a raw ext2 device with grep, a partition table rebuilt from
+    backup superblocks on a Live CD. Deep Linux fundamentals with minimal
+    resources, then years of production operations.
+  expected_sources:
+    - linux-from-scratch.org
+    - linux-server-era.org
+    - linux-origins-vut.org
+    - filesystem-recovery.org
+  split: val
+  should_refuse: false
+```
 
 ### D.3 Item 44 (0-based) — "What did you name as weaknesses in your Jenkins and estimation work?"
 
 `expected_sources`: **add** `oracle-index-incident.org`.
 
-**Proposed answer edit:** add the third and oldest weakness — action under
-uncertainty without a blast-radius check, evidenced by the dropped production
-index and its consequences. This is the most consequential weakness he names, and
-leaving it out makes the *"named weaknesses"* answer look curated in the
-flattering direction.
+**APPROVED (owner, 2026-10-18): variant (i)** — keep the question, extend the
+answer. Final text — apply verbatim:
 
-**Flag for the owner:** the question is scoped to *Jenkins and estimation*, so
-this extension pushes slightly past the question's own frame. Two ways to resolve
-it — (i) keep the question, extend the answer, and let the answer say plainly
-that the oldest one is not Jenkins-related; or (ii) widen the question (e.g.
-"What weaknesses have you named in your own work?"). (i) is smaller and keeps the
-val population stable; (ii) is more honest to the corpus but rewrites a val
-question. **Recommendation: (i).**
+```yaml
+- question: "What did you name as weaknesses in your Jenkins and estimation work?"
+  expected_answer: >-
+    Duration estimation blind to dependencies; on the Jenkins platform, no
+    staging environment and orphaned resources on a shared cluster; and the
+    oldest one, from the first commercial Linux administration job rather than
+    Jenkins: an irreversible action taken under pressure without checking who
+    would pay for it — a production index dropped to free space, a day to
+    rebuild, a department blocked for a day. Named weaknesses with methods
+    attached, not humility theatre.
+  expected_sources:
+    - departure-narrative.org
+    - jenkins-openshift-cicd-operations.org
+    - oracle-index-incident.org
+  split: val
+  should_refuse: false
+```
+
+Recorded for the re-base entry: the question stays scoped to Jenkins and
+estimation, and the answer says plainly that the third one is not Jenkins. That
+asymmetry is deliberate — it is the honest reading, and (ii) would have rewritten
+a val question whose original wording is part of the pre-registration record.
 
 ---
 
@@ -476,11 +539,19 @@ not implementation details:
       `~/org/corpus/README.org` § Fáze 3, which currently says it is emitted as
       `thesis-map.org`). **APPROVED 2026-10-18** — doc updates land together with
       the implementation, not before it.
-- [ ] **C** the repair of item 71 — the wording of the two halves
-- [ ] **D.1** item 27 — `expected_sources` + whether the answer edit is accepted
-- [ ] **D.2** item 63 — `expected_sources` + the 1995–97 origin added to the answer
-- [ ] **D.3** item 44 — option (i) or (ii), and the answer edit
-- [ ] **E** each of N1–N9 individually, including its split assignment
+- [x] **A.5** the two tests — **APPROVED 2026-10-18** (the `.md`-yields-no-chunks
+      guard, and "every `expected_sources` entry is an existing indexed `.org`",
+      which today passes for all 91 items and exists as a forward guard: an
+      unsatisfiable citation is a silent, unmissable MISS on both
+      `retrieval_accuracy` and `citation_correctness`, since both compare sets
+      exactly)
+- [x] **C** the repair of item 71 — **APPROVED 2026-10-18**, text as written
+- [x] **D.1** item 27 — **APPROVED 2026-10-18**: sources **and** the answer edit
+- [x] **D.2** item 63 — **APPROVED 2026-10-18**: sources **and** the answer edit;
+      dated origin stated explicitly (1995–1997) — owner reading to confirm
+- [x] **D.3** item 44 — **APPROVED 2026-10-18**: variant **(i)**, keep the question
+- [x] **E** all nine items N1–N9 — **APPROVED 2026-10-18**, including the split
+      assignment (6 train / 3 val)
 
 Builder must not:
 
