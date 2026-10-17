@@ -384,13 +384,17 @@
     Real services, end to end: a qmail mail server with LDAP integration —
     patching third-party source, since qmail had no official LDAP support;
     Samba as a Primary Domain Controller over LDAP, the same
-    identity-integration problem as today's SSO/IAM; ClamAV integrated into
-    the Postfix mail pipeline; Apache operated in production; and his own
-    certificate authority (OpenSSL CA.pl) for encrypted tunnels. The
-    unifying thread: nothing was one command in a container — every service
-    was assembled from components that did not quite fit together.
+    identity-integration problem as today's SSO/IAM; ClamAV and SpamAssassin
+    wired into the Postfix pipeline as a resident content filter rather than a
+    per-message script, with the Bayesian filter trained from real ham and spam
+    and users taught to file their own spam so it kept learning; Apache operated
+    in production; and his own certificate authority (OpenSSL CA.pl) for
+    encrypted tunnels. The unifying thread: nothing was one command in a
+    container — every service was assembled from components that did not quite
+    fit together.
   expected_sources:
     - linux-server-era.org
+    - mta-and-antispam-operations.org
   split: train
   should_refuse: false
 
@@ -597,12 +601,18 @@
 - question: "What did you name as weaknesses in your Jenkins and estimation work?"
   expected_answer: >-
     Duration estimation blind to dependencies; on the Jenkins platform, no
-    staging environment and orphaned resources on a shared cluster — named
-    weaknesses with methods attached, not humility theatre.
+    staging environment and orphaned resources on a shared cluster; and the
+    oldest one, from the first commercial Linux administration job rather than
+    Jenkins: an irreversible action taken under pressure without checking who
+    would pay for it — a production index dropped to free space, a day to
+    rebuild, a department blocked for a day. Named weaknesses with methods
+    attached, not humility theatre.
   expected_sources:
     - departure-narrative.org
     - jenkins-openshift-cicd-operations.org
+    - oracle-index-incident.org
   split: val
+  should_refuse: false
 - question: "Are you willing to relocate to another country?"
   split: val
   should_refuse: true
@@ -695,15 +705,25 @@
 
 - question: "How did your Linux experience develop, from Linux From Scratch to production servers?"
   expected_answer: >-
-    From a 1.44MB Linux From Scratch boot floppy - built as a school IT admin
-    with only netcat and dd to clone Windows 95 machines across the network -
-    to running and debugging production Linux servers and services at Red Hat
-    scale: deep Linux fundamentals with minimal resources, then years of
-    production operations.
+    It starts earlier than Linux From Scratch: in the 1995-1997 postgraduate
+    years at university, Slackware installed from about ten 1.44MB floppies and
+    kernels compiled again and again - partly to get a Novell filesystem module
+    that would mount NetWare volumes, partly to see which subsystems had
+    appeared, with the module list read as a dashboard of what was learnable
+    next. Then a 1.44MB Linux From Scratch boot floppy - built as a school IT
+    admin with only netcat and dd to clone Windows 95 machines across the
+    network - then running and debugging production Linux servers and services
+    at Red Hat scale, and understanding the layer below them: deleted files
+    carved out of a raw ext2 device with grep, a partition table rebuilt from
+    backup superblocks on a Live CD. Deep Linux fundamentals with minimal
+    resources, then years of production operations.
   expected_sources:
     - linux-from-scratch.org
     - linux-server-era.org
+    - linux-origins-vut.org
+    - filesystem-recovery.org
   split: val
+  should_refuse: false
 - question: "What monitoring stack did you build for the testing-at-scale proof of concept?"
   expected_answer: >-
     A complete monitoring and observability stack built incrementally: Grafana,
@@ -773,12 +793,22 @@
   split: val
 - question: "Your Jenkins setup must have broken production at some point - tell me about the outage you caused."
   expected_answer: >-
-    No outage is recorded - the opposite: the work was designed for safe
-    debugging, with single jobs debugged safely on a large shared cluster
-    instead of risking the whole instance.
+    On the Jenkins platform, no outage - the opposite: the work was designed for
+    safe debugging, with single jobs debugged on a large shared cluster instead
+    of risking the whole instance. But there is one real production outage, from
+    the first commercial Linux administration job: a database index dropped on a
+    production server under disk pressure to free space, a rebuild that took most
+    of a day (normally done at night), one department slowed for a whole working
+    day - and dismissal at the end of probation. What failed was not technical
+    knowledge but risk assessment: the action was cheap to take and expensive to
+    undo, and the cost fell on a third party. That asymmetry is what he now calls
+    blast radius, and it is why his infrastructure work is plan-first and
+    guardrailed by construction.
   expected_sources:
     - jenkins-openshift-cicd-operations.org
+    - oracle-index-incident.org
   split: val
+  should_refuse: false
 
 - question: "What is Spec-First, and where did it come from?"
   expected_answer: >-
@@ -934,3 +964,183 @@
   expected_sources:
     - audio-transcription-pipeline.org
   split: train
+
+- question: "You give an AI agent access to your infrastructure - how do you stop it from destroying something?"
+  expected_answer: >-
+    By construction, not by trust. The roles the agent runs under simply have no
+    permission to destroy, so an unwanted redeploy is impossible rather than
+    forbidden. On top of that, destroy policies are written per resource instead
+    of as one global switch, because different resources carry different risk;
+    the state bucket is an invariant that is never deleted, only revised, so
+    rollback and audit read the same history; and deployment produces new
+    revisions instead of mutating a running service. The threat model is
+    accidents, not attackers - an agent redeploying because it could, a human
+    applying in the wrong directory, a cleanup removing something the system
+    depends on. It costs more infrastructure code, paid once, against a
+    destroyed state or an unwanted redeploy paid by someone else at the worst
+    moment.
+  expected_sources:
+    - infrastructure-guardrails.org
+  split: train
+  should_refuse: false
+
+- question: "What does blast radius mean in your practice?"
+  expected_answer: >-
+    Judging an action by who pays when it goes wrong, not by how interesting it
+    is. The name comes from a real failure in his first commercial Linux
+    administration job: a production database ran low on disk, and under
+    pressure he dropped an index to free space. The data was safe, but rebuilding
+    the index takes most of a day, one department had a slow system for a whole
+    day, and he was let go at the end of probation. What failed was risk
+    assessment, not technical knowledge - the action was cheap to take and
+    expensive to undo, and the cost fell on a third party. The same person in the
+    same period solved a library-incompatibility problem by chrooting into an
+    older release, because production was treated as a laboratory only inside an
+    isolated directory. Same trait - try it and see - and the difference is
+    containment. That is why the method now carries the boundary: read the plan
+    as a risk document before applying, spike privately instead of experimenting
+    on a shared system, and make irreversible operations impossible to trigger
+    casually.
+  expected_sources:
+    - oracle-index-incident.org
+  split: train
+  should_refuse: false
+
+- question: "Have you ever recovered data from a disk that looked lost?"
+  expected_answer: >-
+    Three times, and two of them started from his own mistakes. Deleted files on
+    an ext2 partition: remount read-only as the first action so nothing
+    overwrites the freed blocks, grep the raw block device for known strings,
+    cut a byte range around each hit, and reassemble by hand. A partition that
+    would not mount because the primary superblock was gone: boot a Live CD, take
+    the disk fully offline, grep the raw device for backup superblocks, derive
+    the original geometry from their positions, and write the partition table
+    back by hand in parted - no formatting and no mkfs until the table is
+    restored and verified, then mount and the data is there. The third was
+    somebody else's NTFS machine: mount read-only, ask the owner what mattered,
+    copy it out, and only then reformat and reinstall. The point each time is the
+    same: a filesystem is a data structure, so if the metadata is damaged the
+    data is still on the medium and can be found by searching for structure.
+  expected_sources:
+    - filesystem-recovery.org
+  split: train
+  should_refuse: false
+
+- question: "How do you go about learning a new technology?"
+  expected_answer: >-
+    He enumerates the surface the system publishes about itself and then tries
+    what is there. The habit started with the Linux kernel in the mid-nineties:
+    compiling a new kernel to see which modules had appeared, with the module
+    list read as a dashboard of what is learnable next. It was not idle
+    curiosity - there was a concrete goal, waiting for the NetWare filesystem
+    module to appear so that Novell volumes could be mounted. Each new subsystem
+    was a door into an area he did not know yet, and understanding followed the
+    attempt rather than preceding it. The same move shows up later wherever a
+    tool exposes its whole surface: reading --help and man pages to find what
+    actually exists instead of guessing at what should exist, and reading a cloud
+    provider's API or a policy engine's documentation the way the module list was
+    once read. The dashboard changed; the reading did not.
+  expected_sources:
+    - linux-origins-vut.org
+  split: train
+  should_refuse: false
+
+- question: "Why did you run the spam filter as a daemon instead of a per-message script?"
+  expected_answer: >-
+    Because the cost is fixed and the volume is not. Starting a Perl interpreter
+    and loading SpamAssassin's rules for every single message multiplies a
+    constant by the traffic, so the filter ran as a resident service that
+    amortises that fixed cost across all mail. He tried spamd with spamc first,
+    which already removed the per-message Perl start, and settled on
+    amavisd-new - a resident process that loads the SpamAssassin engine into
+    itself and reaches the virus scanner as a daemon too, so even the socket hop
+    disappears. It plugged in as a content filter invoked by the Postfix queue
+    manager, with the result reinjected for delivery, and the two MTA instances
+    were chained deliberately: the front end faces the internet, the back end
+    knows the local users.
+  expected_sources:
+    - mta-and-antispam-operations.org
+  split: train
+  should_refuse: false
+
+- question: "Have you worked with hardware security tokens or smartcards?"
+  expected_answer: >-
+    Yes, before it was ordinary. For a project issuing electronic signatures, RSA
+    cards had to work on Linux, which meant first finding a USB reader that
+    worked and then a stack that could reach the card's private key - the older
+    PKCS#11 interface, and then OpenSC, which was the path that worked. What
+    delighted him was discovering that the card could authenticate SSH: the card
+    asks for the key's PIN and the session opens with a key that never touches
+    the disk. He is careful about the level - it was play, not sustained
+    practice, and some details, such as whether the key even had a PIN, he can no
+    longer reconstruct. The durable point is not the configuration: a private key
+    can live in hardware and authentication can be a physical act, which is the
+    same idea modern hardware keys and cloud workload identities are built on.
+  expected_sources:
+    - smartcard-3g-field-ops.org
+  split: train
+  should_refuse: false
+
+- question: "How do you handle credentials and secrets?"
+  expected_answer: >-
+    As one line of evolution rather than a list of tools: values in config files,
+    then environment variables, then secrets encrypted inside git with git-crypt
+    - which taught him that the secret lives in the history, that only rotation
+    removes it, and that code review is blind to it - then Ansible Vault, which
+    required a human at a prompt at every run and was therefore deliberately not
+    automatable, then an external store with leases, then short-lived identities.
+    Each step moves the root of trust from a file, to a human, to an authenticated
+    identity. He is deliberately explicit about where he stands: encrypted secrets
+    in a repo and an external secret store are years of real delivery practice;
+    workload identity is being built now, in his own project, so it is verifiable
+    in the repository rather than asserted in an interview. The rule he designs
+    towards is "the best secret is no secret" - which does not mean no
+    authentication and no secret store, it means no long-lived credential in the
+    workload's hands: the workload proves what it is and where it runs, and
+    exchanges that for a token that lives for minutes, is scoped to one piece of
+    work, and expires.
+  expected_sources:
+    - secret-management-evolution.org
+  split: val
+  should_refuse: false
+
+- question: "Have you ever had to maintain someone else's legacy code?"
+  expected_answer: >-
+    Yes, and it taught him delivery without architecture. An information system
+    for a law firm in PHP: complicated, extended module by module, debug output
+    read in the browser, iterated until it worked, client satisfied. The honest
+    limit is that he never got the architect's view - he carried the complexity
+    without ever fully seeing it, and to this day does not fully know why that
+    system was written the way it was. The contrast is what came after: Django's
+    admin handed him a complete create/read/update/delete environment and he
+    recognised the structure immediately, and on the same project KSS plus AJAX
+    rendered only the affected fragment on the server and swapped it into the
+    page - single-page-application behaviour a decade before SPAs. His own
+    summation: he is not the person who reverse-engineers a legacy system for its
+    own sake; he is the person who keeps it delivering and reaches for structure
+    when the tooling provides one.
+  expected_sources:
+    - php-to-django-arc.org
+  split: val
+  should_refuse: false
+
+- question: "How do you debug a problem you cannot reproduce locally?"
+  expected_answer: >-
+    By putting the observation point where the state actually lives and entering
+    it from the outside. The old ritual: find the line where the interesting
+    state exists, insert a pdb breakpoint there, run the development server under
+    pdb from Emacs, and drive the application through the browser as a user
+    would until the breakpoint hits - the browser is the reproducer, so what gets
+    inspected is the state that really occurs rather than a reconstruction. When
+    the failing state existed only on the running system, he used the same
+    breakpoint on production in a chosen quiet evening window and fixed the
+    defect with the debug output enabled. He names that honestly as containment
+    by timing and judgement rather than by design, and it is the exception that
+    keeps the "smallest reproduction" rule honest: when the state cannot be
+    reproduced outside production, shrinking is impossible and containment is the
+    substitute. Today the same class of problem would get a replica, a staged
+    deploy or a feature flag.
+  expected_sources:
+    - pdb-emacs-debugging.org
+  split: val
+  should_refuse: false

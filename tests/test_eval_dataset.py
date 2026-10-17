@@ -149,15 +149,15 @@ def test_empty_document_is_rejected(tmp_path: Path) -> None:
     assert str(path) in str(excinfo.value)
 
 
-def test_golden_dataset_is_a_37_train_54_val_stratified_split() -> None:
+def test_golden_dataset_is_a_43_train_57_val_stratified_split() -> None:
     everything = load_golden_dataset(SEED_DATASET)
     train = load_golden_dataset(SEED_DATASET, split="train")
     val = load_golden_dataset(SEED_DATASET, split="val")
 
-    assert len(everything) == 91
+    assert len(everything) == 100
     assert {item.split for item in everything} == {"train", "val"}
-    assert len(train) == 37
-    assert len(val) == 54
+    assert len(train) == 43
+    assert len(val) == 57
     assert train == [item for item in everything if item.split == "train"]
     assert val == [item for item in everything if item.split == "val"]
 
@@ -165,9 +165,9 @@ def test_golden_dataset_is_a_37_train_54_val_stratified_split() -> None:
 def test_split_manifest_maps_each_split_to_its_indices() -> None:
     manifest = split_manifest(load_golden_dataset(SEED_DATASET))
 
-    val = [1, 4, 6, 9, 12, 14, 17, 19, 20, 22, 23, 25, 29, 32, 36, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 82, 83, 84, 85, 86, 87, 88]
+    val = [1, 4, 6, 9, 12, 14, 17, 19, 20, 22, 23, 25, 29, 32, 36, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 82, 83, 84, 85, 86, 87, 88, 97, 98, 99]
     assert manifest["val"] == val
-    assert manifest["train"] == [i for i in range(91) if i not in set(val)]
+    assert manifest["train"] == [i for i in range(100) if i not in set(val)]
 
 
 def test_split_filter_none_is_all_and_unknown_split_is_empty(tmp_path: Path) -> None:

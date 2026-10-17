@@ -235,3 +235,11 @@ def test_private_note_changes_no_ranked_retrieval(
     assert all("Private shared content." not in (row["text"] or "") for row in after)
 
 
+def test_thesis_map_is_a_markdown_meta_document_not_an_org_object() -> None:
+    """The extract is a manual step, so pin the artifact, not only the mechanism."""
+    corpus = Path(__file__).resolve().parents[1] / "public_profile_org"
+
+    assert (corpus / "thesis-map.md").is_file()
+    assert not (corpus / "thesis-map.org").exists()
+
+
