@@ -1,0 +1,124 @@
+:PROPERTIES:
+:ID:       20261017-oracle-index-incident
+:TITLE:    Blast radius — the production index I dropped in my first sysadmin job
+:CREATED:  <2026-10-17>
+:REVIEWED: <2026-10-17>
+:AUTHOR:   goose
+:DOMAIN:   carrier-stories way-of-working
+:TAGS:     blast-radius irreversibility production oracle incident stress probation seznam risk-management chroot failure
+:SYNOPSIS: In his first commercial Linux administration job he dropped an index on a production Oracle database to free space, spent a day paying for it, and lost the job in probation — the failure was not technical knowledge but the absence of blast-radius thinking under uncertainty, and that is the discipline he has designed around ever since.
+:STRENGTHS:  honesty-about-failure retrospective-depth systems-thinking self-diagnosis
+:WEAKNESSES: action-under-uncertainty irreversibility-blind-spot
+:END:
+
+# Blast radius — the production index I dropped in my first sysadmin job
+
+Use when asked about a failure, about production judgement, or about why the
+author insists on plan-first and private spikes. This is the origin story, and
+it is told without decoration.
+
+* What happened
+
+The first commercial Linux administration job: Seznam.cz, at a time when
+**Postfix did not exist yet** — Sendmail and Qmail were the mail servers in the
+building, and when a spam wave hit, the admins sat down and cleaned the queues by
+hand.
+
+#+begin_renegotiated date=2026-10-17 by=owner
+old: 'a time when Postfix and Exim did not exist yet'
+new: 'a time when Postfix did not exist yet (Exim existed by then, and he worked
+      with it separately)'
+why: owner's review. The original telling said neither Postfix nor Exim existed;
+     he then recalled that he *did* work with Exim, which advertised itself as
+     curing Sendmail's problems through modularity. Facts: Exim 1.0 is 1995,
+     Postfix first shipped as VMailer in 1998. The dated claim that survives is
+     only the absence of Postfix; the MTA sequence in his own experience is
+     Sendmail → Exim → Postfix.
+#+end_renegotiated
+
+The production Oracle database ran low on disk and the system became slow.
+Under pressure — *"I have to do something, I have to do something, so what can
+I do"* — he dropped an index to free space. He knew the data itself was safe.
+What he did not know was the **cost of the operation**: rebuilding the index
+takes most of a day (normally scheduled for the night). One department had a
+slow system for a whole day. He was let go at the end of probation.
+
+* What actually failed
+
+Not the technical knowledge. The **risk assessment**:
+
+- **Irreversibility.** The action was cheap to take and expensive to undo, and
+  that asymmetry was never checked before the action.
+- **Blast radius.** The cost did not fall on him; it fell on a third party (a
+  department that could not work). This is the part he keeps naming.
+- **The heuristic.** Under uncertainty the reflex was *"I'll do something and
+  see what happens"* — a naive, risky move that he recognises in himself to
+  this day and consciously guards against.
+
+* The same week, the same person — the counter-example
+
+The same period contains the opposite evidence. A database (Oracle or Sybase)
+would not run because of system library incompatibilities (`libc.so` and
+similar). Rather than shuffling library versions on the host, he tried
+**chroot into an older stable Debian** — the binaries found the libraries they
+expected, and it worked. It became the team's systematic solution.
+
+Both outcomes have the **same source**: curiosity plus "let me try it". The
+difference is not talent or caution — it is **containment**. In the chroot case
+production was treated as a laboratory only inside an isolated directory; in
+the index case an irreversible change was made directly on a production system.
+
+That sentence is the whole object: *the trait that produces the good work is the
+same trait that produced the failure; what differs is the boundary around it.*
+
+* What it changed
+
+The design rules this person now builds by did not come from a course, they
+came from this:
+
+- **plan before apply**, and read the plan as a risk document;
+- **private spike** instead of experimenting on a shared system;
+- **`prevent_destroy`** and resource-level destroy policies — an operation that
+  cannot be undone must be impossible to trigger casually;
+- **small, low-risk reproduction loops** on shared infrastructure
+  (see [[id:20261008-cicd-jenkins-openshift][the mini-seed pattern]]);
+- **immutable, versioned state** instead of in-place mutation
+  (see [[id:20261017-infrastructure-guardrails][guardrails by construction]]).
+
+* The culture he remembers — and why it matters
+
+It was, in his words, a very pleasant place: an open space, senior Linux people
+he admired, and when a spam attack came, everyone sat down at their machines
+and worked the queues. The founder walked in to discuss the newest technology
+trends **and asked the engineers for their opinion** — which, to a young admin,
+felt strange and then felt like being part of a family.
+
+That is also a data point about the environments he seeks: technical seniors to
+learn from, and leadership that talks to engineers as peers.
+
+* Honest self-assessment
+
+He still calls it *"my fuck-up"* without softening it: dropping an index on a
+production database was a real fuck-up. What he takes from it is not shame but a
+named internal alarm: when he notices the "do something and see" pressure, that
+is the moment to stop and check the blast radius. The failure mode is known,
+named, and designed against — which is the only honest way to present it.
+
+* Sources
+
+- corpus/texts/20261017-oracle-index-incident-transcript.txt
+  — the account in the author's own words: the job, the mail era, the slow
+    production Oracle, the dropped index and its day-long rebuild, the
+    probation dismissal; the chroot/libc success in the same period; the
+    open-space culture and the founder asking engineers' opinions; the
+    self-diagnosis of the "do something and see" reflex.
+  git ref: cd4c23784fe519457dbe197aff58081411ce51d6:corpus/texts/20261017-oracle-index-incident-transcript.txt
+- User recollection (2026-10-17, chat, during review) — the Exim correction and
+  the MTA sequence: he worked with Exim, which presented itself as removing
+  Sendmail's problems through modularity; its configuration felt considerably
+  simpler because of that modularity, though it took him a long time to get into
+  it; then came Postfix, where modularity sat *within a few files*.
+  sha256: n/a (chat context, no external file)
+- Naming policy (2026-10-16, owner): the employer may be named (Seznam.cz,
+  a short first engagement). Internal details — department, database, index,
+  colleagues, systems — stay anonymous.

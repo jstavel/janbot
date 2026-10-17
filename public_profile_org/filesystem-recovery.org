@@ -1,0 +1,147 @@
+:PROPERTIES:
+:ID:       20261017-filesystem-recovery
+:TITLE:    Filesystem forensics on a student's Linux — carving, superblocks, partition tables
+:CREATED:  <2026-10-17>
+:REVIEWED: <2026-10-17>
+:AUTHOR:   goose
+:DOMAIN:   projects carrier-stories
+:TAGS:     linux ext2 ext3 superblock partition-table data-recovery forensics grep live-cd knoppix ntfs gparted
+:SYNOPSIS: Two recoveries he can retrace step by step — deleted files carved out of a raw ext2/3 device with grep, a partition table rebuilt from backup superblocks on a Live CD — plus a third where a read-only mount saved the data, the owner decided what mattered, and the disk was reformatted: the filesystem as a data structure, and a blast-radius reflex exercised years before it was named.
+:STRENGTHS:  deep-system-knowledge methodical-recovery comfort-below-the-abstraction self-learning
+:WEAKNESSES: self-inflicted-incident destructive-shell-habit memory-reconstruction-risk
+:END:
+
+# Filesystem forensics on a student's Linux — carving, superblocks, partition tables
+
+Use when asked about Linux depth, incident composure, or "have you ever really
+broken something". Two recoveries he can retrace step by step — both starting
+from his own mistakes — and one rescue of somebody else's Windows machine where
+the value was access to the data and the decision was left to its owner.
+
+* Recovery 1 — deleted files, ext2
+
+It started with his own `rm -rf` on a filesystem that mattered, with `rm`
+aliased so that it never asked. He still remembers the heat of the moment.
+
+The procedure, in this order:
+
+1. **Remount the affected partition read-only immediately.** First action, before
+   thinking further — every write can overwrite the freed blocks.
+2. **grep the raw block device** (`/dev/hda6`, in the extended partition) for
+   known text strings.
+3. For each hit, extract a **chunk of bytes around the match** and collect them
+   in a directory.
+4. Reassemble the pieces by hand.
+
+Honest attribution: the method was found on a blog, not invented — a tool or
+procedure of that era, possibly related to the GParted family. What was his was
+the decision order: **freeze first, search the raw device second, reassemble
+third.** With ext3 and its journal the same class of recovery became much easier.
+
+* Recovery 2 — lost superblock, partition not mountable
+
+The partition would not mount; the primary superblock was gone.
+
+1. **Take the disk completely offline**: boot a Live CD (Knoppix, later a
+   Parted/GParted live image), attach a large external USB disk as the
+   destination for anything recovered.
+2. **grep the raw device for backup superblocks** — not for text, for metadata.
+3. From the positions of the backup superblocks, **derive the original geometry**
+   (cylinders, heads, offsets, partition start in blocks).
+4. Write the **partition table back by hand in `parted`**, exactly to the computed
+   geometry. No formatting, no `mkfs`, nothing that writes over the data, until
+   the table is restored and verified.
+5. Mount. The data was there.
+
+He describes the moment the table worked as one he remembers to this day.
+
+* Rescue 3 — NTFS: mount read-only, save the data, then reinstall
+
+The value here was never a repair. It was **access to the data**, and a decision
+left to the person who owned the machine.
+
+The situation: in the early NTFS era, friends' Windows machines often ended up in
+a state where the boot-time recovery/administrator mode offered very few options
+and frequently did not solve the problem.
+
+What he actually did:
+
+1. Booted Linux from a CD.
+2. Mounted the NTFS volume **read-only**.
+3. Asked the owner the only question that mattered: *"is there anything you want
+   to save?"*
+4. Copied out what mattered.
+5. The disk was then **reformatted and Windows reinstalled**. Nothing else was
+   attempted.
+
+No repair was performed, and he is clear that he does not believe he had the
+tools for an NTFS repair at the time — which matches the era: the Linux NTFS
+driver was read-only, safe write support arrived much later, and `ntfsfix` only
+clears the dirty flag so that *Windows itself* runs `chkdsk`. Repairing an NTFS
+volume from a Linux CD was simply not on the table.
+
+**Why it was worth doing** — answering his own later doubt (*"it doesn't make
+much sense, they could just boot their own CD"*): Windows setup and the recovery
+console gave no way to reach files on a sick volume. A Linux CD did. So the
+reinstall happened anyway, but **without data loss and without the risk of
+formatting over something that mattered**. The benefit was real; it was just not
+the benefit the first recollection claimed.
+
+**The correction itself is part of the object.** The first version of this memory
+said *"they didn't have to reinstall"*; the actual outcome was: data rescued,
+disk reformatted, Windows reinstalled. What survived the years reliably was the
+**scene** and the **act of asking before destroying** — the method and even the
+outcome had been retro-fitted with later knowledge. This is the same failure mode
+the corpus guards against elsewhere: a memory that becomes more coherent than the
+event probably was.
+
+Also from that period: cloning disks over the network in GParted.
+
+* What it demonstrates
+
+- **The filesystem is a data structure, not an appliance.** If the metadata is
+  damaged, the data is still on the medium and can be found by searching for
+  structure.
+- **A safe order of operations beats a clever tool**: freeze writes, work on a
+  copy or an offline device, rebuild metadata, verify, and only then mount.
+- **The irreversible step belongs to the person who pays for it.** Before
+  formatting someone else's disk he asked what they wanted to keep — the
+  blast-radius reflex, exercised casually years before it was given that name
+  and long before the production incident that made it a rule.
+- **Comfort below the abstraction.** No layer of the stack is magic; it can be
+  opened, read and reasoned about.
+- The same pull as building a Linux From Scratch on a floppy
+  ([[id:20261007-linux-from-scratch][LFS on 1.44MB]]) and the same lesson from the
+  other side as the production index incident
+  ([[id:20261017-oracle-index-incident][blast radius]]).
+
+* Open question, recorded live
+
+Where is the equivalent today? Kubernetes, containers and managed disks put the
+raw device out of reach; the "geek operation" of the block-device era has no
+obvious cloud-native counterpart. He names this as something he *wants to test*
+in the new environment — a learning direction, not a claim of expertise.
+
+* Sources
+
+- corpus/texts/20261017-lowlevel-data-recovery-transcript.txt
+  — the three recoveries in the author's own words: the `rm -rf` and read-only
+    remount, grep carving on `/dev/hda6`, the method's external origin, ext3's
+    effect; the superblock loss, Live CD boot, backup-superblock search,
+    geometry derivation and manual partition-table write in parted; the NTFS
+    rescues for Windows users and network cloning in GParted.
+  git ref: cd4c23784fe519457dbe197aff58081411ce51d6:corpus/texts/20261017-lowlevel-data-recovery-transcript.txt
+  Review note (2026-10-17, owner): the first harvest said "mounted or repaired"
+  and implied GParted's NTFS recovery worked — both overstated the transcript.
+  A first correction marked the method as unreconstructed. The author then
+  recalled the actual sequence: read-only mount, ask the owner what to save,
+  copy it out, reformat the disk, reinstall Windows — **no repair attempt**, and
+  he does not believe he had NTFS repair tools then (consistent with the era:
+  read-only driver, `ntfsfix` defers to Windows `chkdsk`). The section was
+  rewritten to that sequence. Note that the *outcome* was corrected too: they
+  did reinstall; what was saved was the data.
+- corpus/texts/20261017-lowlevel-cloud-question-transcript.txt
+  — the open question: do experiments of this kind (superblock search, raw
+    recovery) have any equivalent in Kubernetes / container / cloud
+    environments; a stated intention to try.
+  git ref: cd4c23784fe519457dbe197aff58081411ce51d6:corpus/texts/20261017-lowlevel-cloud-question-transcript.txt

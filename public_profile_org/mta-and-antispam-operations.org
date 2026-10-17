@@ -1,0 +1,211 @@
+:PROPERTIES:
+:ID:       20261017-mta-and-antispam-operations
+:TITLE:    Mail plumbing as a routine — MTA eras, ClamAV + SpamAssassin, and teaching users to train their own filter
+:CREATED:  <2026-10-17>
+:REVIEWED: <2026-10-17>
+:AUTHOR:   goose
+:DOMAIN:   projects way-of-working
+:TAGS:     sendmail qmail exim postfix spamassassin clamav milter sa-learn bayesian spam-corpus training users enablement mail-pipeline dual-instance spamd spamc amavisd-new qmgr content-filter amortisation capacity
+:SYNOPSIS: Three mail eras in one practice — sendmail and qmail queues, Exim's modularity, then Postfix where a filtering daemon (amavisd-new driving ClamAV and SpamAssassin) sat between two MTA instances so Perl never started per message — and the part that became a skill: a routine antispam pipeline trained on real spam, with users taught to file their own spam so the filter kept learning.
+:STRENGTHS:  mail-pipeline-operations dataset-driven-tuning user-enablement teaching repeated-routines ecosystem-judgement capacity-reasoning amortisation
+:WEAKNESSES: adoption-by-drift dates-relative-only
+:END:
+
+# Mail plumbing as a routine — MTA eras, ClamAV + SpamAssassin, and teaching users to train their own filter
+
+Use when asked about running real services, about email infrastructure, or about
+"how do you get other people to adopt something". The interesting part is not
+which MTA won; it is that a mail-security pipeline became a **routine**, and then
+a **capability handed to users**.
+
+* Three MTA eras — and only one of them had a reason
+
+| Era | Configuration model | What it cost him |
+|---|---|---|
+| **Sendmail / Qmail** | Sendmail's monolithic `sendmail.cf`; Qmail as the alternative | spam waves meant the admins sat down and cleaned queues by hand |
+| **Exim** | advertised as **curing Sendmail's problems through modularity** | the modular config *was* considerably simpler — and yet **it took him a long time to get into it** |
+| **Postfix** | modularity **within a few files**, each with an obvious role | the one that finally stuck — and it "just smoothly started being used" |
+
+That last line is worth keeping honest: **there was no decision.** Postfix drifted
+in. Infrastructure adoption frequently works like that — a tool enters through a
+colleague, a distribution default or a project need, and the rationalisation comes
+afterwards. Naming it as drift, rather than inventing a comparison study, is the
+accurate record.
+
+* The modularity lesson — it is not about the number of files
+
+Exim was the modular one, and it was still slow to learn. Postfix was also
+modular, and it was quick. The difference is not file count:
+
+- Exim's modularity **moved** the complexity into a configuration language you
+  still had to learn as a whole.
+- Postfix's split matched **roles he already had in his head**: something accepts,
+  something queues, something delivers. Fewer concepts to hold, not fewer lines.
+
+Stated as a rule: **the value of modularity is measured by the mental model it
+removes, not by how many files it produces.** The same criterion appears
+elsewhere in this corpus — `array_map` instead of a `for` loop
+([[id:20261007-perl-clojure-gateway][the functional seed]]), the Django admin
+instead of writing CRUD by hand
+([[id:20261017-php-to-django-arc][the Django era]]), a mini-seed instead of
+reseeding the whole job stack
+([[id:20261008-cicd-jenkins-openshift][small blast radius]]). In every case the
+question is *what does this take off my plate*, not *how sophisticated is it*.
+
+* What actually became a skill — the mail security pipeline
+
+Antispam and antivirus were not one-off configurations; they were **installed
+repeatedly, as routine**:
+
+- **ClamAV** for viruses and **SpamAssassin** for spam, both wired into the
+  **Postfix** pipeline (the Milter path).
+- **SpamAssassin** is Perl-based and **Bayesian**: `sa-learn` is fed examples of
+  ham and of spam, and the filter's scoring improves from them.
+- The repetition is the point. Anyone can install a package once; the competence
+  is in the pipeline that survives upgrades, new users and changing traffic.
+
+* The throughput decision — a filtering daemon between two MTA instances
+
+The antispam was not bolted on as a per-message script. It ran as a **service**,
+and the reason is a calculation rather than a taste: starting a Perl interpreter
+and loading the filter's rules **for every single message** is expensive, and cost
+is multiplied by volume. Running the filter as a resident daemon **amortises that
+fixed cost across all traffic**.
+
+Two components carried that reasoning, and he tried the first before choosing the
+second:
+
+- **`spamd` + `spamc` first** — SpamAssassin as a resident daemon, each message
+  handled by a small client that talks to it over a socket. It works, and it
+  already removes the per-message Perl start.
+- **`amavisd-new` in the end** — a **resident Perl process that loads the
+  SpamAssassin engine into itself** (`Mail::SpamAssassin`) and reaches the virus
+  scanner as a daemon too. Even the client/server hop disappears: one long-lived
+  process holds both engines warm, and the per-message Perl start is gone
+  entirely.
+
+Where it plugged in is the part he remembers as *"part of the qmgr"* — correctly:
+**the Postfix queue manager invokes the content filter**, handing each message to
+`amavisd-new`, which scans it and **reinjects** the result back into Postfix for
+delivery. So the filter is a stage inside Postfix's own queue machinery, not a
+wrapper around the whole server:
+
+```
+instance A (accepts)  →  qmgr  →  amavisd-new (resident: SpamAssassin + clamd)  →  reinject  →  instance B (delivers)
+```
+
+The two chained instances were his deliberate choice: mail handed from one to the
+next, each side with its own queue and its own policy — the front end faces the
+internet, the back end knows the local users.
+
+**One term to keep straight**, because it changes who gets the credit:
+
+- Postfix was **never "split into two processes"** — it is *by design* a pipeline
+  of many small daemons, each doing exactly one thing (`master.cf` defines the
+  daemons; `main.cf` the parameters). That split is the software's architecture,
+  not a decision of his.
+- What **was** his decision is the **two MTA instances** chained around the filter
+  — the documented way to run a content filter without making the same instance
+  both the front door and the delivery agent.
+- And there is a third reading worth naming, because it may be the truest one:
+  **the reinjection hop itself feels like two MTAs.** Mail goes out of the queue
+  manager into `amavisd-new` (port 10024) and comes back in through a **second
+  submission listener** (10025) before being delivered. Two listening ports, mail
+  arriving twice, handed from one side to the other — which is exactly what "two
+  MTAs passing mail to each other" describes, even when it is one Postfix
+  installation with a content filter.
+
+So the memory is right at the level that matters (mail handed between two MTAs,
+filter resident because Perl is expensive per message) and loose in one label
+(processes vs instances).
+
+**Why it is evidence worth keeping:** it is **capacity reasoning**, not
+configuration trivia — fixed cost ÷ volume, and a queue boundary drawn where the
+policies differ. The same instinct as keeping a warm connection pool instead of
+reconnecting, and the same instinct as loading a model once rather than per
+request.
+
+* The part he enjoyed most — handing the training loop to users
+
+The filter was not tuned only by the administrator. Users **kept their spam in a
+folder**, and their own antispam learned from that folder; he **taught them how to
+train it themselves**.
+
+That is a different kind of work from operating mail servers, and it has three
+quiet requirements:
+
+1. **A convention that survives without him** — a predictable place to put the
+   spam, so the loop keeps running when he is not there.
+2. **An explanation short enough to be repeated** — the user must understand *why*
+   moving mail into that folder helps, or the loop stalls.
+3. **Willingness to give away the control** — the tuning stops being the admin's
+   private craft and becomes a shared capability.
+
+The outcome is the same shape as the best work in this corpus: build the tool
+around how people actually work, then make them able to operate it
+([[id:20261007-intranet-pattern][intranet pattern]],
+[[id:20261007-mentoring-downchain][mentoring down-chain]]).
+
+* Why this is more than nostalgia about mail servers
+
+- **Training on a labelled corpus is the same shape as everything else he does
+  now.** Ham and spam in two folders is a labelled dataset; `sa-learn` improves a
+  measurable score from it. That is the same instrument as the JanBot golden
+  dataset and its eval gate
+  ([[id:20261007-janbot-ai-agent][JanBot]],
+  [[id:20261015-janbot-value-proposition][what the eval is for]]) and as Reactive
+  Testing's evidence-first verification
+  ([[id:20261007-reactive-testing-origin][Reactive Testing]]). Twenty years apart,
+  same move: **turn a felt judgement into data you can measure against.**
+- **The user-facing half is the harder half.** Installing the filter is
+  engineering; getting people to keep feeding it is product and teaching work.
+- **He enjoyed it because of the training set** — the pleasure was in the loop
+  closing, not in the configuration files.
+
+* Honest limits
+
+- **Dates are relative, not pinned.** The Exim period sits before SpamAssassin
+  existed (first release April 2001), which is consistent with his own reporting
+  that he never put antispam into Exim — there was nothing to install yet, in his
+  setup.
+- **`SA-Exim` existed** (SpamAssassin shipped an Exim integration), so the absence
+  of antispam in Exim is evidence about *timing and path*, not about possibility.
+- **Postfix's arrival had no deliberate reason.** Recorded as drift.
+- **The filter stack is remembered at last** — `spamd`+`spamc` tried first,
+  `amavisd-new` chosen in the end, hooked in through the Postfix queue manager.
+  What is *not* remembered are version numbers and the exact `master.cf` lines;
+  the object claims the arrangement, not the configuration text.
+- No claim is made here about scale (users, volume) — that detail is not
+  remembered and is not needed for the lesson.
+
+* Sources
+
+- User recollection (2026-10-17, chat) — the whole object: the three MTA eras
+  (sendmail/qmail queue cleaning, Exim's modularity and its learning cost,
+  Postfix's few-file modularity and its unreasoned arrival), **ClamAV +
+  SpamAssassin installed as routine in Postfix**, the filtering **daemon running as
+  a service so Perl was not started per message** (`spamd`+`spamc` tried first,
+  then **`amavisd-new`**, hooked in through the Postfix **qmgr** as a content
+  filter), his **choice of a dual-MTA arrangement** (two chained instances) for
+  that reason, SpamAssassin trained on a set of emails, and **users taught to keep their own spam folder so their own
+  filter learned from it**.
+  sha256: n/a (chat context, no external file)
+- corpus/texts/20261017-oracle-index-incident-transcript.txt — the mail-era
+  context being lived through: Sendmail and Qmail as the servers, and the admins
+  cleaning queues by hand during spam waves.
+  git ref: cd4c23784fe519457dbe197aff58081411ce51d6:corpus/texts/20261017-oracle-index-incident-transcript.txt
+- Apache SpamAssassin facts (checked 2026-10-17): Perl-based (`Mail::SpamAssassin`),
+  first release 20 April 2001, Bayesian filtering via `sa-learn`, usable standalone
+  or as a subprogram of another application (Milter, `SA-Exim`). Used only to date
+  the Exim period relative to the antispam era.
+  url: https://en.wikipedia.org/wiki/Apache_SpamAssassin
+- Postfix architecture facts (checked 2026-10-17): Postfix is "many daemons serving
+  exactly one purpose", organised as pipelines of processes that pass
+  responsibility from one to the next; `main.cf` holds parameters and `master.cf`
+  defines daemon processes; performance beyond the intrinsic limit is reached by
+  submitting into **different MTA instances**. Used to separate "the pipeline is
+  Postfix's design" from "the two chained instances were his decision".
+  url: https://en.wikipedia.org/wiki/Postfix_(software)
+- Related corpus objects: 20261008-linux-server-era (ClamAV in the Postfix
+  pipeline), 20261007-intranet-pattern, 20261007-mentoring-downchain,
+  20261015-janbot-value-proposition.

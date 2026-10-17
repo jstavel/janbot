@@ -1,0 +1,241 @@
+:PROPERTIES:
+:ID:       20261017-linux-origins-vut
+:TITLE:    "Linux forever" — how the devotion started: kernel builds and nine desktops
+:CREATED:  <2026-10-17>
+:REVIEWED: <2026-10-17>
+:AUTHOR:   goose
+:DOMAIN:   carrier-stories attitudes
+:TAGS:     linux origins vut kernel fvwm window-manager virtual-desktops motivation self-learning slackware debian apt rpm ncpfs novell package-management
+:SYNOPSIS: The origin of a 25+ year Linux line in the 1995–1997 postgraduate years: Slackware from ten floppies, kernels compiled to get a Novell module and to see what new subsystems had appeared — the module list read as a dashboard of what is learnable — a gradient title bar and nine desktops shown to friends still on Windows 95, then Red Hat's RPM pain replaced by Debian's dependency resolution: intrinsic motivation, a repeatable learning method, and an early ecosystem judgement, not a career plan.
+:STRENGTHS:  intrinsic-motivation long-term-commitment hands-on-curiosity teaching-peers ecosystem-judgement
+:WEAKNESSES: enthusiasm-not-a-deliverable
+:END:
+
+# "Linux forever" — how the devotion started: kernel builds and nine desktops
+
+Use when asked "how did you get into Linux" or when the conversation needs to
+show sustained motivation rather than a list of skills.
+
+* The setting
+
+The window is pinned: **postgraduate studies at VUT Brno, 1995–1997** (Advanced
+Control Theory and C++ Programming). That date matters, because it fixes what was
+and was not possible at the time — Windows 95 shipped in August 1995, and the
+episode below is a direct comparison against it.
+
+The evenings looked like this: *"the guys went to the pub and I sat there and
+installed things"* — kernel configuration and builds (`make config` / `xconfig`,
+`make bzImage`, `make zImage`), again and again, because it was interesting.
+
+The distribution history inside that window, in the order it happened:
+
+1. **Slackware**, installed from roughly **ten 1.44MB floppies**, swapped one
+   after another. An act of patience, and the entry point.
+2. **Red Hat** — the RPM years. This is where the dependency pain was felt (see
+   below).
+3. **Debian** — the relief, and the reason he stayed.
+
+The **`testing`** branch came later: `testing` only came into being around 2000,
+so working with it belongs to a later phase of the Linux line, not to the
+postgraduate window. Recorded separately here so the two eras are not blurred
+into one.
+
+* The moment he remembers
+
+He had a graphical environment and discovered he could configure a **gradient in
+the window title bar**, from light blue to dark blue — and, importantly, that
+setting it up **took deliberate work**. He also had **nine virtual desktops** in a
+3×3 grid.
+
+#+begin_renegotiated date=2026-10-17 by=owner
+old: 'the window manager he remembers as "FWM2" — almost certainly FVWM2'
+new: 'a window manager of the FVWM family — fvwm2 or, plausibly, AfterStep'
+why: owner's review. He remembers the gradient setup precisely and confirms it
+     cost him real effort, but concedes it may have been AfterStep rather than
+     fvwm2. Both were used, and trying out different environments was itself part
+     of the fun — so the object now names the family and keeps the uncertainty
+     instead of asserting one WM. Also applied in * Sources below.
+#+end_renegotiated
+
+He showed it to his friends, who were running Windows 95 and had none of it.
+They were, in his words, completely floored — *"what is that?"*. He kept
+demonstrating: watch, I move windows between desktops, look at the title bar.
+Later he even installed a Windows 95 utility that added virtual desktops, so his
+own desktop felt right everywhere.
+
+An aside that is really the point: **trying out different environments was the
+fun itself** — window managers were swapped and configured for the pleasure of
+seeing what each one could do. The gradient was not a product; it was a thing
+worth spending an evening on.
+
+He sums it up as *"that was the beginning of my Linux era, when I said Linux
+forever"* — and he has been on Linux continuously since.
+
+* The goal was not the kernel — it was Novell volumes
+
+Worth naming, because it is the difference between fiddling and engineering:
+there was a **reason** to build the kernel. He wanted to **mount Novell
+(NetWare) volumes** from Linux, and he remembers waiting for the **NetWare
+filesystem module to appear in the kernel** so that he could attach them.
+
+That is a concrete capability goal driving low-level work: read what the kernel
+offers, wait for the module, build it, mount the thing. The same shape as every
+later episode — the goal is to *make a real system do a real thing*, and the
+layer below is a tool, not a hobby in itself.
+
+* The module list as a dashboard of what can be learned
+
+The NetWare module was a reason, not the only reason. The deeper motive was
+plain curiosity: **compile a new kernel and see what has appeared in it.** Every
+release brought new subsystems, and each one was a door into an area of the
+system he did not know yet — suspend to disk, suspend to RAM, new filesystems,
+network protocols, hardware support.
+
+Hence the formulation worth keeping, in his own words: **the module list was his
+dashboard — a menu of what is interesting and what he could learn next.**
+
+That is a learning method, not a hobby:
+
+- **Enumerate the capability surface, then pick what to try.** You do not need a
+  curriculum; the system publishes its own syllabus. The kernel's module list was
+  the first dashboard he used this way.
+- **Learn by making the thing work.** Understanding followed the attempt — read
+  what the subsystem offers, build it, mount it, suspend the machine, watch what
+  happens.
+- **The habit outlived the kernel.** The same move appears later wherever a tool
+  exposes its full surface: reading `--help` and man pages to find what actually
+  exists rather than guessing at what should exist, and reading a cloud
+  provider's API or a policy engine's documentation the same way a module list
+  was once read. The dashboard changed; the reading did not.
+
+A dating note, since the window of this object is pinned to 1995–1997 and the
+habit is not. Confirmed during review: **he kept compiling kernels for a long
+time after the postgraduate years**, so the suspend examples belong to that later
+stretch — APM-era suspend on laptops existed first, while ACPI-based
+suspend-to-RAM and suspend-to-disk came later than the window above. The habit is
+what this object claims, not the dates of individual subsystems.
+
+* The distribution judgement — RPM meant manual dependencies, Debian did not
+
+This is the part that is not nostalgia at all. Having run **Red Hat**, where
+resolving package dependencies by hand was *"horrendous"*, he moved to **Debian**
+and experienced what he still calls a **revolution**: a tool that pulled the
+whole dependency chain for you. The consequence was disbelief that an RPM-based
+distribution survived at all — not a preference between two flavours, but a
+judgement about which one wastes the user's time.
+
+One detail worth getting right, because the object should not carry a wrong
+date. He first remembered the revolution as **`dpkg` / `apt-get`**; APT's first
+release is **31 March 1998** and it first shipped in Debian 2.1 on **9 March
+1999** — after the postgraduate window. Asked during review, he confirmed the
+tool was in fact **`dselect`**, and remembers it specifically:
+
+- a **very particular interface**, unlike anything he had used before;
+- **interactive** in a way that felt *revolutionary for its time*;
+- and genuinely hard to learn — *"it took me a lot of work to understand its
+  logic"*.
+
+`apt-get` actually began as the project to replace `dselect` (codenamed
+"Deity", commissioned in 1997) and is the name the capability later inherited.
+So: the experience is real, the tool is confirmed, and the label arrived a year
+or two later — the same pattern as in
+[[id:20261017-filesystem-recovery][the NTFS rescue]], where the memory kept the
+result and re-dated the method.
+
+Read in hindsight, that judgement was **correct for its era**: `apt` gave Debian
+automatic dependency resolution while RPM-based systems still required chasing
+dependencies manually (the good automated resolvers came later). What looked
+like disbelief was a working engineering criterion, applied early and stated
+plainly: *a distribution that makes me resolve dependencies by hand is wasting
+the only resource I cannot get back.*
+
+That criterion has not changed — it reappears as the choice of package managers,
+the refusal to accumulate hand-managed tooling on CI agents
+([[id:20261008-cicd-jenkins-openshift][images over agent sprawl]]), and the
+preference for `uv` and lockfiles in current work. The transferable trait is not
+"I liked Debian", it is **judging a tool by what it removes from the human's
+plate**.
+
+* The other OS in the room — FreeBSD, watched rather than adopted
+
+At Seznam.cz — the same open space that produced the production incident
+([[id:20261017-oracle-index-incident][blast radius]]) — one of the admins ran
+**FreeBSD**. He eyed it: another Unix, a different base-system and packaging
+philosophy, chosen by someone working next to him.
+
+What he actually did was **try it a few times** — not adopt it. The honest
+framing matters here: this is curiosity without conversion, and it says two
+things at once. He **notices what the people around him use and takes it
+seriously**; and he **does not switch tools merely because they are
+interesting**. The evaluation was real; the commitment never happened. No claim
+of FreeBSD competence is made in this object.
+
+* Why this is evidence, not nostalgia
+
+- **Intrinsic motivation.** Nobody assigned the kernel builds or the window
+  manager configuration. The reward was making the machine genuinely his and
+  understanding it from the bottom.
+- **Continuity.** The same pull — build it yourself, understand the layer below —
+  recurs across the whole career: a Linux From Scratch on a floppy
+  ([[id:20261007-linux-from-scratch][LFS]]), a custom C++ allocator with canary
+  bytes ([[id:20261007-cpp-memory-allocator][operator new]]), recovering filesystems
+  from raw devices ([[id:20261017-filesystem-recovery][forensics]]), smartcards
+  ([[id:20261017-smartcard-3g-field-ops][hardware auth]]) and today an AI agent
+  built end to end ([[id:20261007-janbot-ai-agent][JanBot]]).
+- **Teaching by demonstration.** The first thing he did with a working system was
+  show someone else how it worked — the same impulse that later shows up as
+  mentoring.
+- **A repeatable learning method.** "The module list is my dashboard" is not a
+  metaphor for enthusiasm — it is a procedure: read the system's own inventory of
+  capabilities, pick the interesting ones, and learn by making them work. It
+  scales from kernel modules to CLI flags to cloud APIs.
+- **Ecosystem judgement, formed early.** The Debian-over-RPM conclusion was a
+  real criterion applied at the right time, not a preference dressed up later.
+  It is the same judgement that shows up in choosing a package manager, in
+  refusing hand-managed tooling on CI agents, and in preferring lockfiles today.
+
+* The honest caveat
+
+This is enthusiasm, not a deliverable — with one exception: the distribution
+judgement *is* a deliverable-grade argument, because it can be stated,
+justified and carried into a current decision. Its value to a recruiter is
+therefore twofold: twenty-five years of continuous, self-directed use, and a
+habit of choosing tools by understanding them rather than by fashion. It
+explains the depth — it is not itself proof of it.
+
+* Sources
+
+- ~/dev/cv/cv-en.tex (line 133) — the date anchor for the whole episode:
+  `\cventry{1995--1997}{Postgraduate Studies}{VUT}{Brno}{}{Advanced Control
+  Theory and C++ Programming.}`
+  git ref: 562111f:cv-en.tex
+- User recollection (2026-10-17, chat, corrected same day) — the additions to
+  this object: the order **Slackware → Red Hat → Debian** (an earlier telling had
+  Debian before Red Hat; the author corrected it during review); kernel
+  builds motivated by wanting to mount **Novell/NetWare** volumes while waiting
+  for the NetWare filesystem module to appear; **Slackware from ~10 × 1.44MB
+  floppies**; the move to **Debian testing**; and the early disbelief about Red
+  Hat, because manual RPM dependency resolution was painful while Debian had it
+  solved; the explicit statement that this belongs to the 1995–1997
+  postgraduate years; and the learning method — kernel builds driven by curiosity
+  about what appeared in each release (suspend to disk, suspend to RAM, other
+  subsystems), with **the module list read as a dashboard of what is interesting
+  and what can be learned next**; the confirmation that the tool was **`dselect`**
+  (particular interface, interactive, felt revolutionary at the time, hard to
+  learn the logic of) rather than `apt-get`; that kernel compilation continued
+  long after the postgraduate years; and the **FreeBSD** episode at Seznam.cz —
+  an admin who ran it, Jan eyeing it, trying it a few times, not adopting it.
+  sha256: n/a (chat context, no external file)
+- APT release facts (checked 2026-10-17, Wikipedia/APT): first release
+  31 March 1998; first shipped in Debian 2.1 on 9 March 1999; `apt-get` began as
+  the `dselect` replacement project commissioned in 1997. Used only to keep the
+  object from dating `apt-get` into 1995–1997.
+  url: https://en.wikipedia.org/wiki/APT_(software)
+- corpus/texts/20261017-linux-origins-vut-transcript.txt
+  — the author's account: VUT Brno, technical cybernetics, postgraduate kernel
+    builds, the gradient title bar and 3×3 desktops (window manager of the FVWM
+    family, fvwm2 or AfterStep — corrected 2026-10-17), the Windows 95 comparison and
+    the added desktop utility, "Linux forever", the memory of the feeling.
+  git ref: cd4c23784fe519457dbe197aff58081411ce51d6:corpus/texts/20261017-linux-origins-vut-transcript.txt
+- Related corpus objects: 20261007-linux-from-scratch, 20261007-cpp-memory-allocator,
+  20261017-filesystem-recovery.

@@ -1,0 +1,95 @@
+:PROPERTIES:
+:ID:       20261017-pdb-emacs-debugging
+:TITLE:    The debugging ritual — put the observation point where the state is
+:CREATED:  <2026-10-17>
+:REVIEWED: <2026-10-17>
+:AUTHOR:   goose
+:DOMAIN:   way-of-working
+:TAGS:     debugging pdb python django plone emacs breakpoints reproducing-issues
+:SYNOPSIS: For years the standard debugging move was `import pdb; pdb.set_trace()` in the line that mattered, the server run under pdb from Emacs and the app driven through the browser until the breakpoint hit — and when the failing state existed only on the running system, the same breakpoint used on production in a quiet evening window, with the debug output enabled to fix the defect live: observe real state rather than guess it, and contain the pause by timing and judgement.
+:STRENGTHS:  methodical-debugging observation-over-guessing tooling-craft
+:WEAKNESSES: containment-by-timing-not-by-design
+:END:
+
+# The debugging ritual — put the observation point where the state is
+
+Use when asked "how do you debug?" — the answer is a small, concrete habit, not a
+philosophy.
+
+* The ritual
+
+1. Find the line where the interesting state exists.
+2. Insert `import pdb; pdb.set_trace()` **there**, in the source.
+3. Start the development server **under pdb, from Emacs** (`M-x pdb`).
+4. Drive the application through the browser as a user would, until the
+   breakpoint is reached.
+5. Trace the actual state in the editor — variables, call stack, the values that
+   are really there.
+
+This was a **regular, near-ritual operation** during the Django and Plone years,
+repeated for every non-obvious defect.
+
+* Why it is the right shape
+
+- **The browser is the reproducer.** The path into the bug is the real user path,
+  so what is inspected is the state that actually occurs, not a reconstruction.
+- **The debugger is where the state is inspectable.** One breakpoint in the right
+  place replaces a cycle of printing values, redeploying and guessing.
+- **Observation before hypothesis.** It is a discipline against the "I think it
+  must be X" reflex.
+
+* Production as a live laboratory — the breakpoint on the running system
+
+The ritual was not confined to a laptop. When a problem could not be reproduced
+anywhere else — because the failing state existed **only** on the running system
+— he used the same breakpoint on the **live version, in the evening, directly on
+the production server**: *"if it was not a problem at that hour"*. The process
+stopped at the chosen line, he inspected the real state, and with the **debug
+output enabled** he could **fix the defect online**.
+
+That is a deliberate production intervention, and its containment was **timing
+and judgement**: a quiet evening, a known low-traffic window, a breakpoint placed
+where the state was worth pausing the service for. Not elegance — a calculated,
+chosen pause.
+
+**What it cost, stated honestly.** Stopping a server process at a breakpoint
+means requests wait; enabling debug output makes tracebacks and internals
+visible and changes behaviour (caching, verbosity, sometimes configuration
+validation). It worked because the window was chosen, the fault was understood,
+and the fix was small. This is **containment by judgement and timing, not by
+design** — the same class of decision as dropping the production index
+([[id:20261017-oracle-index-incident][blast radius]]), but taken with the blast
+radius weighed first. Today the same problem would be attacked with a local
+reproduction, a replica, a staged deploy or a feature flag; the honest record is
+that at that time, on that system, a careful evening breakpoint was the
+instrument that existed.
+
+**And the limit of the "smallest instance" rule.** The transfer below says: build
+the smallest copy of the path that you can drive from outside. This episode is
+the exception that keeps that rule honest — **when the failing state cannot be
+reproduced outside production, shrinking is impossible and containment becomes
+the substitute.** Knowing which of the two situations you are in is the skill.
+
+* Transfer
+
+The tooling is era-specific (Python 2, pdb, Emacs); the transferable rule is not:
+*place the observation point where the state lives, and enter it from the
+outside.* The same instinct appears much later as the **mini-seed** pattern for
+debugging shared CI configuration
+([[id:20261008-cicd-jenkins-openshift][a small, real reproduction loop before
+touching the shared system]]) and in the evaluation-first approach of
+[[id:20261007-reactive-testing-origin][Reactive Testing]]: reproduce and observe
+before changing anything.
+
+* Sources
+
+- corpus/texts/20261017-pdb-emacs-debugging-transcript.txt
+  — the ritual described in the author's own words: `import pdb;
+    pdb.set_trace()`, server run under pdb from Emacs, breakpoint reached
+    through the browser, state traced in the editor; used in Django and Plone.
+  git ref: cd4c23784fe519457dbe197aff58081411ce51d6:corpus/texts/20261017-pdb-emacs-debugging-transcript.txt
+- User recollection (2026-10-17, chat) — that the breakpoint was used on the
+  **live version** of the system, in the evening, **directly on the production
+  server**, when it was judged that pausing the service was not a problem; and
+  that with debug output enabled he could fix the defect **online**.
+  sha256: n/a (chat context, no external file)

@@ -1,0 +1,79 @@
+:PROPERTIES:
+:ID:       20261017-infrastructure-guardrails
+:TITLE:    Guardrails by construction — make destructive operations impossible, not merely forbidden
+:CREATED:  <2026-10-17>
+:REVIEWED: <2026-10-17>
+:AUTHOR:   goose
+:DOMAIN:   way-of-working projects
+:TAGS:     infrastructure-as-code opentofu terraform guardrails blast-radius destroy-protection immutability state yubikey 2fa rbac janbot
+:SYNOPSIS: Infrastructure safety is treated as a property of the design rather than of the operator's discipline — hardware 2FA, roles with no permission to destroy, state that is never deleted but only revised, and per-resource destroy policies written into the infrastructure definition itself.
+:STRENGTHS:  safety-by-design blast-radius-awareness infrastructure-discipline defence-in-depth
+:WEAKNESSES: none-identified
+:END:
+
+# Guardrails by construction — make destructive operations impossible, not merely forbidden
+
+Use when asked about infrastructure safety, IaC discipline, or giving an agent
+access to a real environment. The claim is one sentence: **an operation that
+must never happen accidentally should be impossible, not discouraged.**
+
+* Layers, not a single lock
+
+| Layer | Control | What it stops |
+|-------|---------|---------------|
+| Human | hardware 2FA (YubiKey) on personal and administrative accounts | compromised credentials; password-only access |
+| Identity | roles in the OpenTofu environment have **no permission to destroy** | an agent or a mistyped apply removing resources |
+| Resource | per-resource destroy policy — some buckets and services are defined as non-destroyable | a blanket permission removing something that must exist |
+| State | the state bucket is an **invariant**: it cannot be deleted, only revised | losing the record of what exists |
+| History | every change creates a new revision, revisions are retained for a defined period | silent overwrite; no rollback, no audit trail |
+| Delivery | deployments produce new revisions rather than mutating a running service | "in-place" changes that cannot be rolled back |
+
+The important detail is granularity: the destructive rules are **not global
+switches, they are written into the definition of each bucket and each service**.
+Different resources carry different destructive policies because they carry
+different risk.
+
+* Why the state bucket is the clearest example
+
+State is the one artefact whose loss is not recoverable from the repository — it
+records what actually exists. So it is protected at the level of the
+infrastructure definition:
+
+- it **cannot be deleted**;
+- changes are **new revisions**, retained for a defined period;
+- rollback and audit both read the same history.
+
+The formulation used: *state is not overwritten, it is revised.*
+
+* The design intent — accidents, not attackers
+
+The threat model here is not primarily malicious. It is:
+
+- an **agent** redeploying something because it had the permission to;
+- a **human** running an apply in the wrong directory;
+- a **cleanup** that removes a resource the system depends on.
+
+That is why "the deploy role cannot redeploy by accident" is described as
+**accident prevention**, not just least privilege. The same reasoning as the
+mini-seed pattern in CI ([[id:20261008-cicd-jenkins-openshift][small blast
+radius by design]]) and the same lesson as the production index incident
+([[id:20261017-oracle-index-incident][blast radius]]): the boundary has to be
+built before the pressure arrives.
+
+* What it costs, honestly
+
+More objects, more policy, more infrastructure code, and more things to keep in
+sync. Accepted deliberately: the cost of writing a guardrail is paid once, the
+cost of a destroyed state or an unwanted redeploy is paid by someone else, at
+the worst moment.
+
+* Sources
+
+- corpus/texts/20261017-infrastructure-guardrails-transcript.txt
+  — hardware 2FA on personal accounts; roles that cannot destroy; per-bucket
+    and per-service differences in destructive policy; the state bucket as a
+    non-deletable invariant, versioned with retained revisions.
+  git ref: cd4c23784fe519457dbe197aff58081411ce51d6:corpus/texts/20261017-infrastructure-guardrails-transcript.txt
+- corpus/objects/20261017-secret-management-evolution/ — the identity layer
+  this guardrail set sits on (service accounts, short-lived impersonated
+  tokens).

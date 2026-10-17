@@ -1,0 +1,121 @@
+:PROPERTIES:
+:ID:       20261017-smartcard-3g-field-ops
+:TITLE:    Hardware authentication and field operations — the card in the reader, the modem in the bag
+:CREATED:  <2026-10-17>
+:REVIEWED: <2026-10-17>
+:AUTHOR:   goose
+:DOMAIN:   projects carrier-stories
+:TAGS:     smartcard opensc pkcs11 nss ssh 3g minicom ericsson remote-administration hardware physical-layer
+:SYNOPSIS: Two hands-on episodes from the same instinct — making a smartcard authenticate SSH on Linux through OpenSC's PKCS#11 provider, and administering servers remotely from the field over 3G with minicom and a phone — evidence that the physical and transport layers are not treated as magic.
+:STRENGTHS:  hardware-curiosity pki-hands-on self-reliance field-operations
+:WEAKNESSES: practice-not-sustained some-details-remembered-imprecisely
+:END:
+
+# Hardware authentication and field operations — the card in the reader, the modem in the bag
+
+Use when the conversation needs evidence of *hands-on with the layer below the
+API*: a private key that never leaves a card, and a server reached from a field
+with a serial terminal.
+
+* The card as the key
+
+The context was the NEPodpis project ([[id:20261007-nepodpis][PKI for blind Linux
+clients]]): RSA cards had to work on Linux, and a USB reader that worked there had
+to be found first. Two stacks existed for reaching a card's private key — an older
+PKCS#11 interface and the newer **OpenSC**, which was the path that worked.
+
+The part he remembers as *"that was cool"*: while exploring how Linux wires
+identity together — the layer that had already evolved from `/etc/passwd` to
+`/etc/shadow` and then to a **pluggable mechanism configured under `/etc`**, whose
+entries loaded `.so` objects — he discovered the card could be used for **SSH
+authentication**. Insert the card, run `ssh`, the card asks for the private key's
+PIN, and the session opens with a key that never touches the disk.
+
+#+begin_renegotiated date=2026-10-17 by=owner
+old: 'after configuring the security sources through NSS ... he discovered the card
+      could be used for SSH authentication'
+new: 'while exploring the pluggable identity layer in /etc (which is NSS — Name
+      Service Switch) he discovered that a card could be used for SSH
+      authentication, which is enabled by PKCS#11, not by NSS'
+why: owner's review. His recollection was right about *which layer he was reading*
+     — NSS, configured under /etc, with `.so` modules and a progression from
+     /etc/passwd to /etc/shadow — but NSS is name/identity *lookup*, it does not
+     authenticate anything. The card's participation in SSH comes from the PKCS#11
+     provider (OpenSC's `opensc-pkcs11.so`), and for interactive logins from PAM
+     (`pam_pkcs11.so`). Three adjacent `/etc` layers with `.so` modules blurred
+     into one memory; the object now separates them. Also applied to :SYNOPSIS:.
+#+end_renegotiated
+
+Honest framing, in his words:
+
+- it was **play, not discipline** — it never became daily practice;
+- he may have created the key **without a PIN**, a one-shot decision he
+  remembers imprecisely and cannot now reconstruct;
+- the exact details of the older library and the configuration are gone.
+
+* Three `/etc` layers that are easy to confuse — and were
+
+Worth separating once, because they sit side by side, are all configured under
+`/etc`, and all load `.so` objects:
+
+| Layer | Config | Modules | What it does | Does it authenticate? |
+|---|---|---|---|---|
+| **NSS** (Name Service Switch) | `/etc/nsswitch.conf` | `libnss_files.so`, `libnss_ldap.so`, … | *looks up* users, groups, hosts — which source answers the question | **no** — resolution only |
+| **PAM** | `/etc/pam.d/*` | `pam_unix.so`, `pam_pkcs11.so`, … | decides whether a claimed identity may log in | **yes** |
+| **PKCS#11 provider** | `~/.ssh/config`, `ssh -I` | `opensc-pkcs11.so` | exposes a private key that lives on the card | **no** — it supplies the key |
+
+The card's private key was reachable because OpenSSH spoke PKCS#11 to OpenSC, not
+because of NSS. NSS is the layer he was *reading about* at the time — and the
+distinction is exactly the kind of detail that separates familiarity from
+understanding.
+
+The durable point is not the configuration: it is that **a private key can live in
+hardware and authentication can be a physical act** — the same idea today's
+hardware security keys and cloud workload identities are built on
+([[id:20261017-secret-management-evolution][secret management evolution]]).
+
+* The field: a server, a phone and 3G
+
+With the arrival of 3G he set up remote administration from anywhere:
+
+- an **Ericsson T65** connected over USB, a 3G SIM;
+- **minicom** started, the **dial-up sequence** typed to open the data channel
+  (the numbers and AT-style sequences he no longer remembers verbatim);
+- then administration through the terminal: Apache or another service, a few
+  commands, then waiting.
+
+His memory of the feeling is precise even though the commands are gone:
+*"I have a laptop and I can administer a server remotely"* — an obvious thing
+today, an astonishing one then, and he loved it.
+
+* What the two episodes share
+
+- **The physical layer is not magic.** Readers, cards, modems, serial lines:
+  they can be assembled by hand into a working path.
+- **Self-reliance over waiting for support.** If no supported product exists, he
+  will build the path from what is available — the same with a Linux From Scratch
+  on a floppy ([[id:20261007-linux-from-scratch][LFS]]) and with raw block devices
+  ([[id:20261017-filesystem-recovery][filesystem forensics]]).
+- **Delight in the capability itself.** The reward is the working thing, not the
+  certificate.
+
+* Sources
+
+- corpus/texts/20261017-smartcard-3g-ops-transcript.txt
+  — the author's account: the NEPodpis card research, PKCS#11 vs OpenSC, the USB
+    reader, NSS configuration and the `/etc/passwd` → `/etc/shadow` → NSS
+    history, the card as an SSH key with a PIN, the "it was play, not
+    discipline" self-assessment and the uncertain PIN decision; the Ericsson T65,
+    3G SIM, minicom, dial-up sequence and remote server administration from the
+    field.
+  git ref: cd4c23784fe519457dbe197aff58081411ce51d6:corpus/texts/20261017-smartcard-3g-ops-transcript.txt
+- User recollection (2026-10-17, chat, during review) — clarifying the NSS memory:
+  "it was a layer in Linux under /etc, it defined policies for /etc/passwd, `.so`
+  objects were mentioned, but I don't remember exactly what it was called."
+  That identifies the layer as **NSS / Name Service Switch** (`/etc/nsswitch.conf`,
+  `libnss_*.so`) — resolution, not authentication. The card/SSH path is PKCS#11
+  (`opensc-pkcs11.so`), and interactive logins go through PAM (`pam_pkcs11.so`).
+  sha256: n/a (chat context, no external file)
+- Related corpus objects: 20261007-nepodpis (the project itself),
+  20261008-linux-server-era (PKI groundwork), 20261017-secret-management-evolution
+  (the trust-anchor line this belongs to).

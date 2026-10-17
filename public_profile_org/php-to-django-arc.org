@@ -1,0 +1,101 @@
+:PROPERTIES:
+:ID:       20261017-php-to-django-arc
+:TITLE:    From patching legacy PHP to server-rendered components — one web era in review
+:CREATED:  <2026-10-17>
+:REVIEWED: <2026-10-17>
+:AUTHOR:   goose
+:DOMAIN:   projects carrier-stories
+:TAGS:     php legacy wordpress django django-admin kss ajax spa server-side-rendering components cdbazar
+:SYNOPSIS: Maintaining a legacy PHP system taught delivery by iteration but never gave architectural grasp; Django 0.98's admin did, and KSS/AJAX partial re-rendering produced SPA-like behaviour a decade before SPAs — the component boundary arriving before the framework.
+:STRENGTHS:  pragmatic-delivery component-thinking rapid-development iteration
+:WEAKNESSES: architectural-grasp-arrived-late legacy-system-comprehension
+:END:
+
+# From patching legacy PHP to server-rendered components — one web era in review
+
+Use when asked about the web-development years, about legacy code, or about
+"what did you learn from the era before frameworks". The arc has three stages,
+and the honest part is that the architectural understanding came with the
+framework, not with the years.
+
+* Stage 1 — PHP, delivery by iteration
+
+As an independent contractor he took over and extended an **information system
+for a law firm, written in PHP**. The system was complicated; he extended it
+module by module, followed the debug output in the browser, and iterated until it
+worked. The client was satisfied.
+
+The honest limit, stated by him: **he never got the architect's view.** There was
+no moment of "now I understand the core principles", and to this day he does not
+fully know why that system was written the way it was. He *carried* the complexity
+without ever fully *seeing* it.
+
+Around the same period: WordPress — templates, hosting configuration,
+`.htaccess`, debugging other people's installations. High uncertainty each time,
+usually ending well, always by iteration rather than by model.
+
+One seed worth keeping: he used `array_map` and `array_filter` instead of `for`
+loops instinctively. It made the code shorter and the mental model simpler — a
+functional instinct years before it had a name in his toolchain
+(see [[id:20261007-perl-clojure-gateway][the Perl→Clojure gateway]]).
+
+* Stage 2 — Django 0.98: the admin as a finished CRUD environment
+
+Then came Django **0.98**, and the discovery that a complete create/read/update/
+delete environment already existed: the Django admin. It became the core of his
+intranet-style projects, including [[id:20261007-cdbazar][cdbazar]], and he pushed
+its extension points as far as they went.
+
+He also learned its limits the hard way: a filter over many rows **without
+pagination** produced a request that appeared to hang for ten minutes. Lesson
+taken: use a framework's standard parts deliberately, not maximally.
+
+His standing conclusion, still held: if he had to build an intranet **tomorrow**,
+he would start with the Django admin.
+
+* Stage 3 — KSS + AJAX: the page as independent fragments (pre-SPA)
+
+On the same project, when AJAX appeared, he combined it with an idea from the
+Plone world: **KSS (Kinetic Style Sheets)**, where a block of a page is declared
+dynamic, rendered on the server by a specific view.
+
+The resulting design:
+
+- the page is split into **independent fragments**, each with its own template,
+  its own view and its own refresh cycle (e.g. a shopping-cart widget showing the
+  order count);
+- an action renders **only the fragment affected by it** on the server;
+- that HTML comes back over AJAX and replaces the fragment's content
+  (`innerHTML` replace) on the client.
+
+It behaved like a single-page application **before SPA existed**, and the goal was
+explicit: do not re-render the whole page for a partial change. The architecture
+kept server-side rendering while getting the interaction feel of a client-side
+app — the same trade-off that decades later returns as islands, htmx and
+server components.
+
+* What the arc says
+
+- **Delivery first, architecture later.** The PHP years prove he could keep a
+  business system running and growing without a full model of it; the Django years
+  prove that when a coherent structure was available he recognised it immediately
+  and used it.
+- **Component boundaries were an instinct before they were a framework.** The KSS
+  fragment design is the same idea as today's component architecture, arrived at
+  from the server side.
+- **Honest limitation.** He is not the person who will reverse-engineer and
+  re-architect a legacy system for its own sake; he is the person who will keep it
+  delivering and reach for structure when the tooling provides one.
+
+* Sources
+
+- corpus/texts/20261017-php-django-ajax-arc-transcript.txt
+  — the author's account: legacy PHP information system for a law firm, the
+    missing architectural grasp, WordPress and `.htaccess` work, `array_map`/
+    `array_filter`; Django 0.98 and the admin; the unpaginated-filter incident;
+    KSS, fragment templates, server-side partial rendering and `innerHTML`
+    replacement as a pre-SPA pattern.
+  git ref: cd4c23784fe519457dbe197aff58081411ce51d6:corpus/texts/20261017-php-django-ajax-arc-transcript.txt
+- Related corpus objects: 20261007-cdbazar (the project this arc ran on),
+  20261007-perl-clojure-gateway (the functional seed), 20261007-intranet-pattern
+  (intranets as tools for people).
