@@ -28,7 +28,7 @@ Ports-and-adapters: every caller reaches JanBot only through the `POST /chat` JS
 
 Key invariants: fail-closed scope filter (only `public_profile_org/` is indexed) and scoped retrieval (only chunks located within `JANBOT_CORPUS_PATH` can be retrieved, so an out-of-corpus chunk never reaches the prompt or a citation), org subtree chunking with a retrievable file-root chunk (no naive text splitters), Pydantic as the single source of truth for the API contract, and a test layer that is never modified to accommodate a change in the AI core.
 
-`public_profile_org/` is JanBot's source of truth, itself an extract of the wider personal corpus SSOT (`~/org/corpus/views/work-profile/index.org`); it is updated only by re-extraction, never edited in place.
+`public_profile_org/` is JanBot's source of truth, itself an extract of the wider personal corpus SSOT (`~/org/corpus/views/work-profile/index.org`); it is updated only by re-extraction, never edited in place. It carries two document kinds: `.org` files are evidence and are indexed; `.md` files are meta documents, kept for readers and never indexed.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
 

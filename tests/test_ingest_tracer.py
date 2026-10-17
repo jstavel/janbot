@@ -105,3 +105,19 @@ def test_non_org_files_ignored(
 
     assert [path.name for path in iter_org_files(corpus)] == ["example.org"]
     assert index_corpus(corpus, index_path, embedder) == 4
+
+
+def test_markdown_meta_document_contributes_zero_chunks(
+    tmp_path: Path, embedder: Callable[[list[str]], list[list[float]]]
+) -> None:
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    (corpus / "thesis-map.md").write_text(
+        "# Thesis map\n\n## A thesis\n- Claim: a restatement of other files.\n"
+    )
+    (corpus / "example.org").write_text(FIXTURE_FILE.read_text())
+    index_path = tmp_path / "index"
+
+    assert [path.name for path in iter_org_files(corpus)] == ["example.org"]
+    assert index_corpus(corpus, index_path, embedder) == 4
+

@@ -1,12 +1,3 @@
-:PROPERTIES:
-:ID:       20261017-thesis-map
-:TITLE:    Thesis map — five claims, their evidence, and the gap that would falsify each
-:CREATED:  <2026-10-17>
-:DOMAIN:   way-of-working
-:TAGS:     thesis evidence status proven supported held gaps honesty anti-overclaiming
-:SYNOPSIS: Five claims about how this person works, each with its evidence, its result, an honest status (proven | supported | held) and the gap that would falsify it — a held thesis is never presented as proven, and the gaps are stated when asked what is missing.
-:END:
-
 # Thesis map — five claims, their evidence, and the gap that would falsify each
 
 The frame: **steering an AI agent, raising children and mentoring a junior are one
@@ -16,7 +7,7 @@ Five theses, each with a claim, its evidence, its result, an honest status, and 
 gap that would falsify it. Statuses: *proven* (a result exists) · *supported* (evidence, no
 measured outcome) · *held* (direction felt, mechanism not yet pinned).
 
-* The gardener frame — steering a partner that knows more than any individual
+## The gardener frame — steering a partner that knows more than any individual
 - Claim: one discipline governs every collaboration — a model, a junior, a child, a
   peer: unconditional respect, and guidance by *steering the direction* rather than
   micromanaging, because command fails against a partner whose knowledge exceeds any
@@ -34,7 +25,7 @@ measured outcome) · *held* (direction felt, mechanism not yet pinned).
 - Gap: **no formal people-management role — leading a *team* is the untested scale**;
   no controlled test that the method transfers; "gardener" is a frame, not a model.
 
-* Spec-first — define "done" with the stakeholder before starting
+## Spec-first — define "done" with the stakeholder before starting
 - Claim: work starts from an agreed definition of "done", written down before
   implementation, because a shared artifact is the one thing a stakeholder and an
   AI agent can both be held to — and the artifact, not the chat, is where the work
@@ -49,7 +40,7 @@ measured outcome) · *held* (direction felt, mechanism not yet pinned).
 - Gap: not shown to transfer to a team that did not choose it (demonstration, not
   adoption).
 
-* The AI-era paradigm — determinism, information density, a higher entry level
+## The AI-era paradigm — determinism, information density, a higher entry level
 - Claim: the AI era moves the binding constraint from "what the team already knows"
   to "what the model can hold", so languages that buy determinism (TypeScript, Rust,
   Clojure) gain value rather than losing it, and the developer's role shifts from
@@ -61,7 +52,7 @@ measured outcome) · *held* (direction felt, mechanism not yet pinned).
 - Status: **held** — felt, not yet fully articulated (the owner's own words).
 - Gap: which changes, how they interact, how to measure them.
 
-* Process → confidence
+## Process → confidence
 - Claim: confidence is a by-product of process, not a personality trait — making the
   rule explicit and then verifying it is what turns a felt judgement into something
   that can be checked, and that is why the same habit shows up in the corpus, the
@@ -76,7 +67,7 @@ measured outcome) · *held* (direction felt, mechanism not yet pinned).
 - Status: **supported**.
 - Gap: confidence is claimed, not measured.
 
-* The meta-thesis — make the implicit explicit, then verify it
+## The meta-thesis — make the implicit explicit, then verify it
 - Claim: every durable method in this corpus reduces to one move — turn the implicit
   into an explicit artifact, then verify the artifact — and the corpus itself is the
   worked example.

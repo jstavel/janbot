@@ -13,8 +13,10 @@ import pytest
 import yaml
 
 from janbot.eval.dataset import GoldenItem, load_golden_dataset, split_manifest
+from janbot.ingest.scope import iter_org_files
 
 SEED_DATASET = Path(__file__).resolve().parents[1] / "eval" / "golden_dataset.yaml"
+CORPUS_ROOT = Path(__file__).resolve().parents[1] / "public_profile_org"
 
 
 def _write(path: Path, entries: object) -> Path:
@@ -37,6 +39,28 @@ def test_seed_dataset_returns_one_item_per_entry() -> None:
         else:
             assert item.expected_sources
             assert all(source.strip() for source in item.expected_sources)
+
+
+def test_every_expected_source_resolves_to_an_indexed_org_file() -> None:
+    items = load_golden_dataset(SEED_DATASET)
+    indexed = {
+        path.relative_to(CORPUS_ROOT.resolve()).as_posix()
+        for path in iter_org_files(CORPUS_ROOT)
+    }
+
+    unresolved = sorted(
+        {
+            source
+            for item in items
+            for source in item.expected_sources
+            if source not in indexed
+        }
+    )
+
+    assert not unresolved, (
+        "expected_sources must each name an indexed .org file under "
+        f"public_profile_org/: unresolved {unresolved}"
+    )
 
 
 def test_missing_dataset_names_the_path(tmp_path: Path) -> None:

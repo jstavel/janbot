@@ -42,6 +42,8 @@ Chunking preserves semantic structure:
 - Breadcrumb of parent headings preserved in metadata
 - No naive text splitters that break semantic boundaries
 
+The corpus carries two document kinds: `.org` files are evidence and are indexed; `.md` files are meta documents, kept for readers and never indexed.
+
 ### 4. Fail-Closed Security Boundary
 
 Only files in `public_profile_org/` are indexed. The ingestion pipeline provably never touches private notes — the scope filter is a whitelist, not a blocklist.
