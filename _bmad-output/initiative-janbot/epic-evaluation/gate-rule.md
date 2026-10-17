@@ -4,26 +4,35 @@ Committed **before** the optimization stages run, so `5.14` (BootstrapFewShot,
 multi-objective) and `5.9` (MIPROv2) are judged against a fixed rule rather than a
 threshold chosen after seeing the numbers.
 
-Reference: the val baseline **`c6ced445`** (gate-eligible **n = 44**; the breadth val,
-54 items minus the 10 `should_refuse`; **`JANBOT_RETRIEVAL_MODE=hybrid` — the adopted
-default — with the two-best relevance guard**), judge `anthropic/claude-haiku-4.5`,
-`dataset_sha256` `1c3864bd…` as recorded in that run. **This is the RE-REGISTRATION
-transcription** — the reference moved with the breadth work (corpus + index rebuilt,
-dataset 91), and the n-specific thresholds were re-instantiated for the new n (the
-principle — 1.5σ, symmetric floor — is unchanged; see the epic Notes "PRE-REGISTERED
-metric re-registration", 2026-10-15). A compiled stage is evaluated on the same
-44 gate-eligible held-out val items and compared proportion-for-proportion.
+Reference: the val baseline **`4c0d848c8f924a3aa32ee220114c126f`** (status `FINISHED`),
+re-registered 2026-10-18 after the corpus round 2026-10-17. Nominal gate-eligible
+**n = 47** (val 57 minus the 10 `should_refuse`); for `citation_correctness` and
+`faithfulness` the **observed n = 45**, because two items errored (`FabricatedCitation`)
+and the metric contract excludes errored items. **Both n yield the same integer
+thresholds** (derived below). Judge `anthropic/claude-haiku-4.5`; retrieval
+`JANBOT_RETRIEVAL_MODE=hybrid` (the adopted default) with the `chunks` window,
+`top_k=4` and the two-best relevance guard (θ = 0.26); `program=baseline`
+(`JANBOT_PROGRAM_PATH` unset); `dataset_sha256` `78761c13…109d`. Split: train 43 /
+val 57; `should_refuse` 13 (10 val). This reference supersedes `c6ced445` (91 items,
+54 val, 44 gate-eligible, `dataset_sha256` `1c3864bd…`), which remains a valid
+historical record but is not comparable across a corpus + index + dataset re-base.
+**This is the RE-REGISTRATION transcription** — the reference moved with the breadth
+work and now with the corpus round; the n-specific thresholds were re-instantiated at
+the new baseline p (the principle — 1.5σ, symmetric floor — is unchanged; see the
+epic Notes "PRE-REGISTERED metric re-registration", 2026-10-15). A compiled stage is
+evaluated on the same gate-eligible held-out val items and compared
+proportion-for-proportion.
 
 ## Metrics
 
-- **Gate metrics: `citation_correctness` is the GAIN-CARRIER** (baseline 0.7209 —
-  room to move) and **`faithfulness` is the GUARD** (baseline 0.9767, 42/43 — at its
-  ceiling: with one unfaithful item, the maximal gain is +1 = 0.023, below its floor,
-  so **faithfulness can never accept** — a gain must come from `citation_correctness`;
-  faithfulness may only guard a regression).
-- `retrieval_accuracy` and `retrieval_mrr` are **compiler-invariant** (data-level) —
-  recorded for sanity, **never gating**.
-- No other gate metric: at n=15 each extra guard compounds the false-reject risk.
+- **Gate metrics: `citation_correctness` is the GAIN-CARRIER** (baseline **0.7111**,
+  32/45 — room to move) and **`faithfulness` is the GUARD** (baseline **0.9778**,
+  44/45 — at its ceiling: with one unfaithful item, the maximal gain is +1 item =
+  0.0222, below its floor, so **faithfulness can never accept** — a gain must come
+  from `citation_correctness`; faithfulness may only guard a regression).
+- `retrieval_accuracy` (**0.7660**, n = 47) and `retrieval_mrr` (**0.7677**, n = 47)
+  are **compiler-invariant** (data-level) — recorded for sanity, **never gating**.
+- No other gate metric: at this n each extra guard compounds the false-reject risk.
 
 ## Target and threshold
 
@@ -31,14 +40,27 @@ metric re-registration", 2026-10-15). A compiled stage is evaluated on the same
   beyond the floor**. A cross-floor trade — one up beyond the floor, the other down
   beyond it — is a **REJECT** (the Goodhart guard: faithfulness must not be bought
   with citations, nor the reverse).
-- **Noise floor (re-instantiated at the new gate-eligible n=44):** per-metric
-  1.5σ = 1.5·√(p(1−p)/n) at the metric's baseline p:
-  - **Gain-carrier `citation_correctness`** (p≈0.7209): σ ≈ 0.068, **1.5σ ≈ 0.102** →
-    **accept needs ≥ 5 items up** (5/44 = 0.114 > 0.113); **a regression is allowed
-    up to 4 items down** (4/44 = 0.091 ≤ 0.113; ≥ 5 down = 0.114 fails).
-  - **Guard `faithfulness`** (p≈0.9767): σ ≈ 0.023, **1.5σ ≈ 0.034** → the maximal
-    gain (+1 item = 0.023) is below it, so it **cannot accept**; **a regression is
-    allowed up to 1 item down** (0.023 ≤ 0.034; ≥ 2 down = 0.045 fails).
+- **Noise floor (re-derived at the new baseline p; arithmetic shown):** per-metric
+  1.5σ = 1.5·√(p(1−p)/n) at the reference's own p.
+  - **Gain-carrier `citation_correctness`** (p = 32/45 ≈ 0.7111):
+    - nominal **n = 47**: σ = √(0.7111·0.2889/47) ≈ √0.004371 ≈ **0.0661**;
+      1.5σ ≈ **0.0992** → **accept needs ≥ 5 items up** (5/47 = 0.1064 > 0.0992);
+      **a regression is allowed up to 4 items down** (4/47 = 0.0851 ≤ 0.0992;
+      ≥ 5 down = 0.1064 fails).
+    - observed **n = 45**: σ = √(0.7111·0.2889/45) ≈ √0.004565 ≈ **0.0676**;
+      1.5σ ≈ **0.1013** → **accept needs ≥ 5 items up** (5/45 = 0.1111 > 0.1013);
+      **a regression is allowed up to 4 items down** (4/45 = 0.0889 ≤ 0.1013;
+      ≥ 5 down = 0.1111 fails).
+    - **Identical integers at both n: accept ≥ 5 items, regression ≤ 4 items.**
+  - **Guard `faithfulness`** (p = 44/45 ≈ 0.9778):
+    - nominal **n = 47**: σ = √(0.9778·0.0222/47) ≈ √0.000462 ≈ **0.0215**;
+      1.5σ ≈ **0.0323** → the maximal gain (+1 item = 0.0213) is below it, so it
+      **cannot accept**; **a regression is allowed up to 1 item down**
+      (2 down = 0.0426 > 0.0323 fails).
+    - observed **n = 45**: σ = √(0.9778·0.0222/45) ≈ √0.000483 ≈ **0.0220**;
+      1.5σ ≈ **0.0330** → +1 item = 0.0222 is below it, so it **cannot accept**;
+      **a regression is allowed up to 1 item down** (2 down = 0.0444 > 0.0330 fails).
+    - **Identical integers at both n: cannot accept, regression ≤ 1 item.**
 
 ## Verdicts and policy
 
@@ -52,13 +74,26 @@ metric re-registration", 2026-10-15). A compiled stage is evaluated on the same
 
 Detecting a ~5% effect needs val ≈ 100 items; until then **"no decision" is the
 honest expected outcome** of a stage, not a failure. **Breadth has arrived** (2026-10-15):
-the val is 54 items (44 gate-eligible) across the ten-class failure taxonomy, and the
-N confirmation passed (citation-moved 9 under hybrid vs the floor 5) — the gate is now
-**decidable** for a lever that moves `citation_correctness`.
+the val is now **57 items (47 gate-eligible)** across the ten-class failure taxonomy, and
+the N confirmation on the previous 54-item val passed (citation-moved 9 under hybrid vs
+the floor 5); that confirmation is carried forward as the breadth evidence — it was **not**
+re-measured on the new val. The gate is now **decidable** for a lever that moves
+`citation_correctness`.
 
 Threshold note on record: 2σ would be off-spec — chosen after the fact — and would
 weaken the pre-registration; 1.5σ is the value entry 18 pre-registered, re-instantiated
 per-metric at the new n.
+
+## Re-registration history
+
+A re-registration moves the reference and re-derives its n-specific thresholds; it is
+**not a verdict** and never changes the principle above.
+
+- **2026-10-15** — `28c98a8d` → **`c6ced445`** (hybrid + the two-best guard adopted;
+  91 items, 54 val, 44 gate-eligible).
+- **2026-10-18** — **`c6ced445` → `4c0d848c8f924a3aa32ee220114c126f`** (corpus round
+  2026-10-17: nine new objects, `thesis-map` moved out of the index, dataset 91 → 100
+  with repaired/extended/new items; train 43 / val 57). No gate decision was made.
 
 ## Verdict record
 

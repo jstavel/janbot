@@ -232,3 +232,14 @@ verify = "The 38 items are mapped to classes; the missing/thin classes are named
 covers = ["E1"]
 hitl = false
 risk = "low"
+
+[[entry]]
+id = 22
+type = "story"
+title = "Metric-population inconsistency: errored items are coverage misses but excluded from citation/faithfulness (measurement defect, not a model defect)"
+description = "Recorded by the 2026-10-18 re-base (reference 4c0d848c). An errored item (the program raises FabricatedCitation) is counted as a miss by answer_coverage but excluded as unobserved by citation_correctness and faithfulness, so the same event lowers coverage and raises the quality metrics. This is a measurement defect, not a model defect. Do not fix it mid-comparison: c6ced445 was measured under the same rule, and changing the instrument mid-comparison is worse than the bias. Decide one population contract for errored items across all metrics; if the rule changes, mark every historical run measured under the old rule incomparable and re-measure the reference under the frozen rule; if it does not change, record the decision and its rationale. Counterfactual already recorded in the epic: scoring the two errors as failures on both sides gives old citation 31/44 = 0.7045 and faithfulness 42/44 = 0.9545, new 32/47 = 0.6809 and 44/47 = 0.9362; the faithfulness delta -0.018 is inside the 0.033 floor, so the comparison is robust to the choice."
+verify = "A recorded population contract states how errored items are scored in every metric; if it changes, affected historical runs are marked incomparable and a new reference is measured under the frozen rule; if it does not change, the decision and its rationale are recorded."
+covers = ["E2"]
+after = [16, 20]
+hitl = true
+risk = "medium"
