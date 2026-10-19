@@ -175,3 +175,63 @@ def test_lexicon_is_versioned_data() -> None:
     assert MARKERS
     assert SUBJECT_TOKENS
     assert all(len(marker) == 2 for marker in MARKERS)
+
+
+def test_item19_clause_keeps_the_grounded_clause() -> None:
+    """The recorded item-19 shape: drop the technology clause, keep the grounded clause."""
+    result = apply_output_guard(
+        answer=(
+            "I have a strong foundation in TypeScript, and I focus on creating "
+            "systems with verifiable outputs."
+        ),
+        citations=["intro.org"],
+        retrieved_chunks=_chunks(
+            (
+                "intro.org",
+                "Python and Perl by hand, Clojure by heart, TypeScript with agents. "
+                "I focus on creating systems with verifiable outputs.",
+            )
+        ),
+    )
+
+    assert result.declined is False
+    assert result.answer == "I focus on creating systems with verifiable outputs."
+    assert result.dropped_clauses == ["I have a strong foundation in TypeScript"]
+
+
+def test_overclaim_in_the_first_of_two_clauses() -> None:
+    result = apply_output_guard(
+        answer="I have a strong foundation in TypeScript, and I build verified systems.",
+        citations=["intro.org"],
+        retrieved_chunks=_chunks(("intro.org", "I build verified systems.")),
+    )
+
+    assert result.declined is False
+    assert result.answer == "I build verified systems."
+    assert result.dropped_clauses == ["I have a strong foundation in TypeScript"]
+
+
+def test_overclaim_in_the_second_of_two_clauses() -> None:
+    result = apply_output_guard(
+        answer="I build verified systems, and I have a strong foundation in TypeScript.",
+        citations=["intro.org"],
+        retrieved_chunks=_chunks(("intro.org", "I build verified systems.")),
+    )
+
+    assert result.declined is False
+    assert result.answer == "I build verified systems."
+    assert result.dropped_clauses == ["I have a strong foundation in TypeScript."]
+
+
+def test_version_number_is_not_a_clause_boundary() -> None:
+    result = apply_output_guard(
+        answer="I have a strong foundation in Python 3.12.",
+        citations=["intro.org"],
+        retrieved_chunks=_chunks(
+            ("intro.org", "I have a strong foundation in Python 3.12.")
+        ),
+    )
+
+    assert result.declined is False
+    assert result.answer == "I have a strong foundation in Python 3.12."
+    assert result.dropped_clauses == []
