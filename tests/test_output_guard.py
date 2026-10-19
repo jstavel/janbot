@@ -285,4 +285,72 @@ def test_unretrieved_object_id_falls_through_to_d1() -> None:
     )
 
     assert result.declined is True
+    assert result.action == "declined: D1-all-invalid"
     assert result.normalized_count == 0
+
+
+def test_empty_citations_decline_as_uncited() -> None:
+    result = apply_output_guard(
+        answer="I built it.",
+        citations=[],
+        retrieved_chunks=_chunks(("profile.org", "Built it.")),
+    )
+
+    assert result.declined is True
+    assert result.action == "declined: uncited"
+
+
+def test_all_invalid_labels_decline_as_d1_all_invalid() -> None:
+    result = apply_output_guard(
+        answer="I built it.",
+        citations=["elsewhere.md"],
+        retrieved_chunks=_chunks(("profile.org", "Built it.")),
+    )
+
+    assert result.declined is True
+    assert result.action == "declined: D1-all-invalid"
+
+
+def test_partial_d1_repair_action() -> None:
+    result = apply_output_guard(
+        answer="I built it.",
+        citations=["profile.org", "elsewhere.md"],
+        retrieved_chunks=_chunks(("profile.org", "Built it.")),
+    )
+
+    assert result.declined is False
+    assert result.action == "repaired: D1-partial"
+
+
+def test_d1_and_d2_repair_action() -> None:
+    result = apply_output_guard(
+        answer="I have a strong foundation in TypeScript. I build verified systems.",
+        citations=["profile.org", "elsewhere.md"],
+        retrieved_chunks=_chunks(("profile.org", "I build verified systems.")),
+    )
+
+    assert result.declined is False
+    assert result.action == "repaired: D1-partial + D2"
+
+
+def test_d2_empty_action() -> None:
+    result = apply_output_guard(
+        answer="I have a strong foundation in TypeScript.",
+        citations=["profile.org"],
+        retrieved_chunks=_chunks(("profile.org", "Engineering background.")),
+    )
+
+    assert result.declined is True
+    assert result.action == "declined: D2-empty"
+
+
+def test_guard_error_action_is_named() -> None:
+    # Force the internal helper to fail by passing a malformed chunk mapping.
+    result = apply_output_guard(
+        answer="I built it.",
+        citations=["profile.org"],
+        retrieved_chunks=[{"source": "profile.org"}],  # type: ignore[list-item]
+    )
+
+    assert result.declined is True
+    assert result.action == "declined: guard-error"

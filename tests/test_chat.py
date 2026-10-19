@@ -437,6 +437,7 @@ def test_chat_indexed_but_unretrieved_source_can_never_be_cited(
 
     _assert_insufficiency(response)
     assert "projects.org" not in response.text
+    assert app.state.program.last_guard_action == "declined: D1-all-invalid"
 
 
 def test_chat_bracketed_claim_label_is_normalized(
@@ -477,6 +478,7 @@ def test_chat_uncited_answer_declines_with_200_insufficiency(
     )
 
     _assert_insufficiency(response)
+    assert app.state.program.last_guard_action == "declined: uncited"
 
 
 def test_chat_unknown_source_claim_is_dropped_and_declines_without_valid_label(
@@ -496,6 +498,7 @@ def test_chat_unknown_source_claim_is_dropped_and_declines_without_valid_label(
     )
 
     _assert_insufficiency(response)
+    assert app.state.program.last_guard_action == "declined: D1-all-invalid"
 
 
 def test_chat_mixed_fabricated_and_valid_claim_keeps_the_valid_label(
@@ -520,6 +523,7 @@ def test_chat_mixed_fabricated_and_valid_claim_keeps_the_valid_label(
     assert body["answer"] == CANNED_ANSWER
     assert [citation["source"] for citation in body["citations"]] == ["profile.org"]
     assert "elsewhere.md" not in response.text
+    assert app.state.program.last_guard_action == "repaired: D1-partial"
 
 
 def test_chat_overclaim_sentence_is_dropped_and_answer_kept(
