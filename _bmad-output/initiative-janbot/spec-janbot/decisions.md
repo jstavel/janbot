@@ -94,10 +94,11 @@ Companion to `spec-janbot.md`. Historical decision log; older ADRs are not edite
 - **Fixed:** the `/chat` core is untouched; the gate stays OPEN until E2 is evidenced; the compiled program is not shipped (entry-14 REJECT).
 - **Note (2026-10-19):** the E2 output-level guard required by the condition above is specified in **ADR-010** (PROPOSED). This note only points at the follow-up; ADR-009's text is unchanged.
 
-## ADR-010: Deterministic output-level guard against fabricated citations and over-claiming — PROPOSED 2026-10-19
+## ADR-010: Deterministic output-level guard against fabricated citations and over-claiming — ADOPTED 2026-10-19
 
-- **Status:** **PROPOSED** (2026-10-19). Promotion to ADOPTED is a separate dated edit after the
-  T6 self-consistency check passes. This ADR is the follow-up to ADR-009's E2 condition.
+- **Status:** **ADOPTED (2026-10-19)**; proposed 2026-10-19. Promotion is a separate dated
+  edit after the T6 self-consistency and T5 confirmation passed. This ADR is the follow-up
+  to ADR-009's E2 condition.
 - **Context:** ADR-009 (option (c)) requires a deterministic output-level guard with no model
   call so the benchmark stays valid. Runs A (`e7110d58`, `chunks`) and B (`f9ae28f2`,
   `sources`) were both refused registration; the remaining failures are generation-side
@@ -178,6 +179,16 @@ Companion to `spec-janbot.md`. Historical decision log; older ADRs are not edite
   offline replay; and one paid confirmation run after owner approval, whose replay of each
   recorded `raw-answer`/`raw-citations` through the guard must reproduce the recorded final
   answer byte-identically. Until that passes, the status stays **PROPOSED**.
+- **Adoption evidence (2026-10-19).** T6 (`c967e50d`) proved self-consistency: 59/59
+  recomputed retrieval labels and all 49 raw predictions replayed byte-identically. T5
+  (`5ed5d8d7`) confirmed on freshly generated text: 59/59 retrieval labels, 49 raw
+  predictions replayed with 0 answer/action mismatches, the 45 common judged items unchanged,
+  the five E2 acceptance items passing, and `spurious_refusal_rate` exactly 1/49. The alias
+  rule in D1 (org-id → retrieved source, request-local, own `:ID:` only) and the closed-set
+  action labels are part of the adopted decision. **ADR-009's E2 condition is met in
+  substance:** a deterministic output-level guard with no model call, using only
+  request-local data, with benchmark comparability preserved. ADR-009's text is otherwise
+  untouched.
 - **Amendment 1 (2026-10-19) — citation aliases are not fabrications.** T6 (`c967e50d`)
   passed self-consistency: **59/59** recomputed retrieval labels matched the recorded
   `retrieved:` lines and all **49** raw predictions replayed byte-identically. It exposed
