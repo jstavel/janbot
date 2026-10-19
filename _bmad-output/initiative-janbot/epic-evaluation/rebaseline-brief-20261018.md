@@ -148,3 +148,79 @@ not a gate verdict**.
 
 The proposals document
 (`rebaseline-item-proposals-20261018-round2.md`) is the frozen contract for N10–N15 and P1.
+
+---
+
+## 5. Decision rule for the reference run — pre-registered
+
+**Written 2026-10-19, before any metric from the run existed.** No number in this section
+was chosen after seeing a result; the thresholds are derived from the floors already in
+`gate-rule.md` rather than invented alongside this round.
+
+### 5.1 What the run is, and what it is not
+
+It registers **one reference** for the corpus/dataset state at `a8bd69dc…`, judged against
+the previous reference `4c0d848c`. It is **not** a gate verdict: no lever is being accepted
+or rejected, no optimisation stage is opened, and the baseline program still ships.
+
+Registering a reference is still a decision, and this rule is what makes it checkable.
+
+### 5.2 Pre-registered expectations — movement that has a named cause
+
+| # | Expectation | Consequence if observed |
+|---|---|---|
+| E1 | Observed n may differ from the gate-eligible 49 (declines, missing observations) | acceptable **only** with a named cause; an unexplained change in n is a trigger |
+| E2 | Item 19's answer text changes, because the intro it grounds on was rewritten | expected; verify the answer literally does not claim TypeScript expertise |
+| E3 | Item 101 (`"Why does a runbook have to be run by hand?"`) may cite `entering-an-unknown-system` instead of `procedure-drift`, because the new onboarding object competes for that exact phrasing | **pre-registered as the expected single citation regression.** Recorded as a finding, not a defect, and not repaired in this round |
+| E4 | Item 97 (`"How do you handle credentials and secrets?"`) may retrieve `api-key-rotation` alongside `secret-management-evolution` | expected; recorded, `expected_sources` **not** edited |
+
+E3 and E4 were written from a smoke test that saw the competition before the run. Naming
+them here is what stops them being discovered afterwards as an explanation.
+
+### 5.3 Investigation triggers — do not register, investigate first
+
+Any one of these blocks registration until it is understood:
+
+1. **Faithfulness drops by ≥2 items.** The gate tolerance is a regression of ≤1; two items
+   is beyond the floor that already exists, and cannot be attributed to a corpus round that
+   changed six item texts and added six more.
+2. **Any refusal metric leaves its floor** — `refusal_pass_rate` < 1.0 or
+   `spurious_refusal_rate` > 0.0. Both were perfect at the previous reference; a change is a
+   signal, not noise.
+3. **`citation_correctness` drops by ≥5 items.** The gate's accept threshold is +5, so a
+   loss of that size is the mirror image of a decided gain.
+4. **A regression on an item that cites none of the seven new objects.** Such an item had no
+   reason to move; movement means something other than this round changed.
+5. **Observed n changes without a named cause** (see E1).
+
+A movement that falls *inside* these bounds but has no explanation is not a trigger — it is
+a finding to record. The rule separates "unexplained" from "unacceptable".
+
+### 5.4 Outcome states
+
+- **Register** — every movement is attributable to E1–E4 and no trigger fired.
+- **Register with an open finding** — attributable, no trigger, but a named item needs
+  follow-up (E3 is the likely one). The finding goes into `epic-evaluation.md` as an open
+  item; the corpus decision to reduce the redundancy between `procedure-drift` and
+  `entering-an-unknown-system` is a separate round.
+- **Do not register** — any trigger fired. The reference is not created, the previous one
+  stays in force, and the investigation is written up before anything else happens.
+
+### 5.5 What is prohibited after the run
+
+- editing `expected_sources` (or any item text) because the numbers came out a particular
+  way;
+- re-splitting, renumbering, or dropping an item to tidy a metric;
+- re-running until a better number appears, or swapping the judge;
+- attributing a movement to "the judge being harsh" without evidence from the captured
+  per-item verdicts.
+
+If this rule turns out to be insufficient — a case it does not cover — the amendment is
+**appended** with its date and `old → new → why`, in the same way corpus objects are
+renegotiated. It is never rewritten in place after the fact.
+
+### 5.6 Status of the rule itself
+
+Round-specific, and a candidate for the standing protocol: the pre-registration discipline
+already exists for the *levers* (`gate-rule.md`), and this extends the same discipline to
+the *reference*, which until now had no written decision rule at all.
