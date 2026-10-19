@@ -13,8 +13,11 @@ An answer claiming no sources is the decline signal (:class:`UncitedAnswer`): th
 pipeline cannot ground it, so the port answers with an insufficiency reply. A
 retrieval whose best chunk is below the configured relevance threshold is the
 other decline signal (:class:`LowRelevance`), raised before the LM call. An
-answer naming sources outside the retrieved set is a fabricated cited answer and
-is refused (:class:`FabricatedCitation`) rather than declined.
+answer naming sources outside the retrieved set is handled by the deterministic
+output guard (ADR-010): the fabricated labels are dropped and a valid answer is
+kept; if no valid label remains, or the guard itself errors, the response
+declines through the existing uncited path. A citation outside the retrieved set
+can still never leave the port.
 
 The LM is set once at startup by the caller via ``set_lm``, so a request is a
 single program call.
@@ -35,6 +38,7 @@ from janbot.store import VectorStore
 import dspy
 
 from janbot.api.contract import ChatResponse, Citation
+from janbot.guardrails import apply_output_guard
 
 
 class EmptyRetrieval(ValueError):
@@ -50,7 +54,7 @@ class UncitedAnswer(ValueError):
 
 
 class FabricatedCitation(ValueError):
-    """The model named a source outside the retrieved set: a fabricated cited answer, refused."""
+    """A citation outside the retrieved set survived the guard: a fail-closed invariant."""
 
 
 class LowRelevance(ValueError):
@@ -96,18 +100,6 @@ def corpus_relative(root: Path) -> Callable[[str], str]:
             ) from exc
 
     return rewrite
-
-
-def _normalize_claim(claim: str) -> str:
-    """Strip surrounding whitespace and an optional surrounding ``[ ]`` pair.
-
-    Context labels sources as ``[source]``; a model may echo either the
-    bracketed or the bare form, so both must match the retrieved source set.
-    """
-    normalized = claim.strip()
-    if len(normalized) >= 2 and normalized.startswith("[") and normalized.endswith("]"):
-        normalized = normalized[1:-1].strip()
-    return normalized
 
 
 class ChatProgram(dspy.Module):
@@ -191,19 +183,37 @@ class ChatProgram(dspy.Module):
                 "refusing to return an unattributable answer"
             )
         retrieved = set(sources)
-        normalized = [_normalize_claim(claim) for claim in claims]
-        unknown = [claim for claim in normalized if claim not in retrieved]
-        if unknown:
-            raise FabricatedCitation(
-                f"the model made {len(unknown)} unverifiable source claim(s) for question {question!r}; "
-                "the claims name sources outside the retrieved chunks — "
-                "refusing to return the unverifiable answer"
+        guard_result = apply_output_guard(
+            answer=prediction.answer,
+            citations=claims,
+            retrieved_chunks=[
+                {"source": source, "text": chunk["text"] or ""}
+                for source, chunk in zip(sources, chunks, strict=True)
+            ],
+        )
+        if guard_result.declined:
+            raise UncitedAnswer(
+                f"the output guard declined the answer for question {question!r}: "
+                f"{guard_result.reason}"
+            )
+        if not guard_result.answer.strip() or not guard_result.citations:
+            raise UncitedAnswer(
+                f"the output guard left no grounded answer for question {question!r}; "
+                "refusing to return an unattributable answer"
             )
 
-        cited = set(normalized)
+        unknown = [label for label in guard_result.citations if label not in retrieved]
+        if unknown:
+            raise FabricatedCitation(
+                f"the output guard emitted {len(unknown)} citation(s) outside the "
+                f"retrieved set for question {question!r}; refusing to return the "
+                "unverifiable answer"
+            )
+
+        cited = set(guard_result.citations)
         citations = [
             Citation(source=source)
             for source in dict.fromkeys(sources)
             if source in cited
         ]
-        return ChatResponse(answer=prediction.answer, citations=citations)
+        return ChatResponse(answer=guard_result.answer, citations=citations)

@@ -53,13 +53,14 @@ class StubLMFactory:
 
     REPEATS = 16
 
-    def __init__(self, citations: list[str] | None = None) -> None:
+    def __init__(self, citations: list[str] | None = None, answer: str = CANNED_ANSWER) -> None:
         self.citations = list(DEFAULT_CITATIONS if citations is None else citations)
+        self.answer = answer
         self.history: list[dict[str, object]] = []
 
     def __call__(self, **kwargs: object) -> DummyLM:
         self.history.append(kwargs)
-        answer = {"answer": CANNED_ANSWER, "citations": list(self.citations)}
+        answer = {"answer": self.answer, "citations": list(self.citations)}
         return DummyLM([dict(answer) for _ in range(self.REPEATS)])
 
 
@@ -430,13 +431,12 @@ def test_chat_indexed_but_unretrieved_source_can_never_be_cited(
         lm_factory=StubLMFactory(citations=["projects.org"]),
     )
 
-    response = TestClient(app, raise_server_exceptions=False).post(
+    response = TestClient(app).post(
         "/chat", json={"question": "What search infrastructure have you built?"}
     )
 
-    assert response.status_code == 500
-    assert isinstance(response.json()["detail"], str)
-    assert CANNED_ANSWER not in response.text
+    _assert_insufficiency(response)
+    assert "projects.org" not in response.text
 
 
 def test_chat_bracketed_claim_label_is_normalized(
@@ -479,11 +479,11 @@ def test_chat_uncited_answer_declines_with_200_insufficiency(
     _assert_insufficiency(response)
 
 
-def test_chat_unknown_source_claim_is_rejected_with_500_envelope(
+def test_chat_unknown_source_claim_is_dropped_and_declines_without_valid_label(
     indexed_corpus: tuple[Path, Path],
     embedder: Embedder,
 ) -> None:
-    """A claim naming a source outside the retrieved set is unverifiable: reject, do not drop."""
+    """A model citing only an unretrieved source loses the label; with none left it declines."""
     corpus, index_path = indexed_corpus
     app = create_app(
         env=_chat_env(corpus, index_path),
@@ -491,16 +491,65 @@ def test_chat_unknown_source_claim_is_rejected_with_500_envelope(
         lm_factory=StubLMFactory(citations=["elsewhere.md"]),
     )
 
-    response = TestClient(app, raise_server_exceptions=False).post(
+    response = TestClient(app).post(
         "/chat", json={"question": "What search infrastructure have you built?"}
     )
 
-    assert response.status_code == 500
-    detail = response.json()["detail"]
-    assert "unverifiable source claim" in detail
-    assert "outside the retrieved chunks" in detail
+    _assert_insufficiency(response)
+
+
+def test_chat_mixed_fabricated_and_valid_claim_keeps_the_valid_label(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """D1 drops the fabricated label but keeps the answer and the valid citation."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["profile.org", "elsewhere.md"]),
+    )
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "answered"
+    assert body["answer"] == CANNED_ANSWER
+    assert [citation["source"] for citation in body["citations"]] == ["profile.org"]
     assert "elsewhere.md" not in response.text
-    assert CANNED_ANSWER not in response.text
+
+
+def test_chat_overclaim_sentence_is_dropped_and_answer_kept(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """D2 drops an ungrounded capability sentence; the grounded sentence keeps the answer."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(
+            citations=["profile.org"],
+            answer=(
+                "I have a strong foundation in TypeScript. "
+                "I work on search infrastructure."
+            ),
+        ),
+    )
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "answered"
+    assert body["answer"] == "I work on search infrastructure."
+    assert [citation["source"] for citation in body["citations"]] == ["profile.org"]
+    assert "strong foundation in TypeScript" not in response.text
 
 
 def test_chat_foreign_only_index_declines_with_200_insufficiency(
