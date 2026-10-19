@@ -37,7 +37,7 @@ stack, including the container image** (build + push inside `apply`, `kreuzwerke
    the E1 log's URL is **not** superseded (the plan expected it to change).
 4. **Scaling drift (provider 6.50.0 quirk).** The Cloud Run v2 API returns
    `manual_instance_count` (and `min_instance_count: 0`) inside `scaling`, which the schema
-   cannot set, so `terraform plan` always shows `0 to add, 1 to change` for the service
+   cannot set, so `terraform plan` always reports `0 to add, 1 to change, 0 to destroy` for the service
    (cosmetic; `max_instance_count=2` is applied). `ignore_changes` on `template.*.scaling` did
    not suppress it. Follow-up: pin a fixed provider version.
 5. **Protection-lift used once.** A failed first Cloud Run create left a tainted resource;
