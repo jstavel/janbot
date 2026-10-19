@@ -1,8 +1,9 @@
 # Re-baseline brief — corpus round 2026-10-18 (round 2)
 
-**Status:** owner-approved **2026-10-19**. The extract and index are built; the dataset
-change is applied in the commit that follows this document. **No keyed run has happened
-yet.**
+**Status:** owner-approved **2026-10-19**. The extract, index and dataset change are applied
+(commits `38e251a`, `9335eb6`, `3741fc9`, `ee38b18`). The keyed reference run was executed
+on 2026-10-19 (`e7110d58`); the pre-registered triggers fired, so it was **not registered**
+— see §5.7.
 
 Source of truth: `~/org` (the corpus repository), pinned ref
 **`05b11a78049190838069b5f5c6ad123ae420a104`**. The extract was taken from that pinned
@@ -142,9 +143,9 @@ the N14 redaction. Dataset:
 | gate-eligible val | 47 | **49** |
 | `dataset_sha256` | `78761c13…109d` | **`a8bd69dc10f0c9da5dc1b4d0c9639908c75323b7ced9671a0266a7d33ac11c90`** |
 
-The next step is **one keyed val reference run** (baseline program, hybrid/chunks/k=4,
-judge `claude-haiku-4.5`), gated on the owner's explicit go. It registers a **re-baseline,
-not a gate verdict**.
+The keyed val run was executed on 2026-10-19 (`e7110d580277493b93f292f8bce3a67e`). The
+pre-registered triggers fired, so the run was **not registered** — see §5.7 and the
+investigation in `epic-evaluation.md`. The next step is the investigation, not a reference.
 
 The proposals document
 (`rebaseline-item-proposals-20261018-round2.md`) is the frozen contract for N10–N15 and P1.
@@ -224,3 +225,26 @@ renegotiated. It is never rewritten in place after the fact.
 Round-specific, and a candidate for the standing protocol: the pre-registration discipline
 already exists for the *levers* (`gate-rule.md`), and this extends the same discipline to
 the *reference*, which until now had no written decision rule at all.
+
+### 5.7 Outcome (2026-10-19) — **DO NOT REGISTER**
+
+Run **`e7110d580277493b93f292f8bce3a67e`** was executed under the pinned config (val, 59
+items; nominal gate-eligible 49; observed n=45 for citation/faithfulness;
+`dataset_sha256` `a8bd69dc…`; index 417 chunks / 60 sources). Metrics:
+`answer_coverage` 0.9184 (45/49), `retrieval_accuracy` 0.6939 (n=49), `retrieval_mrr`
+0.7415 (n=49), `citation_correctness` 0.6889 (31/45), `citation_precision` 0.6815 (n=45),
+`faithfulness` 0.9556 (43/45), `public_references` 0.9796 (n=49), `refusal_pass_rate` 1.0
+(n=10), `spurious_refusal_rate` 0.0217 (1/46).
+
+**Two §5.3 triggers fired:** (2) the spurious refusal (item 41, “Why were you fired from
+Red Hat?” declined `out_of_corpus`); (4) regressions on old items citing none of the seven
+new objects — items 4, 41, 71, 83, 84, 32 and 87. Per §5.4 the reference is **not created**;
+`4c0d848c` remains in force and `gate-rule.md` is untouched.
+
+**Item 19 (E2):** judged faithful, but the answer still says *“I have a strong foundation in
+programming languages like Python, Perl, Clojure, and TypeScript”* — it **still claims
+TypeScript expertise**; the E2 verification fails. **Item 97 (E4):** retrieves
+`secret-management-evolution` ×4; `api-key-rotation` does not displace it. **E3:** item 101
+is a train item, so the val run cannot observe it.
+
+Full per-item investigation: `epic-evaluation.md`.
