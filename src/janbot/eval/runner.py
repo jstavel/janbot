@@ -86,9 +86,15 @@ def _raw_citations(program: Callable[..., ChatResponse]) -> list[str] | None:
 
 
 def _guard_action(program: Callable[..., ChatResponse]) -> str | None:
-    """The guard action (``none``/``repaired``/``declined``/``disabled`` plus rule)."""
+    """The guard action (closed set: none/repaired/declined/disabled)."""
     action = getattr(program, "last_guard_action", None)
     return None if action is None else str(action)
+
+
+def _normalized_citations(program: Callable[..., ChatResponse]) -> int | None:
+    """How many alias labels the guard resolved before D1, from the additive seam."""
+    count = getattr(program, "last_normalized_citations", None)
+    return None if count is None else int(count)
 
 
 def _evaluate(
@@ -129,6 +135,7 @@ def _evaluate(
                     raw_answer=_raw_answer(program),
                     raw_citations=_raw_citations(program),
                     guard_action=_guard_action(program),
+                    normalized_citations=_normalized_citations(program),
                     judge_verdict=None,
                 )
             )
@@ -144,6 +151,7 @@ def _evaluate(
                     raw_answer=_raw_answer(program),
                     raw_citations=_raw_citations(program),
                     guard_action=_guard_action(program),
+                    normalized_citations=_normalized_citations(program),
                     judge_verdict=None,
                 )
             )
@@ -167,6 +175,7 @@ def _evaluate(
                 raw_answer=_raw_answer(program),
                 raw_citations=_raw_citations(program),
                 guard_action=_guard_action(program),
+                normalized_citations=_normalized_citations(program),
                 judge_verdict=verdict,
             )
         )

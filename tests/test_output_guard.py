@@ -235,3 +235,54 @@ def test_version_number_is_not_a_clause_boundary() -> None:
     assert result.declined is False
     assert result.answer == "I have a strong foundation in Python 3.12."
     assert result.dropped_clauses == []
+
+
+def test_object_id_alias_resolves_to_the_retrieved_source() -> None:
+    result = apply_output_guard(
+        answer="I built the matching engine.",
+        citations=["20261007-matching-engine"],
+        retrieved_chunks=_chunks(
+            (
+                "matching-engine.org",
+                ":PROPERTIES:\n:ID: 20261007-matching-engine\n:END:\n\n# Matching engine\n",
+            )
+        ),
+    )
+
+    assert result.declined is False
+    assert result.answer == "I built the matching engine."
+    assert result.citations == ["matching-engine.org"]
+    assert result.normalized_count == 1
+
+
+def test_cross_link_is_not_an_alias_of_another_objects_id() -> None:
+    """A [[id:...]] cross-link in another object's text must not map that object as an alias."""
+    result = apply_output_guard(
+        answer="The recovery work used the Linux From Scratch story.",
+        citations=["20261007-linux-from-scratch"],
+        retrieved_chunks=_chunks(
+            (
+                "linux-from-scratch.org",
+                ":PROPERTIES:\n:ID: 20261007-linux-from-scratch\n:END:\n\n# LFS\n",
+            ),
+            (
+                "filesystem-recovery.org",
+                "Related: [[id:20261007-linux-from-scratch][Linux From Scratch]].\n",
+            ),
+        ),
+    )
+
+    assert result.citations == ["linux-from-scratch.org"]
+    assert result.normalized_count == 1
+    assert result.citations != ["filesystem-recovery.org"]
+
+
+def test_unretrieved_object_id_falls_through_to_d1() -> None:
+    result = apply_output_guard(
+        answer="I built it.",
+        citations=["20261007-not-retrieved"],
+        retrieved_chunks=_chunks(("profile.org", ":PROPERTIES:\n:ID: 20261001-profile\n:END:\n")),
+    )
+
+    assert result.declined is True
+    assert result.normalized_count == 0

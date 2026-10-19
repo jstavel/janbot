@@ -209,9 +209,11 @@ def main(
         raw_answer = "<none>" if outcome.raw_answer is None else outcome.raw_answer
         raw_citations = ", ".join(outcome.raw_citations or []) or "<none>"
         guard_action = outcome.guard_action or "<none>"
+        normalized = "<none>" if outcome.normalized_citations is None else str(outcome.normalized_citations)
         print(f"retrieved: {question} — {retrieved}")
         print(f"raw-answer: {question} — {raw_answer}")
         print(f"raw-citations: {question} — {raw_citations}")
+        print(f"normalized: {question} — {normalized}")
         print(f"guard: {question} — {guard_action}")
 
     if args.answers:
