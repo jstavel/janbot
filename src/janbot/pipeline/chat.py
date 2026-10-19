@@ -120,11 +120,11 @@ class ChatProgram(dspy.Module):
     reflects the *retrieved* set, never the citations. The ``/chat`` contract and
     behavior are unchanged.
 
-    ``last_raw_answer``, ``last_raw_citations`` and ``last_guard_action`` are the output
-    guard's additive observation seam: the prediction before the guard, the labels the model
-    cited before D1, and the action (``none``/``repaired``/``declined``/``disabled`` plus the
-    rule). They never alter the response; with the guard disabled the raw values equal the
-    final ones.
+    ``last_raw_answer``, ``last_raw_citations``, ``last_guard_action`` and
+    ``last_normalized_citations`` are the output guard's additive observation seam: the
+    prediction before the guard, the labels the model cited before D1, the action, and how
+    many alias labels were normalized. They never alter the response; with the guard disabled
+    the raw values equal the final ones.
 
     ``relevance_threshold`` is the low-relevance decline gate: when it is
     non-zero and the best retrieved chunk's ``similarity`` falls below it,
@@ -154,6 +154,7 @@ class ChatProgram(dspy.Module):
         self.last_raw_answer: str | None = None
         self.last_raw_citations: list[str] | None = None
         self.last_guard_action: str | None = None
+        self.last_normalized_citations: int | None = None
 
     def forward(self, question: str) -> ChatResponse:
         self.last_retrieved_sources = None
@@ -161,6 +162,7 @@ class ChatProgram(dspy.Module):
         self.last_raw_answer = None
         self.last_raw_citations = None
         self.last_guard_action = None
+        self.last_normalized_citations = None
         chunks = self._store.query(question, k=self._top_k)
         if not chunks:
             self.last_retrieved_sources = []
@@ -205,6 +207,7 @@ class ChatProgram(dspy.Module):
 
         if not self._guard_enabled:
             self.last_guard_action = "disabled"
+            self.last_normalized_citations = 0
             if not claims:
                 raise UncitedAnswer(
                     f"the model claimed no sources for question {question!r}; "
@@ -226,12 +229,6 @@ class ChatProgram(dspy.Module):
             ]
             return ChatResponse(answer=prediction.answer, citations=citations)
 
-        if not claims:
-            self.last_guard_action = "declined: D1"
-            raise UncitedAnswer(
-                f"the model claimed no sources for question {question!r}; "
-                "refusing to return an unattributable answer"
-            )
         guard_result = apply_output_guard(
             answer=prediction.answer,
             citations=claims,
@@ -241,6 +238,7 @@ class ChatProgram(dspy.Module):
             ],
         )
         self.last_guard_action = guard_result.action
+        self.last_normalized_citations = guard_result.normalized_count
         if guard_result.declined:
             raise UncitedAnswer(
                 f"the output guard declined the answer for question {question!r}: "

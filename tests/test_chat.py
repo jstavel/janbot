@@ -991,3 +991,33 @@ def test_guard_disabled_records_raw_values_as_final(
     assert program.last_raw_answer == body["answer"]
     assert program.last_raw_citations == ["profile.org"]
     assert [citation["source"] for citation in body["citations"]] == ["profile.org"]
+
+
+def test_guard_seam_counts_normalized_alias_labels(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """An org-id citation is normalized to the retrieved source and counted."""
+    corpus, index_path = indexed_corpus
+    (corpus / "profile.org").write_text(
+        ":PROPERTIES:\n:ID: 20261001-profile\n:END:\n\n"
+        "* About\nSearch infrastructure engineer.\n"
+    )
+    index_corpus(corpus, index_path, embedder)
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["20261001-profile"]),
+    )
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [citation["source"] for citation in body["citations"]] == ["profile.org"]
+    program = app.state.program
+    assert program.last_raw_citations == ["20261001-profile"]
+    assert program.last_normalized_citations == 1
+    assert program.last_guard_action == "none"

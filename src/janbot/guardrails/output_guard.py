@@ -43,6 +43,7 @@ class GuardResult:
     dropped_citations: list[str] = field(default_factory=list)
     dropped_sentences: list[str] = field(default_factory=list)
     dropped_clauses: list[str] = field(default_factory=list)
+    normalized_count: int = 0
 
     @property
     def action(self) -> str:
@@ -145,10 +146,31 @@ def _is_grounded(
     return False
 
 
+def _alias_map(retrieved_chunks: Sequence[Mapping[str, str]]) -> dict[str, str]:
+    """Map an object's own ``:ID:`` to its source label, from retrieved chunks only.
+
+    Only a file-root chunk's own PROPERTIES drawer is considered. A cross-link
+    (``[[id:...]]``) in another object's text is never an alias, and an object that was not
+    retrieved cannot be resolved. This is request-local: no corpus read, no dataset.
+    """
+    aliases: dict[str, str] = {}
+    for chunk in retrieved_chunks:
+        text = str(chunk["text"])
+        if not text.lstrip().startswith(":PROPERTIES:"):
+            continue
+        source = str(chunk["source"])
+        for object_id in re.findall(r"(?m)^:ID:\s+(\S+)\s*$", text):
+            aliases.setdefault(object_id, source)
+    return aliases
+
+
 def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Mapping[str, str]]) -> GuardResult:
     sources = [str(chunk["source"]) for chunk in retrieved_chunks]
     source_set = set(sources)
-    normalized = [_normalize_label(citation) for citation in citations]
+    aliases = _alias_map(retrieved_chunks)
+    raw_labels = [_normalize_label(citation) for citation in citations]
+    normalized = [aliases.get(label, label) for label in raw_labels]
+    normalized_count = sum(1 for label in raw_labels if label in aliases)
     valid: list[str] = []
     dropped: list[str] = []
     for label in normalized:
@@ -166,6 +188,7 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
             reason="no valid citation remains after dropping fabricated labels",
             rule="D1",
             dropped_citations=dropped,
+            normalized_count=normalized_count,
         )
 
     cited_sources = set(valid)
@@ -211,6 +234,7 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
             dropped_citations=dropped,
             dropped_sentences=dropped_sentences,
             dropped_clauses=dropped_clauses,
+            normalized_count=normalized_count,
         )
 
     repaired = answer if not (dropped_sentences or dropped_clauses) else " ".join(kept)
@@ -223,6 +247,7 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
         dropped_citations=dropped,
         dropped_sentences=dropped_sentences,
         dropped_clauses=dropped_clauses,
+        normalized_count=normalized_count,
     )
 
 
