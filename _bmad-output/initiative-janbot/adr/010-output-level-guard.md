@@ -47,9 +47,14 @@ A sentence is an **over-claim** when it contains both:
 
 The sentence is kept only when the claim is **grounded in a cited chunk**: the marker's
 head phrase and the subject token must co-occur in the same sentence of at least one cited
-chunk. Merely finding the subject token somewhere in a cited chunk is **not** grounding —
+chunk. The subject must sit in the marker's **forward claim window** — the text following
+the marker (up to 120 characters). A subject token earlier in the sentence is not
+necessarily the marker's object; ignoring it prevents dropping a grounded sentence such as
+“…expertise in Python and Perl … with a strong foundation in asynchronous systems”. Merely
+finding the subject token somewhere in a cited chunk is **not** grounding —
 `personal-intro.org` says “TypeScript with agents”, which grounds that wording but not
-“a strong foundation in TypeScript”.
+“a strong foundation in TypeScript”. If the window names several subject tokens, **all** of
+them must be grounded; one ungrounded token drops the sentence.
 
 **Action:** drop the ungrounded sentence, keep the other sentences. If the answer becomes
 empty, decline.
@@ -85,6 +90,7 @@ no network access.
 - implication and hedged claims;
 - capability claims without a lexicon marker;
 - a subject token that does not match the lexicon's spelling or aliases;
+- a claim whose subject is phrased **before** the marker (word-order paraphrase);
 - a claim whose marker and subject sit in different sentences;
 - over-claiming spread across several sentences that are each individually grounded.
 

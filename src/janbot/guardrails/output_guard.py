@@ -42,6 +42,11 @@ class GuardResult:
 
 
 _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+|\n+")
+_CLAIM_WINDOW = 120
+
+
+def _phrase_pattern(phrase: str) -> re.Pattern[str]:
+    return re.compile(rf"(?<![a-z0-9]){re.escape(phrase.lower())}(?![a-z0-9])")
 
 
 def _normalize_label(label: str) -> str:
@@ -58,20 +63,29 @@ def _contains(text: str, phrase: str) -> bool:
     Boundaries are deliberately based on letters/digits rather than ``\\b`` so tokens such
     as ``c++`` and ``on-site`` still match without swallowing a longer word.
     """
-    pattern = rf"(?<![a-z0-9]){re.escape(phrase.lower())}(?![a-z0-9])"
-    return re.search(pattern, text.lower()) is not None
+    return _phrase_pattern(phrase).search(text.lower()) is not None
 
 
-def _subject_tokens_in(sentence: str) -> list[str]:
-    return [token for token in SUBJECT_TOKENS if _contains(sentence, token)]
+def _subject_tokens_in(text: str) -> list[str]:
+    return [token for token in SUBJECT_TOKENS if _contains(text, token)]
 
 
-def _markers_in(sentence: str) -> list[tuple[str, str]]:
-    return [
-        (marker.answer_phrase, marker.chunk_phrase)
-        for marker in MARKERS
-        if _contains(sentence, marker.answer_phrase)
-    ]
+def _marker_windows(sentence: str) -> list[tuple[str, str]]:
+    """Yield ``(chunk_phrase, forward_window)`` for each marker in the sentence.
+
+    The subject must sit in the marker's **forward claim window** — the text after the
+    marker. A subject token earlier in the sentence is not necessarily the marker's object;
+    ignoring it prevents dropping a grounded sentence such as "…expertise in Python and
+    Perl … with a strong foundation in asynchronous systems".
+    """
+    lowered = sentence.lower()
+    windows: list[tuple[str, str]] = []
+    for marker in MARKERS:
+        for match in _phrase_pattern(marker.answer_phrase).finditer(lowered):
+            window = sentence[match.end() : match.end() + _CLAIM_WINDOW]
+            if window.strip():
+                windows.append((marker.chunk_phrase, window))
+    return windows
 
 
 def _split_sentences(text: str) -> list[str]:
@@ -79,13 +93,15 @@ def _split_sentences(text: str) -> list[str]:
 
 
 def _is_grounded(
-    marker: tuple[str, str], subject: str, cited_chunk_texts: Sequence[str]
+    chunk_phrase: str, subject: str, cited_chunk_texts: Sequence[str]
 ) -> bool:
-    _, chunk_phrase = marker
     for chunk_text in cited_chunk_texts:
         for chunk_sentence in _split_sentences(chunk_text):
-            if _contains(chunk_sentence, chunk_phrase) and _contains(chunk_sentence, subject):
-                return True
+            lowered = chunk_sentence.lower()
+            for match in _phrase_pattern(chunk_phrase).finditer(lowered):
+                window = chunk_sentence[match.end() : match.end() + _CLAIM_WINDOW]
+                if _contains(window, subject):
+                    return True
     return False
 
 
@@ -121,13 +137,16 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
     kept: list[str] = []
     dropped_sentences: list[str] = []
     for sentence in _split_sentences(answer):
-        markers = _markers_in(sentence)
-        subjects = _subject_tokens_in(sentence)
-        if markers and subjects and not any(
-            _is_grounded(marker, subject, cited_chunk_texts)
-            for marker in markers
-            for subject in subjects
-        ):
+        overclaim = False
+        for chunk_phrase, window in _marker_windows(sentence):
+            subjects = _subject_tokens_in(window)
+            if subjects and not all(
+                _is_grounded(chunk_phrase, subject, cited_chunk_texts)
+                for subject in subjects
+            ):
+                overclaim = True
+                break
+        if overclaim:
             dropped_sentences.append(sentence)
         else:
             kept.append(sentence)
