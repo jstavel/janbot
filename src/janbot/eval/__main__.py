@@ -202,6 +202,17 @@ def main(
     for failure in result.judge_failures:
         print(f"judge: {failure}")
 
+    for outcome in result.outcomes:
+        question = outcome.item.question
+        retrieved = ", ".join(outcome.retrieved_sources or []) or "<none>"
+        raw_answer = "<none>" if outcome.raw_answer is None else outcome.raw_answer
+        raw_citations = ", ".join(outcome.raw_citations or []) or "<none>"
+        guard_action = outcome.guard_action or "<none>"
+        print(f"retrieved: {question} — {retrieved}")
+        print(f"raw-answer: {question} — {raw_answer}")
+        print(f"raw-citations: {question} — {raw_citations}")
+        print(f"guard: {question} — {guard_action}")
+
     if args.answers:
         for outcome in result.outcomes:
             if outcome.response is None:

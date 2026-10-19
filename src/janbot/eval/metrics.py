@@ -41,6 +41,11 @@ class ItemOutcome:
 
     ``retrieved_context`` is the exact context the model was given (the window the
     judge checks the answer against), or ``None`` when the run exposed none.
+
+    ``raw_answer`` and ``raw_citations`` are the guard's additive observation seam: the
+    prediction and labels before the guard. ``guard_action`` is ``none``/``repaired``/
+    ``declined``/``disabled`` plus the rule. They are observability only and never enter a
+    metric.
     """
 
     item: GoldenItem
@@ -49,6 +54,9 @@ class ItemOutcome:
     retrieved_sources: list[str] | None = None
     retrieved_context: str | None = None
     judge_verdict: Verdict | None = None
+    raw_answer: str | None = None
+    raw_citations: list[str] | None = None
+    guard_action: str | None = None
 
 
 Metric = Callable[[list[ItemOutcome]], float]
