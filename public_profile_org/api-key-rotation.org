@@ -1,0 +1,204 @@
+:PROPERTIES:
+:ID:       20261018-api-key-rotation
+:TITLE:    A key with no expiry is a permanent grant — rotation policy for agent-held secrets
+:CREATED:  <2026-10-18>
+:AUTHOR:   goose
+:REVIEWED: <2026-10-18>
+:DOMAIN:   way-of-working
+:TAGS:     secret-management api-keys rotation expiry quotas secret-manager gcp openrouter ai-agents threat-model least-privilege parameter-consistency control-failure-modes
+:SYNOPSIS: A control whose parameters disagree with each other stops protecting anything and becomes a scheduled failure — a credential validity shorter than its rotation interval, a spend cap computed for a calendar month while the thing it bounds lives per key, a cap that resets exactly when the old copy is still usable; the worked example is an agent-held API key, the rule is general.
+:STRENGTHS:  threat-modeling least-privilege automation-thinking parameter-consistency
+:WEAKNESSES: automation-missing rotation-manual
+:END:
+
+# A key with no expiry is a permanent grant — rotation policy for agent-held secrets
+
+Use when asked how credentials are handled for an AI service, or how the
+"agent has access to my key" problem can be bounded.
+
+* The rule this is an instance of
+
+A control whose parameters disagree with each other does not protect anything; it
+becomes a **scheduled failure**:
+
+- a validity shorter than the interval at which the credential is actually refreshed,
+- a quota computed for a calendar period while the thing it bounds lives per key,
+- a cap that resets when the credential rotates — restoring the allowance exactly
+  when the old copy is still usable.
+
+The rule: **fix each parameter against the object it really bounds** (the lifetime of
+one credential, not the month; the rotation interval that really happens, not the one
+that is intended) and **state the control's own failure mode out loud** — when it
+fires, is it an outage, a silent stop, or a bill?
+
+The worked example below is an API key held by an agent. The rule is not about keys,
+which is why this object sits under way-of-working rather than security.
+
+* The threat, stated precisely
+
+An agent talks to a model provider on the owner's behalf, so it necessarily
+holds the provider API key. The risk is not in the call itself — it is that the
+agent can **write the key somewhere and keep it**:
+
+> *"If it stores the key without my knowledge, then it has it forever."*
+
+No amount of prompting fixes this, because the persistence is outside the
+prompt. The threat model is therefore not "the key leaks to an attacker" but
+**"the key survives the task"** — a grant with no end date.
+
+* The countermeasure — three properties, one store
+
+| Property | Purpose |
+|----------|---------|
+| Short expiry | bounds the damage window; every key becomes useless on its own |
+| Usage caps (rate and pricing ceiling) | bounds the blast radius while the key is valid |
+| Regular rotation | shrinks the window in which a persisted copy is still useful |
+
+And a single authoritative place to do it:
+
+- **Google Cloud Secret Manager as the only store** — auditable access,
+  versioning, and a real revoke path. Not `.env`, not a config file, not a
+  conversation.
+
+The key is obtained **ephemerally at runtime** (in memory), never written to
+disk, logs or a user-visible context.
+
+* Sizing the cap — per key, not per account
+
+The limit is set on a **key**, not on the account, so rotation resets it: four
+rotations a month mean four independent allowances, and the real monthly exposure
+is four times the cap, not the cap. Sizing therefore has to be computed against
+the **lifetime of one key**, never against a month.
+
+| Figure | Value |
+|--------|-------|
+| legitimate spend for one key's lifetime | *S* |
+| cap in force | **≈ 1.5 × S** |
+| hard stop if the rotation lapses | ≈ 1.5 × the lifetime — about ten days of maximum spending |
+| worst case per month (*k* keys, each abused to its cap) | *k* × cap — with weekly rotation, ≈ 1.5 × the legitimate monthly spend |
+
+The last row is the part worth remembering: **the exposure multiplier equals the
+cap's margin.** Set the cap at 1.5 × one lifetime and a month of fully abused keys
+costs 1.5 × the legitimate month — the headroom allowed for safety is also the factor
+by which a leak can exceed normal spend.
+
+The reset period is deliberately **off**. A weekly reset would restore the
+allowance and remove the hard stop: a key surviving a missed rotation would keep
+spending. Without reset, the cap doubles as a **rotation-lapse detector** — the
+key dies after about ten days of maximum spending, which is a visible failure
+rather than a silent drain.
+
+The price of that choice: a cap that has been reached looks like a broken key,
+not like an exhausted budget. Hence the operational rule — **a 402/403 from the
+provider means check the key limit, not the network.**
+
+#+begin_renegotiated date=2026-10-18 by=owner
+old: 'The cap was set far above expected spend, so it bounds the account balance
+      rather than the blast radius.'
+new: 'The cap was first set far above expected spend; it has since been re-sized to
+      roughly one and a half times the legitimate spend for a single key, with the
+      reset period off, so that it bounds one key lifetime and doubles as a
+      rotation-lapse detector. (Absolute figures removed from the public text on
+      2026-10-19 — see the reframing marker below.)'
+why: owner stated his own ceiling — a hard limit on a full working day of calls
+     across projects — and set the limit accordingly. The first number was a
+     guess presented as a policy; this one is derived.
+#+end_renegotiated
+
+#+begin_renegotiated date=2026-10-19 by=owner
+old: 'the object as a list of key-specific properties (expiry, cap, rotation) carrying
+      the owner's absolute spend figures'
+new: 'the same content led by the general rule — a control whose parameters disagree
+      becomes a scheduled failure — with figures expressed as ratios to one key's
+      legitimate spend, and with the exposure multiplier named (k × cap, i.e. the cap
+      margin times the legitimate month)'
+why: owner's question (2026-10-19) whether this object earns its place in the corpus.
+     It does, but its value is the parameter-consistency rule, not the OpenRouter and
+     Secret Manager specifics — the 10-17 audit already warned that tool names slide
+     while the lesson holds. The absolute figures described the owner's wallet rather
+     than the method, on a public profile, so they are generalized here **and inside
+     the earlier 2026-10-18 marker**: a deliberate exception to "markers are not
+     edited later", because the reason for removing the numbers applies to every
+     place they appear, including the audit record. That figures were once absolute is
+     recorded in this sentence rather than by keeping them.
+#+end_renegotiated
+
+* Daily or weekly — the interval is a function of maturity
+
+The interval is not a taste question; it is a trade-off between exposure and
+operational cost:
+
+- **Daily** minimises the exposure window and is preferred *once rotation is
+  fully automated and monitored*.
+- **Weekly** is the sane starting point while rotation still costs a human
+  action — a daily manual rotation is not a policy, it is a future outage.
+
+So the policy is a **transition**: weekly first, daily once the rotator runs
+unattended with canary rollout and rollback. "Daily" without automation is
+security theatre; the automation is the actual control.
+
+#+begin_renegotiated date=2026-10-18 by=owner
+old: '"Daily" without automation is security theatre; the automation is the
+      actual control.'
+new: 'the provider-enforced expiry is the control that works without automation;
+      automation is what keeps expiry from turning into an outage. The two
+      intervals must then be ordered — key validity longer than the rotation
+      interval, with margin — or the control produces outages instead of
+      preventing them. Arrangement in force since 2026-10-18: a 30-day validity
+      rotated weekly, i.e. 23 days of headroom, so that expiry is a dead-man
+      switch for "forgot for a month" rather than a weekly dependency. A 7-day
+      validity rotated weekly (the first setting) had no headroom at all and was
+      rejected for that reason.'
+why: owner verified in the OpenRouter UI (2026-10-18) that a key can be issued
+     with a validity of 1, 7 or 30 days. The earlier claim that only a process
+     could bound the exposure window was wrong. The owner then chose a 30-day
+     validity with a weekly rotation.
+#+end_renegotiated
+
+* Honest status
+
+This object records a **policy being decided**, not a deployed control. Not yet
+built: the automatic rotator, the ephemeral retrieval path in the service, the
+anomaly monitoring and the revocation playbook.
+
+#+begin_renegotiated date=2026-10-18 by=owner
+old: 'This object records a **policy being decided**, not a deployed control.
+      Not yet built: the automatic rotator, the ephemeral retrieval path in the
+      service, the anomaly monitoring and the revocation playbook.'
+new: 'This object began as a policy being designed. As of 2026-10-18 the store,
+      the validity and the cap exist on a personal key — one Secret Manager
+      store, a provider-enforced 30-day validity, a usage cap — while rotation
+      is manual and weekly. Not yet built: the automatic rotator, the ephemeral
+      retrieval path in the service, the anomaly monitoring and the revocation
+      playbook. The cap was set far above expected spend, so it bounds the
+      account balance rather than the blast radius.'
+why: owner's first deployment of the policy. Recording the state keeps the
+     "not implemented" claim accurate instead of understating it, and names the
+     cap sizing as the open defect.
+#+end_renegotiated
+
+The design is clearly right in
+direction; calling it "done" would over-claim.
+
+Open question carried explicitly: which component owns the rotation, and whether
+the service can retrieve the key without any persistent material at all.
+
+* Related
+
+- [[id:20261017-secret-management-evolution][Secret management — from git-crypt to short-lived workload identities]] —
+  the line this belongs to: move the root of trust from a file to a human to an
+  identity, and prefer having no long-lived secret at all.
+- [[id:20261017-infrastructure-guardrails][Guardrails by construction]] — the same reasoning applied to destructive
+  operations: make the bad state impossible, not merely discouraged.
+- [[id:20261007-janbot-ai-agent][JanBot]] — the service this policy is written for.
+
+* Sources
+
+- corpus/texts/20261018-api-key-rotation-transcript.txt — the persistence
+  threat ("it has it forever"), time-limited validity, usage caps, rotation,
+  Secret Manager as the single store, the daily-vs-weekly interval question.
+  git ref: 26ce656d07263453fba6c634926ca710c24727ce:corpus/texts/20261018-api-key-rotation-transcript.txt
+  sha256: 3de09783ef72f1267a805ad27ce6e18afd320c05641adcfe2f9c8a4aaca8579f
+- corpus/generated/10-18 Architektura a bezpečnostní strategie automatizované rotace API klíčů OpenRouter v GCP-Summary.txt
+  — Plaud AI restatement (threat model, architecture, interval trade-off,
+  action items); used to check the spoken draft, not as a source of new claims.

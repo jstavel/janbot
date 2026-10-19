@@ -1,0 +1,107 @@
+:PROPERTIES:
+:ID:       20261018-drift-closing-cadence
+:TITLE:    Closing the drift — an onboarding document, a weekly block, a daily ritual
+:CREATED:  <2026-10-18>
+:AUTHOR:   goose
+:REVIEWED: <2026-10-18>
+:DOMAIN:   way-of-working
+:TAGS:     drift-closing cadence weekly-review daily-closing onboarding-document ai-assisted-learning compressed-documentation habit-design
+:SYNOPSIS: The gap between what an AI workflow produces and what the human can reproduce is closed by scheduled operations rather than by osmosis — a compressed, continuously growing onboarding document, a weekly block with no development in it, and a daily close in which the human closes both axes: one decision defended against the ADR, one command from the runbook run by hand.
+:STRENGTHS:  habit-design self-awareness honest-about-limits incremental-method
+:WEAKNESSES: cadence-not-yet-established drift-outruns-closing
+:END:
+
+# Closing the drift — an onboarding document, a weekly block, a daily ritual
+
+Use when asked how I keep up with my own AI-assisted work, or how a project is
+supposed to be handed over. The three instruments below are one method: **the
+drift is closed on a calendar, not on demand.**
+
+* 1. The onboarding document — the compressed map
+
+Joining a project means closing the gap between my knowledge and the project's.
+The instrument is **one dense onboarding document**, not a pile of tickets and
+not a Q&A bank:
+
+- Q&A and quizzes are for **real newcomers** — someone meeting the domain for the
+  first time needs the gradual, question-shaped path.
+- For the owner of an AI-assisted project the need is different: a **compressed
+  document** that can be read step by step and checked against reality ("do I
+  understand this, can I do this?").
+- AI writes and re-compresses it; the document **grows as skills and knowledge
+  accumulate**. It is a living artifact, not a one-off handover pack.
+
+The value is in the compression: a map dense enough to be re-read, short enough
+to be re-read at all.
+
+* 2. The weekly block — the end of the week is not development time
+
+One block per week is reserved and **no development happens in it**. The block
+closes the week: unfinished work is closed or explicitly parked, and the drift is
+reduced on four axes —
+
+- knowledge,
+- experience (what was actually tried),
+- the agentic workflow,
+- the agentic team.
+
+The point is the *reservation*: if closing is what remains after development, it
+never happens. The week is a batch, and a batch needs a commit point.
+
+* 3. The daily close — name the new knowledge, try one piece by hand
+
+The weekly model has an honest weakness: drift accumulates faster than a weekly
+close can absorb it. The refinement is a **daily** close:
+
+1. at the end of the day, ask the agent: *what new knowledge appeared today?*
+2. then close **both axes**, one item each — they close differently:
+   - **knowledge**: take one decision and defend it out loud — the decision, the
+     rejected alternative, what breaks if it changes (see
+     [[id:20261018-knowledge-drift][knowledge drift]]),
+   - **procedure**: take one command from the runbook and **run it by hand** —
+     reading it does not count (see [[id:20261018-procedure-drift][procedure drift]]),
+3. the day is then closed: no open loop carried into the night.
+
+Two reasons, and the second is not a productivity argument: it closes the day
+**emotionally and mentally**. An unclosed day is an open loop.
+
+The two axes are separate steps because they fail differently: a decision can be
+*known* and still not *defensible*, and a command can be *readable* and still not
+*executable* by the person reading it.
+
+* Honest limit — the cadence may still lose
+
+The author states plainly that the drift between project knowledge and practical
+skill is **already a month deep**, so a daily close will not necessarily keep
+up. The hypothesis is that a shorter cadence at least stops the debt from
+growing silently; it is an experiment, not a verified method. What is not in
+doubt is the direction: **closing must be scheduled**, because unscheduled
+learning is precisely how the gap accumulates.
+
+* Related
+
+- [[id:20261018-knowledge-drift][Knowledge drift — the finite set of decisions you must be able to defend]] — the
+  first axis these instruments exist to close.
+- [[id:20261018-procedure-drift][Procedure drift — the runbook is a memory module]] — the second axis, closed by
+  execution rather than by reading.
+- [[id:20261007-gtd-org-system-design][Personal OS as Professional Architecture]] — inbox, weekly review and
+  horizons: the same "reserve the block" habit applied to personal workflow.
+- [[id:20261007-spec-first-evolution][Spec-First Philosophy]] — a written artifact as the thing a human and an
+  agent can both be held to.
+
+* Sources
+
+- corpus/texts/20261018-onboarding-document-transcript.txt — the compressed
+  onboarding document, AI-maintained and growing; Q&A reserved for real
+  newcomers.
+  git ref: 26ce656d07263453fba6c634926ca710c24727ce:corpus/texts/20261018-onboarding-document-transcript.txt
+  sha256: 64ecec2092e739b71a4f2982afef96fc11b0694957d4af43701ebc9df946692d
+- corpus/texts/20261018-weekly-closing-cycle-transcript.txt — the weekly block
+  with no development; closing across knowledge, experience, workflow and team.
+  git ref: 26ce656d07263453fba6c634926ca710c24727ce:corpus/texts/20261018-weekly-closing-cycle-transcript.txt
+  sha256: fdff40f1dca47851dd40d80d722291cbefe0b9e653c3c389372978707eda19db
+- corpus/texts/20261018-daily-closing-drift-transcript.txt — daily close, ask the
+  agent for the day's new knowledge, try it by hand; the doubt that the cadence
+  may still lag a month-deep drift; the emotional reason.
+  git ref: 26ce656d07263453fba6c634926ca710c24727ce:corpus/texts/20261018-daily-closing-drift-transcript.txt
+  sha256: c4a4c13b9f9ca9c5bca504b765e40ab2a9f0543dce7a518aa70978498edda524

@@ -1,0 +1,103 @@
+:PROPERTIES:
+:ID:       20261018-substitutable-ai
+:TITLE:    AI must be substitutable — and so must I
+:CREATED:  <2026-10-18>
+:AUTHOR:   goose
+:REVIEWED: <2026-10-18>
+:DOMAIN:   way-of-working
+:TAGS:     substitutability ai-agents dependency typescript clojure python perl javascript reactive-testing competence expertise
+:SYNOPSIS: If every team member has to be replaceable then the AI is no exception, and the corollary is symmetrical — what I ship I have to be able to reproduce by hand — so AI acceleration is legitimate only where I can still carry the work myself; otherwise the honest answer is declared inexperience plus a deliberate plan to earn the skill.
+:STRENGTHS:  honesty-about-dependency substitutability-principle strategic-clarity learning-plan
+:WEAKNESSES: typescript-without-ai clojure-refresh-needed skill-gap-open
+:END:
+
+# AI must be substitutable — and so must I
+
+Use when asked about dependency on AI, about what "expert" means in an agentic
+workflow, or why I insist on being able to do the work by hand. The principle is
+symmetrical and it is not optional: **if a team member is not substitutable, it
+is a single point of failure — and that applies to the agent exactly as it
+applies to me.**
+
+* The two-way rule
+
+| Direction | Requirement | Why |
+|-----------|-------------|-----|
+| AI → team | another agent or a human can take over the AI's part | otherwise the workflow dies with one vendor, one model, one context |
+| Human → team | the human can reproduce, debug and extend what was shipped | otherwise the human becomes a rubber stamp on output he cannot verify |
+
+The test is concrete: **turn the AI off**. Can I debug this? Extend it? Fix it?
+If the answer is no, the work is not mine yet — it is on loan.
+
+* The honest competence map
+
+Stated without decoration, because the map is the point:
+
+| Technology | Status | Evidence |
+|------------|--------|----------|
+| Python, Perl, JavaScript | expert — written by hand for years | real delivery across two decades |
+| Clojure | deep experience, currently rusty | production work in the past; needs a refresh, not a restart |
+| TypeScript | **produced a large project, cannot write a line unaided** | the reactive-testing monorepo was built with agents; the main ideas are understood, the skill is not in the hands |
+
+The TypeScript row is the uncomfortable one and it is recorded as it is: the
+project proves the *architecture* was understood and specified, not that the
+language is mastered. Without agents the author is a beginner there.
+
+* The strategic choice
+
+Two coherent strategies, and the decision is which one applies when:
+
+- **A — conservative:** apply AI acceleration only to languages where expertise
+  already exists (Python, Perl, JavaScript). Guarantees full understanding of
+  everything shipped; limits reach.
+- **B — expansive:** use AI to enter Clojure or a new stack, **on the condition
+  that active personal practice with the language is part of the workflow** —
+  not passive acceptance of generated output.
+
+The condition is the whole difference between B and dependency. B without the
+practice clause is just A's risk without A's guarantee.
+
+* The self-check I can actually run
+
+The reactive-testing test pipeline, recalled from memory rather than looked up,
+as a substitutability drill:
+
+1. write the test in **Gherkin**,
+2. fold the Gherkin into the **FSM contracts** model,
+3. assign the test to its **test suite**,
+4. run it,
+5. a **script generates one standalone script per use case** for a developer.
+
+Being able to reconstruct that chain from memory is the kind of evidence that
+matters — it shows the method survived the project. The parts that do not come
+back from memory are the honest training list.
+
+* Honest limit
+
+The gap is open, not closed. The decision recorded here is a *rule for future
+work*, not a claim of current mastery: TypeScript remains a declared gap and
+Clojure a refresh task. The rule exists so that the gap cannot quietly grow
+while the portfolio looks strong.
+
+* Related
+
+- [[id:20261018-knowledge-drift][Knowledge drift]] — the systemic version of the same gap, and the finite set
+  of decisions that makes it closable.
+- [[id:20261018-architect-not-coder][Hired for judgement, not for typing]] — how the gap is declared to the
+  market.
+- [[id:20261007-reactive-testing-project][Reactive Testing — TypeScript proof]] — the project this map is honest about.
+- [[id:20261016-ai-era-paradigm][The AI-era development paradigm]] — why entering a new language with AI is
+  legitimate at all.
+
+* Sources
+
+- corpus/texts/20261018-substitutable-ai-transcript.txt — two-way
+  substitutability, "AI must be replaceable like me", the reactive-testing
+  pipeline recalled as a self-check, the demand to train the TypeScript skill.
+  git ref: 26ce656d07263453fba6c634926ca710c24727ce:corpus/texts/20261018-substitutable-ai-transcript.txt
+  sha256: f14bebc74f311bc96d577a61be23d07dfe755ff176178281b76409e944c41c1a
+- corpus/texts/20261018-ai-workflow-strategy-gtd-trading-transcript.txt — the
+  conservative-vs-expansive choice, the condition of personal practice, the
+  competence map by language, "what if the AI is switched off".
+  git ref: 26ce656d07263453fba6c634926ca710c24727ce:corpus/texts/20261018-ai-workflow-strategy-gtd-trading-transcript.txt
+  sha256: c653c6ad8617025c45a32ef4c68116e757d3a390844c5436540a9c4e6fc354f1

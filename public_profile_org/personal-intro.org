@@ -18,19 +18,35 @@
   Stories bring the power to know; success fuels the power to grow.
   Trust builds joy, and shared joy is twice the joy.
 
-  Professional in Perl and Python, JavaScript, TypeScript, yet Clojure is my true passion.
-  Focus on Asynchronous Systems & Invariant Testing.
+  Python and Perl by hand, Clojure by heart, TypeScript with agents.
+  I build systems whose output can be verified, not merely demonstrated.
 
   I cherish the fleeting moments that remind me I am still growing.
 
 * What it claims
 
 - Motto: knowledge grows through stories and success; trust and shared joy are the point of collaboration.
-- Stack: professional in Perl, Python, JavaScript and TypeScript; Clojure is the true passion.
+- Stack: Python and Perl by hand, JavaScript and Clojure in daily use; Clojure is the true passion. TypeScript is written with agents and is not presented as hand-written.
 - Focus: asynchronous systems and invariant testing.
 - Stance: a learner — the fleeting moments that prove you are still growing are the ones worth keeping.
 
+#+begin_renegotiated date=2026-10-19 by=owner
+old: 'Professional in Perl and Python, JavaScript, TypeScript, yet Clojure is my true passion.'
+     'Stack: professional in Perl, Python, JavaScript and TypeScript; Clojure is the true passion.'
+new: 'Python and Perl by hand, Clojure by heart, TypeScript with agents. I build systems
+      whose output can be verified, not merely demonstrated.'
+     'Stack: ... TypeScript is written with agents and is not presented as hand-written.'
+why: contradiction found by the 2026-10-18 re-baseline falsification scan (dataset item 19,
+     "Tell me about yourself."). This object claimed professional TypeScript while
+     substitutable-ai.org states that TypeScript cannot be written unaided, and
+     architect-not-coder.org calls presenting it as expertise an over-claim — so the
+     corpus contradicted itself and the cleaner claim was the one being grounded.
+     The wording now matches the intro as rewritten in the English CV the same day
+     (cv-en.tex, commit 53ee751): TypeScript is declared as agent-assisted and verified,
+     not as a hand-written skill.
+#+end_renegotiated
+
 * Sources
 
-- ~/dev/cv/cv-en.tex — the `\quote{}` intro block (lines 30–35, English CV)
-  git ref: 562111f:cv-en.tex
+- ~/dev/cv/cv-en.tex — the `\quote{}` intro block (English CV)
+  git ref: 53ee751:cv-en.tex

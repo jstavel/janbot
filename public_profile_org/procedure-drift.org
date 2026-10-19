@@ -1,0 +1,139 @@
+:PROPERTIES:
+:ID:       20261018-procedure-drift
+:TITLE:    Procedure drift — the runbook is a memory module, not a courtesy
+:CREATED:  <2026-10-18>
+:AUTHOR:   goose
+:REVIEWED: <2026-10-18>
+:DOMAIN:   way-of-working
+:TAGS:     agentic-development drift procedures runbook commands tooling substitutability rehydration blast-radius stale-claims
+:SYNOPSIS: What an agent actually executes — commands, tools, pipelines — diverges from what people can execute, and that gap is closed only by running the procedure by hand against a primary RUNBOOK.md, which doubles as the agent's own rehydration because every session starts from zero.
+:STRENGTHS:  process-design substitutability-awareness economics-of-artifacts cheap-measurement
+:WEAKNESSES: no-question-log-yet not-yet-measured
+:END:
+
+# Procedure drift — the runbook is a memory module, not a courtesy
+
+Use when asked how a project stays operable by people, or what is measured when
+an agent does the work. The claim: **know-what is closed by reading, know-how is
+closed only by executing** — and the artifact that makes execution possible is a
+primary one, not an appendix.
+
+* The axis
+
+The companion axis to [[id:20261018-knowledge-drift][knowledge drift]]:
+
+| | Knowledge drift | Procedure drift |
+|---|---|---|
+| What diverges | what the agent **knew and used** (decisions, trade-offs, conventions) | what the agent **did** (commands, tools, pipelines, deploy steps) |
+| Failure | the team cannot **explain** it | the team cannot **rebuild** it |
+| Closes by | reading and recalling | **running it** |
+| Artifact | decision index over the ADRs | `RUNBOOK.md` |
+
+Reading a summary closes the first row and nothing of the second. A procedure is
+believed only when it has been executed by someone who did not watch the agent
+do it.
+
+* Rehydration is for both — and that flips the priority
+
+The two parties move in opposite directions:
+
+- **the agent forgets**: every session starts from zero; context is ephemeral,
+- **the human lags**: knowledge persists but accumulates slower than the project
+  produces it, and a new person starts only once, on entering the project.
+
+So the same artifact serves **two consumers** — and the priority is inverted
+against the usual handover convention:
+
+> **Write the runbook and the onboarding document for the agent first, for the
+> human second.**
+
+The economics are the reason. A missing line costs a human *once*, at the start.
+It costs the agent *every session*, silently. A gap in the runbook is therefore
+not a cosmetic flaw in a newcomer document; it is a tax paid at every execution.
+
+The consequence for the content: **stateless and self-sufficient.** No "as we
+discussed yesterday", no dependency on a chat history. Which is the spec-first
+rule — *the artifact, not the chat, is where work gets corrected* — applied one
+layer below intent.
+
+* The runbook is a primary artifact
+
+`RUNBOOK.md` sits in the repository next to the code, next to the decision
+index, and is authored, not generated. Its verification regime is different from
+the index's:
+
+| | `RUNBOOK.md` | `DECISIONS.md` |
+|---|---|---|
+| Type | **primary** (like a Makefile) | **derived index** |
+| Verified by | **running it** — if it does not work, it lies | **pinning to the ADR** |
+| Authority for | **how** | nothing — points at `_bmad-output/` |
+
+Scope discipline: `_bmad-output/` is the single source for *what and why*;
+`RUNBOOK.md` is the single source for *how*; the two do not overlap, so there is
+never two authorities for one question.
+
+* How the drift is measured — free, from traces that already exist
+
+1. **Delta.** What the agent actually executed (session logs, shell history, CI
+   logs) versus what the runbook contains. The delta is the backlog. Greppable;
+   no new evidence to collect.
+2. **Stale entries.** Commands that nobody — agent included — has run for N
+   months are claims that are no longer true. **A runbook that is not run lies.**
+   Same class of finding as a metric that keys on a status field and therefore
+   cannot see metadata: the instrument looks alive and measures nothing.
+3. **The agent's questions.** When the agent has to ask "how are the tests run
+   here?" or invents its own command, the runbook has a hole — and the hole is
+   *recorded*, because the question was asked in the session.
+
+The third one is the strongest, because it is continuous: **every session is a
+test of the runbook.** The human gets a single, subjective test ("can I do
+this?"); the agent gets a repeated, objective one (a question was asked, or it
+was not). That is the first version of this measurement that needs no
+self-assessment at all.
+
+* What gets closed and what does not
+
+Without a filter the process becomes an endless list, people stop maintaining it,
+and the result is worse than no process — false coverage. The filter is blast
+radius:
+
+| Level | Examples | Policy |
+|-------|----------|--------|
+| **must** | deploy, key rotation, destructive operations, anything touching other people's data | always closed, periodically re-verified |
+| **should** | build, test pipeline, reproducing a bug | closed over time |
+| **never** | formatting, `grep`, renaming | legitimately agent-only — **not a debt** |
+
+The `never` row is deliberate: stating it protects the process from absorbing
+work that carries no risk.
+
+* Honest limits
+
+- No question log exists yet. The continuous test is a design, not yet an
+  instrument, and nothing has been measured over time.
+- The delta requires the agent's execution traces to be readable and retained —
+  an assumption, not a verified property of the current setup.
+- "Every session tests the runbook" is an argument, not a result. Status:
+  *held*.
+
+* Related
+
+- [[id:20261018-knowledge-drift][Knowledge drift]] — the other axis, closed by recall instead of execution.
+- [[id:20261018-drift-closing-cadence][Closing the drift]] — the daily and weekly ritual both axes hang on.
+- [[id:20261018-substitutable-ai][AI must be substitutable — and so must I]] — why the procedure must be humanly
+  executable at all.
+- [[id:20261007-reactive-testing-project][Reactive Testing]] — evidence-first verification, the same move applied to test
+  claims.
+- [[id:20261007-gtd-org-system-design][Personal OS]] — the weekly review as the reserved block where this is done.
+
+* Sources
+
+- corpus/texts/20261018-knowledge-skill-drift-transcript.txt — the drift as a
+  property of agentic development; substitutability of every member as the
+  target; closing as a dedicated operation.
+  git ref: 26ce656d07263453fba6c634926ca710c24727ce:corpus/texts/20261018-knowledge-skill-drift-transcript.txt
+  sha256: 0bea97c7809197f7997b3385f60681f54dd600428a26c1bafc6f3716a16125c9
+- Owner clarification (chat, 2026-10-18) — the second axis stated explicitly: the
+  procedures the agent uses (commands, tools) versus whether people can use them
+  too; and the confirmation that rehydration serves both parties — *"the AI
+  starts at every session, a new person starts when entering the project"*.
+  Recorded from conversation; there is no recording of this exchange.
