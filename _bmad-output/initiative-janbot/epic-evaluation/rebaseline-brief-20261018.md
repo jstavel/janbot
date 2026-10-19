@@ -302,3 +302,88 @@ generation side, not the corpus: item 19 is the known over-claiming class for wh
 already required a deterministic output-level guard (ADR-009, E2), and the judge scored that
 answer `faithful` — so the judge does not see paraphrase-level over-claim either. Two open
 findings, no re-run proposed.
+
+---
+
+## 6. Run B — pre-registration for the retrieval-window lever
+
+**Written 2026-10-19, before run B.** Owner decision: run the window lever alone; item 41
+staying out of the window is accepted and is **not** a trigger for this run.
+
+### 6.1 The lever, and what is held constant
+
+| | |
+|---|---|
+| Lever | `JANBOT_RETRIEVAL_WINDOW`: `chunks` → **`sources`** |
+| Held constant | `k = 4`, hybrid fusion, corpus (`05b11a7`, 61 content files), index (417 chunks), dataset (`a8bd69dc…`) |
+| Compared against | run **A** = `e7110d58` (same corpus/dataset/k, `chunks`), *not* against `4c0d848c` |
+
+`k` is deliberately **not** raised. `retrieval_accuracy` is monotone in `k` — a larger window
+satisfies "all expected sources present" arithmetically — so changing `k` and the window
+together would make the accuracy number uninterpretable. Holding `k` fixed keeps the
+comparison valid, which is the whole reason this lever goes first.
+
+### 6.2 Known in advance — the retrieval half is deterministic
+
+Retrieval involves no model call, so these numbers are **measured, not predicted**
+(hybrid, k=4, over the 49 val in-corpus items):
+
+| | A (`chunks`) | B (`sources`) |
+|---|---|---|
+| `retrieval_accuracy` | 34/49 = 0.6939 | **38/49 = 0.7755** |
+| items gained | — | **71, 75, 83, 84** |
+| items lost | — | **none** |
+
+Because retrieval is deterministic, **any** deviation from this table during run B means the
+run did not execute the registered configuration — a hard stop, not a finding.
+
+Item 41 (`"Why were you fired from Red Hat?"`) remains outside the window in both
+configurations. Accepted by the owner; its spurious refusal is carried forward as a known,
+open defect with its own future lever.
+
+### 6.3 Predictions for the half that needs the model
+
+| metric | A | prediction for B | mechanism |
+|---|---|---|---|
+| `citation_correctness` | 31/45 (0.6889) | flat to +2 items | four recovered items bring their expected source back into the window |
+| `citation_precision` | 0.6815 | **flat to better** | `sources` de-duplicates the window: four distinct sources instead of up to four chunks from one — fewer same-source citations competing |
+| `faithfulness` | 43/45 (0.9556) | flat | the recovered items were hallucinations-by-absence; grounding returns |
+| `refusal_pass_rate` | 1.0 | 1.0 | unchanged items |
+| `spurious_refusal_rate` | 1/46 (item 41) | **1/46, unchanged** | exempted by decision |
+| `answer_coverage` | 45/49 | ≥ 45/49 | more windows contain a groundable source |
+
+These are predictions written down before the numbers exist. A prediction that fails is a
+finding about the *mechanism*, not a reason to re-interpret the result.
+
+### 6.4 Judgment — accept or do not register
+
+**Register B** only if all of the following hold against A:
+
+1. `citation_correctness` regresses by **≤ 4 items** (the `gate-rule.md` regress floor);
+2. `faithfulness` regresses by **≤ 1 item** (same floor);
+3. `refusal_pass_rate` stays **1.0**;
+4. `spurious_refusal_rate` stays **1/46** — no *new* spurious refusal beyond item 41;
+5. observed `n` matches the previous denominators or changes with a named cause;
+6. the retrieval side matches §6.2 exactly.
+
+**Do not register** if any of the six fails. No override by re-reading the numbers; an owner
+override is possible but must be written down *as an override with its reason*, never as
+"the run passed".
+
+### 6.5 If B is accepted — a consequence that must not be skipped
+
+A reference must describe **what ships**. The shipped default is
+`JANBOT_RETRIEVAL_WINDOW=chunks`; registering a reference measured with `sources` while the
+default stays `chunks` would make the reference fiction. So acceptance implies, in the same
+round:
+
+- an **ADR** recording the window change (`/chat` contract and answer shape unchanged — only
+  which chunks reach the prompt), with the §6.2/§6.3 evidence attached;
+- flipping the config default to `sources`;
+- re-recording the reference so its configuration matches the shipped default.
+
+### 6.6 Prohibitions after run B
+
+As §5.5: no `expected_sources` edits, no re-split, no re-run for a better number, no judge
+swap, no post-hoc redefinition of what "register" means. Any insufficiency of this
+pre-registration is appended (date, `old → new → why`), never edited in place.
