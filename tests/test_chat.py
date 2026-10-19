@@ -966,3 +966,28 @@ def test_guard_seam_records_the_repaired_action(
     assert program.last_raw_answer == raw
     assert program.last_raw_citations == ["profile.org"]
     assert program.last_guard_action.startswith("repaired: D2")
+
+
+def test_guard_disabled_records_raw_values_as_final(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """With the guard off, the seam's raw values equal the final response byte-for-byte."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env={**_chat_env(corpus, index_path), "JANBOT_OUTPUT_GUARD": "off"},
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["profile.org"]),
+    )
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    program = app.state.program
+    assert program.last_guard_action == "disabled"
+    assert program.last_raw_answer == body["answer"]
+    assert program.last_raw_citations == ["profile.org"]
+    assert [citation["source"] for citation in body["citations"]] == ["profile.org"]

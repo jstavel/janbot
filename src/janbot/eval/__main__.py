@@ -55,6 +55,7 @@ def run_params(config: Config) -> dict[str, Any]:
         "retrieval_mode": config.retrieval_mode,
         "retrieval_window": config.retrieval_window,
         "relevance_threshold": config.relevance_threshold,
+        "output_guard": config.output_guard,
         "program": program_marker(config.program_path),
         "judge_input": "context",
     }
