@@ -150,6 +150,18 @@ Run the port-only happy path with a key (both the `eval` snapshot and `productio
 OPENROUTER_API_KEY=... uv run pytest tests/e2e -q
 ```
 
+### Merging
+
+Changes land through a pull request; `main` is not pushed to directly.
+
+> **Rebase and merge re-creates commits.** GitHub's rebase merge rewrites every commit SHA
+> even when a fast-forward would have been possible, and it **drops empty commits** (this repo
+> records an index rebuild as an empty commit, because `chroma_db/` is gitignored).
+>
+> Consequence for documentation: **never pin the commit SHA of an unmerged branch.** Pin the
+> run id and the `dataset_sha256` instead — that is what the reference registration does. If a
+> commit SHA must be cited, cite it from `main` *after* the merge.
+
 ## License
 
 [MIT](LICENSE)
