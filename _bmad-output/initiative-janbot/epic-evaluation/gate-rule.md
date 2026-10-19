@@ -4,35 +4,35 @@ Committed **before** the optimization stages run, so `5.14` (BootstrapFewShot,
 multi-objective) and `5.9` (MIPROv2) are judged against a fixed rule rather than a
 threshold chosen after seeing the numbers.
 
-Reference: the val baseline **`4c0d848c8f924a3aa32ee220114c126f`** (status `FINISHED`),
-re-registered 2026-10-18 after the corpus round 2026-10-17. Nominal gate-eligible
-**n = 47** (val 57 minus the 10 `should_refuse`); for `citation_correctness` and
-`faithfulness` the **observed n = 45**, because two items errored (`FabricatedCitation`)
-and the metric contract excludes errored items. **Both n yield the same integer
-thresholds** (derived below). Judge `anthropic/claude-haiku-4.5`; retrieval
-`JANBOT_RETRIEVAL_MODE=hybrid` (the adopted default) with the `chunks` window,
-`top_k=4` and the two-best relevance guard (θ = 0.26); `program=baseline`
-(`JANBOT_PROGRAM_PATH` unset); `dataset_sha256` `78761c13…109d`. Split: train 43 /
-val 57; `should_refuse` 13 (10 val). This reference supersedes `c6ced445` (91 items,
-54 val, 44 gate-eligible, `dataset_sha256` `1c3864bd…`), which remains a valid
-historical record but is not comparable across a corpus + index + dataset re-base.
-**This is the RE-REGISTRATION transcription** — the reference moved with the breadth
-work and now with the corpus round; the n-specific thresholds were re-instantiated at
-the new baseline p (the principle — 1.5σ, symmetric floor — is unchanged; see the
-epic Notes "PRE-REGISTERED metric re-registration", 2026-10-15). A compiled stage is
-evaluated on the same gate-eligible held-out val items and compared
-proportion-for-proportion.
+Reference: the val baseline **`5ed5d8d73bb7400782503f8941a994f7`** (status `FINISHED`),
+registered 2026-10-19 for the **shipped** configuration. Nominal gate-eligible **n = 49**
+(val 59 minus the 10 `should_refuse`); for `citation_correctness` and `faithfulness` the
+**observed n = 48**, because item 41 declined (`declined: uncited`) and the metric contract
+excludes declined items. **Both n yield the same integer thresholds** (derived below).
+Config: `chunks` window, `top_k=4`, hybrid, θ = 0.26; judge
+`anthropic/claude-haiku-4.5`; `program=baseline` (`JANBOT_PROGRAM_PATH` unset);
+**`output_guard=on`** (ADR-010); `dataset_sha256` `a8bd69dc…`; corpus `05b11a7`
+(61 content files), index **417 chunks / 60 sources**; train 47 / val 59;
+`should_refuse` 13 (10 val). This reference supersedes `4c0d848c…` (100 items, 57 val,
+47 gate-eligible, `dataset_sha256` `78761c13…`), which remains a valid historical record
+but is not comparable across a corpus + index + dataset re-base. **Judged population grew
+45 → 48 because items 4, 23 and 63 now answer after alias normalization; raw counts are
+therefore not comparable across runs. The comparison was made on the 45 common items,
+where nothing changed (brief §6.8, Amendment 2).** This is a **re-baseline, not a gate
+verdict**; the principle (1.5σ, symmetric floor) is unchanged.
 
 ## Metrics
 
-- **Gate metrics: `citation_correctness` is the GAIN-CARRIER** (baseline **0.7111**,
-  32/45 — room to move) and **`faithfulness` is the GUARD** (baseline **0.9778**,
-  44/45 — at its ceiling: with one unfaithful item, the maximal gain is +1 item =
-  0.0222, below its floor, so **faithfulness can never accept** — a gain must come
-  from `citation_correctness`; faithfulness may only guard a regression).
-- `retrieval_accuracy` (**0.7660**, n = 47) and `retrieval_mrr` (**0.7677**, n = 47)
-  are **compiler-invariant** (data-level) — recorded for sanity, **never gating**.
-- No other gate metric: at this n each extra guard compounds the false-reject risk.
+- **Gate metrics: `citation_correctness` is the GAIN-CARRIER** (baseline **0.6875**,
+  33/48 — room to move) and **`faithfulness` is the GUARD** (baseline **0.9375**,
+  45/48). With three unfaithful items possible in the observed population, the maximal
+  gain is +1 item = 0.0208, below the floor, so **faithfulness can never accept** — a gain
+  must come from `citation_correctness`; faithfulness may only guard a regression.
+- `retrieval_accuracy` (**0.6939**, n = 49) and `retrieval_mrr` (**0.7415**, n = 49) are
+  **compiler-invariant** (data-level) — recorded for sanity, **never gating**.
+- Other non-gating context: `answer_coverage` 48/49, `citation_precision` 0.6910 (n=48),
+  `public_references` 1.0 (n=49), `refusal_pass_rate` 1.0 (n=10),
+  `spurious_refusal_rate` 1/49.
 
 ## Target and threshold
 
@@ -42,25 +42,28 @@ proportion-for-proportion.
   with citations, nor the reverse).
 - **Noise floor (re-derived at the new baseline p; arithmetic shown):** per-metric
   1.5σ = 1.5·√(p(1−p)/n) at the reference's own p.
-  - **Gain-carrier `citation_correctness`** (p = 32/45 ≈ 0.7111):
-    - nominal **n = 47**: σ = √(0.7111·0.2889/47) ≈ √0.004371 ≈ **0.0661**;
-      1.5σ ≈ **0.0992** → **accept needs ≥ 5 items up** (5/47 = 0.1064 > 0.0992);
-      **a regression is allowed up to 4 items down** (4/47 = 0.0851 ≤ 0.0992;
-      ≥ 5 down = 0.1064 fails).
-    - observed **n = 45**: σ = √(0.7111·0.2889/45) ≈ √0.004565 ≈ **0.0676**;
-      1.5σ ≈ **0.1013** → **accept needs ≥ 5 items up** (5/45 = 0.1111 > 0.1013);
-      **a regression is allowed up to 4 items down** (4/45 = 0.0889 ≤ 0.1013;
-      ≥ 5 down = 0.1111 fails).
+  - **Gain-carrier `citation_correctness`** (p = 33/48 = 0.6875):
+    - nominal **n = 49**: σ = √(0.6875·0.3125/49) ≈ √0.004385 ≈ **0.0662**;
+      1.5σ ≈ **0.0993** → **accept needs ≥ 5 items up** (5/49 = 0.1020 > 0.0993);
+      **a regression is allowed up to 4 items down** (4/49 = 0.0816 ≤ 0.0993;
+      ≥ 5 down = 0.1020 fails).
+    - observed **n = 48**: σ = √(0.6875·0.3125/48) ≈ √0.004476 ≈ **0.0669**;
+      1.5σ ≈ **0.1004** → **accept needs ≥ 5 items up** (5/48 = 0.1042 > 0.1004);
+      **a regression is allowed up to 4 items down** (4/48 = 0.0833 ≤ 0.1004;
+      ≥ 5 down = 0.1042 fails).
     - **Identical integers at both n: accept ≥ 5 items, regression ≤ 4 items.**
-  - **Guard `faithfulness`** (p = 44/45 ≈ 0.9778):
-    - nominal **n = 47**: σ = √(0.9778·0.0222/47) ≈ √0.000462 ≈ **0.0215**;
-      1.5σ ≈ **0.0323** → the maximal gain (+1 item = 0.0213) is below it, so it
-      **cannot accept**; **a regression is allowed up to 1 item down**
-      (2 down = 0.0426 > 0.0323 fails).
-    - observed **n = 45**: σ = √(0.9778·0.0222/45) ≈ √0.000483 ≈ **0.0220**;
-      1.5σ ≈ **0.0330** → +1 item = 0.0222 is below it, so it **cannot accept**;
-      **a regression is allowed up to 1 item down** (2 down = 0.0444 > 0.0330 fails).
-    - **Identical integers at both n: cannot accept, regression ≤ 1 item.**
+  - **Guard `faithfulness`** (p = 45/48 = 0.9375):
+    - nominal **n = 49**: σ = √(0.9375·0.0625/49) ≈ √0.001196 ≈ **0.0346**;
+      1.5σ ≈ **0.0519** → +1 item = 0.0204 is below it, so it **cannot accept**;
+      **a regression is allowed up to 2 items down** (2/49 = 0.0408 ≤ 0.0519;
+      3 down = 0.0612 fails).
+    - observed **n = 48**: σ = √(0.9375·0.0625/48) ≈ √0.001221 ≈ **0.0349**;
+      1.5σ ≈ **0.0524** → +1 item = 0.0208 is below it, so it **cannot accept**;
+      **a regression is allowed up to 2 items down** (2/48 = 0.0417 ≤ 0.0524;
+      3 down = 0.0625 fails).
+    - **Identical integers at both n: cannot accept, regression ≤ 2 items.** The guard
+      floor moved from ≤1 to ≤2 because the baseline p is lower (0.9375 vs 0.9778); the
+      principle—1.5σ, symmetric floor—is unchanged.
 
 ## Verdicts and policy
 
@@ -74,7 +77,7 @@ proportion-for-proportion.
 
 Detecting a ~5% effect needs val ≈ 100 items; until then **"no decision" is the
 honest expected outcome** of a stage, not a failure. **Breadth has arrived** (2026-10-15):
-the val is now **57 items (47 gate-eligible)** across the ten-class failure taxonomy, and
+the val is now **59 items (49 gate-eligible)** across the ten-class failure taxonomy, and
 the N confirmation on the previous 54-item val passed (citation-moved 9 under hybrid vs
 the floor 5); that confirmation is carried forward as the breadth evidence — it was **not**
 re-measured on the new val. The gate is now **decidable** for a lever that moves
@@ -94,6 +97,11 @@ A re-registration moves the reference and re-derives its n-specific thresholds; 
 - **2026-10-18** — **`c6ced445` → `4c0d848c8f924a3aa32ee220114c126f`** (corpus round
   2026-10-17: nine new objects, `thesis-map` moved out of the index, dataset 91 → 100
   with repaired/extended/new items; train 43 / val 57). No gate decision was made.
+- **2026-10-19** — **`4c0d848c8f924a3aa32ee220114c126f` → `5ed5d8d73bb7400782503f8941a994f7`**
+  (ADR-010 guard adopted: `output_guard=on`, org-id alias normalization; corpus `05b11a7`,
+  index 417/60, dataset `a8bd69dc…`, train 47 / val 59). The judged population grew 45 → 48
+  because items 4/23/63 now answer; raw counts are not comparable — the 45 common items are
+  unchanged (brief §6.8). This is a re-registration, not a verdict.
 
 ## Verdict record
 
