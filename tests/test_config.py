@@ -30,6 +30,7 @@ def _clear_janbot_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "JANBOT_RETRIEVAL_MODE",
         "JANBOT_RETRIEVAL_WINDOW",
         "JANBOT_RELEVANCE_THRESHOLD",
+        "JANBOT_OUTPUT_GUARD",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -376,3 +377,28 @@ def test_invalid_seed_raises(value: str) -> None:
     message = str(excinfo.value)
     assert "JANBOT_SEED" in message
     assert value in message
+
+
+def test_default_output_guard_is_on() -> None:
+    assert load_config({}).output_guard == "on"
+
+
+def test_output_guard_can_be_disabled() -> None:
+    assert load_config({"JANBOT_OUTPUT_GUARD": "off"}).output_guard == "off"
+
+
+@pytest.mark.parametrize(("value", "expected"), [("ON", "on"), (" Off ", "off"), ("on", "on")])
+def test_output_guard_is_normalized(value: str, expected: str) -> None:
+    assert load_config({"JANBOT_OUTPUT_GUARD": value}).output_guard == expected
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_output_guard_falls_back_to_default(blank: str) -> None:
+    assert load_config({"JANBOT_OUTPUT_GUARD": blank}).output_guard == "on"
+
+
+@pytest.mark.parametrize("value", ["yes", "disabled", "1", "true"])
+def test_invalid_output_guard_raises(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_OUTPUT_GUARD": value})
+    assert "JANBOT_OUTPUT_GUARD" in str(excinfo.value)

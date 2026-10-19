@@ -1,7 +1,7 @@
 """Configuration for JanBot, read from ``JANBOT_*`` environment variables.
 
 Per AD-5, model mode is configuration, not code. This module is stdlib-only and
-reads thirteen variables, each with a documented default:
+reads fourteen variables, each with a documented default:
 
 - ``JANBOT_MODEL_MODE``      -- ``"eval"`` (default) or ``"production"``
 - ``JANBOT_MODEL_SNAPSHOT``  -- locked model snapshot;
@@ -22,6 +22,8 @@ reads thirteen variables, each with a documented default:
 - ``JANBOT_RELEVANCE_THRESHOLD`` -- the low-relevance decline gate; default
   ``0.26`` (the measured value that raises ``refusal_pass_rate`` with no
   ``spurious_refusal_rate`` and no in-corpus regression). ``0.0`` disables the gate.
+- ``JANBOT_OUTPUT_GUARD`` -- deterministic output guard; ``"on"`` (default,
+  shipped) or ``"off"`` for measurement isolation. It never calls a model.
 
 Values are trimmed, and a blank or whitespace-only value counts as unset (so it
 takes the documented default). The model mode, the retrieval mode and the
@@ -65,6 +67,10 @@ RETRIEVAL_WINDOW_CHUNKS = "chunks"
 RETRIEVAL_WINDOW_SOURCES = "sources"
 RETRIEVAL_WINDOWS = (RETRIEVAL_WINDOW_CHUNKS, RETRIEVAL_WINDOW_SOURCES)
 
+OUTPUT_GUARD_ON = "on"
+OUTPUT_GUARD_OFF = "off"
+OUTPUT_GUARDS = (OUTPUT_GUARD_ON, OUTPUT_GUARD_OFF)
+
 MODEL_MODE_ENV = "JANBOT_MODEL_MODE"
 MODEL_SNAPSHOT_ENV = "JANBOT_MODEL_SNAPSHOT"
 JUDGE_MODEL_ENV = "JANBOT_JUDGE_MODEL"
@@ -78,6 +84,7 @@ TOP_K_ENV = "JANBOT_TOP_K"
 RETRIEVAL_MODE_ENV = "JANBOT_RETRIEVAL_MODE"
 RETRIEVAL_WINDOW_ENV = "JANBOT_RETRIEVAL_WINDOW"
 RELEVANCE_THRESHOLD_ENV = "JANBOT_RELEVANCE_THRESHOLD"
+OUTPUT_GUARD_ENV = "JANBOT_OUTPUT_GUARD"
 
 DEFAULT_MODEL_MODE = MODEL_MODE_EVAL
 DEFAULT_MODEL_SNAPSHOT = "openai/gpt-4o-mini-2024-07-18"
@@ -89,6 +96,7 @@ DEFAULT_TOP_K = 4
 DEFAULT_RETRIEVAL_MODE = RETRIEVAL_MODE_HYBRID
 DEFAULT_RETRIEVAL_WINDOW = RETRIEVAL_WINDOW_CHUNKS
 DEFAULT_RELEVANCE_THRESHOLD = 0.26
+DEFAULT_OUTPUT_GUARD = OUTPUT_GUARD_ON
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -109,6 +117,7 @@ class Config:
     retrieval_mode: str
     retrieval_window: str
     relevance_threshold: float
+    output_guard: str
 
 
 def _clean(value: str | None) -> str | None:
@@ -236,6 +245,19 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
                 f"{RELEVANCE_THRESHOLD_ENV}={raw_relevance!r} must not be negative"
             )
 
+    raw_output_guard = _clean(source.get(OUTPUT_GUARD_ENV))
+    output_guard = (
+        DEFAULT_OUTPUT_GUARD
+        if raw_output_guard is None
+        else raw_output_guard.lower()
+    )
+    if output_guard not in OUTPUT_GUARDS:
+        allowed = ", ".join(repr(value) for value in OUTPUT_GUARDS)
+        raise ValueError(
+            f"{OUTPUT_GUARD_ENV}={raw_output_guard!r} is invalid; "
+            f"allowed values: {allowed}"
+        )
+
     raw_root = _clean(source.get(PROJECT_ROOT_ENV))
     project_root = _resolve_path(raw_root, PROJECT_ROOT) if raw_root else PROJECT_ROOT
 
@@ -260,4 +282,5 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
         retrieval_mode=retrieval_mode,
         retrieval_window=retrieval_window,
         relevance_threshold=relevance_threshold,
+        output_guard=output_guard,
     )

@@ -29,7 +29,7 @@ from fastapi.exceptions import ResponseValidationError
 from fastapi.responses import JSONResponse
 
 from janbot.api.contract import ChatRequest, ChatResponse, decline
-from janbot.config import MODEL_MODE_PRODUCTION, load_config
+from janbot.config import MODEL_MODE_PRODUCTION, OUTPUT_GUARD_ON, load_config
 from janbot.store import Embedder, VectorStore, default_embedder
 
 import dspy
@@ -103,6 +103,7 @@ def create_app(
         top_k=config.top_k,
         rewriter=corpus_relative(config.corpus_path),
         relevance_threshold=config.relevance_threshold,
+        guard_enabled=config.output_guard == OUTPUT_GUARD_ON,
     )
     if config.program_path is not None:
         from janbot.eval.optimize import load_program
