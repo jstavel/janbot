@@ -1,0 +1,141 @@
+:PROPERTIES:
+:ID:       20261019-entering-an-unknown-system
+:TITLE:    Entering an unknown system — decisions first, then the runbook
+:CREATED:  <2026-10-19>
+:AUTHOR:   goose
+:REVIEWED: <2026-10-19>
+:DOMAIN:   way-of-working
+:TAGS:     onboarding decisions runbook handover rehydration learning-order parallel-onboarding operations
+:SYNOPSIS: On entering an unfamiliar system, the two artefacts to start producing immediately — in parallel with the ordinary onboarding, not before it — are the list of decisions and the runbook, because the goal is not to read the code but to be able to justify the architectural decisions and to start, test and daily-operate the system by hand.
+:STRENGTHS:  structured-onboarding learning-order self-directed-operations
+:WEAKNESSES: rationale-is-author-formulation never-executed-on-a-real-entry first-pass-will-be-incomplete
+:END:
+
+# Entering an unknown system — decisions first, then the runbook
+
+Use when asked what I do when I start somewhere new — a new job, a new project, an
+unfamiliar codebase. It is the answer I want to give in that interview, and it is
+short enough to say out loud:
+
+> **First I write out the list of decisions. Then the runbook. Then I start
+> training — until I can answer every architectural decision, and can bring the
+> system up, test it and operate it by hand, daily.**
+
+* What the quoted answer does not say: parallel, and a horizon
+
+Read on its own, the answer above can sound like a gate — *"I will not start doing
+anything until I know every decision"* — and as a sequence: list, then runbook,
+then work. Neither is what is meant, and the difference matters in a first week.
+
+**It is parallel.** The list and the runbook are produced *while* the ordinary
+onboarding happens: meeting the team, learning the processes, sitting in the
+ceremonies, picking up the first small tasks. They are the backbone of that period,
+not a precondition for it. An engineer who contributes only once he understands
+everything is a cost to the team, not a help; the artefacts are how understanding
+is built, not the reward for having it.
+
+**"All decisions" is a direction, not a condition.** Decisions are enumerable —
+that is what makes the goal meaningful rather than vague mysticism — but the goal
+is not reachable on day one, and pretending otherwise is its own failure mode. The
+first pass of the list will be incomplete and partly wrong; it gets corrected by
+running the runbook and by asking the people who made the decisions. What is fixed
+is the *direction*: every decision, understood well enough to be defended. What is
+honest is the *pace*: never "all of them" in the first week.
+
+The version worth saying out loud: *"I start doing small things in week one and
+write the two artefacts alongside; the list is a living document, and I expect a
+second pass once I have run the runbook."*
+
+* Why this is a protocol and not a reading list
+
+Onboarding into a system usually means being walked through it: somebody talks,
+you nod, you touch a few things. What is missing at the end is not familiarity —
+it is the two things you would need to *take over*:
+
+| Artefact | Question it answers | What it is not |
+|----------|---------------------|----------------|
+| the list of **decisions** | *why is it like this, and what breaks if I change it* | a design document |
+| the **runbook** | *how do I bring it up, check it and keep it alive* | a README |
+
+The output is not a report about the system. It is the two artefacts I would hand
+to the next person — which is exactly the rehydration pair this corpus already
+describes: decisions close the knowledge gap, the runbook closes the procedural
+one ([[id:20261018-knowledge-drift][knowledge drift]],
+[[id:20261018-procedure-drift][procedure drift]]).
+
+* Why decisions before procedures
+
+*The recording gives the order but not its reason; the explanation below is this
+author's formulation. The owner confirmed (2026-10-19) that the order itself is
+deliberate, not incidental — the reasoning remains open to correction while it is
+his own words that should ultimately carry it.*
+
+Reading the runbook first lets you execute without being able to judge. Every step
+then looks equally important, and a stale step is indistinguishable from a correct
+one. Reading the decisions first frames the steps: you know what each one protects,
+and you notice when the system no longer matches the reason it was built for.
+Execution without judgement is the state this whole corpus is written against —
+so the order follows from that, not from taste.
+
+The order also has a practical property: decisions are **enumerable and finite**
+(nobody can "read the whole codebase" first), so the list can be produced in days,
+while the runbook can be validated only by running it.
+
+* The acceptance test is operational, not intellectual
+
+The criterion is stated as three verbs: **start it by hand, test it, use it daily.**
+
+- *by hand* rules out "the pipeline does it" — you must be able to do the thing the
+  automation does, or you cannot debug the automation;
+- *daily* rules out the one-off victory of getting it running once. Familiarity
+  decays; daily use is what keeps the two artefacts honest, because a runbook you
+  do not run stops describing reality.
+
+That is the same rule as the procedure axis: a procedure is true only while someone
+executes it.
+
+* Relationship to the cadence
+
+The cadence ([[id:20261018-drift-closing-cadence][closing the drift]]) says *when*
+the gap is closed — a weekly block, a daily close. This object is the **entry
+protocol**: the first iteration of that loop, before any cadence exists. The
+onboarding document described there is the compressed map of the project; here its
+two halves are named — decisions and runbook — and an order is given to producing
+them.
+
+* Honest limits
+
+- **Never executed as a real entry into an unfamiliar job.** This is how I intend
+  to start, not a method already proven on someone else's system. Written while
+  preparing for interviews, not after the first week.
+- Whether the decision list can be produced *before* enough code reading to know
+  what to look for is untested. The plausible failure: the first version of the
+  list is wrong and needs a second pass after the runbook is attempted.
+- "Daily use" needs a real system to use daily; a two-week onboarding may not
+  reach it.
+
+* Related
+
+- [[id:20261018-knowledge-drift][Knowledge drift]] — why the unit is a decision, and the three-part test.
+- [[id:20261018-procedure-drift][Procedure drift]] — why the runbook is closed by execution.
+- [[id:20261018-drift-closing-cadence][Closing the drift]] — the recurring loop this is the first turn of.
+- [[id:20261018-substitutable-ai][AI must be substitutable — and so must I]] — the same "can I do it by hand"
+  criterion, applied to my own work.
+- [[id:20261017-filesystem-recovery][Filesystem forensics]] — an earlier instance of refusing to act on a system
+  before understanding it (freeze → read → rebuild → verify).
+
+* Sources
+
+- corpus/texts/20261019-entering-an-unknown-system-transcript.txt — the answer in
+  the owner's own words: the list of decisions first, then the runbook, then
+  training; the two goals (answer every architectural decision; bring the system
+  up, test it and use it daily by hand).
+  git ref: 537d5e1:corpus/texts/20261019-entering-an-unknown-system-transcript.txt
+  sha256: 644221e5672fd5de09086333dc5d122efc4ee7eec121c43be8a5432728e8e09c
+- Owner clarification (chat, 2026-10-19) — the recording could be read as a gate
+  ("no work until all decisions are known"); the owner corrected it: the work runs
+  **in parallel** with meeting the team and the processes, and familiarity with all
+  decisions is an important **goal and direction**, not a precondition. Recorded
+  here because the correction is not in the recording.
+- corpus/generated/10-19 Plán_ Onboarding a provoz systému-Summary.txt — Plaud AI
+  restatement used only to check the reading; not a source of new claims.

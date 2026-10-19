@@ -1,0 +1,137 @@
+:PROPERTIES:
+:ID:       20261018-knowledge-drift
+:TITLE:    Knowledge drift — the finite set of decisions you must be able to defend
+:CREATED:  <2026-10-18>
+:AUTHOR:   goose
+:REVIEWED: <2026-10-18>
+:DOMAIN:   way-of-working
+:TAGS:     agentic-development drift knowledge substitutability decisions adr single-source-of-truth read-model verified
+:SYNOPSIS: Agentic development leaves a team owning decisions that only the agent can explain, and the tractable countermeasure is not "learning the knowledge" but enumerating the decisions and being able to defend each one — the decision, the rejected alternative, and what breaks if it changes — against an ADR that stays the single source of truth.
+:STRENGTHS:  systems-thinking bounded-scope single-source-of-truth-discipline honest-accounting
+:WEAKNESSES: not-yet-measured self-assessment-instrument
+:END:
+
+# Knowledge drift — the finite set of decisions you must be able to defend
+
+Use when asked how a team keeps ownership of an AI-assisted codebase, or what
+"being substitutable" means in practice. The claim is one sentence: **you are
+accountable for a finite set of decisions, not for an unbounded body of
+knowledge.**
+
+* The starting point — everyone must be substitutable
+
+Every member of a team has to be replaceable without loss of quality. The AI is
+a team member, so the rule applies to it too — and symmetrically to the human
+who works with it ([[id:20261018-substitutable-ai][AI must be substitutable — and
+so must I]]).
+
+The drift is what erodes that: the layer that **knows** (the model, the
+accumulating context, the artifact it generated) separates from the layer that
+can **explain and take over** (the humans). Work still ships, so nothing looks
+broken.
+
+* The reduction that makes it tractable
+
+"Learning the knowledge of the project" is unbounded — it cannot be closed, and
+attempting it is how the attempt dies. The reduction:
+
+| Layer | Size | Closable? |
+|-------|------|-----------|
+| all knowledge the agent used | unbounded | no |
+| the decisions that knowledge produced | **finite, enumerable** | yes |
+
+Accountability attaches to the second row, because **a decision is what binds
+the future**. Knowledge that decides nothing is not your responsibility.
+
+* The test — three parts, not one
+
+For each decision:
+
+1. the **decision** — what holds,
+2. the **rejected alternative** — what was on the table and lost,
+3. the **failure mode** — what breaks if it changes.
+
+*"I know we use a digest"* is half an answer. *"I did not take a tag, because a
+tag does not resolve when the container restarts"* is the whole one. **Whoever
+does not know the rejected path only knows the outcome — and an outcome can be
+copied by imitation.** A missing half = **not verified**.
+
+* The artifact — an index, not a second source of truth
+
+The failure mode of this idea is obvious and fatal: write the decisions down
+again and you now have two authorities that will diverge. So the artifact is a
+**read model** over the existing single source of truth — the same
+command/query split already used for the corpus (`views/` over `objects/`):
+
+> `_bmad-output/` = write model, the authority (ADR = decision, spec = intent)
+> `DECISIONS.md` = derived index over it
+
+One row per decision: `id = the ADR's id` (never a new numbering — a second
+identity space means a mapping table means drift), the one-line decision, the
+rejected alternative, the constraint, the failure mode, blast radius, a **pin**
+into the ADR, and one human-owned column: `verified`.
+
+Rules that keep it a read model:
+
+- **no pin, no row** — what cannot be cited is not indexed,
+- a decision **without an ADR is not entered**; the hole stays a hole, because
+  **the hole is the metric** — an index that fills gaps becomes the write model,
+- on conflict **the ADR wins**, and the file says so in its own header,
+- regeneration must be idempotent and must **never overwrite `verified`** (the
+  frozen-block rule),
+- mechanically checkable acceptance criterion: **after regeneration the diff
+  touches only the `verified` column.** Anything else changing without a change
+  in `_bmad-output` means the index is inventing.
+
+* What is deliberately not in it
+
+- **domain facts** — how a library behaves, syntax; learned on demand, not indexed,
+- **rationale prose** — stays in the ADR; the row only points at it,
+- **history and revisions of a decision** — that is git and the ADR diff; the
+  index shows the state in force,
+- **task-level choices and cosmetics** — a variable name is not a decision.
+
+* How it is verified, and how it is sampled
+
+Verification is an **answer produced, not a feeling of recognition**: the agent
+takes a row and asks; the human answers in his own words; the answer is graded
+against the pinned line — decision, rejected alternative, failure mode — not
+against an impression.
+
+Sampling is mechanical, so it never becomes a debate: **must-close blast radius
+first, then the longest-unverified, then whatever the agent touched this week**.
+Three to five per week; the must-close core cycles permanently, which is correct
+— that is the set that has to be answerable at any moment, not once.
+
+* Honest limits
+
+- "Can I defend it" is a **self-assessment mediated by the agent** — better than
+  a hunch, still not an objective measurement. Never reported as *proven*.
+- The index **ages**: a decision verified six months ago may have changed, which
+  is exactly why `verified` carries a date and the must-close core is re-checked.
+- No longitudinal evidence yet that the drift actually shrinks. Design, not
+  result.
+
+* Related
+
+- [[id:20261018-procedure-drift][Procedure drift]] — the other axis: what the agent *did*, closed by execution.
+- [[id:20261018-drift-closing-cadence][Closing the drift]] — when it happens.
+- [[id:20261018-substitutable-ai][AI must be substitutable — and so must I]] — the rule this serves.
+- [[id:20261015-spec-first-artifacts-in-git][Spec-first artifacts in git]] — the same principle one layer down: the
+  artifact, not the chat, is where work gets corrected.
+- [[id:20261017-infrastructure-guardrails][Guardrails by construction]] — blast radius as the filter for what must be
+  closed.
+
+* Sources
+
+- corpus/texts/20261018-knowledge-skill-drift-transcript.txt — substitutability
+  of every team member including the agent; the drift between what agents know
+  and what people can do; the demand that closing the drift be a dedicated,
+  owned operation.
+  git ref: 26ce656d07263453fba6c634926ca710c24727ce:corpus/texts/20261018-knowledge-skill-drift-transcript.txt
+  sha256: 0bea97c7809197f7997b3385f60681f54dd600428a26c1bafc6f3716a16125c9
+- Owner clarification (chat, 2026-10-18) — the reduction from "knowledge" to
+  "every decision must be answerable", and the requirement that `_bmad-output`
+  remain the single source of truth (hence a derived index, not a second store).
+  Not pinned to text: it exists in conversation only, and is recorded here as
+  the owner's refinement of the spoken draft.

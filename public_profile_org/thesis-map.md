@@ -46,7 +46,8 @@ measured outcome) · *held* (direction felt, mechanism not yet pinned).
   Clojure) gain value rather than losing it, and the developer's role shifts from
   writing code to cultivating it.
 - Evidence: 20261016-ai-era-paradigm · 20261007-dna-threads ·
-  20261007-janbot-ai-agent
+  20261007-janbot-ai-agent ·
+  the discipline that keeps the paradigm honest — what I ship I must reproduce
 - Result: the direction is exercised (an agent built end to end, a corpus rebuilt),
   but no outcome isolates the paradigm's own contribution.
 - Status: **held** — felt, not yet fully articulated (the owner's own words).
@@ -61,7 +62,8 @@ measured outcome) · *held* (direction felt, mechanism not yet pinned).
   20261008-remote-work-conviction · 20261008-gtd-trading-descriptive-phase ·
   the cost of no process ·
   process encoded into construction ·
-  freeze → read → rebuild → verify
+  freeze → read → rebuild → verify ·
+  closing the gap on a calendar, not on demand
 - Result: the corpus, the eval discipline and the trading ledger are one instrument
   (make it explicit → verify it) — but no self-reported confidence measure exists.
 - Status: **supported**.
@@ -73,7 +75,8 @@ measured outcome) · *held* (direction felt, mechanism not yet pinned).
   worked example.
 - Evidence: all of the above; the corpus itself ·
   the trust-anchor line, made explicit ·
-  training on a labelled corpus, 2000s
+  training on a labelled corpus, 2000s ·
+  the implicit procedure made explicit — and verified by running it
 - Result: the artifacts are the result — the corpus, the pre-registered eval gate and
   the trading ledger each turn a felt rule into a written, checkable object.
 - Status: **supported** (self-referential — this map is itself an instance).

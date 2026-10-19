@@ -1,0 +1,121 @@
+:PROPERTIES:
+:ID:       20261018-architect-not-coder
+:TITLE:    Hired for judgement, not for typing — and saying so honestly
+:CREATED:  <2026-10-18>
+:AUTHOR:   goose
+:REVIEWED: <2026-10-18>
+:DOMAIN:   carrier-stories attitudes
+:TAGS:     interview clojure trade-offs architecture honesty typescript market-positioning ai-dependency learning
+:SYNOPSIS: A final-round Clojure interview tested trade-off knowledge between libraries and design judgement rather than volume of code, which is where the role is going — and the honest consequence is to declare TypeScript as a new skill learned with AI instead of letting an agentic workflow imply expertise.
+:STRENGTHS:  honesty technical-judgement architecture-over-syntax market-awareness
+:WEAKNESSES: typescript-not-independent library-trade-offs-not-memorised
+:END:
+
+# Hired for judgement, not for typing — and saying so honestly
+
+Use when asked about interviewing, about what a senior developer is worth in the
+AI era, or about how to present a skill that was built with agents.
+
+* What the interview actually tested
+
+A final round for a Clojure role. The hands-on part was deliberately small — a
+project skeleton and one small problem — and the question that carried the signal
+was not *"write this"* but *"what are the trade-offs between the libraries you
+would reach for, and why"*.
+
+No request for a large amount of code. The interviewer was not measuring typing
+speed; he was measuring whether the candidate **knows the ecosystem's
+trade-offs and can reason as a designer**.
+
+#+begin_renegotiated date=2026-10-19 by=owner
+old: 'the pre-2026-10-19 text: the kind of employer, the exact hands-on task and the
+      two library names'
+new: 'a final round for a Clojure role; the hands-on part as "a project skeleton and
+      one small problem"; the question as "the trade-offs between the libraries you
+      would reach for, and why"'
+why: owner's instruction (2026-10-19): drop the interview details. Two reasons, both
+     sound. Anonymisation — a named kind of employer plus a specific task is
+     identifiable in a small market, and this object is public. And relevance — the
+     specifics (tool names, one function, two libraries) add nothing to the lesson,
+     which is about *what the interview measured*, not about the task; the same drift
+     the 10-17 audit named (memories hold scene and lesson, tool names slide).
+     REDACTION, not correction: the removed wording is deliberately NOT reproduced
+     here, because `old:` text is copied into the public extract like any other
+     content — quoting it would defeat the removal. The pre-2026-10-19 revision
+     remains in git history if the owner ever needs it.
+#+end_renegotiated
+
+* The reading — and the correction
+
+The first reading was tempting: *"maybe I do not need to be able to code it any
+more, only to know about it as the designer."* That is half true and it is
+exactly the half that is dangerous.
+
+The corrected reading, kept as the lesson: **the centre of gravity moves from
+syntax to judgement, but it does not move to zero.** Trade-off knowledge without
+the ability to implement is opinion; implementation without trade-off knowledge
+is typing. A senior is expected to hold both.
+
+* Where honesty bites
+
+The portfolio contains TypeScript projects that were built with agents. There is
+a real asymmetry between
+
+- what the artifact demonstrates (architecture, specification, verification
+  discipline), and
+- what the hands can do unaided (not yet much).
+
+Presenting that as TypeScript expertise would be an **over-claim manufactured by
+the workflow**. The rule from [[id:20261018-substitutable-ai][AI must be
+substitutable — and so must I]] applies directly: if I cannot reproduce it
+without the agents, I do not claim it.
+
+* The decision
+
+Two options were open: fill the gap first, or go to market and declare it.
+
+**Chosen: go to market and declare it.** The reason is contextual, not noble —
+a long period without work makes visibility the more urgent need. A targeted
+course to raise the level runs in parallel; it is not a precondition for
+speaking to the market.
+
+How the declaration sounds:
+
+> *"TypeScript is a new skill for me. I build with agents and I am learning it
+> deliberately — I can show you the architecture and the verification, and I
+> will tell you where the language itself is still ahead of me."*
+
+The honest version is also the stronger version: it demonstrates that the
+candidate distinguishes **what he designed** from **what he can reproduce**, which
+is precisely the judgement the interview was testing for.
+
+* Honest limit
+
+The specific library trade-offs were not recalled in the interview itself — the
+gap was named by the interviewer, not by the candidate. Recorded here as a
+learning item, not as a strength.
+
+* Related
+
+- [[id:20261018-substitutable-ai][AI must be substitutable — and so must I]] — the rule this object applies to
+  self-presentation.
+- [[id:20261016-ai-era-paradigm][The AI-era development paradigm]] — from writing code to cultivating it; the
+  broader shift this interview is an instance of.
+- [[id:20261007-reactive-testing-project][Reactive Testing — TypeScript proof]] — the artifact at the centre of the
+  honesty question.
+
+* Sources
+
+- corpus/texts/20261018-architect-not-coder-transcript.txt — the interview:
+  a small hands-on part and a trade-off question instead of bulk coding; the
+  "designer not coder" reading and its correction; the admission that TypeScript
+  without AI is not yet possible. Task and tool specifics dropped on owner's
+  instruction (2026-10-19) — see the marker above.
+  git ref: 26ce656d07263453fba6c634926ca710c24727ce:corpus/texts/20261018-architect-not-coder-transcript.txt
+  sha256: 187919eb5deee704d587fc72523e74e70a057fc1f242b8d26dc2b2620370e2c2
+- corpus/texts/20261018-typescript-honest-communication-transcript.txt — the
+  portfolio asymmetry, the two options (fill the gap vs. declare it), the
+  decision to go to market with an honest statement, the targeted course as a
+  parallel action.
+  git ref: 26ce656d07263453fba6c634926ca710c24727ce:corpus/texts/20261018-typescript-honest-communication-transcript.txt
+  sha256: bc511262788e566bc52d7a388376aa034737825e57fc33f5cd6b03a6e611264d
