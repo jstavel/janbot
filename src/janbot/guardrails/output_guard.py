@@ -5,9 +5,11 @@ Two rules, no model call, no network, no dataset access:
 - **D1 fabricated citation:** a cited label not in the retrieved source set is dropped.
   The answer is kept; if no valid label remains the caller declines through the existing
   uncited path.
-- **D2 over-claim:** a sentence containing a marker from the versioned lexicon and a
-  subject token is kept only when a cited chunk contains the marker's grounded form and the
-  subject token in the same sentence. Otherwise the sentence is dropped.
+- **D2 over-claim:** a clause containing a marker from the versioned lexicon and a subject
+  token in the marker's forward window is kept only when a cited chunk contains the marker's
+  grounded form and the subject token in the same window. Otherwise the clause is dropped;
+  grounded clauses in the same sentence survive. Sentences are split only on the declared
+  connector set.
 
 The guard is a floor, not a semantic judge. It cannot catch paraphrase, implication or a
 claim phrased without a marker; see ADR-010.
@@ -19,7 +21,7 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
-from janbot.guardrails.lexicon import MARKERS, SUBJECT_TOKENS
+from janbot.guardrails.lexicon import CLAUSE_CONNECTORS, MARKERS, SUBJECT_TOKENS
 
 __all__ = ["GuardResult", "apply_output_guard"]
 
@@ -37,12 +39,22 @@ class GuardResult:
     citations: list[str]
     declined: bool = False
     reason: str = ""
+    rule: str = ""
     dropped_citations: list[str] = field(default_factory=list)
     dropped_sentences: list[str] = field(default_factory=list)
+    dropped_clauses: list[str] = field(default_factory=list)
+
+    @property
+    def action(self) -> str:
+        """The seam label: ``none``/``repaired``/``declined`` plus the rule that fired."""
+        changed = self.dropped_citations or self.dropped_sentences or self.dropped_clauses
+        state = "declined" if self.declined else "repaired" if changed else "none"
+        return f"{state}: {self.rule}" if self.rule else state
 
 
 _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+|\n+")
 _CLAIM_WINDOW = 120
+_CLAUSE_PATTERN = re.compile("(" + "|".join(CLAUSE_CONNECTORS) + ")")
 
 
 def _phrase_pattern(phrase: str) -> re.Pattern[str]:
@@ -92,6 +104,34 @@ def _split_sentences(text: str) -> list[str]:
     return [part.strip() for part in _SENTENCE_BOUNDARY.split(text) if part.strip()]
 
 
+def _split_clauses(sentence: str) -> tuple[list[str], list[str]]:
+    """Split a sentence on the declared connector set, keeping the connectors.
+
+    Returns ``(clauses, connectors)`` where ``connectors[i]`` sits between clause ``i`` and
+    ``i + 1``. A sentence with no declared connector is one clause and is never split.
+    """
+    parts = _CLAUSE_PATTERN.split(sentence)
+    if len(parts) == 1:
+        return [sentence], []
+    clauses = [parts[0]]
+    connectors: list[str] = []
+    for index in range(1, len(parts), 2):
+        connectors.append(parts[index])
+        clauses.append(parts[index + 1])
+    return clauses, connectors
+
+
+def _clause_is_overclaim(clause: str, cited_chunk_texts: Sequence[str]) -> bool:
+    for chunk_phrase, window in _marker_windows(clause):
+        subjects = _subject_tokens_in(window)
+        if subjects and not all(
+            _is_grounded(chunk_phrase, subject, cited_chunk_texts)
+            for subject in subjects
+        ):
+            return True
+    return False
+
+
 def _is_grounded(
     chunk_phrase: str, subject: str, cited_chunk_texts: Sequence[str]
 ) -> bool:
@@ -124,6 +164,7 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
             citations=[],
             declined=True,
             reason="no valid citation remains after dropping fabricated labels",
+            rule="D1",
             dropped_citations=dropped,
         )
 
@@ -136,20 +177,29 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
 
     kept: list[str] = []
     dropped_sentences: list[str] = []
+    dropped_clauses: list[str] = []
     for sentence in _split_sentences(answer):
-        overclaim = False
-        for chunk_phrase, window in _marker_windows(sentence):
-            subjects = _subject_tokens_in(window)
-            if subjects and not all(
-                _is_grounded(chunk_phrase, subject, cited_chunk_texts)
-                for subject in subjects
-            ):
-                overclaim = True
-                break
-        if overclaim:
-            dropped_sentences.append(sentence)
-        else:
+        clauses, connectors = _split_clauses(sentence)
+        keep = [
+            not _clause_is_overclaim(clause, cited_chunk_texts) for clause in clauses
+        ]
+        if all(keep):
             kept.append(sentence)
+            continue
+        dropped_clauses.extend(
+            clause for clause, survives in zip(clauses, keep, strict=True) if not survives
+        )
+        if not any(keep):
+            dropped_sentences.append(sentence)
+            continue
+        kept_indices = [index for index, survives in enumerate(keep) if survives]
+        rebuilt = clauses[kept_indices[0]]
+        for index in kept_indices[1:]:
+            rebuilt += connectors[index - 1] + clauses[index]
+        ending = sentence[-1] if sentence and sentence[-1] in ".!?" else ""
+        if ending and not rebuilt.endswith(ending):
+            rebuilt += ending
+        kept.append(rebuilt)
 
     if not kept:
         return GuardResult(
@@ -157,16 +207,22 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
             citations=[],
             declined=True,
             reason="every sentence was an ungrounded over-claim",
+            rule="D1+D2" if dropped else "D2",
             dropped_citations=dropped,
             dropped_sentences=dropped_sentences,
+            dropped_clauses=dropped_clauses,
         )
 
-    repaired = answer if not dropped_sentences else " ".join(kept)
+    repaired = answer if not (dropped_sentences or dropped_clauses) else " ".join(kept)
+    d2 = bool(dropped_sentences or dropped_clauses)
+    rule = "D1+D2" if dropped and d2 else "D1" if dropped else "D2" if d2 else ""
     return GuardResult(
         answer=repaired,
         citations=valid,
+        rule=rule,
         dropped_citations=dropped,
         dropped_sentences=dropped_sentences,
+        dropped_clauses=dropped_clauses,
     )
 
 
@@ -190,4 +246,5 @@ def apply_output_guard(
             citations=[],
             declined=True,
             reason="guard internal error",
+            rule="error",
         )

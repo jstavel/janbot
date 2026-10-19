@@ -134,7 +134,9 @@ Companion to `spec-janbot.md`. Historical decision log; older ADRs are not edite
   window names several subject tokens, all must be grounded. If every clause of a sentence is
   dropped, the sentence is dropped; if every sentence is dropped, the answer declines. The
   connector set is data in `src/janbot/guardrails/lexicon.py`, versioned and reviewed like the
-  marker list.
+  marker list. The `, and` connector splits only when a clause starter follows (a pronoun,
+  determiner or auxiliary), so a list conjunction (“Python, Perl, Clojure, and TypeScript”)
+  stays one clause while “… TypeScript, and I focus …” splits.
   **Why clause granularity:** item 19's recorded sentence carried both the over-claim and a
   grounded clause (“…, and I focus on creating systems with verifiable outputs”); a
   sentence-level rule deleted grounded content. The clause rule keeps the grounded clause.
@@ -151,8 +153,9 @@ Companion to `spec-janbot.md`. Historical decision log; older ADRs are not edite
   nature”); implication/hedged claims; capability claims without a marker; subject spelling or
   aliases not in the lexicon; a subject phrased before the marker; a claim whose marker and
   subject sit in different clauses; over-claiming spread across individually grounded clauses;
-  a connector not in the declared set. The guard is a deterministic floor, not a semantic
-  judge; it must not overstate its coverage.
+  a connector not in the declared set; a list conjunction that is not followed by a clause
+  starter (the `, and` rule keeps it in one clause). The guard is a deterministic floor, not
+  a semantic judge; it must not overstate its coverage.
 - **Observation seam (T2):** `ChatProgram.last_raw_answer`, `last_raw_citations`,
   `last_guard_action` (`none`/`repaired`/`declined`/`disabled` plus the rule) are additive
   observation attributes. With the guard disabled, raw equals final and the action is

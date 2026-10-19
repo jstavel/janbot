@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-LEXICON_VERSION = "2026-10-19.1"
+LEXICON_VERSION = "2026-10-19.2"
 
 
 class Marker(NamedTuple):
@@ -97,4 +97,19 @@ SUBJECT_TOKENS: tuple[str, ...] = (
     "employment",
     "job offer",
     "contract",
+)
+
+
+# Declared clause connectors for D2 (regex patterns). These are the only boundaries the
+# guard may split a sentence on. A version number such as "Python 3.12" contains none of
+# them and is never split. The ", and" connector only splits when a clause starter follows:
+# in "Python, Perl, Clojure, and TypeScript" it is a list conjunction; in
+# "... TypeScript, and I focus ..." it is a clause boundary.
+CLAUSE_CONNECTORS: tuple[str, ...] = (
+    r", and (?=(?:I|we|you|he|she|it|they|the|this|that|these|those|a|an|can|will|would|should|could|may|might|must|is|are|was|were|has|have|do|does|did)\b)",
+    r"; ",
+    r", but ",
+    r" but ",
+    r", so ",
+    r" so ",
 )
