@@ -47,10 +47,13 @@ class GuardResult:
 
     @property
     def action(self) -> str:
-        """The seam label: ``none``/``repaired``/``declined`` plus the rule that fired."""
+        """The closed-set seam label (ADR-010 amendment)."""
+        if self.declined:
+            return f"declined: {self.rule}"
         changed = self.dropped_citations or self.dropped_sentences or self.dropped_clauses
-        state = "declined" if self.declined else "repaired" if changed else "none"
-        return f"{state}: {self.rule}" if self.rule else state
+        if not changed:
+            return "none"
+        return f"repaired: {self.rule}"
 
 
 _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+|\n+")
@@ -180,13 +183,21 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
         elif label not in dropped:
             dropped.append(label)
 
+    if not normalized:
+        return GuardResult(
+            answer=answer,
+            citations=[],
+            declined=True,
+            reason="the model cited nothing",
+            rule="uncited",
+        )
     if not valid:
         return GuardResult(
             answer=answer,
             citations=[],
             declined=True,
-            reason="no valid citation remains after dropping fabricated labels",
-            rule="D1",
+            reason="every cited label was fabricated after normalization",
+            rule="D1-all-invalid",
             dropped_citations=dropped,
             normalized_count=normalized_count,
         )
@@ -229,8 +240,8 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
             answer=answer,
             citations=[],
             declined=True,
-            reason="every sentence was an ungrounded over-claim",
-            rule="D1+D2" if dropped else "D2",
+            reason="the answer became empty after dropping ungrounded over-claims",
+            rule="D2-empty",
             dropped_citations=dropped,
             dropped_sentences=dropped_sentences,
             dropped_clauses=dropped_clauses,
@@ -239,7 +250,15 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
 
     repaired = answer if not (dropped_sentences or dropped_clauses) else " ".join(kept)
     d2 = bool(dropped_sentences or dropped_clauses)
-    rule = "D1+D2" if dropped and d2 else "D1" if dropped else "D2" if d2 else ""
+    rule = (
+        "D1-partial + D2"
+        if dropped and d2
+        else "D1-partial"
+        if dropped
+        else "D2"
+        if d2
+        else ""
+    )
     return GuardResult(
         answer=repaired,
         citations=valid,
@@ -271,5 +290,5 @@ def apply_output_guard(
             citations=[],
             declined=True,
             reason="guard internal error",
-            rule="error",
+            rule="guard-error",
         )
