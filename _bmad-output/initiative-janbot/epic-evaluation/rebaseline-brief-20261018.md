@@ -462,3 +462,67 @@ citation/over-claim guard (ADR-009, E2)** — it addresses item 19, item 4 and t
 errors together. If a retrieval lever is tried instead, the collection-independent
 **dense-only** measurement from §5.8 is the one to take first; another window variant
 before the generation guard would repeat this run's failure mode.
+
+---
+
+## 6.8 Amendment 2 — item counts are not comparable across runs (appended 2026-10-19, after run B)
+
+Appended under §5.5/§6.6, not rewritten in place.
+
+**old (§6.4):** *"1. `citation_correctness` regresses by ≤ 4 items (A: 31/45); 2. `faithfulness`
+regresses by ≤ 1 item (A: 43/45); 5. observed `n` matches the previous denominators or changes
+with a named cause."*
+
+**new:** *"Item-count criteria are evaluated on the **intersection of items observed in both
+runs**, never on raw counts — `n` is a function of how many items errored out, so a raw-count
+comparison mixes a quality change with a population change. And a named cause for an `n`
+change is acceptable only if the cause is **benign**: a new hard error
+(`FabricatedCitation`, `EmptyRetrieval`, `UnattributableContext`) is its own trigger, counted
+separately and reported item by item."*
+
+**why — run B.** Both criteria were read on incomparable denominators:
+
+| metric | raw (as written) | on the 42 common items |
+|---|---|---|
+| `citation_correctness` | 31/45 → 30/42 = **−1 (passes)** | 29 → 30 = **+1 (improves)** |
+| `faithfulness` | 43/45 → 40/42 = **−3 (fails)** | 40/42 → 40/42 = **flat** |
+
+The three-item faithfulness drop is entirely a population change: items **74, 83, 97** became
+new `FabricatedCitation` errors and therefore left the observed set. It is the same class of
+error as `retrieval_accuracy` being monotone in `k` (§5.8): the metric moves because the
+denominator moved, not because behaviour changed.
+
+**The verdict does not change.** Run B is still **not registered** — but for the correct
+reason: three **new hard errors** and `answer_coverage` 45/49 → 42/49, not a faithfulness
+regression. Under the corrected wording, criterion 5 fires on the new errors themselves.
+
+**Consequence:** a run's *population* is part of its result. Every future report must carry,
+beside each metric, **which items errored out** — otherwise the next comparison repeats this
+mistake in the other direction.
+
+### 6.8.1 What run B actually established
+
+The window lever was not a free win:
+
+| | A (`chunks`) | B (`sources`) |
+|---|---|---|
+| `retrieval_accuracy` | 34/49 | **38/49** (deterministic, §6.2 exact) |
+| `citation_precision` | 0.6815 | **0.7262** |
+| `citation` on common items | 29 | **30** |
+| `answer_coverage` | 45/49 | **42/49** |
+| new hard errors | — | **74, 83, 97** |
+
+Four items recovered their expected source in the window; **only one (84) turned that into a
+citation.** Items 71 and 75 retrieved the right source and still missed citing it; item 83
+went from a citation miss to a hard error. Item 97's window now contains
+`api-key-rotation.org` at rank 2 — the new object participates — yet the expected source is at
+rank 1 and the error is generation-side.
+
+**Conclusion: retrieval has stopped being the bottleneck for these items.** A de-duplicated
+window buys coverage and precision, and pays for it in cross-source synthesis: more distinct
+sources in one prompt, more invented source claims. The next lever is therefore the
+deterministic citation/over-claim guard the owner already required for E2 (ADR-009), which now
+has five concrete failing items to satisfy: **4, 19, 74, 83, 97**.
+
+The window lever stays available, but only *after* generation is guarded — otherwise its
+coverage gain is spent on errors.
