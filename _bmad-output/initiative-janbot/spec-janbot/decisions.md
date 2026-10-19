@@ -118,9 +118,15 @@ Companion to `spec-janbot.md`. Historical decision log; older ADRs are not edite
 - **Outputs:** a repaired `(answer, citations)` pair, or a decline through the existing uncited
   path. The guard **fails closed**: if it raises, the request declines; no unguarded text is
   emitted.
-- **D1 — fabricated citation.** A cited label not in the retrieved source set is fabricated.
-  **Action:** drop that label, keep the answer. If no valid label remains, the existing uncited
-  rule declines. A valid label is never dropped; D1 does not rewrite the answer.
+- **D1 — fabricated citation.** Before D1, a cited label is **normalized** when a retrieved
+  chunk's own `:ID:` property equals it: the label is replaced by that chunk's source label.
+  This is request-local (only the retrieved chunks; no corpus read, no dataset, no network).
+  A cross-link (`[[id:...]]`) in another object's text is **not** an alias; only a file-root
+  chunk's own PROPERTIES drawer is considered. An ID whose object was not retrieved cannot be
+  resolved and falls through to D1. A cited label not in the retrieved source set after
+  normalization is fabricated. **Action:** drop that label, keep the answer. If no valid label
+  remains, the existing uncited rule declines. A valid label is never dropped; D1 does not
+  rewrite the answer.
 - **D2 — over-claim (clause granularity).** A clause is an over-claim when it contains both
   (1) a capability/experience/commitment **marker** from the declared lexicon (e.g. “strong
   foundation in”, “professional in”, “expert in”, “interested in working for”) and (2) a
@@ -154,8 +160,9 @@ Companion to `spec-janbot.md`. Historical decision log; older ADRs are not edite
   aliases not in the lexicon; a subject phrased before the marker; a claim whose marker and
   subject sit in different clauses; over-claiming spread across individually grounded clauses;
   a connector not in the declared set; a list conjunction that is not followed by a clause
-  starter (the `, and` rule keeps it in one clause). The guard is a deterministic floor, not
-  a semantic judge; it must not overstate its coverage.
+  starter (the `, and` rule keeps it in one clause); an org-roam ID whose object was not
+  retrieved — it cannot be resolved locally, so D1 still treats it as out-of-window. The guard
+  is a deterministic floor, not a semantic judge; it must not overstate its coverage.
 - **Observation seam (T2):** `ChatProgram.last_raw_answer`, `last_raw_citations`,
   `last_guard_action` (`none`/`repaired`/`declined`/`disabled` plus the rule) are additive
   observation attributes. With the guard disabled, raw equals final and the action is
@@ -163,8 +170,21 @@ Companion to `spec-janbot.md`. Historical decision log; older ADRs are not edite
   per item; metrics are untouched.
 - **Toggle (T3):** `JANBOT_OUTPUT_GUARD=on|off`, default `on`; parsed and validated like the
   other config values. It exists to isolate the lever in measurement, not to hide the guard.
+- **Action labels (closed set):** `none`; `repaired: D1-partial`; `repaired: D2`;
+  `repaired: D1-partial + D2`; `declined: uncited`; `declined: D1-all-invalid`;
+  `declined: D2-empty`; `declined: guard-error`; `disabled`. No two causes share a string.
 - **Evidence:** unit tests for D1, D2 (clause granularity, forward window, no-op, decline,
-  fail-closed), the seam and the toggle; the offline replay (exact for D2, proxy for D1 on the
-  old artifacts); and one paid confirmation run after owner approval, whose replay of each
+  fail-closed, alias normalization and the cross-link trap), the seam and the toggle; the
+  offline replay; and one paid confirmation run after owner approval, whose replay of each
   recorded `raw-answer`/`raw-citations` through the guard must reproduce the recorded final
   answer byte-identically. Until that passes, the status stays **PROPOSED**.
+- **Amendment 1 (2026-10-19) — citation aliases are not fabrications.** T6 (`c967e50d`)
+  passed self-consistency: **59/59** recomputed retrieval labels matched the recorded
+  `retrieved:` lines and all **49** raw predictions replayed byte-identically. It exposed
+  alias citations: items 4, 23 and 63 cited org-roam IDs, not source filenames; they failed
+  as `FabricatedCitation` in run A and declined in T6. The normalizer resolves an ID only
+  from a retrieved chunk's own `:ID:` property; the cross-link trap (a `[[id:...]]` in
+  `filesystem-recovery.org` referencing `20261007-linux-from-scratch`) must not map the
+  wrong source. Item 41 had **no citations** and was mislabelled `declined: D1`; the honest
+  label is `declined: uncited`. Status stays **PROPOSED** until the T4 replay and a fresh
+  confirmation run pass.
