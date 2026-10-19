@@ -248,3 +248,57 @@ TypeScript expertise**; the E2 verification fails. **Item 97 (E4):** retrieves
 is a train item, so the val run cannot observe it.
 
 Full per-item investigation: `epic-evaluation.md`.
+
+---
+
+## 5.8 Amendment 1 to the decision rule — trigger 4's rationale (appended 2026-10-19, after the run)
+
+Appended under §5.5, not rewritten in place.
+
+**old:** *"a regression on an item that cites none of the seven new objects — such an item had
+no reason to move."*
+
+**new:** *"a regression on an item that cites none of the seven new objects. Such an item can
+still move, because hybrid retrieval fuses dense rank with BM25 whose IDF is collection-wide:
+adding chunks changes the lexical statistics for every query. The trigger stays as written —
+the reference must describe what the system does now — but the diagnosis changes: a movement
+on an item whose **dense** rank is unchanged and whose **hybrid** rank moved is a
+**measurement-fragility finding**, not a content regression."*
+
+**why — the experiment.** The 357-chunk index of `4c0d848c` was rebuilt locally from the
+extract at `053a5c9` (deterministic, no model call) and the four items that became new
+retrieval misses were re-queried against both indexes:
+
+| item | expected source | dense rank old → new | **hybrid** rank old → new |
+|---|---|---|---|
+| 41 *"Why were you fired…"* | `departure-narrative.org` | 7 → 7 (unchanged) | **2 → 6** |
+| *"custom metrics in your monitoring stack"* | `departure-narrative.org` | 6 → 6 (unchanged) | **4 → 5** |
+| *"Jenkins … tell me about the outage"* | `oracle-index-incident.org` | 5 → 5 (unchanged) | **4 → 6** |
+| *"Python work is just glue scripts…"* | `audio-transcription-pipeline.org` | 6 → 7 | **3 → 5** |
+
+Three of the four have an **identical dense rank** before and after. All four were inside
+top-4 previously **only by lexical fusion** — they were never semantically in the window.
+So the corpus round did not degrade embeddings; it withdrew a keyword advantage.
+
+**Consequence for how references are compared.** `retrieval_accuracy` / `retrieval_mrr` are
+**collection-size dependent** through BM25. The previous reference's `0.7660` was partly
+lexical luck that a larger corpus cannot preserve. Cross-reference comparison of those two
+metrics is therefore not apples-to-apples when the corpus grows. Two measures follow from
+this, both cheap:
+
+1. Record **dense-only** retrieval accuracy alongside the hybrid one at each reference, so a
+   collection-independent number exists for comparing rounds.
+2. Diagnose any future retrieval movement with the two-index method above (rebuild the
+   previous extract locally, re-query, compare ranks) **before** attributing it to content.
+
+**Also proven by the same experiment:** item 101 (train, so outside the val run) retrieves
+`entering-an-unknown-system` at rank 1 and `procedure-drift` at rank 2 — pre-registered
+hypothesis E3 confirmed at retrieval level, at zero cost. Item 97 retrieves
+`secret-management-evolution` at rank 1 in both indexes; E4 not observed, as reported.
+
+**Not yet established:** item 4's `FabricatedCitation` on an old-only window, and item 19's
+over-claim despite `personal-intro.org` being retrieved at rank 2. Both point at the
+generation side, not the corpus: item 19 is the known over-claiming class for which the owner
+already required a deterministic output-level guard (ADR-009, E2), and the judge scored that
+answer `faithful` — so the judge does not see paraphrase-level over-claim either. Two open
+findings, no re-run proposed.
