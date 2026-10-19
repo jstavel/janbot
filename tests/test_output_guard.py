@@ -107,6 +107,25 @@ def test_subject_without_marker_is_kept() -> None:
     assert result.answer == "I know TypeScript well."
 
 
+def test_subject_before_marker_is_not_the_markers_object() -> None:
+    """A technology mentioned before the marker is not the marker's claim window."""
+    answer = (
+        "The author has expertise in Python and Perl, and emphasizes a strong "
+        "foundation in asynchronous systems and invariant testing."
+    )
+    result = apply_output_guard(
+        answer=answer,
+        citations=["profile.org"],
+        retrieved_chunks=_chunks(
+            ("profile.org", "Python and Perl by hand; asynchronous systems and invariant testing.")
+        ),
+    )
+
+    assert result.declined is False
+    assert result.answer == answer
+    assert result.dropped_sentences == []
+
+
 def test_single_ungrounded_sentence_declines() -> None:
     result = apply_output_guard(
         answer="I have a strong foundation in TypeScript.",
