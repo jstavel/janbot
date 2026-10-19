@@ -8,10 +8,10 @@ baseline_revision: 'a0b9b87'
 route: 'full'
 route_source: 'pinned'
 risk: 'high'
-review: ''
+review: 'Five lenses ran (adversarial, edge-case-hunter, verification-gap, structure, prose). Owner triaged 2026-10-19 into G1, G2, G5-lite, G4, G3 plus rejected/deferred items. Code, build inputs and docs fixed; apply and phase-2 evidence remain owner-run.'
 review_source: ''
-lenses_ran: []
-review_loop_iteration: 0
+lenses_ran: ['adversarial', 'edge-case-hunter', 'verification-gap', 'structure', 'prose']
+review_loop_iteration: 1
 context: []
 ---
 
@@ -25,7 +25,7 @@ context: []
 
 ## Boundaries & Constraints
 
-**Always:** **one tool owns the image** — Terraform builds and pushes it; **E4b's CI must NOT build or push** (it only authenticates and runs `terraform apply`), or there are two builders. The image is referenced **by digest, never by tag** (`image = "<repository>/api@<sha256_digest>"`): a tag is a moving target, so Terraform would report "no changes" while a different image ran. Provider **`kreuzwerker/docker`, pinned** in `.terraform.lock.hcl` (it is the image resource; the Google provider manages only the repository) — a **third-party supply-chain dependency**, pinned like `uv.lock`. The build uses the **`Containerfile` explicitly** (`build { context = "../", dockerfile = "Containerfile", platform = "linux/amd64" }`), which also closes E1's finding that `gcloud run deploy --source` could not honour a Containerfile. **`triggers` hash ONLY the real inputs** — `src/**`, `public_profile_org/**`, and the `Containerfile` (via `filesha1`) — **never volatile inputs** (timestamps, `.git`, the whole working dir), or every apply rebuilds. **Engine prereqs (preflight):** a running engine (`systemctl --user enable --now podman.socket`; `export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock`) and registry credentials via the **engine** (`gcloud auth print-access-token | podman login -u oauth2accesstoken --password-stdin europe-central2-docker.pkg.dev`) — **never a `registry_auth` block** (a token would land in the state file in plaintext, and it is short-lived ~1h). **Artifact Registry cleanup policies** on the repo: **keep the most recent 5** versions, **delete untagged older than 7 days** — with (c) every apply pushes, so unbounded growth is a silent cost; the policy is the guarantee. The **secret value never enters state** — Terraform creates the secret **container** only; the version is added out-of-band (`gcloud secrets versions add`). **Versioned GCS remote state**, bootstrapped once by hand; `.gitignore` gains `*.tfstate*`, `.terraform/`, value-bearing `*.tfvars`, while **`.terraform.lock.hcl` is committed**. **Protection flags:** `prevent_destroy` on the AR repo and the secret container, and Cloud Run `deletion_protection` — the worst case is a redeploy, not data loss. Resources are **fresh, never `terraform import`**; real-stack naming `janbot-api` / `janbot`; service stays **authenticated-only**; `JANBOT_PROGRAM_PATH` stays unset; `/chat` contract and AI core unchanged.
+**Always:** **one tool owns the image** — Terraform builds and pushes it; **E4b's CI must NOT build or push** (it only authenticates and runs `terraform apply`), or there are two builders. The image is referenced **by digest, never by tag** (`image = "<repository>/api@<sha256_digest>"`): a tag is a moving target, so Terraform would report "no changes" while a different image ran. Provider **`kreuzwerker/docker`, pinned** in `.terraform.lock.hcl` (it is the image resource; the Google provider manages only the repository) — a **third-party supply-chain dependency**, pinned like `uv.lock`. The build uses the **`Containerfile` explicitly** (`build { context = "../", dockerfile = "Containerfile", platform = "linux/amd64" }`), which also closes E1's finding that `gcloud run deploy --source` could not honour a Containerfile. **`triggers` hash ONLY the real inputs** — `src/**`, `public_profile_org/**`, and the `Containerfile` (via `filesha1`) — **never volatile inputs** (timestamps, `.git`, the whole working dir), or every apply rebuilds. **Engine prereqs (preflight):** a running engine (`systemctl --user enable --now podman.socket`; `export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock`); registry credentials reach the `kreuzwerker/docker` provider through a `registry_auth` block that carries a **path** (`config_file`, default `~/.docker/config.json`), never a token. The credential itself is written to that file out of band, as a Docker-format `auths` entry (mode 0600), inside a throwaway `DOCKER_CONFIG` that is deleted after both plan and apply. The provider resolves registry auth **only** from `registry_auth` and ignores engine logins, so no credential-bearing value enters configuration or state. Verified 2026-10-19: `terraform state pull | grep -cE 'oauth2accesstoken|ya29\\.|Bearer '` = 0. [re-worded by marker item 1] **Artifact Registry cleanup policies** on the repo: **keep the most recent 5** versions, **delete untagged older than 7 days** — with (c) every apply pushes, so unbounded growth is a silent cost; the policy is the guarantee. The **secret value never enters state** — Terraform creates the secret **container** only; the version is added out-of-band (`gcloud secrets versions add`). **Versioned GCS remote state**, bootstrapped once by hand; `.gitignore` gains `*.tfstate*`, `.terraform/`, value-bearing `*.tfvars`, while **`.terraform.lock.hcl` is committed**. **Protection flags:** `prevent_destroy` on the AR repo and the secret container, and Cloud Run `deletion_protection` — the worst case is a redeploy, not data loss. Resources are **fresh, never `terraform import`**; real-stack naming `janbot-api` / `janbot`; service stays **authenticated-only**; `JANBOT_PROGRAM_PATH` stays unset; `/chat` contract and AI core unchanged.
 
 **Never:** the secret value in state/code/committed/echoed/logged; a hardcoded registry token in HCL or state; volatile `triggers` inputs; image referenced by a movable tag; public (unauthenticated) access; a compiled program; CI building/pushing the image (**E4b builds nothing**); Firestore (E4b); a change to the `/chat` contract or the AI core; `terraform import` of the spike; `-target` (one apply, one graph).
 
@@ -43,6 +43,37 @@ context: []
 | ENGINE | `apply` with no engine / not logged in | image build fails before deploy | preflight: `podman.socket` up + `podman login` |
 | STATE | backend | GCS bucket reachable, **object versioning on** | `terraform init` fails fast if missing |
 
+<renegotiated date="2026-10-19" by="owner">
+  ITEM 1 — registry credentials (supersedes the "engine credentials, never a
+  registry_auth block" clause in §Boundaries & Constraints).
+  ATTRIBUTION: mechanically forced by provider behaviour. Accepted by owner
+  2026-10-19. Recorded separately from owner-owned choices.
+
+  OLD (verbatim, in force at baseline):
+    "registry credentials via the **engine** (`gcloud auth print-access-token |
+    podman login -u oauth2accesstoken --password-stdin
+    europe-central2-docker.pkg.dev`) — **never a `registry_auth` block** (a token
+    would land in the state file in plaintext, and it is short-lived ~1h)"
+
+  NEW:
+    "registry credentials reach the `kreuzwerker/docker` provider through a
+    `registry_auth` block that carries a **path** (`config_file`, default
+    `~/.docker/config.json`), never a token. The credential itself is written to
+    that file out of band, as a Docker-format `auths` entry (mode 0600), inside a
+    throwaway `DOCKER_CONFIG` that is deleted after both plan and apply. The
+    provider resolves registry auth **only** from `registry_auth` and ignores
+    engine logins, so no credential-bearing value enters configuration or state.
+    Verified 2026-10-19: `terraform state pull | grep -cE
+    'oauth2accesstoken|ya29\\.|Bearer '` = 0."
+
+  WHY (two mechanically forced facts, both measured at build time):
+    (a) the provider does not read engine logins — `AuthConfigs` is nil without
+        a block (provider source `internal/provider/provider.go`);
+    (b) `podman login --authfile` writes a non-Docker format the provider cannot
+        parse, so the `auths` entry is written directly.
+    The safeguard the constraint existed for — no credential in state — still
+    holds, by measurement rather than assertion.
+</renegotiated>
 </frozen-after-approval>
 
 ## Code Map
@@ -108,14 +139,60 @@ context: []
 
 ## Plan Change Log
 
+- 2026-10-19 — marker item 1: registry credentials via `registry_auth` (path, no token); mechanically forced.
+
 ## Review Triage Log
+
+Triage 2026-10-19, owner-approved. Findings are grouped by fix group; the canonical fields
+are recorded for the group, not repeated per finding.
+
+### G1 — missing dependency edges (fixed)
+
+- location: `terraform/main.tf` (`docker_registry_image.janbot`, `google_cloud_run_v2_service.janbot`)
+- trigger_condition: the image name is a plain string, so the push has no edge to the repo; the service references only the secret container, so a revision can be created before `secretAccessor` propagates.
+- guard_snippet: `depends_on = [google_artifact_registry_repository.janbot]` on the image; `depends_on = [google_secret_manager_secret_iam_member.run_access]` on the service.
+- potential_consequence: from-zero applies race repo/IAM propagation and fail intermittently.
+
+### G2 — build trigger must be a function of every build input (fixed)
+
+- location: `terraform/main.tf` triggers/locals, `Containerfile`, `.dockerignore`, `.gitignore`
+- trigger_condition: `pyproject.toml`, `uv.lock` and `.dockerignore` were not hashed; tree hashes omitted file names; base images were mutable tags; a dirty tree could be labelled with a clean SHA; `terraform/` and `.env` entered the build context; `*.tfvars.json` was not ignored.
+- guard_snippet: add `pyproject`/`uvlock`/`dockerignore` to `triggers`; hash `${f}:${filesha1(...)}`; pin both base images by digest with ARG + OCI labels; plan-time dirty-tree precondition; exclude `terraform/` and `.env`; ignore `*.tfvars.json`.
+- potential_consequence: stale dependencies, silent renames, non-reproducible rebuilds, leaked build-context files, and a digest that does not correspond to any commit.
+
+### G5-lite — durable rollback (fixed)
+
+- location: `terraform/main.tf` (`docker_registry_image.janbot`, cleanup policies)
+- trigger_condition: `keep_remotely` was unset, replacement deleted the prior image, and only untagged images were cleaned.
+- guard_snippet: `keep_remotely = true`; `lifecycle { create_before_destroy = true }`; add `delete-tagged-30d` (2592000s) after the KEEP policy; keep per-SHA tags.
+- potential_consequence: rollback revisions cannot pull their image and tagged images accumulate without bound.
+
+### G4 — secret region + registry-token hygiene (fixed; apply owner-run)
+
+- location: `terraform/main.tf` (`google_secret_manager_secret.openrouter`, `registry_auth`), `variables.tf`, `terraform/README.md`
+- trigger_condition: `replication { auto {} }` may place the key outside the EU; the preflight overwrote the operator's Docker config with a broad, short-lived token; the secret-region change is ForceNew and destroys versions.
+- guard_snippet: `user_managed` replica in `var.region`; `registry_auth_file` variable; throwaway merged `DOCKER_CONFIG` at 0600 with a trap; documented lift → apply → re-add version → restore → apply → force revision sequence; named follow-up for a deployer SA.
+- potential_consequence: data-residency violation, credential exposure/expiry mid-apply, and a live revision pinned to a destroyed secret version.
+
+### G3 — documents must stop asserting what the mechanism does not do (fixed)
+
+- location: `terraform/README.md`, `terraform/variables.tf`, plan Design Notes/Verification
+- trigger_condition: the runbook claimed one apply and a changed URL, `image_tag` was called non-load-bearing, reversal was called one line, the replacement proof omitted the second apply, the gcloud teardown was not said to bypass protection, ownership was overstated, plan counts/rollback horizon were missing, and the leak check grepped local state while state is remote.
+- guard_snippet: one deterministic-URL statement read from `terraform output -raw service_url`; state two applies and why; tag is ForceNew; reversal is a bounded refactor and `ignore_changes` reverses nothing; second apply; protection-is-Terraform-only; scoped ownership claim; full plan counts and `max(5 versions, 30 days)`; `terraform state pull | grep -c`.
+- potential_consequence: operators trust a URL/procedure that does not exist, and verification passes without observing the thing it claims.
+
+### Rejected / deferred (recorded so the record is honest)
+
+- **REJECTED — “manage the secret version in Terraform”**: targets the frozen boundary “the value never enters state”. Its limitation (rotation is invisible to plan) is accepted and documented; rotation is “re-add the version + force a revision”.
+- **REJECTED as a false positive — lock-file cross-platform claim**: the `zh:` hashes already cover other platforms; no change made.
+- **DEFERRED to E2 — protection flags as variables**: needs a committed `terraform.tfvars` template; carried into E2 rather than invented here.
 
 ## Design Notes
 
-- **Why Terraform owns the image (option (c)) and why it is reversible:** one tool = one source of truth and **one `plan` that shows which image is deployed**; the deciding anti-drift argument is that E4b's CI then builds nothing (two builders would reintroduce drift). Frequency was examined and does not dominate: an image bump is a one-line plan (`image: sha256:old → sha256:new`, 0/1/0). **Reversal is one line** — `lifecycle { ignore_changes = [template[0].containers[0].image] }` — so this is not permanent.
+- **Why Terraform owns the image (option (c)) and why it is reversible only as a bounded refactor:** one tool = one source of truth and **one `plan` that shows which image is deployed**; the deciding anti-drift argument is that E4b's CI then builds nothing (two builders would reintroduce drift). Frequency was examined and does not dominate: an image bump is a one-line plan (`image: sha256:old → sha256:new`, 0/1/0). **Reversal is a bounded refactor, not a one-liner:** replace the digest interpolation with a variable and delete `docker_registry_image`; with `keep_remotely = true` the images survive, so the exit is **safe**. `lifecycle { ignore_changes = [...] }` alone reverses nothing — the image resource keeps building, pushing and replacing.
 - **Digest, not tag:** a tag is movable, so tag-based references hide a changed image behind "no changes"; the digest makes the deployed image explicit and the plan honest.
-- **`triggers` footgun:** hashing only `src/**`, `public_profile_org/**` and the `Containerfile` (via `filesha1`) means rebuilds happen on real change; hashing the working dir or timestamps would rebuild on every apply.
-- **Registry auth via the engine, not Terraform:** a `registry_auth` block would put a short-lived token (~1h) into the state file in plaintext; `podman login` keeps it out of state entirely.
+- **`triggers` footgun:** hashing the real build inputs — `src/**`, `public_profile_org/**`, `Containerfile`, `pyproject.toml`, `uv.lock`, `.dockerignore` — means rebuilds happen on real change; hashing the working dir or timestamps would rebuild on every apply. Each tree hash includes the file name, so a rename with identical content rebuilds.
+- **Registry auth through a path, not a token:** the provider resolves auth only from `registry_auth`; the block carries a path, and the credential lives in a throwaway `DOCKER_CONFIG` deleted after plan and apply. No credential-bearing value enters config or state (verified: 0 matches in `terraform state pull`). See marker item 1.
 - **Cleanup policy = a guarantee, not a nicety:** with every apply pushing an image, an unbounded repository is a silent cost; keep-5 + delete-untagged>7d bounds it while preserving rollback.
 - **Protection flags:** `prevent_destroy` (repo, secret container) and Cloud Run `deletion_protection` make the worst case a redeploy, not data loss.
 - **Container-not-version for the secret:** `google_secret_manager_secret_version` stores the value in state (plaintext); the version stays out-of-band.
@@ -126,11 +203,16 @@ context: []
 ## Verification
 
 **Commands:**
-- Preflight: `systemctl --user enable --now podman.socket`; `export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock`; `gcloud auth print-access-token | podman login -u oauth2accesstoken --password-stdin europe-central2-docker.pkg.dev`.
+- Preflight: `systemctl --user enable --now podman.socket`; `export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock`; `gcloud auth print-access-token | podman login -u oauth2accesstoken --password-stdin europe-central2-docker.pkg.dev`. (superseded by marker item 1)
 - `terraform init && terraform validate && terraform plan` -- expected: clean plan from zero; the plan shows an `image = …@sha256:…`.
 - `terraform apply` -- expected: builds/pushes the image and deploys in one run.
 - `gcloud run services describe janbot-api --region europe-central2 --format='value(spec.template.spec.containers[0].image)'` -- expected: `…/api@sha256:…` (a digest, not a tag).
 - token probes at the new URL -- `GET /health` = `{"status":"ok"}`; in-corpus `POST /chat` = cited; out-of-corpus = graceful decline; no token → `403`.
-- `grep -R "$OPENROUTER_API_KEY" terraform/ .terraform/ *.tfstate*` -- expected: no matches.
+- `grep -R "$OPENROUTER_API_KEY" terraform/ .terraform/ *.tfstate*` -- expected: no matches. (superseded by marker item 1)
+- `terraform state pull | grep -c "$OPENROUTER_API_KEY"` -- expected: `0` (state is remote; the old local grep scanned nothing that holds resource values).
 - `gsutil versioning get gs://<state-bucket>` -- `Enabled: True`.
-- `gcloud artifacts repositories describe janbot --location europe-central2 --format='value(cleanupPolicies)'` -- expected: keep-5 + delete-untagged (or the recorded fallback).
+- `gcloud artifacts repositories describe janbot --location europe-central2 --format='value(cleanupPolicies)'` -- expected: keep-5 + delete-untagged + delete-tagged (or the recorded fallback).
+
+## Follow-ups
+
+- **Owner `stavel.jan@gmail.com`:** dedicated deployer SA with `roles/artifactregistry.writer` instead of a user-scoped `gcloud auth print-access-token` for the build/push preflight.
