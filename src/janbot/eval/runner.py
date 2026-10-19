@@ -73,6 +73,24 @@ def _retrieved_context(program: Callable[..., ChatResponse]) -> str | None:
     return None if context is None else str(context)
 
 
+def _raw_answer(program: Callable[..., ChatResponse]) -> str | None:
+    """The prediction before the output guard, from the additive seam."""
+    answer = getattr(program, "last_raw_answer", None)
+    return None if answer is None else str(answer)
+
+
+def _raw_citations(program: Callable[..., ChatResponse]) -> list[str] | None:
+    """The labels the model cited before D1, from the additive seam."""
+    citations = getattr(program, "last_raw_citations", None)
+    return None if citations is None else list(citations)
+
+
+def _guard_action(program: Callable[..., ChatResponse]) -> str | None:
+    """The guard action (``none``/``repaired``/``declined``/``disabled`` plus rule)."""
+    action = getattr(program, "last_guard_action", None)
+    return None if action is None else str(action)
+
+
 def _evaluate(
     items: list[GoldenItem],
     program: Callable[..., ChatResponse],
@@ -108,6 +126,9 @@ def _evaluate(
                     error=None,
                     retrieved_sources=_retrieved_sources(program),
                     retrieved_context=_retrieved_context(program),
+                    raw_answer=_raw_answer(program),
+                    raw_citations=_raw_citations(program),
+                    guard_action=_guard_action(program),
                     judge_verdict=None,
                 )
             )
@@ -120,6 +141,9 @@ def _evaluate(
                     error=f"{type(exc).__name__}: {exc}",
                     retrieved_sources=_retrieved_sources(program),
                     retrieved_context=_retrieved_context(program),
+                    raw_answer=_raw_answer(program),
+                    raw_citations=_raw_citations(program),
+                    guard_action=_guard_action(program),
                     judge_verdict=None,
                 )
             )
@@ -140,6 +164,9 @@ def _evaluate(
                 error=None,
                 retrieved_sources=_retrieved_sources(program),
                 retrieved_context=_retrieved_context(program),
+                raw_answer=_raw_answer(program),
+                raw_citations=_raw_citations(program),
+                guard_action=_guard_action(program),
                 judge_verdict=verdict,
             )
         )

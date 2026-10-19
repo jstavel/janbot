@@ -917,3 +917,52 @@ def test_create_app_fails_fast_when_index_has_out_of_scope_chunks(
         )
 
     assert "outside" in str(excinfo.value)
+
+
+def test_guard_seam_records_raw_prediction_without_changing_the_response(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """The observation seam is additive: clean output is unchanged and raw equals final."""
+    corpus, index_path = indexed_corpus
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["profile.org"]),
+    )
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["answer"] == CANNED_ANSWER
+    program = app.state.program
+    assert program.last_raw_answer == CANNED_ANSWER
+    assert program.last_raw_citations == ["profile.org"]
+    assert program.last_guard_action == "none"
+
+
+def test_guard_seam_records_the_repaired_action(
+    indexed_corpus: tuple[Path, Path],
+    embedder: Embedder,
+) -> None:
+    """The seam keeps the pre-guard sentence while the response carries the repair."""
+    corpus, index_path = indexed_corpus
+    raw = "I have a strong foundation in TypeScript. I work on search infrastructure."
+    app = create_app(
+        env=_chat_env(corpus, index_path),
+        embedder=embedder,
+        lm_factory=StubLMFactory(citations=["profile.org"], answer=raw),
+    )
+
+    response = TestClient(app).post(
+        "/chat", json={"question": "What search infrastructure have you built?"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["answer"] == "I work on search infrastructure."
+    program = app.state.program
+    assert program.last_raw_answer == raw
+    assert program.last_raw_citations == ["profile.org"]
+    assert program.last_guard_action.startswith("repaired: D2")
