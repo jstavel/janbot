@@ -275,11 +275,10 @@
 
 - question: "Tell me about yourself."
   expected_answer: >-
-    Stories bring the power to know; success fuels the power to grow. Trust
-    builds joy, and shared joy is twice the joy. Professional in Perl and
-    Python, JavaScript and TypeScript, yet Clojure is the true passion. Focus
-    on asynchronous systems and invariant testing — and the fleeting moments
-    that remind me I am still growing.
+    Stories bring the power to know; success fuels the power to grow. Trust builds joy,
+    and shared joy is twice the joy. Python and Perl by hand, Clojure by heart,
+    TypeScript with agents. I build systems whose output can be verified, not merely
+    demonstrated. I cherish the fleeting moments that remind me I am still growing.
   expected_sources:
     - personal-intro.org
   split: val
@@ -1143,4 +1142,122 @@
   expected_sources:
     - pdb-emacs-debugging.org
   split: val
+  should_refuse: false
+
+- question: "How do you keep a team able to own an AI-assisted codebase?"
+  expected_answer: >-
+    By reducing the unbounded body of knowledge to the finite set of decisions the
+    team must be able to defend. For each decision, the test has three parts: what
+    holds, what alternative was rejected, and what breaks if it changes — "I know
+    we use a digest" is half an answer unless you can say why not a tag. The
+    artifact is a derived index, not a second source of truth: `_bmad-output/` stays
+    the write model (ADRs and specs), and `DECISIONS.md` is a read model over it,
+    one row per ADR id (no new numbering), with no pin/no row, the ADR winning on
+    conflict, idempotent regeneration that never overwrites the human-owned
+    `verified` column, and holes left visible because the hole is the metric.
+    Verification is an answer produced in the human's own words against the pinned
+    line, sampled by blast radius and longest-unverified; honest limit: it is a
+    self-assessment mediated by the agent, not an objective measurement.
+  expected_sources:
+    - knowledge-drift.org
+  split: train
+  should_refuse: false
+
+- question: "Why does a runbook have to be run by hand?"
+  expected_answer: >-
+    Because know-what is closed by reading and know-how only by executing: a
+    procedure is believed only when someone who did not watch the agent runs it.
+    `RUNBOOK.md` is a primary artifact, authored not generated, and the single
+    source for how; `_bmad-output/` remains the single source for what and why.
+    It is written for the agent first and the human second because the agent starts
+    every session from zero while a human pays a missing line once — a gap is a tax
+    at every execution. The drift is measured free from traces: the delta between
+    commands actually executed and the runbook, stale entries nobody has run for N
+    months, and the agent's own questions, since every session tests the runbook.
+    The work is filtered by blast radius: must (deploy, key rotation, destructive
+    operations) always closed and periodically re-verified, should closed over
+    time, never legitimately agent-only and not a debt. Honest limit: no question
+    log exists yet; the continuous test is a design, not a measured instrument.
+  expected_sources:
+    - procedure-drift.org
+  split: train
+  should_refuse: false
+
+- question: "How do you keep up with your own AI-assisted work?"
+  expected_answer: >-
+    By scheduling the closing rather than waiting for it: the drift is closed on a
+    calendar, not on demand. Three instruments: a compressed onboarding document —
+    not a Q&A bank, but one dense map that AI writes and re-compresses and that
+    grows as knowledge accumulates; a weekly block reserved with no development in
+    it, where unfinished work is closed or explicitly parked across knowledge,
+    experience, workflow and team; and a daily close that asks the agent what new
+    knowledge appeared, then closes both axes by hand — one decision defended out
+    loud (decision, rejected alternative, failure mode) and one runbook command
+    actually executed — before the day is closed emotionally as well. The honest
+    limit: the drift is already a month deep, so the cadence may still lose; it is
+    an experiment, not a verified method, but closing must be scheduled because
+    unscheduled learning is how the gap accumulates.
+  expected_sources:
+    - drift-closing-cadence.org
+  split: val
+  should_refuse: false
+
+- question: "Does the AI have to be substitutable too, and are you?"
+  expected_answer: >-
+    Yes, and it is symmetrical: if a team member is not substitutable it is a
+    single point of failure, and that applies to the agent exactly as it applies to
+    me. The concrete test is to turn the AI off — can I debug, extend and fix what
+    was shipped? The honest competence map: Python, Perl and JavaScript are expert,
+    written by hand for years; Clojure is deep experience but currently rusty;
+    TypeScript produced a large project with agents, but I cannot write a line
+    unaided and without agents I am a beginner there. The strategic choice is
+    conservative (AI only where expertise already exists) or expansive (AI to enter
+    a new stack only with active personal practice); expansive without the practice
+    clause is dependency with the guarantee removed. The gap is open, not closed:
+    this is a rule for future work, not a claim of current mastery.
+  expected_sources:
+    - substitutable-ai.org
+  split: val
+  should_refuse: false
+
+- question: "What did the Clojure interview actually test?"
+  expected_answer: >-
+    A final round for a Clojure role where the hands-on part was deliberately small
+    and the question that carried the signal was the trade-offs between the
+    libraries one would reach for — not a request for a large amount of code. It
+    tested trade-off knowledge and design judgement, not typing speed. The tempting
+    reading, "I only need to design, not code", is half true and dangerous:
+    trade-off knowledge without implementation is opinion, and implementation
+    without trade-off knowledge is typing; a senior is expected to hold both. The
+    honest consequence is to declare TypeScript as a new skill built with agents
+    rather than let the workflow imply expertise — the artifact shows architecture,
+    specification and verification, not language mastery. The specific library
+    trade-offs were not recalled in the interview itself; that is recorded as a
+    learning item, not a strength.
+  # owner instruction 2026-10-19: interview identifying details redacted here and in
+  # architect-not-coder.org (see its <renegotiated> marker) — anonymisation + the
+  # specifics carry no part of the lesson.
+  expected_sources:
+    - architect-not-coder.org
+  split: train
+  should_refuse: false
+
+- question: "How should an API key held by an agent be rotated?"
+  expected_answer: >-
+    Treat the threat as persistence, not leakage: an agent that touches the key can
+    write it down and keep it, so the grant survives the task and no prompt fixes
+    that. The rule that governs the rest is that a control whose parameters disagree
+    with each other becomes a scheduled failure. Validity has to outlive the rotation
+    interval with margin — a 30-day validity rotated weekly leaves three weeks of
+    headroom, a 7-day validity rotated weekly leaves none. The spend cap is computed
+    for one key's lifetime rather than per month, because rotation resets it: monthly
+    exposure is keys × cap, so the exposure multiplier equals the cap's margin. The
+    reset period stays off, so a cap that is reached doubles as a rotation-lapse
+    detector, at the price that a capped key looks like a broken key. Everything sits
+    in one authoritative store (Secret Manager) with ephemeral retrieval, never on
+    disk, logs or a user-visible context. Honest status: store, validity and cap are
+    in place; the rotator, anomaly monitoring and the revocation playbook are not.
+  expected_sources:
+    - api-key-rotation.org
+  split: train
   should_refuse: false
