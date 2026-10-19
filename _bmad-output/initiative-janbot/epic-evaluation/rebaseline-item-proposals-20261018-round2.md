@@ -3,7 +3,7 @@
 **Status:** **APPROVED by the owner on 2026-10-19** — N10–N15, the 4 train / 2 val split,
 P1 Option B, and the N14 redaction. N15 was corrected before application after the source
 object was reframed (see the note in §C). The approved texts are frozen; the dataset change
-is applied in the commit that follows.
+is applied in commit `ee38b18`.
 
 **Companion:** `rebaseline-brief-20261018.md` (the diagnosis).
 
