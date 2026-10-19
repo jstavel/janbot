@@ -12,9 +12,14 @@
 # Dependencies come from uv.lock; the project itself is not installed as a wheel
 # (src/ is placed on PYTHONPATH) so the build needs no package build backend.
 
-FROM python:3.12-slim AS builder
+# Base images are pinned by digest; bump them deliberately (see terraform/README.md
+# "Base-image bump"). A tag would move under the build with no plan diff.
+ARG PYTHON_IMAGE=python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+ARG UV_IMAGE=ghcr.io/astral-sh/uv@sha256:4a1f3666816dafadd20ceb71eac9a7d56d7ef30279f7d64048519ab901ada336
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+FROM ${PYTHON_IMAGE} AS builder
+
+COPY --from=${UV_IMAGE} /uv /uvx /bin/
 
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 \
@@ -24,7 +29,14 @@ ENV UV_COMPILE_BYTECODE=1 \
 COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 
-FROM python:3.12-slim AS runtime
+FROM ${PYTHON_IMAGE} AS runtime
+
+# Re-declare the ARGs so the labels below can see them.
+ARG PYTHON_IMAGE
+ARG UV_IMAGE
+LABEL org.opencontainers.image.base.name="python:3.12-slim" \
+      org.opencontainers.image.base.digest="sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1" \
+      org.opencontainers.image.base.uv.digest="sha256:4a1f3666816dafadd20ceb71eac9a7d56d7ef30279f7d64048519ab901ada336"
 
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \

@@ -14,5 +14,10 @@ terraform {
       source  = "kreuzwerker/docker"
       version = "~> 3.0"
     }
+    # Runs the plan-time dirty-build-tree guard (git status) via a data source.
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.3"
+    }
   }
 }

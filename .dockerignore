@@ -2,6 +2,7 @@
 # falls back to .dockerignore; Docker reads .dockerignore — one file serves both).
 .git
 .gitignore
+.env
 .venv
 .agents
 .agent-shell
@@ -19,5 +20,6 @@ mlflow.db
 split_manifest.json
 skills-lock.json
 tests
+terraform
 **/__pycache__
 *.pyc

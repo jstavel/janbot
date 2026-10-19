@@ -34,4 +34,5 @@ _bmad/render/
 *.tfstate.*
 .terraform/
 *.tfvars
+*.tfvars.json
 

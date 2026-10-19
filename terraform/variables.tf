@@ -30,6 +30,12 @@ variable "runtime_sa_id" {
 
 variable "image_tag" {
   type        = string
-  description = "Tag to build/push the image under (e.g. the git sha). The deployed image is referenced by DIGEST, so this tag is not load-bearing."
+  description = "Tag to build/push the image under (e.g. the git sha). The tag IS load-bearing: it is the resource name and is ForceNew, so changing it replaces the resource. The deployed image is still referenced by DIGEST."
   default     = "dev"
+}
+
+variable "registry_auth_file" {
+  type        = string
+  description = "Path to the Docker-format auth config the docker provider reads (a PATH, never a token)."
+  default     = "~/.docker/config.json"
 }
