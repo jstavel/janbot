@@ -387,3 +387,78 @@ round:
 As §5.5: no `expected_sources` edits, no re-split, no re-run for a better number, no judge
 swap, no post-hoc redefinition of what "register" means. Any insufficiency of this
 pre-registration is appended (date, `old → new → why`), never edited in place.
+
+---
+
+## 6.7 Run B outcome (2026-10-19) — **NOT REGISTERED**
+
+Run **`f9ae28f24b2643fdaefeff50f819865b`** (FINISHED), pinned config except
+`JANBOT_RETRIEVAL_WINDOW=sources`, `k=4`, hybrid, θ=0.26, judge `claude-haiku-4.5`,
+`program=baseline`, `dataset_sha256` `a8bd69dc…`, index 417 chunks / 60 sources.
+Captured output: `run-f9ae28f2-output.txt`.
+
+| metric | A (`chunks`, `e7110d58`) | B (`sources`, `f9ae28f2`) |
+|---|---|---|
+| `retrieval_accuracy` | 34/49 = 0.6939 | **38/49 = 0.7755** |
+| `retrieval_mrr` | 0.7415 | **0.7619** |
+| `answer_coverage` | 45/49 = 0.9184 | **42/49 = 0.8571** |
+| `citation_correctness` | 31/45 = 0.6889 | **30/42 = 0.7143** |
+| `citation_precision` | 0.6815 | **0.7262** |
+| `faithfulness` | 43/45 = 0.9556 | **40/42 = 0.9524** |
+| `refusal_pass_rate` | 1.0 (n=10) | **1.0** (n=10) |
+| `spurious_refusal_rate` | 1/46 = 0.0217 | **1/43 = 0.0233** |
+
+**T1 was reproduced exactly before spending:** `chunks` 34/49, `sources` 38/49, gained
+**71, 75, 83, 84**, lost **none**. The run's retrieval side matches that table exactly.
+
+### Which criterion failed
+
+**Criterion 2 — faithfulness regressed by more than one item on the pre-registered item
+count: 43 passes (A) → 40 passes (B), −3.** The rate is nearly flat (0.9556 → 0.9524) and
+on the 42 items observed in both runs it is **40/42 vs 40/42**; the three missing passes
+are items that **left the observed population** as new `FabricatedCitation` errors. That is
+the named cause for the n change (criterion 5), but it is also a real quality regression:
+`answer_coverage` fell **45/49 → 42/49** and the §6.3 prediction `≥ 45/49` is falsified.
+Per §6.4 and the “no post-hoc redefinition” rule, B is **not registered**.
+
+The other criteria: (1) citation passes 31→30, −1 ≤ 4 — holds (on the common 42 items it is
+29→30, +1); (3) refusal pass 1.0 — holds; (4) the spurious-refusal **count** is still 1
+(item 41) but the denominator changed 46→43 — no new spurious refusal, denominator change
+named by the three new errors; (5) n 45→42 with the named cause above; (6) retrieval
+matches §6.2 exactly.
+
+### Item-level deltas (attribution)
+
+- **Item 71** — retrieval gained `oracle-index-incident.org` (rank 3 under `sources`), but
+  the citation still misses it; the answer remains the orphaned-pods story. Prediction
+  “recovers its expected citation” **falsified**.
+- **Item 75** — retrieval gained `departure-narrative.org` (rank 3), but the citation still
+  misses it. **Falsified.**
+- **Item 83** — retrieval gained `departure-narrative.org` (rank 3), but the item now errors
+  `FabricatedCitation`; it is worse than A. **Falsified.**
+- **Item 84** — retrieval gained `audio-transcription-pipeline.org` (rank 4) and the
+  citation now passes. **Confirmed.**
+- **Item 41** — still declined `out_of_corpus`; exempted by the owner.
+- **Item 19** — still over-claims TypeScript (“a strong foundation in … TypeScript”);
+  generation-side, unchanged by the window. **Confirmed as a known defect.**
+- **Item 4** — still `FabricatedCitation`; generation-side, unchanged. **Confirmed.**
+- **New errors (B only):** item **74** (“You didn't build that monitoring stack…”), item
+  **83**, and item **97** (“How do you handle credentials and secrets?”) now error
+  `FabricatedCitation`. Item 97's window is `secret-management-evolution.org` (rank 1),
+  `api-key-rotation.org` (rank 2), `infrastructure-guardrails.org`, `core-values-vs-framework.org`
+  — the fabricated claim is generation-side, not a retrieval miss.
+- **Faithfulness set:** A's unfaithful items were 32 and 87; B's are 65 and 67. The
+  unfaithful count is 2 in both; the raw pass count falls only because three items left the
+  observed population. **`citation_precision`** improved 0.6815 → 0.7262 (n=42), as
+  predicted for de-duplicated sources.
+
+### Next candidate lever
+
+The failure is dominated by **generation-side `FabricatedCitation` / over-claim**, not by
+the retrieval window: the `sources` window de-duplicates chunks and the model fabricated
+citations on items **74, 83 and 97**, while items 71/75 still under-cite. The shipped
+default therefore **stays `chunks`**. The next candidate is the **deterministic
+citation/over-claim guard (ADR-009, E2)** — it addresses item 19, item 4 and the new
+errors together. If a retrieval lever is tried instead, the collection-independent
+**dense-only** measurement from §5.8 is the one to take first; another window variant
+before the generation guard would repeat this run's failure mode.
