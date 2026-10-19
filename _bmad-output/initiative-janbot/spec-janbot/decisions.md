@@ -92,3 +92,76 @@ Companion to `spec-janbot.md`. Historical decision log; older ADRs are not edite
 - **Reasons:** the owner chose the private→guarded→public path; the controls are the minimum that makes an unauthenticated endpoint with a live model key safe (cost, input, identity, anonymization, abuse), each with a falsifiable acceptance test so the gate is provable, not asserted.
 - **Consequences:** 🟢 the public endpoint is cost-bounded and identity-safe before exposure; 🟢 anonymization is already satisfied by the shipped fail-closed scope (stated, not implicit). 🟡 a guardrail layer is new code in front of the unchanged `/chat` core (added, never a core change); 🟡 **over-claiming is a residual gap** — θ covers identity/commitment pre-LM, but a tangential-grounding answer can still assert first-person interest — closed by the E2 output-level guard (option (c), the adopted condition). 🟡 **the guardrail store is Firestore** (owner decision, 2026-10-16): the cache is a **baked build artifact needing no store**, and only the rate-limit/quota **counters** need shared state → **Firestore in native mode, `europe-central2`** (serverless, atomic increments, GCP-native, Terraform-friendly, generous free tier). **Memorystore Redis is rejected** (a Cloud Run VPC connector plus a ~$30–40/month floor is unjustified here). **`--max-instances=1` is a fallback only, not a solution** — instance-local counters reset on restart and cannot honour "cannot be exceeded regardless of traffic". E4 owns the Firestore IaC.
 - **Fixed:** the `/chat` core is untouched; the gate stays OPEN until E2 is evidenced; the compiled program is not shipped (entry-14 REJECT).
+- **Note (2026-10-19):** the E2 output-level guard required by the condition above is specified in **ADR-010** (PROPOSED). This note only points at the follow-up; ADR-009's text is unchanged.
+
+## ADR-010: Deterministic output-level guard against fabricated citations and over-claiming — PROPOSED 2026-10-19
+
+- **Status:** **PROPOSED** (2026-10-19). Promotion to ADOPTED is a separate dated edit after the
+  T6 self-consistency check passes. This ADR is the follow-up to ADR-009's E2 condition.
+- **Context:** ADR-009 (option (c)) requires a deterministic output-level guard with no model
+  call so the benchmark stays valid. Runs A (`e7110d58`, `chunks`) and B (`f9ae28f2`,
+  `sources`) were both refused registration; the remaining failures are generation-side
+  (`rebaseline-brief-20261018.md` §5.8, §6.7/§6.8). The acceptance target is five items:
+  4, 19, 74, 83, 97.
+- **Placement — stated as built:** the guard is invoked **inside `ChatProgram.forward`**,
+  immediately after the raw prediction and before the existing citation validation. It is
+  **inside the core**, not a wrapper in front of it. **Why:** the port and the eval runner use
+  the same single code path; a wrapper would need a new program interface and the eval would
+  not exercise the guard. **Cost:** without an observation seam the raw prediction is consumed,
+  and without a toggle the guard's effect cannot be isolated against references measured before
+  it. **The cost is removed by T2** (additive seam: raw answer, raw citations, action) **and
+  T3** (`JANBOT_OUTPUT_GUARD=on|off`, default `on`). **The `/chat` contract, `ChatResponse`
+  shape, error envelope, retrieval path and DSPy signature are unchanged.**
+- **Inputs:** the generated answer text; the source labels the model cited; the retrieved
+  chunks for the request (source label plus chunk text). **No** model call, network, dataset,
+  `expected_sources`, or any eval-only field.
+- **Outputs:** a repaired `(answer, citations)` pair, or a decline through the existing uncited
+  path. The guard **fails closed**: if it raises, the request declines; no unguarded text is
+  emitted.
+- **D1 — fabricated citation.** A cited label not in the retrieved source set is fabricated.
+  **Action:** drop that label, keep the answer. If no valid label remains, the existing uncited
+  rule declines. A valid label is never dropped; D1 does not rewrite the answer.
+- **D2 — over-claim (clause granularity).** A clause is an over-claim when it contains both
+  (1) a capability/experience/commitment **marker** from the declared lexicon (e.g. “strong
+  foundation in”, “professional in”, “expert in”, “interested in working for”) and (2) a
+  **subject token** from the declared lexicon (technologies, employers, commitments) in the
+  marker's **forward claim window** (the text following the marker, up to 120 characters). A
+  subject earlier in the clause/sentence is not necessarily the marker's object. A candidate
+  sentence is split on the declared **connector set** (`, and `, `; `, ` but `, `, so `); only
+  the clause carrying the ungrounded claim is dropped, so grounded clauses in the same sentence
+  survive. A clause is kept only when a cited chunk contains the marker's grounded form and the
+  subject token in the same forward window; token presence elsewhere is not grounding. If the
+  window names several subject tokens, all must be grounded. If every clause of a sentence is
+  dropped, the sentence is dropped; if every sentence is dropped, the answer declines. The
+  connector set is data in `src/janbot/guardrails/lexicon.py`, versioned and reviewed like the
+  marker list.
+  **Why clause granularity:** item 19's recorded sentence carried both the over-claim and a
+  grounded clause (“…, and I focus on creating systems with verifiable outputs”); a
+  sentence-level rule deleted grounded content. The clause rule keeps the grounded clause.
+  **Why the forward window:** the first implementation dropped a grounded sentence because
+  Python/Perl appeared earlier in it; the marker's object must follow the marker.
+- **Decision table:** fabricated label → drop label/keep answer; no valid label → decline;
+  clause with marker + ungrounded subject → drop clause; all sentences dropped → decline; guard
+  internal error → decline; clean output → byte-identical pass-through. Repair is the default
+  over refusal; a thinner grounded answer is preferable to an error, and refusal is reserved
+  for no valid grounding.
+- **Lexicon:** markers, grounded forms, subject tokens and clause connectors live in a
+  dedicated versioned data module, not inline in the matcher. Reviewed data; no network.
+- **What this guard cannot catch:** paraphrase (“I know TypeScript well”, “TypeScript is second
+  nature”); implication/hedged claims; capability claims without a marker; subject spelling or
+  aliases not in the lexicon; a subject phrased before the marker; a claim whose marker and
+  subject sit in different clauses; over-claiming spread across individually grounded clauses;
+  a connector not in the declared set. The guard is a deterministic floor, not a semantic
+  judge; it must not overstate its coverage.
+- **Observation seam (T2):** `ChatProgram.last_raw_answer`, `last_raw_citations`,
+  `last_guard_action` (`none`/`repaired`/`declined`/`disabled` plus the rule) are additive
+  observation attributes. With the guard disabled, raw equals final and the action is
+  `disabled`. The eval runner records `raw-answer:`, `raw-citations:`, `retrieved:`, `guard:`
+  per item; metrics are untouched.
+- **Toggle (T3):** `JANBOT_OUTPUT_GUARD=on|off`, default `on`; parsed and validated like the
+  other config values. It exists to isolate the lever in measurement, not to hide the guard.
+- **Evidence:** unit tests for D1, D2 (clause granularity, forward window, no-op, decline,
+  fail-closed), the seam and the toggle; the offline replay (exact for D2, proxy for D1 on the
+  old artifacts); and one paid confirmation run after owner approval, whose replay of each
+  recorded `raw-answer`/`raw-citations` through the guard must reproduce the recorded final
+  answer byte-identically. Until that passes, the status stays **PROPOSED**.
