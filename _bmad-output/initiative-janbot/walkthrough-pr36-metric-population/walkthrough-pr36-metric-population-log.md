@@ -102,3 +102,12 @@ Session: unavailable · Timestamp: 2026-10-20T15:49:00+02:00
 - Action: Presented the tests pinning the contract.
 - Result: Block 7 accepted by the reviewer.
 - Evidence: narrative block 7; metrics/runner/public-urls/optimize tests.
+
+## 13 — Periphery — accepted; round closed
+
+Session: unavailable · Timestamp: 2026-10-20T15:55:00+02:00
+
+- Action: Presented the periphery; closed item 3 (decline vocabulary prose + named owner follow-up) and item 5 (triage log now records the independent review and its five later items). Marked all eight blocks done.
+- Result: Round closed from the reviewer's side. Narrative and log committed as evidence (`0cf23d7`); follow-up docs commit pending.
+- Evidence: narrative block 8; plan Review Triage Log and Follow-ups; `deferred-work.md`; `gate-rule.md` / epic item-41 vocabulary.
+- Open: none.
