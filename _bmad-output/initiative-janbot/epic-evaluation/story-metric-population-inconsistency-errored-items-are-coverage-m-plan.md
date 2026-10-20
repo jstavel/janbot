@@ -3,7 +3,7 @@ title: 'Metric-population contract for non-answered items'
 type: 'feature'
 ticket: 22
 created: '2026-10-20'
-status: 'built'
+status: done
 baseline_revision: '1eeb890b03fae688e87026b7d0e1389b71bb1454'
 route: 'full'
 route_source: 'auto'
