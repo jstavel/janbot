@@ -24,7 +24,7 @@ from janbot.api.contract import INSUFFICIENT_ANSWER, ChatResponse, Citation
 from janbot.eval import __main__ as eval_cli
 from janbot.eval.dataset import GoldenItem
 from janbot.eval.judge import FAITHFUL, Verdict
-from janbot.eval.runner import run_eval
+from janbot.eval.runner import _routed_model, run_eval
 
 Embedder = Callable[[list[str]], list[list[float]]]
 
@@ -878,3 +878,16 @@ def test_cli_pins_the_dataset_in_the_recorded_run(
     run = client.search_runs([experiment.experiment_id])[0]
     assert run.data.params["dataset_sha256"] == hashlib.sha256(dataset.read_bytes()).hexdigest()
     assert any(a.path == dataset.name for a in client.list_artifacts(run.info.run_id))
+
+
+def test_routed_model_is_none_when_the_item_made_no_lm_call() -> None:
+    from types import SimpleNamespace
+
+    program = SimpleNamespace(
+        last_raw_answer=None,
+        _answer=SimpleNamespace(
+            lm=SimpleNamespace(history=[{"model": "previous-item-model"}])
+        ),
+    )
+
+    assert _routed_model(program) is None

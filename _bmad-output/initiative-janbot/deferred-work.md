@@ -119,6 +119,12 @@
   evidence: Item 41 is `should_refuse=false` (in-corpus) but the API `reason` is `out_of_corpus` and the actual mechanism is an uncited answer (`raw-citations: <none>`). The reference prose now names all three layers. Deferred from 5.22: changing the classifier is API decline semantics, not the metric population. Reopen when decline semantics change or an artifact needs to quote `reason` as a mechanism.
 
 
+- source_plan: `_bmad-output/initiative-janbot/epic-gcp-deploy/story-guardrails-and-cost-protection-plan.md`
+  owner: `stavel.jan@gmail.com`
+  summary: Exact model-call quota (not the conservative request quota) needs a pre-LM hook inside `ChatProgram`; E2 deliberately kept the AI core untouched.
+  evidence: The E2 quota counts every request that reaches the program, including empty-retrieval/low-relevance refusals, so a cheap refusal flood can exhaust the 500/day cap (availability trade; the per-IP rate bounds the rate, not the total). Review finding, 2026-10-20. Reopen if the public demo needs exact model-call accounting or the AI-core boundary is renegotiated.
+
+
 ## Maybe (2026-10-18) — recorded, deliberately unscheduled
 
 **"Maybe" is ranked below *Someday*: the owner is not convinced he will ever pick this up.**

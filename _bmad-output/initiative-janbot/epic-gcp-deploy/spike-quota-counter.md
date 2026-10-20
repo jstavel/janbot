@@ -51,3 +51,19 @@ The 2026-10-20 owner decision ("sharded counter") is **superseded by measurement
 a **single-document counter** (`FieldValue.increment`) with **fail-closed** on any Firestore
 error. Sharding stays unbuilt until a measurement shows the single document failing — and the
 same scripts can answer that later without new design work.
+
+## Raw output coverage (E2, 2026-10-20)
+
+The committed `spike-quota-counter-output.txt` covers the burst rows and the
+100/s sustained row; the 10/s and 50/s rows are summarized from the same script
+and are not present in the raw file. The **implemented transactional counter**
+is verified separately in `spike-quota-counter-e2-output.txt` against a
+throwaway Firestore native database (`janbot-e2-verify`, deleted after):
+
+- 20 concurrent quota increments at cap 10 → **exactly 10 allowed**;
+- 11 concurrent rate checks at cap 10 → 9 allowed, 2 fail-closed store errors
+  under first-write contention (the cap is never exceeded);
+- an unreachable database → `store_error` for both controls (fail closed).
+
+The implementation uses a read-then-set/increment transaction, not the spike's
+plain `DocumentReference.update`.

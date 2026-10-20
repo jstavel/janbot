@@ -54,9 +54,9 @@ class Limiter(Protocol):
     def consume_quota(self) -> GuardDecision: ...
 
 
-def _rate_doc_id(client_ip: str, window: int) -> str:
+def _rate_doc_id(client_ip: str) -> str:
     digest = hashlib.sha256(client_ip.encode("utf-8")).hexdigest()[:24]
-    return f"rate_{digest}_{window}"
+    return f"rate_{digest}"
 
 
 class FirestoreLimits:
@@ -106,19 +106,25 @@ class FirestoreLimits:
         """Count one request for ``client_ip``; deny the N+1th request in the window."""
         now = self._clock()
         window = int(now.timestamp() // self._rate_window_seconds)
-        ref = self._collection.document(_rate_doc_id(client_ip or "unknown", window))
+        ref = self._collection.document(_rate_doc_id(client_ip or "unknown"))
         try:
-            allowed = self._increment_within(ref, self._rate_limit, now)
+            allowed = self._increment_within(
+                ref, self._rate_limit, now, window=window
+            )
         except Exception:
             return GuardDecision.deny(STORE_ERROR)
         return GuardDecision.allow() if allowed else GuardDecision.deny(RATE_LIMITED)
 
     def consume_quota(self) -> GuardDecision:
-        """Count one model call for the UTC day; deny when the cap is reached.
+        """Count one request that reached the program for the UTC day.
 
-        The counter is incremented *before* the model call, so a failed call is
-        still charged. That is the conservative direction: the quota can only
-        under-serve, never over-spend.
+        This is a **conservative request quota**, not an exact model-call meter:
+        a pre-LM refusal (empty retrieval / low relevance) consumes a slot even
+        though it makes no model call. It therefore bounds spend from above, and
+        a refusal flood can exhaust the daily quota (availability trade; the
+        per-IP rate limit bounds its rate, not the total). Exact model-call
+        counting would need a pre-LM hook inside the AI core, which E2's boundary
+        forbids.
         """
         now = self._clock()
         ref = self._collection.document(f"quota_{now.date().isoformat()}")
@@ -128,12 +134,38 @@ class FirestoreLimits:
             return GuardDecision.deny(STORE_ERROR)
         return GuardDecision.allow() if allowed else GuardDecision.deny(QUOTA_EXCEEDED)
 
-    def _increment_within(self, ref: Any, limit: int, now: datetime) -> bool:
+    def _increment_within(
+        self,
+        ref: Any,
+        limit: int,
+        now: datetime,
+        *,
+        window: int | None = None,
+    ) -> bool:
         from google.cloud import firestore
 
         @firestore.transactional
         def update(transaction: Any) -> bool:
             snapshot = ref.get(transaction=transaction)
+            if window is not None:
+                # One document per IP; a new window resets the count in place.
+                current = (
+                    int(snapshot.get("count") or 0)
+                    if snapshot.exists and snapshot.get("window") == window
+                    else 0
+                )
+                if current >= limit:
+                    return False
+                data = {
+                    "count": current + 1,
+                    "window": window,
+                    "updated_at": firestore.SERVER_TIMESTAMP,
+                }
+                if not snapshot.exists:
+                    data["created_at"] = firestore.SERVER_TIMESTAMP
+                transaction.set(ref, data)
+                return True
+
             current = int(snapshot.get("count") or 0) if snapshot.exists else 0
             if current >= limit:
                 return False

@@ -81,11 +81,9 @@ def _app(
     cache_path: Path | None = None,
     guardrails: str | None = None,
 ):
-    extra: dict[str, str] = {}
+    extra: dict[str, str] = {"JANBOT_GUARDRAILS": guardrails or "on"}
     if cache_path is not None:
         extra["JANBOT_CACHE_PATH"] = str(cache_path)
-    if guardrails is not None:
-        extra["JANBOT_GUARDRAILS"] = guardrails
     app = create_app(
         env=_env(corpus, index_path, **extra),
         embedder=embedder,
@@ -163,6 +161,22 @@ def test_cache_hit_makes_zero_model_calls_and_is_contract_shaped(
     assert app.state.model_calls["model"] == 0
     assert limiter.rate_calls == ["testclient"]
     assert limiter.quota_calls == 0
+
+
+def test_rate_key_uses_the_last_forwarded_hop_and_normalizes_ipv6(
+    indexed_corpus, embedder
+) -> None:
+    corpus, index_path = indexed_corpus
+    limiter = RecordingLimiter()
+    app = _app(corpus, index_path, embedder, limiter=limiter)
+    client = TestClient(app)
+
+    client.post("/chat", json={"question": "q"}, headers={"x-forwarded-for": "spoof-a, 203.0.113.7"})
+    client.post("/chat", json={"question": "q"}, headers={"x-forwarded-for": "spoof-b, 203.0.113.7"})
+    client.post("/chat", json={"question": "q"}, headers={"x-forwarded-for": "spoof-c, 2001:db8::1"})
+    client.post("/chat", json={"question": "q"}, headers={"x-forwarded-for": "spoof-d, 2001:0db8:0:0:0:0:0:1"})
+
+    assert limiter.rate_calls == ["203.0.113.7", "203.0.113.7", "2001:db8::1", "2001:db8::1"]
 
 
 def test_rate_n_plus_one_is_refused(indexed_corpus, embedder) -> None:

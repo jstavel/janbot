@@ -41,6 +41,7 @@ from janbot.eval.judge import Judge, build_judge
 from janbot.eval.optimize import program_marker
 from janbot.eval.runner import RunResult, run_eval
 from janbot.guardrails.cache import corpus_sha256
+from janbot.guardrails.limits import GuardDecision
 
 DEFAULT_DATASET = PROJECT_ROOT / "eval" / "golden_dataset.yaml"
 DEFAULT_EXPERIMENT = "janbot-eval"
@@ -113,6 +114,16 @@ def _corpus_commit() -> str:
             "before recording a cache artifact"
         )
     return _git("rev-parse", "HEAD")
+
+
+class _NoopLimiter:
+    """The export run needs the program, not the shared request controls."""
+
+    def check_rate(self, client_ip: str) -> GuardDecision:
+        return GuardDecision.allow()
+
+    def consume_quota(self) -> GuardDecision:
+        return GuardDecision.allow()
 
 
 def write_cache_artifact(path: str | Path, result: RunResult, config: Config) -> int:
@@ -222,13 +233,28 @@ def main(
     tracking_uri = source.get(TRACKING_URI_ENV) or DEFAULT_TRACKING_URI
 
     config = load_config(source)
-    if args.cache_out is not None and config.model_mode != "production":
-        print(
-            "--cache-out requires JANBOT_MODEL_MODE=production; the cache must "
-            "be a snapshot of what the service actually does",
-            file=sys.stderr,
-        )
-        return 2
+    if args.cache_out is not None:
+        if args.split != "val":
+            print(
+                "--cache-out requires --split val; the cache covers the val "
+                "non-refusal set",
+                file=sys.stderr,
+            )
+            return 2
+        if config.model_mode != "production":
+            print(
+                "--cache-out requires JANBOT_MODEL_MODE=production; the cache "
+                "must be a snapshot of what the service actually does",
+                file=sys.stderr,
+            )
+            return 2
+        if config.output_guard != "on":
+            print(
+                "--cache-out requires JANBOT_OUTPUT_GUARD=on; an unguarded "
+                "snapshot would be rejected by the image build",
+                file=sys.stderr,
+            )
+            return 2
     api_key = (source.get(OPENROUTER_API_KEY_ENV) or "").strip() or None
     judge = None if args.cache_out else _resolve_judge(config, api_key, lm_factory, judge)
 
@@ -245,7 +271,12 @@ def main(
         )
         return 2
 
-    app = create_app(env=source, **_app_kwargs(embedder, lm_factory))
+    app = create_app(
+        env=source,
+        limiter=_NoopLimiter() if args.cache_out is not None else None,
+        require_cache=args.cache_out is None,
+        **_app_kwargs(embedder, lm_factory),
+    )
     params = run_params(config)
     params["split"] = args.split
     result: RunResult = run_eval(
