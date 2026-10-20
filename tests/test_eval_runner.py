@@ -150,9 +150,15 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "retrieval_mrr__n": 0,
         "citation_correctness__n": 2,
         "citation_precision__n": 2,
-        "faithfulness__n": 0,
+        "faithfulness__n": 2,
         "refusal_pass_rate__n": 0,
         "spurious_refusal_rate__n": 2,
+    }
+    assert result.reason_counts == {
+        "hard_error__n": 0,
+        "in_corpus_decline__n": 0,
+        "judge_failure__n": 2,
+        "non_answered__n": 0,
     }
     assert result.run_id
     assert result.reference_failures == []
@@ -187,11 +193,15 @@ def test_run_eval_records_one_run_with_params_and_stub_metric(tmp_path: Path) ->
         "citation_precision": 0.5,
         "citation_precision__n": 2.0,
         "faithfulness": 0.0,
-        "faithfulness__n": 0.0,
+        "faithfulness__n": 2.0,
         "refusal_pass_rate": 0.0,
         "refusal_pass_rate__n": 0.0,
         "spurious_refusal_rate": 0.0,
         "spurious_refusal_rate__n": 2.0,
+        "hard_error__n": 0.0,
+        "in_corpus_decline__n": 0.0,
+        "judge_failure__n": 2.0,
+        "non_answered__n": 0.0,
     }
 
 
@@ -206,6 +216,13 @@ def test_run_eval_records_per_item_failure_without_aborting(tmp_path: Path) -> N
     result = run_eval(_items(), program, tracking_uri=uri, experiment="janbot-eval")
 
     assert result.metrics["answer_coverage"] == 0.5
+    assert result.metrics["citation_correctness"] == 0.5
+    assert result.reason_counts == {
+        "hard_error__n": 1,
+        "in_corpus_decline__n": 0,
+        "judge_failure__n": 1,
+        "non_answered__n": 1,
+    }
     assert result.outcomes[0].error is None
     assert result.outcomes[1].error is not None
     assert "ValueError" in result.outcomes[1].error
@@ -234,6 +251,49 @@ def test_run_eval_maps_a_decline_to_the_contract_insufficient_response(
     assert outcome.error is None
     assert outcome.judge_verdict is None
     assert all(o.response is not None for o in result.outcomes)
+    assert result.metrics["citation_correctness"] == 0.0
+    assert result.counts["citation_correctness__n"] == 2
+    assert result.reason_counts["in_corpus_decline__n"] == 2
+    assert result.reason_counts["non_answered__n"] == 2
+
+
+def test_run_eval_scores_an_in_corpus_decline_as_a_claim_quality_failure(
+    tmp_path: Path,
+) -> None:
+    from janbot.pipeline.chat import UncitedAnswer
+
+    uri = _tracking_uri(tmp_path)
+    calls: list[str] = []
+
+    class RecordingJudge:
+        def __call__(self, context: str, actual: str) -> Verdict:
+            calls.append(actual)
+            return Verdict(label=FAITHFUL, rationale="because")
+
+    def program(*, question: str) -> ChatResponse:
+        if question == "q2":
+            raise UncitedAnswer("the model claimed no sources")
+        return ChatResponse(answer="ok", citations=[Citation(source="profile.org")])
+
+    result = run_eval(
+        _items(),
+        program,
+        tracking_uri=uri,
+        experiment="janbot-eval",
+        judge=RecordingJudge(),
+    )
+
+    assert calls == ["ok"]
+    assert result.metrics["citation_correctness"] == 0.5
+    assert result.metrics["faithfulness"] == 0.5
+    assert result.counts["citation_correctness__n"] == 2
+    assert result.counts["faithfulness__n"] == 2
+    assert result.reason_counts == {
+        "hard_error__n": 0,
+        "in_corpus_decline__n": 1,
+        "judge_failure__n": 0,
+        "non_answered__n": 1,
+    }
 
 
 def test_run_eval_carries_the_classified_reason_on_a_decline(tmp_path: Path) -> None:
@@ -467,6 +527,10 @@ def test_cli_keyless_run_reads_dataset_and_reports_tracking_uri(
     assert code == 0
     assert "answer_coverage: " in out
     assert "(n=" in out
+    assert "hard_error__n: 0" in out
+    assert "in_corpus_decline__n: 0" in out
+    assert "judge_failure__n: 1" in out
+    assert "non_answered__n: 0" in out
 
 
 def test_cli_answers_flag_dumps_each_items_answer(

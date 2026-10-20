@@ -288,7 +288,9 @@ def test_run_eval_records_a_judge_failure_and_continues(tmp_path: Path) -> None:
         judge=judge,
     )
 
-    assert result.metrics["faithfulness"] == 1.0
+    assert result.metrics["faithfulness"] == 0.5
+    assert result.counts["faithfulness__n"] == 2
+    assert result.reason_counts["judge_failure__n"] == 1
     assert result.outcomes[0].judge_verdict is not None
     assert result.outcomes[1].judge_verdict is None
     assert len(result.judge_failures) == 1

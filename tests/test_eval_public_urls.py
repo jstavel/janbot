@@ -94,10 +94,10 @@ def test_no_urls_involved_passes() -> None:
     assert public_references_metric(outcomes, ALLOW) == 1.0
 
 
-def test_error_outcome_with_no_expected_url_passes() -> None:
+def test_error_outcome_with_no_expected_url_fails_as_non_answered() -> None:
     outcomes = [_outcome("no link", None)]
 
-    assert public_references_metric(outcomes, ALLOW) == 1.0
+    assert public_references_metric(outcomes, ALLOW) == 0.0
 
 
 def test_error_outcome_with_expected_url_fails_as_incomplete() -> None:

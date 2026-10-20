@@ -4,35 +4,67 @@ Committed **before** the optimization stages run, so `5.14` (BootstrapFewShot,
 multi-objective) and `5.9` (MIPROv2) are judged against a fixed rule rather than a
 threshold chosen after seeing the numbers.
 
-Reference: the val baseline **`5ed5d8d73bb7400782503f8941a994f7`** (status `FINISHED`),
-registered 2026-10-19 for the **shipped** configuration. Nominal gate-eligible **n = 49**
-(val 59 minus the 10 `should_refuse`); for `citation_correctness` and `faithfulness` the
-**observed n = 48**, because item 41 declined (`declined: uncited`) and the metric contract
-excludes declined items. **Both n yield the same integer thresholds** (derived below).
-Config: `chunks` window, `top_k=4`, hybrid, θ = 0.26; judge
-`anthropic/claude-haiku-4.5`; `program=baseline` (`JANBOT_PROGRAM_PATH` unset);
-**`output_guard=on`** (ADR-010); `dataset_sha256` `a8bd69dc…`; corpus `05b11a7`
-(61 content files), index **417 chunks / 60 sources**; train 47 / val 59;
-`should_refuse` 13 (10 val). This reference supersedes `4c0d848c…` (100 items, 57 val,
-47 gate-eligible, `dataset_sha256` `78761c13…`), which remains a valid historical record
-but is not comparable across a corpus + index + dataset re-base. **Judged population grew
-45 → 48 because items 4, 23 and 63 now answer after alias normalization; raw counts are
-therefore not comparable across runs. The comparison was made on the 45 common items,
-where nothing changed (brief §6.8, Amendment 2).** This is a **re-baseline, not a gate
-verdict**; the principle (1.5σ, symmetric floor) is unchanged.
+## Population contract (one contract, stated once)
+
+Entry 22, owner decision **B** (2026-10-20). Every metric has **one fixed
+population**; no metric may compute a score over a population that silently
+shrinks. A non-answered item is a failure, not an exclusion.
+
+- **Claim-quality metrics** — `answer_coverage`, `citation_correctness`,
+  `citation_precision`, `faithfulness`, `public_references`: population = every
+  in-corpus (non-`should_refuse`) item; the citation metrics additionally require
+  the item to name expected sources. A **hard error** or an **in-corpus decline**
+  is a failure. A missing judge verdict is a `faithfulness` failure.
+- **`refusal_pass_rate`**: population = every `should_refuse` item. A clean
+  decline passes; an answer or a hard error fails.
+- **`spurious_refusal_rate`**: population = every in-corpus item. A decline
+  counts as a spurious refusal; a hard error is not a decline (it fails
+  `answer_coverage`, not this metric).
+- **`retrieval_accuracy` / `retrieval_mrr`**: unchanged, over items with expected
+  sources and an observed retrieval claim (`retrieved_sources is not None`); never
+  gating.
+- **Diagnostics beside the population** (not a second denominator):
+  `hard_error__n`, `in_corpus_decline__n`, `judge_failure__n`, `non_answered__n`.
+- **Out-of-corpus declines** are correct behaviour and stay with the refusal
+  metrics; they are absent from the claim-quality populations.
+
+Runs measured before this contract (including `4c0d848c`, `e7110d58`, `f9ae28f2`
+and `5ed5d8d7`) are **incomparable** on absolute claim-quality values. Their
+per-item evidence remains valid historical record.
+
+## Reference
+
+Reference: the val baseline **`156b5d1a76694867bd92e7a03feda76b`** (status `FINISHED`),
+registered 2026-10-20 under the population contract above. Nominal gate-eligible
+**n = 49** (val 59 minus the 10 `should_refuse`); the claim-quality metrics now aggregate
+over that same **n = 49** — the nominal/observed split is gone. Config: `chunks` window,
+`top_k=4`, hybrid, θ = 0.26; judge `anthropic/claude-haiku-4.5`; `program=baseline`
+(`JANBOT_PROGRAM_PATH` unset); **`output_guard=on`** (ADR-010); `dataset_sha256`
+`a8bd69dc…`; corpus `05b11a7` (61 content files), index **417 chunks / 60 sources**;
+train 47 / val 59; `should_refuse` 13 (10 val). This reference supersedes `5ed5d8d7`
+under a **contract change**, not a corpus/index/dataset re-base: the per-item retrieval,
+citation, judge, failure and decline lines are byte-identical to `5ed5d8d7`; only the
+aggregates and populations changed. Gate comparisons are still evaluated on the common
+items observed in both runs (brief §6.8, Amendment 2), as a second guard beside the fixed
+population. It is a **re-baseline, not a gate verdict**; the principle (1.5σ, symmetric
+floor) is unchanged.
 
 ## Metrics
 
-- **Gate metrics: `citation_correctness` is the GAIN-CARRIER** (baseline **0.6875**,
-  33/48 — room to move) and **`faithfulness` is the GUARD** (baseline **0.9375**,
-  45/48). With three unfaithful items possible in the observed population, the maximal
-  gain is +1 item = 0.0208, below the floor, so **faithfulness can never accept** — a gain
-  must come from `citation_correctness`; faithfulness may only guard a regression.
+- **Gate metrics: `citation_correctness` is the GAIN-CARRIER** (baseline **0.6735**,
+  33/49 — room to move) and **`faithfulness` is the GUARD** (baseline **0.9184**,
+  45/49). Four items are non-faithful (three `hallucinated` verdicts plus item 41's
+  decline), so a gain of 3 items = 0.0612 exceeds the 0.0587 floor: **faithfulness can
+  accept with ≥3 items up**, and may also guard a regression (≤2 down). A gain may come
+  from either gate metric (symmetric target).
 - `retrieval_accuracy` (**0.6939**, n = 49) and `retrieval_mrr` (**0.7415**, n = 49) are
   **compiler-invariant** (data-level) — recorded for sanity, **never gating**.
-- Other non-gating context: `answer_coverage` 48/49, `citation_precision` 0.6910 (n=48),
-  `public_references` 1.0 (n=49), `refusal_pass_rate` 1.0 (n=10),
+- Other non-gating context: `answer_coverage` 48/49, `citation_precision` 0.6769 (n=49),
+  `public_references` 0.9796 (48/49), `refusal_pass_rate` 1.0 (n=10),
   `spurious_refusal_rate` 1/49.
+- **Diagnostics at the reference:** `hard_error__n` = 0, `in_corpus_decline__n` = 1,
+  `judge_failure__n` = 0, `non_answered__n` = 1. The one non-answer is item 41
+  (`declined: uncited`); it is a failure in the claim-quality metrics.
 
 ## Target and threshold
 
@@ -40,30 +72,23 @@ verdict**; the principle (1.5σ, symmetric floor) is unchanged.
   beyond the floor**. A cross-floor trade — one up beyond the floor, the other down
   beyond it — is a **REJECT** (the Goodhart guard: faithfulness must not be bought
   with citations, nor the reverse).
-- **Noise floor (re-derived at the new baseline p; arithmetic shown):** per-metric
-  1.5σ = 1.5·√(p(1−p)/n) at the reference's own p.
-  - **Gain-carrier `citation_correctness`** (p = 33/48 = 0.6875):
-    - nominal **n = 49**: σ = √(0.6875·0.3125/49) ≈ √0.004385 ≈ **0.0662**;
-      1.5σ ≈ **0.0993** → **accept needs ≥ 5 items up** (5/49 = 0.1020 > 0.0993);
-      **a regression is allowed up to 4 items down** (4/49 = 0.0816 ≤ 0.0993;
-      ≥ 5 down = 0.1020 fails).
-    - observed **n = 48**: σ = √(0.6875·0.3125/48) ≈ √0.004476 ≈ **0.0669**;
-      1.5σ ≈ **0.1004** → **accept needs ≥ 5 items up** (5/48 = 0.1042 > 0.1004);
-      **a regression is allowed up to 4 items down** (4/48 = 0.0833 ≤ 0.1004;
-      ≥ 5 down = 0.1042 fails).
-    - **Identical integers at both n: accept ≥ 5 items, regression ≤ 4 items.**
-  - **Guard `faithfulness`** (p = 45/48 = 0.9375):
-    - nominal **n = 49**: σ = √(0.9375·0.0625/49) ≈ √0.001196 ≈ **0.0346**;
-      1.5σ ≈ **0.0519** → +1 item = 0.0204 is below it, so it **cannot accept**;
-      **a regression is allowed up to 2 items down** (2/49 = 0.0408 ≤ 0.0519;
-      3 down = 0.0612 fails).
-    - observed **n = 48**: σ = √(0.9375·0.0625/48) ≈ √0.001221 ≈ **0.0349**;
-      1.5σ ≈ **0.0524** → +1 item = 0.0208 is below it, so it **cannot accept**;
-      **a regression is allowed up to 2 items down** (2/48 = 0.0417 ≤ 0.0524;
-      3 down = 0.0625 fails).
-    - **Identical integers at both n: cannot accept, regression ≤ 2 items.** The guard
-      floor moved from ≤1 to ≤2 because the baseline p is lower (0.9375 vs 0.9778); the
-      principle—1.5σ, symmetric floor—is unchanged.
+- **Noise floor (re-derived at the reference's own p; arithmetic shown):** per-metric
+  1.5σ = 1.5·√(p(1−p)/n) at the reference's own p, n = 49.
+  - **Gain-carrier `citation_correctness`** (p = 33/49 = 0.6735):
+    σ = √(0.6735·0.3265/49) ≈ √0.004487 ≈ **0.0670**;
+    1.5σ ≈ **0.1005** → **accept needs ≥ 5 items up** (5/49 = 0.1020 > 0.1005);
+    **a regression is allowed up to 4 items down** (4/49 = 0.0816 ≤ 0.1005;
+    ≥ 5 down = 0.1020 fails).
+  - **Guard `faithfulness`** (p = 45/49 = 0.9184):
+    σ = √(0.9184·0.0816/49) ≈ √0.001529 ≈ **0.0391**;
+    1.5σ ≈ **0.0587** → 2 items up = 0.0408 is below it; **3 items up = 0.0612 exceeds
+    it** → **accept needs ≥ 3 items up**;
+    **a regression is allowed up to 2 items down** (2/49 = 0.0408 ≤ 0.0587;
+    3 down = 0.0612 fails).
+  - **Integer thresholds: citation accept ≥ 5 items, regression ≤ 4 items; faithfulness
+    accept ≥ 3 items, regression ≤ 2 items.** The citation floor is unchanged from the
+    previous reference; the faithfulness floor is ≤2 here (it moved from ≤1 to ≤2 at
+    `5ed5d8d7` because the baseline p fell). The 1.5σ principle is unchanged.
 
 ## Verdicts and policy
 
@@ -102,9 +127,17 @@ A re-registration moves the reference and re-derives its n-specific thresholds; 
   index 417/60, dataset `a8bd69dc…`, train 47 / val 59). The judged population grew 45 → 48
   because items 4/23/63 now answer; raw counts are not comparable — the 45 common items are
   unchanged (brief §6.8). This is a re-registration, not a verdict.
+- **2026-10-20** — **`5ed5d8d7…` → `156b5d1a76694867bd92e7a03feda76b`** (population
+  contract change, entry 22 decision B: one failure-inclusive population; hard errors and
+  in-corpus declines are failures; diagnostics beside the population). Same corpus, index
+  and dataset; the per-item evidence is byte-identical to `5ed5d8d7`. Every earlier run is
+  incomparable on absolute claim-quality values. Floors: citation accept ≥5 / regress ≤4;
+  faithfulness accept ≥3 / regress ≤2. This is a re-registration, not a verdict.
 
 ## Verdict record
 
-Append-only; the rule above is frozen and never edited by a verdict.
+Append-only; the rule above is frozen and never edited by a verdict. Verdicts recorded
+before 2026-10-20 were measured under the old conditional population; their absolute
+values are historical and incomparable under the contract above.
 
 - **2026-10-16 — entry 14 (multi-objective `BootstrapFewShot` compile), vs reference `c6ced445`: REJECT.** Compile `1bd62a51` (`fewshot:ef4f7404a591`, `w_c=w_f=0.5`, 4 demos); val run `707fbef3` (`dataset_sha256` `1c3864bd…`). `citation_correctness` 0.7209 (31/43) → 0.7273 (32/44); `faithfulness` 0.9767 (42/43) → 0.9091 (40/44). Item-level: citation +1/−0; faithfulness +1/−4 (**net −3**) — the guard fell beyond its ≤1-item floor. Keep the baseline; do not adopt; do not escalate to MIPROv2. Evidence: `epic-evaluation/run-707fbef3-output.txt`.
