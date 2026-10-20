@@ -172,6 +172,9 @@ def main(
         count = result.counts.get(f"{name}__n", 0)
         print(f"{name}: {value:.4f} (n={count})")
 
+    for name, count in result.reason_counts.items():
+        print(f"{name}: {count}")
+
     for failure in result.reference_failures:
         print(f"reference: {failure}")
 

@@ -29,6 +29,7 @@ from janbot.eval.metrics import (
     ItemOutcome,
     citation_misses,
     metric_counts,
+    reason_counts,
     registered_metrics,
     registered_public_reference_failures,
     retrieval_misses,
@@ -45,6 +46,7 @@ class RunResult:
     outcomes: list[ItemOutcome]
     metrics: dict[str, float]
     counts: dict[str, int]
+    reason_counts: dict[str, int]
     run_id: str
     reference_failures: list[str]
     retrieval_misses: list[str]
@@ -262,13 +264,14 @@ def run_eval(
         name: float(metric(outcomes)) for name, metric in registered_metrics().items()
     }
     counts = metric_counts(outcomes)
+    reasons = reason_counts(outcomes)
     try:
         run_id = _record(
             tracking_uri,
             experiment,
             params or {},
             metrics,
-            counts,
+            {**counts, **reasons},
             dataset_path=dataset_path,
             split_manifest=split_manifest,
         )
@@ -280,6 +283,7 @@ def run_eval(
         outcomes=outcomes,
         metrics=metrics,
         counts=counts,
+        reason_counts=reasons,
         run_id=run_id,
         reference_failures=registered_public_reference_failures(
             [outcome for outcome in outcomes if not outcome.item.should_refuse]

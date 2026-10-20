@@ -9,9 +9,12 @@ first expected source in the retrieved list over the same eligible items: rank 1
 scores 1.0, rank 4 scores 0.25, an unretrieved expected source scores 0.0, and
 items without a retrieval claim are excluded. Citation: containment (expected
 subset of cited) passes, a missed expected source fails and is named, a
-retrieved-but-unexpected citation still passes and only lowers precision, and a
-declined response is excluded from the population. No model, no network, no
-MLflow.
+retrieved-but-unexpected citation still passes and only lowers precision, and the
+claim-quality population is fixed — an in-corpus decline or hard error stays in it
+and fails. Faithfulness is likewise failure-inclusive over every in-corpus item;
+a missing verdict fails. Refusal metrics use one denominator each: every
+should-refuse item for a pass, every in-corpus item for a spurious refusal (an
+error is not a decline). No model, no network, no MLflow.
 """
 
 from __future__ import annotations
@@ -29,6 +32,7 @@ from janbot.eval.metrics import (
     faithfulness,
     metric_counts,
     metric_spec,
+    reason_counts,
     refusal_pass_rate,
     register_metric,
     registered_metrics,
@@ -190,15 +194,17 @@ def test_extra_retrieved_source_still_passes_and_only_lowers_precision() -> None
     assert citation_precision(outcomes) == 0.5
 
 
-def test_declined_response_is_excluded_from_citation_containment() -> None:
+def test_declined_response_is_a_citation_failure_in_the_population() -> None:
     outcomes = [_declined(["a.org"], question="Refuse?")]
 
     assert citation_correctness(outcomes) == 0.0
+    assert citation_precision(outcomes) == 0.0
     assert citation_misses(outcomes) == []
-    assert metric_counts(outcomes)["citation_correctness__n"] == 0
+    assert metric_counts(outcomes)["citation_correctness__n"] == 1
+    assert metric_counts(outcomes)["citation_precision__n"] == 1
 
 
-def test_crashed_response_is_excluded_and_not_named() -> None:
+def test_crashed_response_is_a_citation_failure_in_the_population() -> None:
     crashed = ItemOutcome(
         item=_item(["a.org"], question="Boom?"),
         response=None,
@@ -206,18 +212,20 @@ def test_crashed_response_is_excluded_and_not_named() -> None:
     )
     outcomes = [crashed, _citation_outcome(["a.org"], ["a.org"])]
 
-    assert citation_correctness(outcomes) == 1.0
+    assert citation_correctness(outcomes) == 0.5
     assert citation_misses(outcomes) == []
-    assert citation_precision(outcomes) == 1.0
+    assert citation_precision(outcomes) == 0.5
+    assert metric_counts(outcomes)["citation_correctness__n"] == 2
 
 
-def test_only_crashed_items_aggregate_to_zero() -> None:
+def test_only_crashed_items_aggregate_to_zero_over_the_population() -> None:
     crashed = ItemOutcome(
         item=_item(["a.org"]), response=None, error="ValueError: boom"
     )
 
     assert citation_correctness([crashed]) == 0.0
     assert citation_precision([crashed]) == 0.0
+    assert metric_counts([crashed])["citation_correctness__n"] == 1
 
 
 def test_citation_metric_averages_pass_and_miss() -> None:
@@ -240,17 +248,17 @@ def test_citation_precision_is_the_mean_expected_share_of_cited() -> None:
     assert citation_precision(outcomes) == 0.75
 
 
-def test_declined_response_leaves_the_citation_population() -> None:
+def test_declined_response_stays_in_the_citation_population_and_fails() -> None:
     outcomes = [
         _citation_outcome(["a.org"], ["a.org"]),
         _declined(["b.org"]),
     ]
 
-    assert citation_correctness(outcomes) == 1.0
-    assert citation_precision(outcomes) == 1.0
+    assert citation_correctness(outcomes) == 0.5
+    assert citation_precision(outcomes) == 0.5
     assert citation_misses(outcomes) == []
-    assert metric_counts(outcomes)["citation_correctness__n"] == 1
-    assert metric_counts(outcomes)["citation_precision__n"] == 1
+    assert metric_counts(outcomes)["citation_correctness__n"] == 2
+    assert metric_counts(outcomes)["citation_precision__n"] == 2
 
 
 def test_citation_item_with_no_expected_sources_is_excluded() -> None:
@@ -302,25 +310,40 @@ def test_faithfulness_averages_faithful_and_hallucinated() -> None:
     assert faithfulness(outcomes) == 0.5
 
 
-def test_unjudged_items_are_excluded_from_the_aggregate() -> None:
+def test_unjudged_items_fail_within_the_population() -> None:
     unjudged = ItemOutcome(item=_item(["a.org"]), response=_answered(), error=None)
     outcomes = [_judged(FAITHFUL), unjudged]
 
-    assert faithfulness(outcomes) == 1.0
+    assert faithfulness(outcomes) == 0.5
+    assert metric_counts(outcomes)["faithfulness__n"] == 2
 
 
-def test_no_judged_items_aggregate_to_zero() -> None:
+def test_no_judged_items_aggregate_to_zero_over_the_nominal_population() -> None:
     unjudged = ItemOutcome(item=_item(["a.org"]), response=_answered(), error=None)
 
     assert faithfulness([unjudged]) == 0.0
     assert faithfulness([]) == 0.0
+    assert metric_counts([unjudged])["faithfulness__n"] == 1
 
 
-def test_declined_response_is_excluded_from_faithfulness() -> None:
+def test_declined_response_fails_within_the_faithfulness_population() -> None:
     outcomes = [_judged(FAITHFUL), _declined(["a.org"])]
 
-    assert faithfulness(outcomes) == 1.0
-    assert metric_counts(outcomes)["faithfulness__n"] == 1
+    assert faithfulness(outcomes) == 0.5
+    assert metric_counts(outcomes)["faithfulness__n"] == 2
+
+
+def test_a_non_answered_item_cannot_pass_through_a_stray_faithful_verdict() -> None:
+    declined = _declined(["a.org"])
+    judged = ItemOutcome(
+        item=declined.item,
+        response=declined.response,
+        error=None,
+        judge_verdict=Verdict(label=FAITHFUL, rationale="because"),
+    )
+
+    assert faithfulness([judged]) == 0.0
+    assert metric_counts([judged])["faithfulness__n"] == 1
 
 
 def test_faithfulness_is_registered() -> None:
@@ -406,7 +429,7 @@ def test_refusal_pass_rate_averages_declined_and_answered() -> None:
     assert refusal_pass_rate(outcomes) == 0.5
 
 
-def test_refusal_pass_rate_excludes_errored_should_refuse_items() -> None:
+def test_refusal_pass_rate_counts_an_errored_should_refuse_item_as_a_failure() -> None:
     errored = ItemOutcome(
         item=_item([], "boom?", should_refuse=True),
         response=None,
@@ -414,7 +437,7 @@ def test_refusal_pass_rate_excludes_errored_should_refuse_items() -> None:
     )
 
     assert refusal_pass_rate([errored]) == 0.0
-    assert metric_counts([errored])["refusal_pass_rate__n"] == 0
+    assert metric_counts([errored])["refusal_pass_rate__n"] == 1
 
 
 def test_refusal_pass_rate_is_zero_with_no_should_refuse_items() -> None:
@@ -442,13 +465,13 @@ def test_spurious_refusal_rate_averages_declined_and_answered() -> None:
     assert spurious_refusal_rate(outcomes) == 0.5
 
 
-def test_spurious_refusal_rate_excludes_errored_items() -> None:
+def test_spurious_refusal_rate_keeps_an_errored_item_but_does_not_count_it() -> None:
     errored = ItemOutcome(
         item=_item(["a.org"]), response=None, error="ValueError: boom"
     )
 
     assert spurious_refusal_rate([errored]) == 0.0
-    assert metric_counts([errored])["spurious_refusal_rate__n"] == 0
+    assert metric_counts([errored])["spurious_refusal_rate__n"] == 1
 
 
 def test_spurious_refusal_rate_is_zero_with_no_in_corpus_items() -> None:
@@ -481,6 +504,48 @@ def test_answer_coverage_still_counts_an_errored_non_refusal_item() -> None:
 
     assert stub_metric(outcomes) == 0.5
     assert metric_counts(outcomes)["answer_coverage__n"] == 2
+
+
+def test_reason_counts_name_every_non_answered_in_corpus_item() -> None:
+    errored = ItemOutcome(
+        item=_item(["a.org"], question="Boom?"),
+        response=None,
+        error="FabricatedCitation: boom",
+    )
+    outcomes = [
+        _citation_outcome(["a.org"], ["a.org"], question="Answered"),
+        _declined(["b.org"], question="Declined"),
+        errored,
+    ]
+
+    assert reason_counts(outcomes) == {
+        "hard_error__n": 1,
+        "in_corpus_decline__n": 1,
+        "judge_failure__n": 1,
+        "non_answered__n": 2,
+    }
+
+
+def test_reason_counts_do_not_call_a_judged_answer_a_judge_failure() -> None:
+    outcomes = [_judged(FAITHFUL), _declined(["a.org"])]
+
+    assert reason_counts(outcomes) == {
+        "hard_error__n": 0,
+        "in_corpus_decline__n": 1,
+        "judge_failure__n": 0,
+        "non_answered__n": 1,
+    }
+
+
+def test_reason_counts_leave_out_of_corpus_declines_with_the_refusal_metrics() -> None:
+    outcomes = [_should_refuse_outcome(declined=True)]
+
+    assert reason_counts(outcomes) == {
+        "hard_error__n": 0,
+        "in_corpus_decline__n": 0,
+        "judge_failure__n": 0,
+        "non_answered__n": 0,
+    }
 
 
 def _should_refuse_outcome(

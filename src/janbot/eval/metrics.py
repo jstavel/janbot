@@ -36,8 +36,9 @@ class ItemOutcome:
 
     ``judge_verdict`` is the LLM-as-a-judge's verdict for the item, or ``None``
     when the item was unjudged — no judge was configured, the program produced no
-    answer, or the judge call failed. Only judged items count in the
-    ``faithfulness`` aggregate.
+    answer, or the judge call failed. Every in-corpus item is in the
+    ``faithfulness`` population; a missing verdict is a failure, so a keyless run
+    scores ``0.0`` over the nominal population.
 
     ``retrieved_context`` is the exact context the model was given (the window the
     judge checks the answer against), or ``None`` when the run exposed none.
@@ -133,8 +134,8 @@ def metric_counts(outcomes: list[ItemOutcome]) -> dict[str, int]:
 
     ``population`` is the number of ``outcomes`` the metric's declared
     denominator selects — the same eligibility its value aggregates over — so
-    each ``n`` matches that metric's own population (e.g. faithfulness over
-    judged-and-answered items only).
+    each ``n`` matches that metric's own population (e.g. faithfulness over every
+    in-corpus item, answered or not).
     """
     return {
         f"{name}__n": sum(1 for outcome in outcomes if registration.denominator(outcome))
@@ -142,24 +143,42 @@ def metric_counts(outcomes: list[ItemOutcome]) -> dict[str, int]:
     }
 
 
+def reason_counts(outcomes: list[ItemOutcome]) -> dict[str, int]:
+    """Return the diagnostic reason breakdown beside the single claim-quality population.
+
+    The claim-quality metrics have one fixed population — the in-corpus
+    (non-refusal) items — and a non-answered item is a failure in each. This
+    breakdown keeps the *reason* visible without giving any metric a second
+    denominator: ``non_answered__n`` is exactly ``hard_error__n`` plus
+    ``in_corpus_decline__n``, and ``judge_failure__n`` names the answered items
+    that carry no verdict (including every keyless run). All four counts are over
+    the in-corpus population; a should-refuse item's failure is visible in its own
+    refusal metric instead.
+    """
+    in_corpus = [outcome for outcome in outcomes if _non_refusal_eligible(outcome)]
+    hard_error = sum(1 for outcome in in_corpus if outcome.response is None)
+    in_corpus_decline = sum(1 for outcome in in_corpus if _declined(outcome))
+    judge_failure = sum(
+        1
+        for outcome in in_corpus
+        if _responded(outcome) and outcome.judge_verdict is None
+    )
+    return {
+        "hard_error__n": hard_error,
+        "in_corpus_decline__n": in_corpus_decline,
+        "judge_failure__n": judge_failure,
+        "non_answered__n": hard_error + in_corpus_decline,
+    }
+
+
 def _responded(outcome: ItemOutcome) -> bool:
     """Whether the run returned an ordinary answer: a response observed and not a decline.
 
     A declined response (``status="insufficient"``) is not an ordinary answer, so
-    it is excluded from every claim-making population — a refusal is never scored
-    as an uncited or unfaithful answer.
+    it is a failure in every claim-quality metric — the population is fixed and a
+    non-answer never shrinks it.
     """
     return outcome.response is not None and outcome.response.status != "insufficient"
-
-
-def _observed(outcome: ItemOutcome) -> bool:
-    """Whether the run returned any response at all — an ordinary answer or a decline.
-
-    The refusal metrics score how the program *behaved* (answered vs declined), so
-    their population is observed responses; an errored item (``response is None``)
-    is unobserved and excluded.
-    """
-    return outcome.response is not None
 
 
 def _declined(outcome: ItemOutcome) -> bool:
@@ -168,33 +187,22 @@ def _declined(outcome: ItemOutcome) -> bool:
 
 
 def _refusal_eligible(outcome: ItemOutcome) -> bool:
-    """Whether the item should be refused and the run observed a response.
+    """Whether the item should be refused: the population :func:`refusal_pass_rate` uses.
 
-    The population :func:`refusal_pass_rate` aggregates over: a should-refuse item
-    whose run produced a response (a clean decline passes; an answer fails). An
-    errored item is unobserved, so it is excluded.
+    A should-refuse item is always in the population; a clean decline passes, an
+    answer fails, and a hard error fails (it produced no decline).
     """
-    return outcome.item.should_refuse and _observed(outcome)
-
-
-def _in_corpus_eligible(outcome: ItemOutcome) -> bool:
-    """Whether the item is in-corpus and the run observed a response.
-
-    The population :func:`spurious_refusal_rate` aggregates over: an in-corpus item
-    whose run produced a response (a decline is a false refusal). An errored item
-    is unobserved, so it is excluded.
-    """
-    return not outcome.item.should_refuse and _observed(outcome)
+    return outcome.item.should_refuse
 
 
 def _non_refusal_eligible(outcome: ItemOutcome) -> bool:
-    """Whether the item is not a should-refuse item.
+    """Whether the item is not a should-refuse item: the claim-quality population.
 
-    The shared eligibility ``answer_coverage``/``public_references`` switch to
-    (the entry-16 principle applied), so a correctly-declined refusal item is out
-    of their populations entirely and neither value nor denominator is diluted. It
-    is intentionally independent of whether a response was observed — those
-    metrics already treat an unobserved response as a miss over the item.
+    ``answer_coverage``/``public_references`` and the claim-quality metrics switch
+    to this population (the entry-16 principle applied), so a correctly-declined
+    refusal item is out of their populations entirely. It is intentionally
+    independent of whether a response was observed — a non-answered item stays in
+    the population and counts as a failure.
     """
     return not outcome.item.should_refuse
 
@@ -220,9 +228,13 @@ def _item_reference_failures(
     """Return the human-readable public-reference failures for one item (empty = pass).
 
     The owner's asymmetry: an answer URL off the allow-list is unverifiable, and an
-    expected URL the answer does not surface is incomplete. A missing response
-    surfaces nothing, so any expected URL counts as incomplete.
+    expected URL the answer does not surface is incomplete. A non-answered in-corpus
+    item is a failure under the population contract, even when its expected answer
+    names no URL: there is no answer to certify. An out-of-corpus decline is not in
+    this population.
     """
+    if not outcome.item.should_refuse and not _responded(outcome):
+        return [f"{outcome.item.question} — no answer (non-answered in-corpus item)"]
     answer = outcome.response.answer if outcome.response is not None else ""
     answer_urls = extract_urls(answer, allow_list)
     unverifiable = [url for url in answer_urls if not is_public_reference(url, allow_list)]
@@ -369,21 +381,16 @@ def _cited_sources(outcome: ItemOutcome) -> set[str]:
 
 
 def _citation_eligible(outcome: ItemOutcome) -> bool:
-    """Whether the item makes a citation claim: it names expected sources and the run answered.
+    """Whether the item makes a citation claim: it is in-corpus and names expected sources.
 
-    A missing response is unobserved (mirrors ``retrieved_sources is None`` for
-    retrieval), so it is excluded. A declined response (``status="insufficient"``)
-    is excluded too, so a refusal is never scored as an uncited answer. A
-    should-refuse item is the refusal metrics' population whether it was declined
-    or answered, so it is excluded from this claim-making population entirely.
-    This is the population both the ``citation_correctness``/``citation_precision``
-    values and their recorded ``__n`` aggregate over.
+    A should-refuse item is the refusal metrics' population whether it was declined
+    or answered, so it is excluded from this claim-making population entirely. A
+    missing or declined response is *not* excluded: the population is fixed, and a
+    non-answer counts as a citation miss (and precision ``0.0``). This is the
+    population both the ``citation_correctness``/``citation_precision`` values and
+    their recorded ``__n`` aggregate over.
     """
-    return (
-        not outcome.item.should_refuse
-        and bool(outcome.item.expected_sources)
-        and _responded(outcome)
-    )
+    return not outcome.item.should_refuse and bool(outcome.item.expected_sources)
 
 
 def _item_citation_misses(outcome: ItemOutcome) -> list[str]:
@@ -392,12 +399,12 @@ def _item_citation_misses(outcome: ItemOutcome) -> list[str]:
     The golden ``expected_sources`` must be a subset of the sources the answer
     actually cites — containment, never exact-set equality, so a legitimately
     retrieved related source is not an error. Every expected source the answer
-    never cites is named. A declined response is excluded from the population and
-    names no miss; a missing response is unobserved and names no miss. The extra,
-    retrieved-but-unexpected citations are not misses:
-    :func:`citation_precision` carries that signal.
+    never cites is named. A non-answered item (declined or errored) is a failure
+    in the metric but names no miss here: its reason is the decline/error
+    diagnostic, not a missing citation line. The extra, retrieved-but-unexpected
+    citations are not misses: :func:`citation_precision` carries that signal.
     """
-    if not _citation_eligible(outcome):
+    if not _citation_eligible(outcome) or not _responded(outcome):
         return []
     expected = outcome.item.expected_sources
     cited = _cited_sources(outcome)
@@ -421,32 +428,40 @@ def citation_misses(outcomes: list[ItemOutcome]) -> list[str]:
 def citation_correctness(outcomes: list[ItemOutcome]) -> float:
     """Fraction of claim-making items whose expected sources were all cited.
 
-    An item counts only when it names expected sources and the run answered it; an
-    item with no expected sources, no observed response, or a declined response is
-    excluded. The item passes when its expected sources are a subset of the
+    An item counts whenever it is in-corpus and names expected sources; an item
+    with no expected sources is excluded (no citation claim). The population is
+    fixed, so a non-answered item is in it and fails: a decline or a hard error
+    cites nothing. The item passes when its expected sources are a subset of the
     sources its answer cites — never exact-set equality, so a related retrieved
     source the answer also cites is not an error.
     """
     eligible = [outcome for outcome in outcomes if _citation_eligible(outcome)]
     if not eligible:
         return 0.0
-    passed = sum(1 for outcome in eligible if not _item_citation_misses(outcome))
+    passed = sum(
+        1
+        for outcome in eligible
+        if _responded(outcome) and not _item_citation_misses(outcome)
+    )
     return passed / len(eligible)
 
 
 def citation_precision(outcomes: list[ItemOutcome]) -> float:
     """Informational aggregate: the expected share of the sources items cite.
 
-    Over the same eligible items as :func:`citation_correctness` (expected
-    sources named and the run answered — a declined response is excluded), per
-    item precision is the fraction of the cited sources that the golden
-    ``expected_sources`` also names. The aggregate is their mean, so a
+    Over the same fixed eligible population as :func:`citation_correctness`
+    (expected sources named), per item precision is the fraction of the cited
+    sources that the golden ``expected_sources`` also names. A non-answered item
+    has precision ``0.0`` — it cited nothing. The aggregate is their mean, so a
     retrieved-but-unexpected citation lowers this metric without ever failing
     containment.
     """
     precisions: list[float] = []
     for outcome in outcomes:
         if not _citation_eligible(outcome):
+            continue
+        if not _responded(outcome):
+            precisions.append(0.0)
             continue
         cited = _cited_sources(outcome)
         if not cited:
@@ -460,50 +475,46 @@ def citation_precision(outcomes: list[ItemOutcome]) -> float:
 
 
 def _faithfulness_eligible(outcome: ItemOutcome) -> bool:
-    """Whether the item was answered and judged: the population faithfulness aggregates over.
+    """Whether the item is in-corpus: the fixed population faithfulness aggregates over.
 
-    An unjudged item — no judge configured, no answer to judge, or a failed judge
-    call — is excluded, as is a declined response. A should-refuse item is the
-    refusal metrics' population whether it was declined or answered, so it is
-    excluded here. This is the population both the ``faithfulness`` value and its
-    recorded ``__n`` aggregate over.
+    A should-refuse item is the refusal metrics' population whether it was declined
+    or answered, so it is excluded here. Every other item is in the population; an
+    unjudged item — no judge configured, no answer to judge, or a failed judge call
+    — is a failure, not an exclusion. This is the population both the
+    ``faithfulness`` value and its recorded ``__n`` aggregate over.
     """
-    return (
-        not outcome.item.should_refuse
-        and _responded(outcome)
-        and outcome.judge_verdict is not None
-    )
+    return not outcome.item.should_refuse
 
 
 def faithfulness(outcomes: list[ItemOutcome]) -> float:
-    """Fraction of judged items the judge found faithful to the golden expected answer.
+    """Fraction of in-corpus items the judge found faithful to the retrieved context.
 
-    An item counts only when it carries a judge verdict and was answered; an
-    unjudged item — no judge configured, no answer to judge, or a failed judge
-    call — is excluded, as is a declined response. The metric is pure: it never
-    calls the judge (the runner runs it per item and stores the verdict). With no
-    judged items the aggregate is ``0.0``.
+    The population is every in-corpus item. An item passes only when it carries a
+    ``FAITHFUL`` verdict; an unjudged item — no judge configured, no answer to
+    judge, or a failed judge call — fails. The metric is pure: it never calls the
+    judge (the runner runs it per item and stores the verdict). With no in-corpus
+    items the aggregate is ``0.0``.
     """
     eligible = [outcome for outcome in outcomes if _faithfulness_eligible(outcome)]
-    judged: list[Verdict] = [
-        outcome.judge_verdict
-        for outcome in eligible
-        if outcome.judge_verdict is not None
-    ]
-    if not judged:
+    if not eligible:
         return 0.0
-    faithful = sum(1 for verdict in judged if verdict.label == FAITHFUL)
-    return faithful / len(judged)
+    faithful = sum(
+        1
+        for outcome in eligible
+        if _responded(outcome)
+        and outcome.judge_verdict is not None
+        and outcome.judge_verdict.label == FAITHFUL
+    )
+    return faithful / len(eligible)
 
 
 def refusal_pass_rate(outcomes: list[ItemOutcome]) -> float:
     """Fraction of should-refuse items the program cleanly declined.
 
-    Over the should-refuse items whose run produced a response, an item passes
-    when the response is the contract's ``insufficient`` decline; an answered
-    out-of-corpus question fails. An errored item is unobserved and excluded. With
-    no should-refuse items the aggregate is ``0.0`` (like ``faithfulness`` before
-    a judge exists).
+    Over every should-refuse item, an item passes when the response is the
+    contract's ``insufficient`` decline; an answered out-of-corpus question fails,
+    and so does a hard error (it produced no decline). With no should-refuse items
+    the aggregate is ``0.0`` (like ``faithfulness`` before a judge exists).
     """
     eligible = [outcome for outcome in outcomes if _refusal_eligible(outcome)]
     if not eligible:
@@ -515,12 +526,12 @@ def refusal_pass_rate(outcomes: list[ItemOutcome]) -> float:
 def spurious_refusal_rate(outcomes: list[ItemOutcome]) -> float:
     """Fraction of in-corpus items the program spuriously declined (a false refusal).
 
-    Over the in-corpus items whose run produced a response, an item counts when
-    the response is a decline — a question the program should have answered. An
-    errored item is unobserved and excluded. Polarity is ``higher_is_better=False``;
-    with no in-corpus observed items the aggregate is ``0.0``.
+    Over every in-corpus item, an item counts when the response is a decline — a
+    question the program should have answered. A hard error produced no decline,
+    so it stays in the denominator without counting. Polarity is
+    ``higher_is_better=False``; with no in-corpus items the aggregate is ``0.0``.
     """
-    eligible = [outcome for outcome in outcomes if _in_corpus_eligible(outcome)]
+    eligible = [outcome for outcome in outcomes if _non_refusal_eligible(outcome)]
     if not eligible:
         return 0.0
     declined = sum(1 for outcome in eligible if _declined(outcome))
@@ -556,6 +567,6 @@ register_metric(
 register_metric(
     "spurious_refusal_rate",
     spurious_refusal_rate,
-    denominator=_in_corpus_eligible,
+    denominator=_non_refusal_eligible,
     higher_is_better=False,
 )

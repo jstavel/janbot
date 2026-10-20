@@ -115,11 +115,14 @@ def _cited_sources(prediction: Any) -> set[str]:
 def _cited_ok(example: Any, prediction: Any) -> bool:
     """Whether the prediction answered and cites every golden expected source.
 
-    The citation atom, aligned with the eval ``citation_correctness`` eligibility:
-    a non-empty *answered* response whose cited sources are a superset of the
-    example's golden ``expected_sources`` (containment, never exact-set equality).
-    A declined response (``status="insufficient"``) makes no citation claim, so it
-    is never a citation win. Tolerant of ``Citation`` objects or bare strings.
+    The citation atom, aligned with the failure-inclusive eval
+    ``citation_correctness`` contract: that metric's fixed population includes every
+    in-corpus item with expected sources, and a non-answer is a failure. A declined
+    or empty response therefore returns ``False`` here — the same verdict the
+    metric gives it. A citation win is a non-empty answered response whose cited
+    sources are a superset of the example's golden ``expected_sources``
+    (containment, never exact-set equality). Tolerant of ``Citation`` objects or
+    bare strings.
     """
     if getattr(prediction, "status", None) == "insufficient":
         return False
