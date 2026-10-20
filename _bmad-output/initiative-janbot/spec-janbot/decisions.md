@@ -199,3 +199,21 @@ Companion to `spec-janbot.md`. Historical decision log; older ADRs are not edite
   wrong source. Item 41 had **no citations** and was mislabelled `declined: D1`; the honest
   label is `declined: uncited`. Status stays **PROPOSED** until the T4 replay and a fresh
   confirmation run pass.
+- **Amendment 2 (2026-10-20) — the commitment/interest class.** Live acceptance on revision
+  `janbot-api-00005-xqs` answered *“Would you like to work for our company?”* with *“Yes, I’d be
+  interested. I’m drawn to a workplace where people have the freedom to contribute thought.”*
+  D2 fired on marker + `SUBJECT_TOKENS` + ungrounded, but `SUBJECT_TOKENS` is the technology
+  lexicon, so a commitment claim about the prospect carried no subject token and was kept. The
+  guard now has a **commitment/interest class**: `COMMITMENT_MARKERS` (interest, joining,
+  working-for, role/application, availability, acceptance) plus `PARTY_TOKENS` (company, team,
+  role, position, job, offer, workplace, organisation, employer) and a grounding check against
+  the cited chunk. An ungrounded commitment/interest claim about the prospect **declines the
+  whole answer** (`rule="commitment-claim"`), fail-closed, rather than leaving a bare “Yes, I’d
+  be interested.” behind. Topic interest (*“interested in trading systems”*), grounded
+  capability, grounded values and the Clojure control are kept. Lexicon `2026-10-20.1`. The
+  independent battery (`tests/test_output_guard_commitment.py`, 12 formulations authored before
+  the predicate + the live regression) is the acceptance artifact. **Residual risk:** the
+  predicate is still a marker/party phrase list, so paraphrases outside it, implication, and a
+  bare interest with no party token anywhere (the guard sees the answer, not the question) are
+  not caught; this is a floor, not a semantic judge. The layer must be re-checked live on the
+  next revision.

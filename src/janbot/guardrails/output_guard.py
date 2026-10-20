@@ -21,7 +21,13 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
-from janbot.guardrails.lexicon import CLAUSE_CONNECTORS, MARKERS, SUBJECT_TOKENS
+from janbot.guardrails.lexicon import (
+    CLAUSE_CONNECTORS,
+    COMMITMENT_MARKERS,
+    MARKERS,
+    PARTY_TOKENS,
+    SUBJECT_TOKENS,
+)
 
 __all__ = ["GuardResult", "apply_output_guard"]
 
@@ -86,6 +92,10 @@ def _subject_tokens_in(text: str) -> list[str]:
     return [token for token in SUBJECT_TOKENS if _contains(text, token)]
 
 
+def _party_tokens_in(text: str) -> list[str]:
+    return [token for token in PARTY_TOKENS if _contains(text, token)]
+
+
 def _marker_windows(sentence: str) -> list[tuple[str, str]]:
     """Yield ``(chunk_phrase, forward_window)`` for each marker in the sentence.
 
@@ -102,6 +112,47 @@ def _marker_windows(sentence: str) -> list[tuple[str, str]]:
             if window.strip():
                 windows.append((marker.chunk_phrase, window))
     return windows
+
+
+def _commitment_marker_windows(sentence: str) -> list[tuple[object, str]]:
+    """Yield ``(marker, forward_window)`` for each commitment/interest marker."""
+    lowered = sentence.lower()
+    windows: list[tuple[object, str]] = []
+    for marker in COMMITMENT_MARKERS:
+        for match in _phrase_pattern(marker.answer_phrase).finditer(lowered):
+            window = sentence[match.end() : match.end() + _CLAIM_WINDOW]
+            if window.strip():
+                windows.append((marker, window))
+    return windows
+
+
+def _marker_is_grounded(chunk_phrase: str, cited_chunk_texts: Sequence[str]) -> bool:
+    """Whether a cited chunk contains the marker's grounded form at all."""
+    return any(_contains(chunk_text, chunk_phrase) for chunk_text in cited_chunk_texts)
+
+
+def _commitment_claim_is_ungrounded(
+    clause: str, cited_chunk_texts: Sequence[str]
+) -> bool:
+    """Whether the clause carries an ungrounded commitment/interest claim.
+
+    A party-required marker needs a party noun in its forward window; without one
+    it is a topic interest and is left to the capability rule. A standalone
+    commitment marker is checked on its own.
+    """
+    for marker, window in _commitment_marker_windows(clause):
+        if marker.party_required:
+            parties = _party_tokens_in(window)
+            if not parties:
+                continue
+            if not all(
+                _is_grounded(marker.chunk_phrase, party, cited_chunk_texts)
+                for party in parties
+            ):
+                return True
+        elif not _marker_is_grounded(marker.chunk_phrase, cited_chunk_texts):
+            return True
+    return False
 
 
 def _split_sentences(text: str) -> list[str]:
@@ -208,6 +259,22 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
         for chunk in retrieved_chunks
         if str(chunk["source"]) in cited_sources
     ]
+
+    for sentence in _split_sentences(answer):
+        for clause in _split_clauses(sentence)[0]:
+            if _commitment_claim_is_ungrounded(clause, cited_chunk_texts):
+                return GuardResult(
+                    answer=answer,
+                    citations=[],
+                    declined=True,
+                    reason=(
+                        "an ungrounded first-person commitment or interest claim "
+                        "about the prospect"
+                    ),
+                    rule="commitment-claim",
+                    dropped_citations=dropped,
+                    normalized_count=normalized_count,
+                )
 
     kept: list[str] = []
     dropped_sentences: list[str] = []

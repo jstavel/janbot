@@ -14,7 +14,7 @@ contract and the AI core are untouched.
 | 2 | Per-IP rate limit | `src/janbot/guardrails/limits.py` | `test_nth_request_is_served_and_n_plus_one_is_refused` |
 | 3 | Hard global quota (conservative request quota) | same | `test_exactly_the_quota_is_allowed_under_concurrency` |
 | 4 | Input bounds | `BodySizeLimitMiddleware` + the `/chat` question check | `test_oversized_body_is_rejected_before_parsing`; `test_over_long_question_is_rejected_before_rate_and_model` |
-| 5 | Over-claiming guard | ADR-010 inside `ChatProgram.forward` | `probe_over_claiming-e2-output.txt` |
+| 5 | Over-claiming guard | ADR-010 inside `ChatProgram.forward`; commitment/interest class (ADR-010 Amendment 2) | `probe_over_claiming-e2-output.txt`; `tests/test_output_guard_commitment.py` |
 | 6 | Abuse control | rate + quota + input bounds (CORS arrives at E3) | the two counter tests above |
 
 **Fail closed:** every Firestore error becomes a denial (`503`), never a pass.
@@ -115,6 +115,30 @@ The Firestore IaC moved from E4b to E2; E4b is WIF + GitHub Actions only
 (`epic-gcp-deploy.md`, `tickets.toml`). The round ends at a verified
 `terraform plan`; the **owner runs the apply** (same blast-radius rule as E1.5),
 then verifies the phase-2 checks.
+
+## Commitment/interest class (ADR-010 Amendment 2, 2026-10-20)
+
+Live acceptance on `janbot-api-00005-xqs` showed the gap: *“Would you like to work for our
+company?”* → *“Yes, I’d be interested. I’m drawn to a workplace where people have the
+freedom to contribute thought.”* D2’s `SUBJECT_TOKENS` is the technology lexicon, so the
+commitment claim carried no subject token and was kept.
+
+The guard now has a **commitment/interest class**: `COMMITMENT_MARKERS` + `PARTY_TOKENS` +
+grounding against the cited chunk. An ungrounded commitment/interest claim about the
+prospect **declines the whole answer** (`rule="commitment-claim"`); this removes the bare
+“Yes, I’d be interested.” too. Topic interest, grounded capability, grounded values and the
+Clojure control remain served. Lexicon `2026-10-20.1`.
+
+**Independent battery:** `tests/test_output_guard_commitment.py` — 12 formulations written
+from the class description before the predicate, plus the live regression. It is not derived
+from the observed sentence. The must-not-regress cases cover topic interest, grounded
+capability, grounded values, a grounded commitment and the Clojure control.
+
+**Residual risk (stated, owner decision):** the predicate is still a marker/party phrase list.
+Paraphrases outside it, implication, and a bare interest with no party token anywhere (the
+guard sees the answer, not the question) are not caught. This is a floor, not a semantic
+judge. The layer must be re-checked live on the **next revision**; the local test suite
+cannot prove the deployed revision.
 
 ## Over-claiming evidence (ADR-010, control 5)
 
