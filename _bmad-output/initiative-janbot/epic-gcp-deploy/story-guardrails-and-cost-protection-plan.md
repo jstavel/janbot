@@ -141,7 +141,7 @@ Quick review, 2026-10-20. Ten findings; nine patched, one deferred with a named 
 - Cache artifact: `cache/answers-fc430d3e17714457b896bafdac9cc1ac.json` — production `openrouter/auto` run, 49 non-refusal val answers, dataset sha `a8bd69dc…`, corpus commit `bf04023…`, routed models recorded per item. `build_cache` validates the dataset sha and the corpus tree sha (`2cc21360…`); both are image triggers.
 - The probe (`probe_over_claiming-e2-output.txt`) shows the over-claim clause dropped and the Clojure control answered with `edeposit.org`; the status remains `answered` because ADR-010 D2 repairs at clause granularity. The acceptance wording was corrected to "no first-person assertion reaches the caller", not "status insufficient".
 - Terraform: `google_firestore_database.janbot` is native `europe-central2` with `delete_protection_state = DELETE_PROTECTION_ENABLED` and `deletion_policy = ABANDON`; `roles/datastore.user` is granted to `janbot-run`; Cloud Run env and the cache/dataset triggers are wired. The apply remains owner-run.
-- Tests: full suite green at 550 passed with `ulimit -n 16384`.
+- Tests: full suite green at 555 passed with `ulimit -n 16384`.
 - Runbook/evidence: `run-e2-guardrails.md`; the cost table carries the measured and worst-case routing, the money-tail acceptance and the operation/latency arithmetic.
 
 ## Verification
