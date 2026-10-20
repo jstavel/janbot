@@ -25,9 +25,14 @@ tests inject stubs so the CLI runs offline and keyless.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
+import subprocess
 import sys
 from collections.abc import Mapping
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from janbot.config import PROJECT_ROOT, Config, load_config
@@ -35,6 +40,7 @@ from janbot.eval.dataset import load_golden_dataset, split_manifest
 from janbot.eval.judge import Judge, build_judge
 from janbot.eval.optimize import program_marker
 from janbot.eval.runner import RunResult, run_eval
+from janbot.guardrails.cache import corpus_sha256
 
 DEFAULT_DATASET = PROJECT_ROOT / "eval" / "golden_dataset.yaml"
 DEFAULT_EXPERIMENT = "janbot-eval"
@@ -89,6 +95,79 @@ def _resolve_judge(
     return build_judge(build_judge_lm(config, api_key=api_key, **kwargs))
 
 
+def _git(*args: str) -> str:
+    return subprocess.run(
+        ["git", "-C", str(PROJECT_ROOT), *args],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+def _corpus_commit() -> str:
+    """The commit the corpus was pinned at; refuses a dirty corpus tree."""
+    dirty = _git("status", "--porcelain", "--", "public_profile_org")
+    if dirty:
+        raise RuntimeError(
+            "public_profile_org has uncommitted changes; commit the corpus "
+            "before recording a cache artifact"
+        )
+    return _git("rev-parse", "HEAD")
+
+
+def write_cache_artifact(path: str | Path, result: RunResult, config: Config) -> int:
+    """Write the pinned production answer cache; return its entry count.
+
+    Only a non-refusal, answered item enters the cache: a should-refuse item and
+    an ``insufficient`` reply stay live, because the θ gate declines them before
+    the LM and caching them would freeze the item-3 reason heuristic.
+    """
+    entries: list[dict[str, Any]] = []
+    routed: set[str] = set()
+    for outcome in result.outcomes:
+        if outcome.item.should_refuse or outcome.response is None:
+            continue
+        if outcome.response.status != "answered":
+            continue
+        if outcome.routed_model:
+            routed.add(outcome.routed_model)
+        entries.append(
+            {
+                "question": outcome.item.question,
+                "response": outcome.response.model_dump(mode="json"),
+                "routed_model": outcome.routed_model,
+            }
+        )
+    if not entries:
+        raise RuntimeError("the run produced no non-refusal answers to cache")
+
+    dataset = PROJECT_ROOT / "eval" / "golden_dataset.yaml"
+    if not dataset.is_file():
+        raise RuntimeError(f"golden dataset not found: {dataset}")
+    document = {
+        "metadata": {
+            "run_id": result.run_id,
+            "date": datetime.now(UTC).date().isoformat(),
+            "model_mode": config.model_mode,
+            "requested_model": "openrouter/auto",
+            "routed_models": sorted(routed),
+            "dataset": "eval/golden_dataset.yaml",
+            "dataset_sha256": hashlib.sha256(dataset.read_bytes()).hexdigest(),
+            "corpus_commit": _corpus_commit(),
+            "corpus_sha256": corpus_sha256(PROJECT_ROOT / "public_profile_org"),
+            "output_guard": config.output_guard,
+            "split": "val",
+        },
+        "entries": entries,
+    }
+    out_path = Path(path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(
+        json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    return len(entries)
+
+
 def main(
     argv: list[str] | None = None,
     env: Mapping[str, str] | None = None,
@@ -129,14 +208,29 @@ def main(
         action="store_true",
         help="print each item's answer text (to diagnose judge verdicts)",
     )
+    parser.add_argument(
+        "--cache-out",
+        default=None,
+        help=(
+            "write the pinned production answer-cache artifact (non-refusal "
+            "val answers) to this path; requires JANBOT_MODEL_MODE=production"
+        ),
+    )
     args = parser.parse_args(argv)
 
     source = os.environ if env is None else env
     tracking_uri = source.get(TRACKING_URI_ENV) or DEFAULT_TRACKING_URI
 
     config = load_config(source)
+    if args.cache_out is not None and config.model_mode != "production":
+        print(
+            "--cache-out requires JANBOT_MODEL_MODE=production; the cache must "
+            "be a snapshot of what the service actually does",
+            file=sys.stderr,
+        )
+        return 2
     api_key = (source.get(OPENROUTER_API_KEY_ENV) or "").strip() or None
-    judge = _resolve_judge(config, api_key, lm_factory, judge)
+    judge = None if args.cache_out else _resolve_judge(config, api_key, lm_factory, judge)
 
     all_items = load_golden_dataset(args.dataset)
     items = (
@@ -168,6 +262,10 @@ def main(
     print(f"MLflow tracking URI: {tracking_uri}")
     print(f"MLflow run: {result.run_id}")
     print(f"items: {len(result.outcomes)}")
+
+    if args.cache_out is not None:
+        cached = write_cache_artifact(args.cache_out, result, config)
+        print(f"cache: {cached} non-refusal answers -> {args.cache_out}")
     for name, value in result.metrics.items():
         count = result.counts.get(f"{name}__n", 0)
         print(f"{name}: {value:.4f} (n={count})")
