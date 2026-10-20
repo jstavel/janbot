@@ -108,6 +108,11 @@
   summary: The full test suite needs more open file descriptors than the common default soft limit (1024); on such a shell the store tests fail with `OSError: [Errno 24] Too many open files` and the suite looks red when it is not. The store tests may not be closing their Chroma clients.
   evidence: Reproduced — `ulimit -n 1024` gives EMFILE failures in `tests/test_store_similarity.py` / `tests/test_store_window.py` (plus an EMFILE during pytest's temp-dir cleanup); `ulimit -n 16384` (and the dev default 524288) gives **464 passed / 0 failed**. This is **not** a correctness defect and **not** order-sensitivity — a reproducibility/hygiene item (hypothesis: unclosed Chroma clients in the store tests). Do not fix in 7.3.
 
+- source_plan: `_bmad-output/initiative-janbot/epic-evaluation/story-metric-population-inconsistency-errored-items-are-coverage-m-plan.md`
+  summary: Full suite is red when the shell's file-descriptor soft limit is low; the store tests fail with SQLite CANTOPEN. Pre-existing, not a metric-population defect.
+  evidence: Reproduced 2026-10-20 with `ulimit -n 1024`: **21 failed / 493 passed**, all in `tests/test_store_scope.py`, `tests/test_store_similarity.py`, `tests/test_store_window.py`; first error `chromadb.errors.InternalError: error returned from database: (code: 14) unable to open database file`. Store files alone pass (30 passed); `test_store_window.py` + `test_eval_runner.py` pass (44 passed); it is an ordering/state interaction, not store logic. With `ulimit -n 16384` the full suite is **514 passed**. Same 21 failures on parent `1eeb890`. Not fixed in this round (mixes themes); the README carries the qualification so no artifact claims an unqualified green.
+
+
 ## Maybe (2026-10-18) — recorded, deliberately unscheduled
 
 **"Maybe" is ranked below *Someday*: the owner is not convinced he will ever pick this up.**
