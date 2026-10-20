@@ -143,6 +143,7 @@ Quick review, 2026-10-20. Ten findings; nine patched, one deferred with a named 
 - Terraform: `google_firestore_database.janbot` is native `europe-central2` with `delete_protection_state = DELETE_PROTECTION_ENABLED` and `deletion_policy = ABANDON`; `roles/datastore.user` is granted to `janbot-run`; Cloud Run env and the cache/dataset triggers are wired. The apply remains owner-run.
 - Tests: full suite green at 555 passed with `ulimit -n 16384`.
 - Runbook/evidence: `run-e2-guardrails.md`; the cost table carries the measured and worst-case routing, the money-tail acceptance and the operation/latency arithmetic.
+- Post-acceptance fix (2026-10-20, ADR-010 Amendment 2): the live revision answered a commitment claim that D2's technology-only subject lexicon missed. Added `COMMITMENT_MARKERS` + `PARTY_TOKENS` + grounding; an ungrounded commitment/interest claim declines the whole answer. Lexicon `2026-10-20.1`; battery `tests/test_output_guard_commitment.py` (12 class formulations + live regression); residual risk stated in the runbook; live re-check required on the next revision.
 
 ## Verification
 
