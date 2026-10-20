@@ -1,7 +1,7 @@
 """Configuration for JanBot, read from ``JANBOT_*`` environment variables.
 
 Per AD-5, model mode is configuration, not code. This module is stdlib-only and
-reads fourteen variables, each with a documented default:
+reads a documented set of variables, each with a default:
 
 - ``JANBOT_MODEL_MODE``      -- ``"eval"`` (default) or ``"production"``
 - ``JANBOT_MODEL_SNAPSHOT``  -- locked model snapshot;
@@ -24,10 +24,25 @@ reads fourteen variables, each with a documented default:
   ``spurious_refusal_rate`` and no in-corpus regression). ``0.0`` disables the gate.
 - ``JANBOT_OUTPUT_GUARD`` -- deterministic output guard; ``"on"`` (default,
   shipped) or ``"off"`` for measurement isolation. It never calls a model.
+- ``JANBOT_GUARDRAILS``      -- the request guardrail layer; ``"on"`` (default) or
+  ``"off"``. ``off`` is honoured only outside production: production + ``off``
+  fails fast at startup.
+- ``JANBOT_CACHE_PATH``      -- baked answer-cache artifact; default unset (no
+  cache). The container image sets it to the build-time artifact.
+- ``JANBOT_RATE_LIMIT``      -- requests per IP per window; default ``10``
+- ``JANBOT_RATE_WINDOW_SECONDS`` -- per-IP rate window; default ``600`` (10 min)
+- ``JANBOT_DAILY_QUOTA``     -- hard global model-call quota per UTC day; default
+  ``500``
+- ``JANBOT_MAX_QUESTION_CHARS`` -- maximum question length; default ``2000``
+- ``JANBOT_MAX_BODY_BYTES``  -- maximum ``/chat`` request body; default ``8192``
+- ``JANBOT_FIRESTORE_PROJECT`` -- GCP project for the shared counters; default
+  unset. Production mode requires it.
+- ``JANBOT_FIRESTORE_DATABASE`` -- Firestore native database id; default
+  ``"(default)"``
 
 Values are trimmed, and a blank or whitespace-only value counts as unset (so it
-takes the documented default). The model mode, the retrieval mode and the
-retrieval window are normalized to lower case before validation, so
+takes the documented default). The model mode, the retrieval mode, the
+retrieval window and the guardrail switch are normalized to lower case before validation, so
 ``"Production"`` and ``" production "`` (and ``"Hybrid"``, ``"Sources"``) are
 accepted.
 ``JANBOT_TEMPERATURE`` must parse as a finite number, ``JANBOT_SEED`` must parse
@@ -71,6 +86,10 @@ OUTPUT_GUARD_ON = "on"
 OUTPUT_GUARD_OFF = "off"
 OUTPUT_GUARDS = (OUTPUT_GUARD_ON, OUTPUT_GUARD_OFF)
 
+GUARDRAILS_ON = "on"
+GUARDRAILS_OFF = "off"
+GUARDRAILS_MODES = (GUARDRAILS_ON, GUARDRAILS_OFF)
+
 MODEL_MODE_ENV = "JANBOT_MODEL_MODE"
 MODEL_SNAPSHOT_ENV = "JANBOT_MODEL_SNAPSHOT"
 JUDGE_MODEL_ENV = "JANBOT_JUDGE_MODEL"
@@ -85,6 +104,15 @@ RETRIEVAL_MODE_ENV = "JANBOT_RETRIEVAL_MODE"
 RETRIEVAL_WINDOW_ENV = "JANBOT_RETRIEVAL_WINDOW"
 RELEVANCE_THRESHOLD_ENV = "JANBOT_RELEVANCE_THRESHOLD"
 OUTPUT_GUARD_ENV = "JANBOT_OUTPUT_GUARD"
+GUARDRAILS_ENV = "JANBOT_GUARDRAILS"
+CACHE_PATH_ENV = "JANBOT_CACHE_PATH"
+RATE_LIMIT_ENV = "JANBOT_RATE_LIMIT"
+RATE_WINDOW_ENV = "JANBOT_RATE_WINDOW_SECONDS"
+DAILY_QUOTA_ENV = "JANBOT_DAILY_QUOTA"
+MAX_QUESTION_CHARS_ENV = "JANBOT_MAX_QUESTION_CHARS"
+MAX_BODY_BYTES_ENV = "JANBOT_MAX_BODY_BYTES"
+FIRESTORE_PROJECT_ENV = "JANBOT_FIRESTORE_PROJECT"
+FIRESTORE_DATABASE_ENV = "JANBOT_FIRESTORE_DATABASE"
 
 DEFAULT_MODEL_MODE = MODEL_MODE_EVAL
 DEFAULT_MODEL_SNAPSHOT = "openai/gpt-4o-mini-2024-07-18"
@@ -97,6 +125,13 @@ DEFAULT_RETRIEVAL_MODE = RETRIEVAL_MODE_HYBRID
 DEFAULT_RETRIEVAL_WINDOW = RETRIEVAL_WINDOW_CHUNKS
 DEFAULT_RELEVANCE_THRESHOLD = 0.26
 DEFAULT_OUTPUT_GUARD = OUTPUT_GUARD_ON
+DEFAULT_GUARDRAILS = GUARDRAILS_ON
+DEFAULT_RATE_LIMIT = 10
+DEFAULT_RATE_WINDOW_SECONDS = 600
+DEFAULT_DAILY_QUOTA = 500
+DEFAULT_MAX_QUESTION_CHARS = 2000
+DEFAULT_MAX_BODY_BYTES = 8192
+DEFAULT_FIRESTORE_DATABASE = "(default)"
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -118,6 +153,15 @@ class Config:
     retrieval_window: str
     relevance_threshold: float
     output_guard: str
+    guardrails: str
+    cache_path: Path | None
+    rate_limit: int
+    rate_window_seconds: int
+    daily_quota: int
+    max_question_chars: int
+    max_body_bytes: int
+    firestore_project: str | None
+    firestore_database: str
 
 
 def _clean(value: str | None) -> str | None:
@@ -261,9 +305,53 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
     raw_root = _clean(source.get(PROJECT_ROOT_ENV))
     project_root = _resolve_path(raw_root, PROJECT_ROOT) if raw_root else PROJECT_ROOT
 
+    raw_guardrails = _clean(source.get(GUARDRAILS_ENV))
+    guardrails = (
+        DEFAULT_GUARDRAILS if raw_guardrails is None else raw_guardrails.lower()
+    )
+    if guardrails not in GUARDRAILS_MODES:
+        allowed = ", ".join(repr(value) for value in GUARDRAILS_MODES)
+        raise ValueError(
+            f"{GUARDRAILS_ENV}={raw_guardrails!r} is invalid; allowed values: {allowed}"
+        )
+    if model_mode == MODEL_MODE_PRODUCTION and guardrails == GUARDRAILS_OFF:
+        raise ValueError(
+            f"{GUARDRAILS_ENV}={GUARDRAILS_OFF!r} is not permitted in "
+            f"{MODEL_MODE_PRODUCTION!r} model mode; the guardrail layer cannot be "
+            "switched off in production"
+        )
+
+    def _positive_int(name: str, default: int) -> int:
+        raw = _clean(source.get(name))
+        if raw is None:
+            return default
+        try:
+            value = int(raw)
+        except ValueError as exc:
+            raise ValueError(f"{name}={raw!r} is not an integer") from exc
+        if value < 1:
+            raise ValueError(f"{name}={raw!r} must be a positive integer")
+        return value
+
+    rate_limit = _positive_int(RATE_LIMIT_ENV, DEFAULT_RATE_LIMIT)
+    rate_window_seconds = _positive_int(
+        RATE_WINDOW_ENV, DEFAULT_RATE_WINDOW_SECONDS
+    )
+    daily_quota = _positive_int(DAILY_QUOTA_ENV, DEFAULT_DAILY_QUOTA)
+    max_question_chars = _positive_int(
+        MAX_QUESTION_CHARS_ENV, DEFAULT_MAX_QUESTION_CHARS
+    )
+    max_body_bytes = _positive_int(MAX_BODY_BYTES_ENV, DEFAULT_MAX_BODY_BYTES)
+
+    firestore_project = _clean(source.get(FIRESTORE_PROJECT_ENV))
+    firestore_database = (
+        _clean(source.get(FIRESTORE_DATABASE_ENV)) or DEFAULT_FIRESTORE_DATABASE
+    )
+
     corpus_value = _clean(source.get(CORPUS_PATH_ENV)) or DEFAULT_CORPUS_PATH
     index_value = _clean(source.get(INDEX_PATH_ENV)) or DEFAULT_INDEX_PATH
     program_value = _clean(source.get(PROGRAM_PATH_ENV))
+    cache_value = _clean(source.get(CACHE_PATH_ENV))
 
     return Config(
         model_mode=model_mode,
@@ -283,4 +371,17 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
         retrieval_window=retrieval_window,
         relevance_threshold=relevance_threshold,
         output_guard=output_guard,
+        guardrails=guardrails,
+        cache_path=(
+            _resolve_path(cache_value, project_root)
+            if cache_value is not None
+            else None
+        ),
+        rate_limit=rate_limit,
+        rate_window_seconds=rate_window_seconds,
+        daily_quota=daily_quota,
+        max_question_chars=max_question_chars,
+        max_body_bytes=max_body_bytes,
+        firestore_project=firestore_project,
+        firestore_database=firestore_database,
     )

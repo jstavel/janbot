@@ -354,3 +354,21 @@ def test_guard_error_action_is_named() -> None:
 
     assert result.declined is True
     assert result.action == "declined: guard-error"
+
+
+def test_probe_overclaim_is_refused_and_clojure_control_survives() -> None:
+    """The two recorded probe answers: the commitment claim is refused; the control answers."""
+    overclaim = apply_output_guard(
+        answer="I am interested in working for your company on Clojure.",
+        citations=["profile.org"],
+        retrieved_chunks=_chunks(("profile.org", "Public profile of Jan Stavel.")),
+    )
+    assert overclaim.declined is True
+
+    control = apply_output_guard(
+        answer="I have used Clojure in production systems.",
+        citations=["profile.org"],
+        retrieved_chunks=_chunks(("profile.org", "I have used Clojure in production systems.")),
+    )
+    assert control.declined is False
+    assert control.citations == ["profile.org"]

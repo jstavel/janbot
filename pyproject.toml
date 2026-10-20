@@ -17,6 +17,7 @@ dependencies = [
     "orgparse==0.5.20260926",
     "mlflow==3.17.1",
     "pyyaml==6.0.3",
+    "google-cloud-firestore==2.34.1",
 ]
 
 [dependency-groups]

@@ -29,7 +29,20 @@ from fastapi.exceptions import ResponseValidationError
 from fastapi.responses import JSONResponse
 
 from janbot.api.contract import ChatRequest, ChatResponse, decline
-from janbot.config import MODEL_MODE_PRODUCTION, OUTPUT_GUARD_ON, load_config
+from janbot.config import (
+    GUARDRAILS_ON,
+    MODEL_MODE_PRODUCTION,
+    OUTPUT_GUARD_ON,
+    load_config,
+)
+from janbot.guardrails.cache import AnswerCache, load_cache
+from janbot.guardrails.limits import (
+    QUOTA_EXCEEDED,
+    RATE_LIMITED,
+    STORE_ERROR,
+    FirestoreLimits,
+    Limiter,
+)
 from janbot.store import Embedder, VectorStore, default_embedder
 
 import dspy
@@ -46,11 +59,87 @@ from janbot.pipeline.chat import (
 OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
 
 
+class _BodyTooLarge(Exception):
+    """The request body exceeded the configured cap before it was parsed."""
+
+
+async def _send_error(send, status_code: int, detail: str) -> None:
+    import json
+
+    body = json.dumps({"detail": detail}).encode("utf-8")
+    headers = [
+        (b"content-type", b"application/json"),
+        (b"content-length", str(len(body)).encode("ascii")),
+    ]
+    await send({"type": "http.response.start", "status": status_code, "headers": headers})
+    await send({"type": "http.response.body", "body": body})
+
+
+class BodySizeLimitMiddleware:
+    """Reject an oversized ``/chat`` body before FastAPI parses it.
+
+    A declared ``Content-Length`` is checked first; a chunked body is counted as
+    it is received and aborted once the cap is crossed. The OpenAPI contract is
+    unchanged — this is an HTTP bound, not a Pydantic field.
+    """
+
+    def __init__(self, app, *, max_bytes: int, path: str = "/chat") -> None:
+        self.app = app
+        self.max_bytes = max_bytes
+        self.path = path
+
+    async def __call__(self, scope, receive, send) -> None:
+        if scope["type"] != "http" or scope.get("path") != self.path:
+            await self.app(scope, receive, send)
+            return
+
+        headers = {key.lower(): value for key, value in scope.get("headers", [])}
+        declared = headers.get(b"content-length")
+        if declared is not None:
+            try:
+                length = int(declared)
+            except ValueError:
+                await _send_error(send, 400, "invalid content-length")
+                return
+            if length > self.max_bytes:
+                await _send_error(send, 413, "request body too large")
+                return
+
+        received = 0
+
+        async def limited_receive():
+            nonlocal received
+            message = await receive()
+            if message["type"] == "http.request":
+                received += len(message.get("body", b""))
+                if received > self.max_bytes:
+                    raise _BodyTooLarge
+            return message
+
+        try:
+            await self.app(scope, limited_receive, send)
+        except _BodyTooLarge:
+            await _send_error(send, 413, "request body too large")
+
+
+def _client_ip(request: Request) -> str:
+    """The caller's IP: the first ``X-Forwarded-For`` hop (Cloud Run) or the peer."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        first = forwarded.split(",")[0].strip()
+        if first:
+            return first
+    return request.client.host if request.client else "unknown"
+
+
+
 def create_app(
     env: Mapping[str, str] | None = None,
     *,
     embedder: Embedder | None = None,
     lm_factory: LMFactory = dspy.LM,
+    limiter: Limiter | None = None,
+    cache: AnswerCache | None = None,
 ) -> FastAPI:
     """Build the app: config -> store -> LM -> program, then wire the port.
 
@@ -60,11 +149,17 @@ def create_app(
     omitted. A blank or whitespace-only ``OPENROUTER_API_KEY`` counts as
     absent.
 
+    ``limiter`` and ``cache`` are test seams for the shared counters and the
+    baked cache. Production leaves them unset: the Firestore limiter is built
+    from ``JANBOT_FIRESTORE_PROJECT`` and the cache is loaded from
+    ``JANBOT_CACHE_PATH``. There is no other ``/chat`` path around the layer.
+
     Raises:
         ValueError: if the resolved configuration is invalid, if
             ``JANBOT_PROGRAM_PATH`` is set but does not name a file, if the model
-            mode is ``production`` and no ``OPENROUTER_API_KEY`` is present, or
-            if the index holds chunks whose ``source_path`` lies outside
+            mode is ``production`` and no ``OPENROUTER_API_KEY`` is present, if
+            ``JANBOT_CACHE_PATH`` names a missing/invalid artifact, or if the
+            index holds chunks whose ``source_path`` lies outside
             ``JANBOT_CORPUS_PATH`` (built from a different corpus root).
     """
     config = load_config(env)
@@ -111,19 +206,82 @@ def create_app(
         load_program(program, config.program_path)
     program.set_lm(lm)
 
+    guardrails_on = config.guardrails == GUARDRAILS_ON
+    if guardrails_on:
+        if cache is None and config.cache_path is not None:
+            cache = load_cache(config.cache_path)
+        if limiter is None:
+            limiter = FirestoreLimits.from_config(config)
+        if config.model_mode == MODEL_MODE_PRODUCTION and limiter is None:
+            raise ValueError(
+                "the guardrail layer is on in production but no Firestore "
+                "project is configured; refusing to start without the shared "
+                "rate/quota counters"
+            )
+
     app = FastAPI(title="JanBot")
     app.state.program = program
+    app.state.cache = cache if guardrails_on else None
+    app.state.limiter = limiter if guardrails_on else None
+    app.state.config = config
+
+    if guardrails_on:
+        app.add_middleware(
+            BodySizeLimitMiddleware, max_bytes=config.max_body_bytes, path="/chat"
+        )
+
+    def _guard_denied(decision) -> HTTPException:
+        if decision.reason == STORE_ERROR:
+            return HTTPException(
+                status_code=503,
+                detail="the guardrail store is unavailable",
+            )
+        return HTTPException(
+            status_code=429,
+            detail=(
+                "too many requests"
+                if decision.reason == RATE_LIMITED
+                else "the daily model-call quota is exhausted"
+            ),
+        )
 
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
     @app.post("/chat", response_model=ChatResponse)
-    def chat(request: ChatRequest) -> ChatResponse:
+    def chat(request: Request, payload: ChatRequest) -> ChatResponse:
+        active_cache = app.state.cache
+        active_limiter = app.state.limiter
+
+        if guardrails_on and len(payload.question) > config.max_question_chars:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    "question exceeds the maximum length of "
+                    f"{config.max_question_chars} characters"
+                ),
+            )
+
+        if active_limiter is not None:
+            decision = active_limiter.check_rate(_client_ip(request))
+            if not decision.allowed:
+                raise _guard_denied(decision)
+
+        if active_cache is not None:
+            cached = active_cache.lookup(payload.question)
+            if cached is not None:
+                return cached
+
+        if active_limiter is not None:
+            decision = active_limiter.consume_quota()
+            if not decision.allowed:
+                raise _guard_denied(decision)
+
         try:
-            return app.state.program(question=request.question)
+            return app.state.program(question=payload.question)
         except (EmptyRetrieval, LowRelevance, UncitedAnswer):
-            return decline(question=request.question)
+            return decline(question=payload.question)
         except ValueError as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
         except HTTPException:

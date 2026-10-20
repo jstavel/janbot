@@ -46,7 +46,8 @@ class ItemOutcome:
     ``raw_answer`` and ``raw_citations`` are the guard's additive observation seam: the
     prediction and labels before the guard. ``guard_action`` is the closed-set action;
     ``normalized_citations`` counts alias labels resolved before D1. They are observability
-    only and never enter a metric.
+    only and never enter a metric. ``routed_model`` is the provider-reported model for
+    the item's LM call (observability only; the production router may pick per call).
     """
 
     item: GoldenItem
@@ -59,6 +60,7 @@ class ItemOutcome:
     raw_citations: list[str] | None = None
     guard_action: str | None = None
     normalized_citations: int | None = None
+    routed_model: str | None = None
 
 
 Metric = Callable[[list[ItemOutcome]], float]

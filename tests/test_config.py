@@ -402,3 +402,41 @@ def test_invalid_output_guard_raises(value: str) -> None:
     with pytest.raises(ValueError) as excinfo:
         load_config({"JANBOT_OUTPUT_GUARD": value})
     assert "JANBOT_OUTPUT_GUARD" in str(excinfo.value)
+
+
+def test_guardrails_default_on() -> None:
+    config = load_config({})
+
+    assert config.guardrails == "on"
+    assert config.rate_limit == 10
+    assert config.rate_window_seconds == 600
+    assert config.daily_quota == 500
+    assert config.max_question_chars == 2000
+    assert config.max_body_bytes == 8192
+    assert config.firestore_project is None
+
+
+def test_guardrails_off_is_allowed_outside_production() -> None:
+    config = load_config({"JANBOT_GUARDRAILS": "off"})
+
+    assert config.guardrails == "off"
+
+
+def test_production_with_guardrails_off_fails_fast() -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_GUARDRAILS": "off", "JANBOT_MODEL_MODE": "production"})
+
+    message = str(excinfo.value)
+    assert "JANBOT_GUARDRAILS" in message
+    assert "production" in message
+
+
+def test_invalid_guardrails_value_fails_fast() -> None:
+    with pytest.raises(ValueError, match="JANBOT_GUARDRAILS"):
+        load_config({"JANBOT_GUARDRAILS": "maybe"})
+
+
+@pytest.mark.parametrize("name", ["JANBOT_RATE_LIMIT", "JANBOT_DAILY_QUOTA"])
+def test_non_positive_limits_are_rejected(name: str) -> None:
+    with pytest.raises(ValueError, match=name):
+        load_config({name: "0"})

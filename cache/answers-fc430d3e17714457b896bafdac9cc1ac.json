@@ -1,0 +1,799 @@
+{
+  "metadata": {
+    "run_id": "fc430d3e17714457b896bafdac9cc1ac",
+    "date": "2026-10-20",
+    "model_mode": "production",
+    "requested_model": "openrouter/auto",
+    "routed_models": [
+      "deepseek/deepseek-v4-flash-0731",
+      "deepseek/deepseek-v4.1-flash-1017",
+      "google/gemini-2.5-flash",
+      "openai/gpt-6-luna",
+      "z-ai/glm-5.3-flash"
+    ],
+    "dataset": "eval/golden_dataset.yaml",
+    "dataset_sha256": "a8bd69dc10f0c9da5dc1b4d0c9639908c75323b7ced9671a0266a7d33ac11c90",
+    "corpus_commit": "bf0402369ab0820b7b180876f45d713c7e944e42",
+    "output_guard": "on",
+    "split": "val",
+    "corpus_sha256": "2cc21360c28f19eae7d635fb5adf860a18067950ba2a71b12bd331495f469670"
+  },
+  "entries": [
+    {
+      "question": "Why did you leave your last job after so many years there?",
+      "response": {
+        "status": "answered",
+        "answer": "After about a decade in a high-trust role where I felt aligned with the work, there was a leadership change, and I also went through a personal crisis. It made me reflect on what I wanted next, and I decided it was the right time to grow elsewhere. I’m grateful for what I learned during those years, and I see the move as a growth decision rather than a failure story.",
+        "citations": [
+          {
+            "source": "departure-narrative.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Have you implemented spec-first testing end to end, not just talked about it?",
+      "response": {
+        "status": "answered",
+        "answer": "Yes. I implemented Spec-First testing end to end in a TypeScript monorepo against the Kraken Pro trading UI: 149 commits, 50 specification documents, 4 completed epics, with evidence recorded from a live browser and verified offline against formal models. I also built JanBot, a production AI agent built spec-first and verified by tests from day one, demonstrating the approach scales from documents to deployed systems.",
+        "citations": [
+          {
+            "source": "reactive-testing-project.org"
+          },
+          {
+            "source": "janbot-ai-agent.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "deepseek/deepseek-v4-flash-0731"
+    },
+    {
+      "question": "Do you have full-stack experience?",
+      "response": {
+        "status": "answered",
+        "answer": "Yes. I built and maintained a Django e-commerce platform solo, owning the full lifecycle from database and backend through frontend and deployment. It has been in production for over 18 years, and I shaped its customer-facing workflows through in-person visits and feedback from the retailer’s team. My experience also includes systems work beyond web development, though that is not “full-stack” in the usual web sense.",
+        "citations": [
+          {
+            "source": "cdbazar.org"
+          },
+          {
+            "source": "matching-engine.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "What model modes does JanBot support and why?",
+      "response": {
+        "status": "answered",
+        "answer": "JanBot supports `eval` and `production` modes. `eval` is deterministic so tests and CI can reliably verify behavior; `production` is flexible because real-world AI responses can be probabilistic.",
+        "citations": [
+          {
+            "source": "janbot-ai-agent.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "What Clojure work did you do at Red Hat?",
+      "response": {
+        "status": "answered",
+        "answer": "At Red Hat, I maintained and extended the Clojure tests for subscription-manager. I also wrote Clojure libraries that bridged into the Java-based TestNG test infrastructure, with some tests written in Clojure alongside the existing Java tests.",
+        "citations": [
+          {
+            "source": "clojure-testing.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Do you have security or PKI experience?",
+      "response": {
+        "status": "answered",
+        "answer": "Yes, the provided context demonstrates significant experience in security and PKI. This includes deep technical knowledge of PKI, asymmetric cryptography, smartcard hardware, and certification authority workflows. The individual has operational experience running their own Certificate Authority (CA) using OpenSSL's `CA.pl` for encrypted tunnels and later applied this knowledge to guide clients through public certification processes in the NEPodpis project. The experience also includes a rare combination of PKI security in a QA/testing context.",
+        "citations": [
+          {
+            "source": "nepodpis.org"
+          },
+          {
+            "source": "linux-server-era.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "google/gemini-2.5-flash"
+    },
+    {
+      "question": "How do you use AI in your day-to-day work?",
+      "response": {
+        "status": "answered",
+        "answer": "I use AI in a spec-first workflow: I set the direction and constraints, break work into small steps, and review the outputs rather than handing over responsibility. I check the artifacts and evidence, not just whether I trust the AI, so its work stays verifiable. To keep my understanding aligned with what it produces, I also use a daily close: defend one decision against the ADR and run one runbook command by hand. The goal is for AI to help build while I remain the architect and take responsibility for the result.",
+        "citations": [
+          {
+            "source": "spec-first-pitch.org"
+          },
+          {
+            "source": "drift-closing-cadence.org"
+          },
+          {
+            "source": "spec-first-artifacts-in-git.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Tell me about yourself.",
+      "response": {
+        "status": "answered",
+        "answer": "I build systems whose output can be verified, not merely demonstrated. I work in Python and Perl by hand, Clojure by heart, and TypeScript with agents. I value stories as a way to know, success as fuel to grow, and trust and shared joy. In AI workflows, I see my role as architect rather than scribe: I maintain development direction, steer and review work, and plan in small, bounded steps—AI generates, but the human decides. My professional philosophy is shaped by eight foundational books covering organized thinking (GTD), growth mindset, deep work, purpose, leadership and trust, extreme ownership, building a second brain, and atomic habits.",
+        "citations": [
+          {
+            "source": "spec-first-pitch.org"
+          },
+          {
+            "source": "personal-intro.org"
+          },
+          {
+            "source": "foundational-books.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "deepseek/deepseek-v4.1-flash-1017"
+    },
+    {
+      "question": "What do you prefer - remote, onsite, or hybrid?",
+      "response": {
+        "status": "answered",
+        "answer": "I prefer remote work as the default. I’m open to coming onsite for genuinely personal, unstructured time with colleagues, but routine meetings and collaboration work well remotely.",
+        "citations": [
+          {
+            "source": "remote-work-conviction.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Where can I find the source for the eDeposit AMQP/pdfbox worker?",
+      "response": {
+        "status": "answered",
+        "answer": "The source is at https://github.com/edeposit/edeposit.amqp.pdfbox.",
+        "citations": [
+          {
+            "source": "edeposit.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Which of your projects can I inspect right now, and where?",
+      "response": {
+        "status": "answered",
+        "answer": "You can inspect these public references now:\n- JanBot: https://github.com/jstavel/janbot\n- Krakatoa matching engine: https://github.com/jstavel/krakatoa\n- Reactive Testing: https://github.com/jstavel/reactive_testing. Note: another project note says the prototype’s code is on Red Hat internal GitLab and has no public content, so that code may not be available in the public repository.\n- Personal OS / system design (gtd-org): https://github.com/jstavel/gtd-org\n- cdbazar: https://github.com/jstavel/cdbazar; live site: https://www.bazar-cd.cz\n- Clojure testing era: https://github.com/jstavel/test-clj.testng, https://github.com/jstavel/verify-testng, https://github.com/jstavel/bugzilla-testng, and https://github.com/jstavel/gnome.ldtp\n- Audio transcription pipeline: https://github.com/jstavel/python-audio-transcription\n- eDeposit: https://github.com/edeposit (including clj-amqp, amqp.pdfbox, and amqp.kramerius; this is the eDeposit organization)\n- rhsm-cockpit-qe: https://github.com/RedHatQE/rhsm-cockpit-qe\n- NEPodpis: https://www.brailcom.cz/projects (live site; no repository listed).\n\nOther work has no public reference in the proof map because it is internal, client-gated, or unpublished.",
+        "citations": [
+          {
+            "source": "public-proof-map.org"
+          },
+          {
+            "source": "reactive-testing-framework.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "You've been at this a long time - what can you bring that a younger engineer can't?",
+      "response": {
+        "status": "answered",
+        "answer": "I bring a combination of perspectives that’s hard to get from experience in just one discipline: I can explain technical ideas clearly to non-technical people, build with deployment and operations in mind, and design for failure from the start. I’ve also kept learning by exploring how systems actually work and trying things hands-on. And experience has taught me to clarify what’s needed, account for reviews and other dependencies when estimating, and surface process risks early. That means I can help connect the technical work to the people and systems around it—not just write the code.",
+        "citations": [
+          {
+            "source": "departure-narrative.org"
+          },
+          {
+            "source": "career-trajectory.org"
+          },
+          {
+            "source": "linux-origins-vut.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Have you done Infrastructure as Code?",
+      "response": {
+        "status": "answered",
+        "answer": "Yes. I’ve used Infrastructure as Code for provisioning and test environments, including Vagrant, and later Packer and Terraform. I also apply safety guardrails in infrastructure definitions, such as destroy protection and keeping infrastructure state versioned rather than deleted.",
+        "citations": [
+          {
+            "source": "vagrant-provisioning.org"
+          },
+          {
+            "source": "infrastructure-guardrails.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Why Clojure? What led you to it?",
+      "response": {
+        "status": "answered",
+        "answer": "The context doesn’t say what first drew me to Clojure. It does describe it as my true passion and shows how I put it to practical use: I built bridges between Clojure and Java’s TestNG infrastructure so the team could use Clojure without leaving its existing testing ecosystem.",
+        "citations": [
+          {
+            "source": "clojure-testing.org"
+          },
+          {
+            "source": "personal-intro.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "What is JanBot for?",
+      "response": {
+        "status": "answered",
+        "answer": "JanBot is a grounded AI career assistant. It makes its owner’s existing knowledge easier to access, provides citations, and serves it at scale; when the information isn’t available, it should refuse rather than make things up.",
+        "citations": [
+          {
+            "source": "janbot-value-proposition.org"
+          },
+          {
+            "source": "janbot-ai-agent.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Which services did your end-to-end tests run against at Red Hat, and on what platform?",
+      "response": {
+        "status": "answered",
+        "answer": "The end-to-end tests covered Cockpit and the RHSM (Red Hat Subscription Management) services. Those services were deployed on OpenShift, Red Hat’s Kubernetes-based container platform.",
+        "citations": [
+          {
+            "source": "openshift-kubernetes-bridge.org"
+          },
+          {
+            "source": "rhsm-cockpit-qe.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Why were you fired from Red Hat?",
+      "response": {
+        "status": "answered",
+        "answer": "The provided context does not say that I was fired from Red Hat or give a reason. It describes mentorship and technical work there, but not a termination.",
+        "citations": [
+          {
+            "source": "mentoring-downchain.org"
+          },
+          {
+            "source": "openshift-kubernetes-bridge.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right?",
+      "response": {
+        "status": "answered",
+        "answer": "That's incorrect. The work recorded under \"OpenShift\" in the corpus is indeed Kubernetes-platform experience, as OpenShift is Red Hat's distribution of Kubernetes. This includes tasks like setting up Jenkins CI/CD with agents built as Podman container images and debugging jobs on a shared cluster, as well as running end-to-end tests against services deployed on the container platform. The term \"Kubernetes\" might not appear directly in some records, but the underlying work involves container orchestration on a Kubernetes-based platform.",
+        "citations": [
+          {
+            "source": "openshift-kubernetes-bridge.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "google/gemini-2.5-flash"
+    },
+    {
+      "question": "Was your departure part of a Red Hat layoff?",
+      "response": {
+        "status": "answered",
+        "answer": "No. The departure was initiated by the engineer as a mutual, clean break; it was not forced or described as part of a layoff.",
+        "citations": [
+          {
+            "source": "departure-narrative.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "What did you name as weaknesses in your Jenkins and estimation work?",
+      "response": {
+        "status": "answered",
+        "answer": "In the Jenkins CI/CD work, the named weaknesses were:\n\n1. **No dedicated test environment for CI changes** — job changes were validated against the production Jenkins instance (the fear that \"it might break all the tests\" is what motivated the mini-seed pattern). The lesson: CI-as-code deserves its own staging environment; the mini-seed was only a lightweight approximation.\n2. **Orphaned resources / shared-infra cleanup** — after repeatedly spinning up a full Jenkins instance in a container while iterating on configuration, the torn-down instances left orphaned Jenkins agent pods running, which nearly filled the shared OpenShift cluster and made it almost unusable. A colleague cleaned them up. The lesson: on shared infrastructure, what you create has a lifecycle beyond what you see — always account for and clean up the whole resource tree.\n3. Relatedly, **debugging on shared infrastructure requires care** — config-as-code makes changes reproducible, but also makes mistakes reproducible.\n\nIn the estimation work, the named weakness was:\n\n4. **Self-referential estimation** — estimating effort from one's own working time alone, ignoring review waits and handoffs. The lesson: the calendar, not the keyboard, is the unit of estimation on a shared process.\n\n(The same narrative also names visibility dependency and over-delivery/scope creep as weaknesses, addressed by actively narrating contributions and using Spec-First to define \"done\" with stakeholders.)",
+        "citations": [
+          {
+            "source": "jenkins-openshift-cicd-operations.org"
+          },
+          {
+            "source": "departure-narrative.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "z-ai/glm-5.3-flash"
+    },
+    {
+      "question": "How did you move from systems engineering into quality engineering?",
+      "response": {
+        "status": "answered",
+        "answer": "The context frames it as a spiral rather than a ladder: after systems administration and programming roles, the move into quality engineering came through building intranets and retail automation in Perl and library messaging systems in Clojure + RabbitMQ, then moving into Senior QE at enterprise scale. Testing emerged as the natural intersection of deep systems knowledge and user empathy — “finding the edge before the customer does.”",
+        "citations": [
+          {
+            "source": "career-trajectory.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "deepseek/deepseek-v4.1-flash-1017"
+    },
+    {
+      "question": "How did your testing approach take shape over the years?",
+      "response": {
+        "status": "answered",
+        "answer": "The approach began taking shape in 2019 as Reactive Testing: separate what the system does from how it is verified, and use observations from real system runs as evidence rather than relying only on test-framework pass/fail results. The idea also emphasized reusing scenarios and other artifacts across development and testing, including in systems with many asynchronous parts. An attempt to apply this through ARA with Ansible and Robot Framework did not work because the platform was not suited to post-hoc validation. The philosophy later developed through Simulation-First shift-left testing into Spec-First: a human writes and reviews the specification as a contract, AI writes the code, and verification evaluates collected evidence.",
+        "citations": [
+          {
+            "source": "spec-first-philosophy.org"
+          },
+          {
+            "source": "rhsm-ansible-qe.org"
+          },
+          {
+            "source": "reactive-testing-origin.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Where can a recruiter verify your project claims?",
+      "response": {
+        "status": "answered",
+        "answer": "Recruiters can verify project claims through the public references in the proof map: JanBot (https://github.com/jstavel/janbot), Krakatoa (https://github.com/jstavel/krakatoa), Reactive Testing (https://github.com/jstavel/reactive_testing), cdbazar (https://github.com/jstavel/cdbazar; live at https://www.bazar-cd.cz), and the other listed GitHub repositories and live sites. Some work has no public reference because it is internal, client-gated, or unpublished; those projects should be identified honestly rather than assigned an invented link.",
+        "citations": [
+          {
+            "source": "public-proof-map.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "How did your Linux experience develop, from Linux From Scratch to production servers?",
+      "response": {
+        "status": "answered",
+        "answer": "My Linux experience began with Slackware in the mid-1990s: I compiled kernels to add a Novell module and explore new subsystems, then moved to Debian after struggling with Red Hat’s RPM dependency handling. Later, as a high-school IT administrator, I built a Linux From Scratch system small enough for a 1.44MB floppy, with just netcat and `dd`, to clone Windows 95 machines over the network. That shows a progression from learning Linux’s internals to applying those fundamentals to a practical systems-administration task. The context does not describe work on production servers, so I can’t detail that part of the progression.",
+        "citations": [
+          {
+            "source": "linux-from-scratch.org"
+          },
+          {
+            "source": "linux-origins-vut.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "What monitoring stack did you build for the testing-at-scale proof of concept?",
+      "response": {
+        "status": "answered",
+        "answer": "The proof of concept used Grafana and Prometheus, CCT, node_exporter with custom metrics, and Ansible automation for deployment, forming a full monitoring pipeline.",
+        "citations": [
+          {
+            "source": "departure-narrative.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "What did you build to monitor Red Hat QA systems?",
+      "response": {
+        "status": "answered",
+        "answer": "I built a working prototype of an event-driven testing framework that monitored DBus, inotify, and REST API through reactive streams.",
+        "citations": [
+          {
+            "source": "reactive-testing-framework.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "deepseek/deepseek-v4-flash-0731"
+    },
+    {
+      "question": "What was the OpenShift platform work at Red Hat, and what ran on it?",
+      "response": {
+        "status": "answered",
+        "answer": "The OpenShift work at Red Hat was Kubernetes-platform work: OpenShift is Red Hat's Kubernetes distribution, so the container-platform experience recorded under the name 'OpenShift' is effectively Kubernetes experience (the word 'Kubernetes' simply never appears in the records, which is why a vocabulary-bridge object was created to make this explicit). Two things ran on it: (1) Jenkins CI/CD on OpenShift — job definitions as code, the seed job, agents built as Podman container images, and debugging single jobs safely on a large shared cluster; and (2) Cockpit (web UI) tests using the RHSM Ansible + Robot Framework architecture — end-to-end tests run against services deployed on the same container platform.",
+        "citations": [
+          {
+            "source": "openshift-kubernetes-bridge.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "z-ai/glm-5.3-flash"
+    },
+    {
+      "question": "You only ever wrote playbooks - you never touched the container platform itself, right?",
+      "response": {
+        "status": "answered",
+        "answer": "No. You did more than write playbooks: you worked with Jenkins CI/CD on OpenShift, including Jenkins agents running as pods, and dealt with the lifecycle of resources left behind on the shared cluster. The Cockpit tests and RHSM Ansible/Robot Framework work also ran against services on that platform. Since OpenShift is Red Hat’s Kubernetes distribution, that counts as container-platform experience—not just playbook work.",
+        "citations": [
+          {
+            "source": "jenkins-openshift-cicd-operations.org"
+          },
+          {
+            "source": "openshift-kubernetes-bridge.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Which asynchronous systems have you worked with, and how did they differ?",
+      "response": {
+        "status": "answered",
+        "answer": "The asynchronous systems span roughly two decades and differ mainly in technology layer and domain, while sharing one underlying principle — that systems are fundamentally asynchronous:\n\n1. **Perl POE (2003)** — the first event-driven programming experience.\n2. **Twisted Deferred in CoreNet (2005)** — async orchestration in Python.\n3. **PostgreSQL → RabbitMQ (2007)** — persistent queues with fail-over; this was also the first convergence point, where PostgreSQL CDC via triggers (Code as Data) met event streaming (Async).\n4. **Plone → AMQP Broker → Workers (2013)** — event-driven enterprise architecture. In the eDeposit system, Plone events were published to RabbitMQ and consumed asynchronously by decoupled, resilient workers, including a dedicated Clojure AMQP worker (edeposit.amqp.kramerius) that bridged eDeposit to the Kramerius publication system.\n5. **RxJS/RxPy (2016)** — reactive extensions, with Kafka under consideration.\n6. **CandleCon RxPy examples (2020)** — reactive patterns applied to DBus, inotify, and REST.\n7. **Krakatoa matching engine (2026)** — an event-driven market simulation, deliberately split between Rust for the zero-allocation, deterministic-latency engine and Clojure for the orchestration layer.\n\nHow they differed: the tooling evolved from event-loop frameworks (POE, Twisted), to persistent message brokers (RabbitMQ/AMQP), to reactive extension libraries (Rx), to a full event-driven trading system — and the domains shifted across telecom/intranets, digital preservation, enterprise testing, and trading. What did not change was the principle: tools changed, the event-driven approach did not, with each adoption (event streaming in 2007, reactive in 2016) arriving before the buzzword did.",
+        "citations": [
+          {
+            "source": "edeposit.org"
+          },
+          {
+            "source": "dna-threads.org"
+          },
+          {
+            "source": "matching-engine.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "z-ai/glm-5.3-flash"
+    },
+    {
+      "question": "What ran on the OpenShift platform, and how does it relate to Kubernetes?",
+      "response": {
+        "status": "answered",
+        "answer": "Jenkins CI/CD and Cockpit web-UI tests (using the RHSM Ansible and Robot Framework architecture) ran on OpenShift. OpenShift is Red Hat’s Kubernetes distribution, so this work represents Kubernetes-platform experience.",
+        "citations": [
+          {
+            "source": "openshift-kubernetes-bridge.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "As a teacher-turned-engineer, you obviously lack formal computer science training, right?",
+      "response": {
+        "status": "answered",
+        "answer": "That isn’t established by the information here. I taught computer science and physics at secondary school, then moved into systems administration and programming, building practical experience across each domain. The context doesn’t say whether I had formal computer science training.",
+        "citations": [
+          {
+            "source": "career-trajectory.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Your Jenkins setup must have broken production at some point - tell me about the outage you caused.",
+      "response": {
+        "status": "answered",
+        "answer": "The context doesn’t describe a confirmed production outage, but it does describe a serious incident the author caused on shared infrastructure: while iterating on a full Jenkins instance launched from JCasC in a container, he repeatedly re-created the instance, and the Jenkins agent pods it spawned were orphaned and kept running. A teammate reported that the shared OpenShift cluster was nearly full of pods and almost unusable. A colleague cleaned them up, and the lesson was to tear down the whole resource tree—agents, pods, volumes—because ephemeral top-level resources can leave orphaned children consuming shared capacity. The context also notes a related weakness: there was no dedicated test environment for CI changes, so job changes were validated against the production Jenkins instance.",
+        "citations": [
+          {
+            "source": "jenkins-openshift-cicd-operations.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "deepseek/deepseek-v4.1-flash-1017"
+    },
+    {
+      "question": "What is Spec-First, and where did it come from?",
+      "response": {
+        "status": "answered",
+        "answer": "Spec-First is a way of working where an up-to-date specification is the main source of truth: it sets out the vision, goals, steps, and milestones, and AI generates code from it. The spec gives the work direction and helps keep both the AI and the person on track rather than letting the AI hallucinate or wander. It came from a working style the author was already using—structuring work around a spec for each task, iteration, and work summaries—before it had a name. The author connects its development to a broader progression from QECamp through behave and simulation-first to spec-first. Tools such as spec-kit and BMAD-Method support this approach.",
+        "citations": [
+          {
+            "source": "spec-first-pitch.org"
+          },
+          {
+            "source": "spec-first-philosophy.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "What is the visibility dependency you have written about?",
+      "response": {
+        "status": "answered",
+        "answer": "Visibility dependency is the pattern where real capability is invisible to a keyword scan — work that can't be found or recognized because its surface description doesn't convey its substance. Examples in the corpus: JanBot being invisible to a keyword scan because 'Python, FastAPI, ChromaDB' says nothing about the architectural thinking, fail-closed design, or testing maturity; the OpenShift work being unreachable by Kubernetes questions unless made retrievable; a validated reactive-testing idea that never achieved team-wide adoption because without change management and visibility it stayed at the individual contributor level; and a decade of work plus a personal crisis becoming invisible to new leadership, with the lesson to narrate your contribution actively rather than assume it speaks for itself.",
+        "citations": [
+          {
+            "source": "janbot-ai-agent.org"
+          },
+          {
+            "source": "openshift-kubernetes-bridge.org"
+          },
+          {
+            "source": "reactive-testing-origin.org"
+          },
+          {
+            "source": "departure-narrative.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "z-ai/glm-5.3-flash"
+    },
+    {
+      "question": "You didn't build that monitoring stack yourself - you copied it from a tutorial, right?",
+      "response": {
+        "status": "answered",
+        "answer": "The context doesn’t say whether you used any tutorials, so I can’t rule that out. It does describe the stack as work you built for a neighboring team, using a spec-first process with proposals, specifications, and task breakdowns—not as a tutorial copy.",
+        "citations": [
+          {
+            "source": "insights-health-monitoring.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Your mentoring was just code review, not real coaching, right?",
+      "response": {
+        "status": "answered",
+        "answer": "No. The context shows it was a formal company mentoring program at Red Hat, and the mentee’s written feedback describes real coaching: making space for questions, listening and guiding without judgment, giving direction and confidence, and being open, easy-going, and “very real” rather than a typical formal mentorship. The mentee also credits the mentorship as a contributing factor in their promotion from ASME to SME.",
+        "citations": [
+          {
+            "source": "mentoring-downchain.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "deepseek/deepseek-v4.1-flash-1017"
+    },
+    {
+      "question": "You only automated things for yourself, never for the team, right?",
+      "response": {
+        "status": "answered",
+        "answer": "No. I automated things to make life easier for both myself and the team—for example, writing Ansible playbooks that also served as living documentation in Jira tickets.",
+        "citations": [
+          {
+            "source": "departure-narrative.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "What is the Beaker CI you worked with?",
+      "response": {
+        "status": "answered",
+        "answer": "Beaker CI was part of the production test infrastructure for the RHSM Ansible QE project. It ran as part of the team’s daily CI/CD pipeline for years, alongside a large test suite of 60+ playbooks and custom plugins. The context does not provide further details about Beaker’s configuration or operation.",
+        "citations": [
+          {
+            "source": "rhsm-ansible-qe.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "What are the custom metrics in your monitoring stack?",
+      "response": {
+        "status": "answered",
+        "answer": "The custom metrics covered Insights Client successful and failed uploads, core updates, client and core versions, GA-versus-Canary channel comparisons, and RHSM system registration status. The stack also included custom Node Exporter metrics for system-level observability.",
+        "citations": [
+          {
+            "source": "insights-health-monitoring.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Your Python work is just glue scripts, not real systems work, right?",
+      "response": {
+        "status": "answered",
+        "answer": "No. Python is described as an expert, hand-written skill backed by real delivery across two decades. The work is focused on systems whose output can be verified, with asynchronous systems and invariant testing as areas of focus—not merely glue scripts.",
+        "citations": [
+          {
+            "source": "personal-intro.org"
+          },
+          {
+            "source": "substitutable-ai.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "The matching engine is a toy, not a real product, right?",
+      "response": {
+        "status": "answered",
+        "answer": "Not exactly. Krakatoa is described as a high-throughput Clojure/Rust matching engine with a zero-allocation hot path, built as proof-of-work for the spec-kit framework. The context doesn’t establish that it’s a deployed commercial product, though.",
+        "citations": [
+          {
+            "source": "matching-engine.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "You learned Kubernetes from a cheat sheet, not from real work, right?",
+      "response": {
+        "status": "answered",
+        "answer": "No. The recorded experience includes hands-on work on OpenShift, Red Hat’s Kubernetes distribution: running Jenkins agents and debugging an incident where orphaned agent pods nearly filled a shared cluster. The work was documented under “OpenShift,” rather than “Kubernetes.” Some Kubernetes areas are described as learning goals, not established expertise.",
+        "citations": [
+          {
+            "source": "openshift-kubernetes-bridge.org"
+          },
+          {
+            "source": "jenkins-openshift-cicd-operations.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "The eDeposit work was just one library - not substantial, right?",
+      "response": {
+        "status": "answered",
+        "answer": "No. Although it was for one institution—the National Library—the work supported a substantial publishing workflow: librarians used eDeposit to process, validate, and archive publishers’ digital publications into the Long-Term Preservation system. The work included designing the architecture that became the foundation, building the Clojure backend with XML processing, and creating the librarian-facing forms and workflow. The team grew from two to three developers.",
+        "citations": [
+          {
+            "source": "edeposit.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "You never actually ran anything in CI - it was just talk, right?",
+      "response": {
+        "status": "answered",
+        "answer": "No. The context says the Ansible test architecture ran in the team’s daily CI/CD pipeline for years. It also describes Jenkins work validated against a production instance, with a mini-seed job used to iterate on individual job changes. There was no dedicated staging environment for CI changes, but that’s different from not running anything in CI.",
+        "citations": [
+          {
+            "source": "rhsm-ansible-qe.org"
+          },
+          {
+            "source": "jenkins-openshift-cicd-operations.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "How do you handle credentials and secrets?",
+      "response": {
+        "status": "answered",
+        "answer": "I treat secret handling as a progression from storing secrets more safely toward avoiding long-lived secrets altogether. In past delivery work, I used git-crypt, Ansible Vault, and HashiCorp Vault. The design I’m building toward uses short-lived tokens obtained through a 2FA-protected account to impersonate service accounts, with roles based on the type of work and least privilege. I keep credentials out of dotfiles and use a 2FA-protected vault for credentials and tokens; static service-account key files are an anti-pattern, not a default. I’m building and verifying the cloud IAM and workload-identity mechanics now, and am still learning how to scope policies and verify that agents receive only what they need.",
+        "citations": [
+          {
+            "source": "secret-management-evolution.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Have you ever had to maintain someone else's legacy code?",
+      "response": {
+        "status": "answered",
+        "answer": "Yes. As an independent contractor he took over and extended a complicated information system for a law firm written in PHP, extending it module by module, following browser debug output, and iterating until it worked. Around the same period he also worked on WordPress — templates, hosting configuration, `.htaccess`, and debugging other people's installations. The honest limit he states is that he never got the architect's view: he carried the complexity without ever fully seeing it, and to this day does not fully know why that system was written the way it was.",
+        "citations": [
+          {
+            "source": "php-to-django-arc.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "deepseek/deepseek-v4.1-flash-1017"
+    },
+    {
+      "question": "How do you debug a problem you cannot reproduce locally?",
+      "response": {
+        "status": "answered",
+        "answer": "When the failing state exists only on the running system and cannot be reproduced locally, the approach described is to put the observation point where the state actually is: use the same breakpoint on the live production system during a quiet, low-traffic evening window, inspect the real state at the chosen line, and with debug output enabled fix the defect online. This is a deliberate production intervention contained by timing and judgement rather than by design. The context also notes the limit of the “smallest instance” rule: when the failing state cannot be reproduced outside production, shrinking is impossible, so containment becomes the substitute.",
+        "citations": [
+          {
+            "source": "pdb-emacs-debugging.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "deepseek/deepseek-v4.1-flash-1017"
+    },
+    {
+      "question": "How do you keep up with your own AI-assisted work?",
+      "response": {
+        "status": "answered",
+        "answer": "I close the gap between what AI produces and what I can reproduce through scheduled habits, not by assuming I’ll absorb it along the way: I maintain a compressed, growing onboarding document; set aside a weekly block with no development; and end each day by defending one decision against the ADR and running one runbook command by hand. The cadence is intended to close the drift, though it is not yet fully established and the drift can still outrun it.",
+        "citations": [
+          {
+            "source": "drift-closing-cadence.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Does the AI have to be substitutable too, and are you?",
+      "response": {
+        "status": "answered",
+        "answer": "Yes. The AI is a team member, so it must be replaceable without loss of quality; the same rule applies to the human working with it. As for me: I should be able to reproduce by hand the work I ship. I can’t honestly claim that I’m fully substitutable in every area—the context acknowledges gaps such as TypeScript without AI and needing to refresh Clojure. Where I can’t yet carry the work myself, I should say so and have a deliberate plan to build the skill.",
+        "citations": [
+          {
+            "source": "substitutable-ai.org"
+          },
+          {
+            "source": "knowledge-drift.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    }
+  ]
+}

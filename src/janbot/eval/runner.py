@@ -99,6 +99,23 @@ def _normalized_citations(program: Callable[..., ChatResponse]) -> int | None:
     return None if count is None else int(count)
 
 
+def _routed_model(program: Callable[..., ChatResponse]) -> str | None:
+    """The provider-reported model for the last LM call, from DSPy's history.
+
+    ``openrouter/auto`` may route per call; the history entry records the
+    ``response_model`` the provider actually served. This is observability only:
+    it never enters a metric or the ``/chat`` contract.
+    """
+    predict = getattr(program, "_answer", None)
+    lm = getattr(predict, "lm", None)
+    history = getattr(lm, "history", None)
+    if not history:
+        return None
+    entry = history[-1]
+    model = entry.get("response_model") or entry.get("model")
+    return str(model) if model else None
+
+
 def _evaluate(
     items: list[GoldenItem],
     program: Callable[..., ChatResponse],
@@ -138,6 +155,7 @@ def _evaluate(
                     raw_citations=_raw_citations(program),
                     guard_action=_guard_action(program),
                     normalized_citations=_normalized_citations(program),
+                    routed_model=_routed_model(program),
                     judge_verdict=None,
                 )
             )
@@ -154,6 +172,7 @@ def _evaluate(
                     raw_citations=_raw_citations(program),
                     guard_action=_guard_action(program),
                     normalized_citations=_normalized_citations(program),
+                    routed_model=_routed_model(program),
                     judge_verdict=None,
                 )
             )
@@ -178,6 +197,7 @@ def _evaluate(
                 raw_citations=_raw_citations(program),
                 guard_action=_guard_action(program),
                 normalized_citations=_normalized_citations(program),
+                routed_model=_routed_model(program),
                 judge_verdict=verdict,
             )
         )

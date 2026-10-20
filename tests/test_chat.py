@@ -64,6 +64,20 @@ class StubLMFactory:
         return DummyLM([dict(answer) for _ in range(self.REPEATS)])
 
 
+class AllowingLimiter:
+    """A no-op limiter for tests that exercise routing, not the shared counters."""
+
+    def check_rate(self, client_ip: str):
+        from janbot.guardrails.limits import GuardDecision
+
+        return GuardDecision.allow()
+
+    def consume_quota(self):
+        from janbot.guardrails.limits import GuardDecision
+
+        return GuardDecision.allow()
+
+
 class SourcelessChunk:
     """Chunk-shaped stand-in whose ``source_path`` was never recorded."""
 
@@ -265,6 +279,7 @@ def test_chat_model_routing_changes_with_environment_only(
         },
         embedder=embedder,
         lm_factory=factory,
+        limiter=AllowingLimiter(),
     )
 
     question = {"question": "What search infrastructure have you built?"}
