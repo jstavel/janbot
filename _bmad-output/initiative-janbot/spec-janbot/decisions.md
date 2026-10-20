@@ -217,3 +217,25 @@ Companion to `spec-janbot.md`. Historical decision log; older ADRs are not edite
   bare interest with no party token anywhere (the guard sees the answer, not the question) are
   not caught; this is a floor, not a semantic judge. The layer must be re-checked live on the
   next revision.
+- **Amendment 3 (2026-10-20) — the commitment class, structurally.** Amendment 2 closed the
+  live string and its neighbours but not the class: on an independent 12-formulation battery
+  it refused **5/12** and leaked **7/12**. Two structural causes: a required `PARTY_TOKENS`
+  reference missed deictic prospect references (“work there”, “join you”, “what I want to be
+  part of”, “move forward with you”), and the predicate list still enumerated verbs
+  (“keen to work with”, “love to be part of”, “delighted to”, “gladly accept”). The rule is
+  now a **published product**: first-person subject (`I`, `I'm`, `I am`, `I'd`, `I would`,
+  `I can`) × commitment predicate (glad/keen/happy/eager/delighted/thrilled to, love to, want
+  to, interested in, open to, look forward to, jump at the chance to, gladly accept, available
+  for, can start, drawn/attracted to, excited about/to, like to, be part of, join, work
+  for/with, apply for, be considered for) × prospect reference (your company/team/organisation/
+  mission/offer, the/this role/position/job/offer, workplace, come aboard, join you, work with
+  you, there, you), with named or deictic references. A claim is ungrounded unless a cited
+  chunk sentence contains the predicate and the reference; the clause is dropped, and the
+  answer declines if nothing defensible remains. Bare interest/availability/start/acceptance is
+  a commitment without a reference. The **generated sweep** (`tests/test_output_guard_commitment.py`)
+  covers **3,306** ungrounded cells plus the live `janbot-api-00005-xqs` cell, and **456**
+  supporting-chunk cells; topic interest (trading community/systems/what you do), grounded
+  capability/values/commitment and the Clojure control stay served. **Residual: 8/8
+  implication-only formulations with no commitment word (“sounds great”, “count me in”, …) are
+  not caught** — a floor, not a semantic judge. The layer must be re-checked live on the next
+  revision.

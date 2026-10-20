@@ -23,9 +23,9 @@ from dataclasses import dataclass, field
 
 from janbot.guardrails.lexicon import (
     CLAUSE_CONNECTORS,
-    COMMITMENT_MARKERS,
+    COMMITMENT_PREDICATES,
     MARKERS,
-    PARTY_TOKENS,
+    PROSPECT_REFERENCES,
     SUBJECT_TOKENS,
 )
 
@@ -92,38 +92,7 @@ def _subject_tokens_in(text: str) -> list[str]:
     return [token for token in SUBJECT_TOKENS if _contains(text, token)]
 
 
-def _party_tokens_in(text: str) -> list[str]:
-    return [token for token in PARTY_TOKENS if _contains(text, token)]
-
-
-def _marker_windows(sentence: str) -> list[tuple[str, str]]:
-    """Yield ``(chunk_phrase, forward_window)`` for each marker in the sentence.
-
-    The subject must sit in the marker's **forward claim window** — the text after the
-    marker. A subject token earlier in the sentence is not necessarily the marker's object;
-    ignoring it prevents dropping a grounded sentence such as "…expertise in Python and
-    Perl … with a strong foundation in asynchronous systems".
-    """
-    lowered = sentence.lower()
-    windows: list[tuple[str, str]] = []
-    for marker in MARKERS:
-        for match in _phrase_pattern(marker.answer_phrase).finditer(lowered):
-            window = sentence[match.end() : match.end() + _CLAIM_WINDOW]
-            if window.strip():
-                windows.append((marker.chunk_phrase, window))
-    return windows
-
-
-def _commitment_marker_windows(sentence: str) -> list[tuple[object, str]]:
-    """Yield ``(marker, forward_window)`` for each commitment/interest marker."""
-    lowered = sentence.lower()
-    windows: list[tuple[object, str]] = []
-    for marker in COMMITMENT_MARKERS:
-        for match in _phrase_pattern(marker.answer_phrase).finditer(lowered):
-            window = sentence[match.end() : match.end() + _CLAIM_WINDOW]
-            if window.strip():
-                windows.append((marker, window))
-    return windows
+_FIRST_PERSON = re.compile(r"\b(?:i|i'm|i am|i'd|i would|i can)\b", re.I)
 
 
 def _marker_is_grounded(chunk_phrase: str, cited_chunk_texts: Sequence[str]) -> bool:
@@ -131,27 +100,62 @@ def _marker_is_grounded(chunk_phrase: str, cited_chunk_texts: Sequence[str]) -> 
     return any(_contains(chunk_text, chunk_phrase) for chunk_text in cited_chunk_texts)
 
 
+def _commitment_grounded(predicate: object, reference: object, cited: Sequence[str]) -> bool:
+    """Whether a cited chunk sentence contains both the predicate and the reference."""
+    for chunk_text in cited:
+        for chunk_sentence in _split_sentences(chunk_text):
+            if _contains(chunk_sentence, predicate.chunk_phrase) and re.search(
+                reference.pattern, chunk_sentence, re.I
+            ):
+                return True
+    return False
+
+
 def _commitment_claim_is_ungrounded(
     clause: str, cited_chunk_texts: Sequence[str]
 ) -> bool:
-    """Whether the clause carries an ungrounded commitment/interest claim.
+    """Whether the clause carries a first-person commitment/interest claim.
 
-    A party-required marker needs a party noun in its forward window; without one
-    it is a topic interest and is left to the capability rule. A standalone
-    commitment marker is checked on its own.
+    The rule is structural: a first-person subject, a commitment predicate from the
+    published predicate axis, and a named or deictic prospect reference. A bare
+    predicate (interest, availability, start, acceptance) is a commitment without a
+    reference. The claim is an over-claim when no cited chunk sentence contains the
+    predicate and the reference. Topic interest has no prospect reference and is
+    left to the capability rule.
     """
-    for marker, window in _commitment_marker_windows(clause):
-        if marker.party_required:
-            parties = _party_tokens_in(window)
-            if not parties:
+    if _FIRST_PERSON.search(clause) is None:
+        return False
+    grounded_spans: list[tuple[int, int]] = []
+    ungrounded_spans: list[tuple[int, int]] = []
+    for predicate in COMMITMENT_PREDICATES:
+        for match in re.finditer(predicate.pattern, clause, re.I):
+            references = [
+                reference
+                for reference in PROSPECT_REFERENCES
+                if re.search(reference.pattern, clause, re.I)
+            ]
+            if references:
+                grounded = all(
+                    _commitment_grounded(predicate, reference, cited_chunk_texts)
+                    for reference in references
+                )
+            elif predicate.bare:
+                grounded = _marker_is_grounded(
+                    predicate.chunk_phrase, cited_chunk_texts
+                )
+            else:
                 continue
-            if not all(
-                _is_grounded(marker.chunk_phrase, party, cited_chunk_texts)
-                for party in parties
-            ):
-                return True
-        elif not _marker_is_grounded(marker.chunk_phrase, cited_chunk_texts):
-            return True
+            if grounded:
+                grounded_spans.append(match.span())
+            else:
+                ungrounded_spans.append(match.span())
+    for start, end in ungrounded_spans:
+        if any(
+            ground_start <= start and end <= ground_end
+            for ground_start, ground_end in grounded_spans
+        ):
+            continue
+        return True
     return False
 
 
@@ -174,6 +178,18 @@ def _split_clauses(sentence: str) -> tuple[list[str], list[str]]:
         connectors.append(parts[index])
         clauses.append(parts[index + 1])
     return clauses, connectors
+
+
+def _marker_windows(sentence: str) -> list[tuple[str, str]]:
+    """Yield ``(chunk_phrase, forward_window)`` for each capability marker."""
+    lowered = sentence.lower()
+    windows: list[tuple[str, str]] = []
+    for marker in MARKERS:
+        for match in _phrase_pattern(marker.answer_phrase).finditer(lowered):
+            window = sentence[match.end() : match.end() + _CLAIM_WINDOW]
+            if window.strip():
+                windows.append((marker.chunk_phrase, window))
+    return windows
 
 
 def _clause_is_overclaim(clause: str, cited_chunk_texts: Sequence[str]) -> bool:
@@ -279,11 +295,18 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
     kept: list[str] = []
     dropped_sentences: list[str] = []
     dropped_clauses: list[str] = []
+    commitment_dropped = False
     for sentence in _split_sentences(answer):
         clauses, connectors = _split_clauses(sentence)
-        keep = [
-            not _clause_is_overclaim(clause, cited_chunk_texts) for clause in clauses
-        ]
+        keep: list[bool] = []
+        for clause in clauses:
+            commitment_over = _commitment_claim_is_ungrounded(
+                clause, cited_chunk_texts
+            )
+            commitment_dropped = commitment_dropped or commitment_over
+            keep.append(
+                not (commitment_over or _clause_is_overclaim(clause, cited_chunk_texts))
+            )
         if all(keep):
             kept.append(sentence)
             continue
@@ -308,7 +331,7 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
             citations=[],
             declined=True,
             reason="the answer became empty after dropping ungrounded over-claims",
-            rule="D2-empty",
+            rule="commitment-claim" if commitment_dropped else "D2-empty",
             dropped_citations=dropped,
             dropped_sentences=dropped_sentences,
             dropped_clauses=dropped_clauses,
@@ -326,6 +349,8 @@ def _guard(answer: str, citations: Sequence[str], retrieved_chunks: Sequence[Map
         if d2
         else ""
     )
+    if commitment_dropped:
+        rule = f"{rule} + commitment".strip() if rule else "commitment"
     return GuardResult(
         answer=repaired,
         citations=valid,

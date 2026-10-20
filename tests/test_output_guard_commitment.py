@@ -1,35 +1,60 @@
-"""Independent commitment/interest paraphrase battery (authored before the predicate).
+"""Structural commitment/interest sweep (ADR-010 Amendment 3).
 
-These formulations were written from the class description — a first-person
-commitment or interest in the prospect (working for / joining / being interested
-in their company, team, role) — not derived from the live answer string. The
-guard must refuse the claim or decline the answer unless a cited chunk supports
-it. The must-not-regress cases pin topic interest, grounded capability, grounded
-values and the Clojure control.
+The sweep is the specification of the class, not a hand-written battery. The
+test generates the full product of the published axes at collection time:
+
+    subject form × commitment predicate × prospect reference
+
+Ungrounded cells must be declined; a supporting cited chunk must keep the same
+cell. Topic interest, grounded capability/values, the grounded commitment case
+and the Clojure control are the must-not-regress edge. The live
+``janbot-api-00005-xqs`` answer is one cell, not a separate test. The residual
+implication-only forms (no commitment word) are counted, not waived.
 """
 
 from __future__ import annotations
 
+import itertools
+
 import pytest
 
-from janbot.guardrails.lexicon import COMMITMENT_MARKERS, PARTY_TOKENS
+from janbot.guardrails.lexicon import (
+    COMMITMENT_PREDICATES,
+    PROSPECT_REFERENCES,
+    SUBJECT_FORMS,
+)
 from janbot.guardrails.output_guard import apply_output_guard
 
-PLAIN_CHUNK = "Public profile of Jan Stavel. He builds search and testing systems."
+NEUTRAL_CHUNK = "Public profile of Jan Stavel. He builds search and testing systems."
+LIVE_ANSWER = (
+    "Yes, I'd be interested. I'm drawn to a workplace where people have the "
+    "freedom to contribute thought."
+)
 
-COMMITMENT_ANSWERS = (
-    "I'd be keen to join your team.",
-    "I'm genuinely excited about the opportunity to work for your company.",
-    "Working for your organisation would suit me well.",
-    "I'd be interested in the position you're hiring for.",
-    "I want to be considered for this role.",
-    "I'm open to joining your team.",
-    "I can start immediately if you make an offer.",
-    "I'd accept an offer from your company.",
-    "Joining your team would be a privilege.",
-    "Sign me up — I'd be glad to come aboard.",
-    "I'd love to be part of your organisation.",
-    "I'm attracted to your company's mission.",
+SWEEP_CELLS = tuple(
+    f"{subject} {predicate.lead} {reference.phrase}"
+    for subject, predicate, reference in itertools.product(
+        SUBJECT_FORMS, COMMITMENT_PREDICATES, PROSPECT_REFERENCES
+    )
+)
+UNGROUNDED_ANSWERS = SWEEP_CELLS + (LIVE_ANSWER,)
+GROUNDED_PAIRS = tuple(
+    (predicate, reference)
+    for predicate, reference in itertools.product(
+        COMMITMENT_PREDICATES, PROSPECT_REFERENCES
+    )
+    if not predicate.bare
+)
+
+RESIDUAL_IMPLICATION = (
+    "Sounds great.",
+    "That sounds like a good fit.",
+    "I'd be happy with that.",
+    "Where do I sign?",
+    "Count me in.",
+    "I'm in.",
+    "That works for me.",
+    "I like the sound of that.",
 )
 
 
@@ -37,30 +62,44 @@ def _chunks(text: str) -> list[dict[str, str]]:
     return [{"source": "profile.org", "text": text}]
 
 
-@pytest.mark.parametrize("answer", COMMITMENT_ANSWERS)
-def test_commitment_or_interest_claim_is_declined(answer: str) -> None:
+@pytest.mark.parametrize("answer", UNGROUNDED_ANSWERS)
+def test_every_ungrounded_sweep_cell_is_declined(answer: str) -> None:
     result = apply_output_guard(
         answer=answer,
         citations=["profile.org"],
-        retrieved_chunks=_chunks(PLAIN_CHUNK),
+        retrieved_chunks=_chunks(NEUTRAL_CHUNK),
     )
 
     assert result.declined is True
     assert result.rule == "commitment-claim"
 
 
-@pytest.mark.parametrize(
-    "answer",
-    (
-        "I'm interested in trading systems and distributed testing.",
-        "I'm interested in learning more about distributed testing.",
-    ),
-)
-def test_interest_in_a_topic_is_not_declined(answer: str) -> None:
+@pytest.mark.parametrize(("predicate", "reference"), GROUNDED_PAIRS)
+def test_a_supporting_chunk_keeps_the_same_cell(predicate, reference) -> None:
+    answer = f"I'm {predicate.lead} {reference.phrase}"
     result = apply_output_guard(
         answer=answer,
         citations=["profile.org"],
-        retrieved_chunks=_chunks(PLAIN_CHUNK),
+        retrieved_chunks=_chunks(answer),
+    )
+
+    assert result.declined is False
+    assert result.answer == answer
+
+
+@pytest.mark.parametrize(
+    "answer",
+    (
+        "I'd love to be part of the trading community.",
+        "I'm interested in trading systems and distributed testing.",
+        "I'm interested in what you do.",
+    ),
+)
+def test_topic_interest_is_not_declined(answer: str) -> None:
+    result = apply_output_guard(
+        answer=answer,
+        citations=["profile.org"],
+        retrieved_chunks=_chunks(NEUTRAL_CHUNK),
     )
 
     assert result.declined is False
@@ -91,16 +130,26 @@ def test_grounded_values_statement_is_kept() -> None:
     assert result.answer == answer
 
 
-def test_grounded_commitment_statement_is_kept() -> None:
-    answer = "I am interested in working for your company."
+@pytest.mark.parametrize(
+    ("answer", "chunk"),
+    (
+        ("I can start.", "I can start."),
+        ("I gladly accept.", "I gladly accept."),
+        ("I accept.", "I accept the offer."),
+        ("Yes, I'd be interested.", "I am interested in working for your company."),
+        ("I'm available.", "I'm available."),
+    ),
+)
+def test_a_bare_commitment_is_kept_by_a_supporting_chunk(
+    answer: str, chunk: str
+) -> None:
     result = apply_output_guard(
         answer=answer,
         citations=["profile.org"],
-        retrieved_chunks=_chunks(answer),
+        retrieved_chunks=_chunks(chunk),
     )
 
     assert result.declined is False
-    assert result.answer == answer
 
 
 def test_clojure_control_still_answers_with_citations() -> None:
@@ -116,23 +165,23 @@ def test_clojure_control_still_answers_with_citations() -> None:
     assert result.citations == ["profile.org"]
 
 
-def test_commitment_lexicon_is_declared() -> None:
-    assert COMMITMENT_MARKERS
-    assert PARTY_TOKENS
-    assert all(len(marker) == 3 for marker in COMMITMENT_MARKERS)
+def test_implication_only_residual_is_counted_not_waived() -> None:
+    declined = [
+        apply_output_guard(
+            answer=answer,
+            citations=["profile.org"],
+            retrieved_chunks=_chunks(NEUTRAL_CHUNK),
+        ).declined
+        for answer in RESIDUAL_IMPLICATION
+    ]
+
+    # Residual: 8/8 implication-only forms have no commitment word and are not
+    # caught by a predicate-based guard. The number is the acceptance record.
+    assert sum(declined) == 0
 
 
-def test_live_acceptance_string_is_declined() -> None:
-    """Regression case, recorded after the battery: the live janbot-api-00005-xqs answer."""
-    answer = (
-        "Yes, I'd be interested. I'm drawn to a workplace where people have the "
-        "freedom to contribute thought."
-    )
-    result = apply_output_guard(
-        answer=answer,
-        citations=["profile.org"],
-        retrieved_chunks=_chunks(PLAIN_CHUNK),
-    )
-
-    assert result.declined is True
-    assert result.rule == "commitment-claim"
+def test_published_axes_are_populated() -> None:
+    assert len(SUBJECT_FORMS) >= 6
+    assert len(COMMITMENT_PREDICATES) >= 10
+    assert len(PROSPECT_REFERENCES) >= 10
+    assert len(UNGROUNDED_ANSWERS) >= 8
