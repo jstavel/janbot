@@ -123,6 +123,24 @@ def test_unobserved_retrieval_is_excluded() -> None:
     assert retrieval_misses(outcomes) == []
 
 
+def test_a_hard_error_before_retrieval_is_out_of_scope_for_retrieval() -> None:
+    errored = ItemOutcome(
+        item=_item(["a.org"]),
+        response=None,
+        error="ValueError: boom before retrieval",
+        retrieved_sources=None,
+    )
+
+    assert retrieval_accuracy([errored]) == 0.0
+    assert retrieval_mrr([errored]) == 0.0
+    assert retrieval_misses([errored]) == []
+    assert metric_counts([errored])["retrieval_accuracy__n"] == 0
+    assert metric_counts([errored])["retrieval_mrr__n"] == 0
+    # The claim-quality metrics keep the fixed population and fail the item.
+    assert metric_counts([errored])["citation_correctness__n"] == 1
+    assert metric_counts([errored])["faithfulness__n"] == 1
+
+
 def test_metric_averages_pass_and_miss() -> None:
     outcomes = [
         _outcome(["a.org"], ["a.org"]),

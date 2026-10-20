@@ -6,9 +6,10 @@ threshold chosen after seeing the numbers.
 
 ## Population contract (one contract, stated once)
 
-Entry 22, owner decision **B** (2026-10-20). Every metric has **one fixed
-population**; no metric may compute a score over a population that silently
-shrinks. A non-answered item is a failure, not an exclusion.
+Entry 22, owner decision **B** (2026-10-20). Every **claim-quality/gating**
+metric has **one fixed population**; no such metric may compute a score over a
+population that silently shrinks. A non-answered item is a failure, not an
+exclusion.
 
 - **Claim-quality metrics** — `answer_coverage`, `citation_correctness`,
   `citation_precision`, `faithfulness`, `public_references`: population = every
@@ -22,7 +23,10 @@ shrinks. A non-answered item is a failure, not an exclusion.
   `answer_coverage`, not this metric).
 - **`retrieval_accuracy` / `retrieval_mrr`**: unchanged, over items with expected
   sources and an observed retrieval claim (`retrieved_sources is not None`); never
-  gating.
+  gating. **This is the explicit exception to the fixed-population rule:** a run
+  with no retrieval claim has no retrieval result to score, so the item is out of
+  scope. A hard error before retrieval therefore reduces the retrieval `n`; it is
+  not scored as a retrieval miss.
 - **Diagnostics beside the population** (not a second denominator):
   `hard_error__n`, `in_corpus_decline__n`, `judge_failure__n`, `non_answered__n`.
 - **Out-of-corpus declines** are correct behaviour and stay with the refusal
