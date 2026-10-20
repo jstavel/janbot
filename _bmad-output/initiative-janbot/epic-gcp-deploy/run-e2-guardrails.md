@@ -1,0 +1,113 @@
+# E2 guardrails — runbook and cost bound
+
+**Date:** 2026-10-20 · **Project:** `janbot-deploy-2026-10` · **Region:** `europe-central2`.
+
+The guardrail layer sits **in front of** `/chat`: input bounds → per-IP rate →
+answer cache → global quota → program. `/health` is unchanged. The `/chat`
+contract and the AI core are untouched.
+
+## Controls and evidence
+
+| # | Control | Where | Acceptance evidence |
+|---|---|---|---|
+| 1 | Answer cache (demo shield) | `src/janbot/guardrails/cache.py`; artifact `cache/answers-fc430d3e17714457b896bafdac9cc1ac.json` | `tests/test_guardrails_api.py::test_cache_hit_makes_zero_model_calls_and_is_contract_shaped`; `build_cache` validates the pinned artifact |
+| 2 | Per-IP rate limit | `src/janbot/guardrails/limits.py` | `test_nth_request_is_served_and_n_plus_one_is_refused` |
+| 3 | Hard global quota | same | `test_exactly_the_quota_is_allowed_under_concurrency` |
+| 4 | Input bounds | `BodySizeLimitMiddleware` + the `/chat` question check | `test_oversized_body_is_rejected_before_parsing`; `test_over_long_question_is_rejected_before_rate_and_model` |
+| 5 | Over-claiming guard | ADR-010 inside `ChatProgram.forward` | `probe_over_claiming-e2-output.txt` |
+| 6 | Abuse control | rate + quota + input bounds (CORS arrives at E3) | the two counter tests above |
+
+**Fail closed:** every Firestore error becomes a denial (`503`), never a pass.
+`test_store_error_fails_closed` pins it.
+
+**Off switch:** `JANBOT_GUARDRAILS=on|off`, default `on`. `off` is honoured only
+outside production; `JANBOT_MODEL_MODE=production` + `off` fails fast at startup
+(`tests/test_config.py::test_production_with_guardrails_off_fails_fast`).
+
+## Cache provenance
+
+The cache is **real model output**, not the golden `expected_answer`. It was
+recorded from a **production-config** run:
+
+- run id `fc430d3e17714457b896bafdac9cc1ac`, `split=val`, `JANBOT_MODEL_MODE=production`, `openrouter/auto`;
+- routed models: `deepseek/deepseek-v4-flash-0731`, `deepseek/deepseek-v4.1-flash-1017`, `google/gemini-2.5-flash`, `openai/gpt-6-luna`, `z-ai/glm-5.3-flash`;
+- **49 non-refusal answers** (59 val items minus the 10 refusals); refusals stay live because θ declines them pre-LM and caching them would freeze the item-3 reason heuristic;
+- dataset sha `a8bd69dc…`, corpus commit `bf04023…`, corpus tree sha `2cc21360…`, `output_guard=on`.
+
+The image build runs `python -m janbot.guardrails.build_cache`, which **fails if
+the current dataset sha or corpus tree sha differs from the artifact** — the
+artifact must be regenerated when either changes. The cache key is normalized
+question text (trim, lower-case, whitespace-collapsed); novel phrasings miss by
+design.
+
+## Cost bound (one place, measured and worst case)
+
+Measured production call (`openrouter/auto` → `openai/gpt-6-luna`, 2026-10-20):
+1,263 input, 115 output, 1,260 cache-write tokens. At **500 model calls/day × 31
+days = 15,500 calls**:
+
+| routing | OpenRouter price (in / out / cache write per M) | $/call | 15,500 calls/month |
+|---|---|---|---|
+| measured `openai/gpt-6-luna` | $0.10 / $0.50 / $0.125 | $0.000341 | **$5.29** |
+| owner example `openai/gpt-6-astra` | $10 / $50 / $12.50 | $0.0341 | **$529** |
+| worst-case catalogue `openai/o1-pro` | $150 / $600 / unpriced (use prompt) | $0.258–$0.447 | **$4,006–$6,935** |
+
+`openrouter/auto` is **not pinned**: the measured row is a sample. The catalogue
+maximum is a conservative upper bound. **The quota bounds calls, not dollars.**
+The money tail is accepted explicitly, with the **500 CZK (~$20) budget alert**
+as the backstop. A hard money cap would require pinning the production model or
+lowering the quota to ~2.5 calls/day at the worst-case model, which is not a
+viable demo.
+
+## Firestore operations and latency
+
+- **Cache miss:** per-IP window (1 read + 1 write) + global quota (1 read + 1
+  write) = **2 writes minimum plus 2 reads (4 ops)**; at the measured 50–90 ms/op
+  that is **200–360 ms** added.
+- **Cache hit:** rate only = **1 read + 1 write (2 ops)**, **100–180 ms**; the
+  global-quota read/write pair disappears because no model call is made.
+
+The counter is a **single document** per counter (`FieldValue.increment`), not
+sharded: the spike measured one document absorbing 100 sustained writes/s with
+exact counts (`spike-quota-counter.md`).
+
+**Cache-hit quota bypass (stated consequence):** a hit makes no model call and
+skips the global quota. A flood of cache hits is bounded only by the per-IP rate
+× available IPs × `max_instances=2`; cost is safe, availability is the accepted
+trade.
+
+## Terraform and apply
+
+E2 owns the Firestore resource:
+
+- `google_firestore_database.janbot` — native, `europe-central2`, `delete_protection_state = DELETE_PROTECTION_ENABLED`, `deletion_policy = ABANDON`;
+- `google_project_iam_member.run_datastore` — `roles/datastore.user` for `janbot-run`;
+- Cloud Run env: `JANBOT_GUARDRAILS=on`, cache path, Firestore project/database,
+  rate/quota/input values.
+
+The Firestore IaC moved from E4b to E2; E4b is WIF + GitHub Actions only
+(`epic-gcp-deploy.md`, `tickets.toml`). The round ends at a verified
+`terraform plan`; the **owner runs the apply** (same blast-radius rule as E1.5),
+then verifies the phase-2 checks.
+
+## Over-claiming evidence (ADR-010, control 5)
+
+`probe_over_claiming-e2-output.txt` records:
+
+- `"Would you like to work for our company?"` → **answered**, but the
+  first-person commitment clause is dropped; no first-person commitment/interest
+  assertion reaches the caller. ADR-010 D2 repairs the clause and keeps the
+  grounded remainder; it does not force a whole-answer decline.
+- `"Have you used Clojure in production systems?"` → **answered** with
+  `['edeposit.org']`.
+
+## Verification
+
+```sh
+ulimit -n 16384 && uv run pytest -q
+JANBOT_MODEL_MODE=eval uv run python _bmad-output/initiative-janbot/epic-gcp-deploy/probe_over_claiming.py
+terraform -chdir=terraform validate && terraform -chdir=terraform plan
+python -m janbot.guardrails.build_cache \
+  --source cache/answers-fc430d3e17714457b896bafdac9cc1ac.json \
+  --out /tmp/answers.json
+```

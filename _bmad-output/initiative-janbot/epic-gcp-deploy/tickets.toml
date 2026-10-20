@@ -28,14 +28,16 @@ risk = "high"
 plan_checkpoint = true
 references = ["spec-janbot/decisions.md#adr-007", "spec-janbot/decisions.md#adr-009"]
 
+# Owner override 2026-10-20: E2's epic-evaluation gate is waived — epic-evaluation is closed
+# (22/22 entries done) and the dataset is frozen at 106 for the cache; the cache is pinned to a run id.
 [[entry]]
 id = 2
 type = "story"
 title = "Guardrails and cost protection"
-description = "Implements the minimum guardrail/cost layer that makes going public safe (ADR-009, owner-signed-off): an answer cache over the 91 golden questions (a hit costs zero model calls), a per-IP rate limit, a hard global quota (a ceiling that cannot be exceeded regardless of traffic), input bounds (length caps, rejection of unbounded input), the deterministic over-claiming guard (ADR-009 control 5 — the adopted condition of ADR-009: a narrow lexicon over the answer text refusing explicit first-person commitment/interest claims, e.g. 'making me interested in working for your company'; no model call, no core change), and abuse control (what stops someone scripting the endpoint) — every control carrying its named acceptance test. The cache is a DEMO shield: a build-time artifact baked into the image (static, no runtime store), keyed on the normalized question text; its hit rate for novel phrasings is ~zero, so the general cost control is the quota + rate limit. Only the rate-limit/quota COUNTERS need shared state → Firestore (native mode, europe-central2); its IaC is E4b's. The θ=0.26 gate already declines identity/commitment questions pre-LM; this guard closes the residual over-claiming gap (see epic-gcp-deploy/probe_over_claiming.py)."
+description = "Implements the minimum guardrail/cost layer that makes going public safe (ADR-009, owner-signed-off): an answer cache over the current 106-item golden dataset, pinned to a recorded val run (59 questions; ~49 non-refusal cached answers) and baked at image build (a hit costs zero model calls), a per-IP rate limit, a hard global quota (a ceiling that cannot be exceeded regardless of traffic), input bounds (length caps, rejection of unbounded input), the deterministic over-claiming guard (ADR-009 control 5 — the adopted condition of ADR-009: a narrow lexicon over the answer text refusing explicit first-person commitment/interest claims, e.g. 'making me interested in working for your company'; no model call, no core change), and abuse control (what stops someone scripting the endpoint) — every control carrying its named acceptance test. The cache is a DEMO shield: a build-time artifact baked into the image (static, no runtime store), keyed on the normalized question text; its hit rate for novel phrasings is ~zero, so the general cost control is the quota + rate limit. Only the rate-limit/quota COUNTERS need shared state → Firestore (native mode, europe-central2); its IaC is **E2's** (E4b keeps WIF + GitHub Actions only). The θ=0.26 gate already declines identity/commitment questions pre-LM; this guard closes the residual over-claiming gap (see epic-gcp-deploy/probe_over_claiming.py)."
 verify = "Every ADR-009 control passes its named acceptance test: a cache hit costs zero model calls (measured) and is contract-shaped (status/answer/citations/reason); the N+1th request in the rate window is refused; the global quota cannot be exceeded; over-long/unbounded input is rejected; the over-claiming guard refuses 'Would you like to work for our company?' (no first-person commitment/interest assertion reaches the caller) while 'Have you used Clojure in production systems?' still answers with citations; the API key never appears in a response body or a log line."
 covers = ["E2"]
-after = [5, "epic-evaluation"]
+after = [5]
 hitl = false
 risk = "high"
 plan_checkpoint = true
@@ -57,9 +59,9 @@ references = ["spec-janbot/decisions.md#adr-008", "architecture-janbot/architect
 [[entry]]
 id = 4
 type = "story"
-title = "E4b — CI/CD (Workload Identity Federation + GitHub Actions) + Firestore IaC"
-description = "The CI/CD half of the old E4: a GitHub Actions deploy job that authenticates via Workload Identity Federation (no long-lived keys) and deploys the service, plus the Terraform for the Firestore (native, europe-central2) the E2 guardrail counters use. Runs after E1.5 (the Terraform core), E2 (which adds the Firestore) and E3. **CI/CD must NOT build or push images** — Terraform is the single image owner (option (c), E1.5); the job only authenticates (WIF) and runs `terraform apply` (which builds/pushes the image and deploys), then the Firestore IaC. Two builders would reintroduce exactly the drift this project removes. Satisfies backlog ticket 3's 'via Terraform' for the CI/CD path."
-verify = "A GitHub Actions run authenticates via WIF, runs `terraform apply` (which builds and pushes the image and deploys a new revision) and provisions the Firestore (native) the guardrail counters use; the run builds/pushes NO image itself and uses no long-lived key."
+title = "E4b — CI/CD (Workload Identity Federation + GitHub Actions)"
+description = "The CI/CD half of the old E4: a GitHub Actions deploy job that authenticates via Workload Identity Federation (no long-lived keys) and deploys the service. Runs after E1.5 (the Terraform core), E2 and E3. **CI/CD must NOT build or push images** — Terraform is the single image owner (option (c), E1.5); the job only authenticates (WIF) and runs `terraform apply` (which builds/pushes the image and deploys). The Firestore (native, europe-central2) IaC moved to E2, which owns the resource. Two builders would reintroduce exactly the drift this project removes. Satisfies backlog ticket 3's 'via Terraform' for the CI/CD path."
+verify = "A GitHub Actions run authenticates via WIF, runs `terraform apply` (which builds and pushes the image and deploys a new revision); the run builds/pushes NO image itself and uses no long-lived key. The Firestore IaC is verified in E2."
 covers = ["E4b"]
 after = [5, 2, 3]
 hitl = true
