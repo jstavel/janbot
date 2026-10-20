@@ -67,8 +67,12 @@ floor) is unchanged.
   `public_references` 0.9796 (48/49), `refusal_pass_rate` 1.0 (n=10),
   `spurious_refusal_rate` 1/49.
 - **Diagnostics at the reference:** `hard_error__n` = 0, `in_corpus_decline__n` = 1,
-  `judge_failure__n` = 0, `non_answered__n` = 1. The one non-answer is item 41
-  (`declined: uncited`); it is a failure in the claim-quality metrics.
+  `judge_failure__n` = 0, `non_answered__n` = 1. The one non-answer is item 41, and
+  its vocabulary has three layers: the dataset says `should_refuse=false` (in-corpus);
+  the API `reason` is `out_of_corpus`, produced by the deterministic
+  `classify_decline_reason` text heuristic; the actual mechanism is an **uncited
+  answer** (`raw-citations: <none>`), which the guard reports as `declined: uncited`.
+  It is a failure in the claim-quality metrics.
 
 ## Target and threshold
 

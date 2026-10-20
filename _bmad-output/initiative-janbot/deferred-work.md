@@ -113,6 +113,12 @@
   evidence: Reproduced 2026-10-20 with `ulimit -n 1024`: **21 failed / 496 passed**, all in `tests/test_store_scope.py`, `tests/test_store_similarity.py`, `tests/test_store_window.py`; first error `chromadb.errors.InternalError: error returned from database: (code: 14) unable to open database file`. Store files alone pass (30 passed); `test_store_window.py` + `test_eval_runner.py` pass (44 passed). The variable is the **descriptor soft limit, not test order**: cumulative fd usage across the session reaches the limit only after the rest of the suite has run, so isolation passes and ordering is a symptom, not the cause. `unclosed Chroma clients` is an **unproven hypothesis**, not the explanation. With `ulimit -n 16384` the full suite is **517 passed / 0 failed**. Same 21 failures on parent `1eeb890`. The new test `test_a_hard_error_before_retrieval_is_out_of_scope_for_retrieval` failed once as a `NameError` typo (`retrieval_mmr`), was fixed, and is green on re-run; it is not a known-red state. Not fixed in this round (mixes themes); the README carries the qualification so no artifact claims an unqualified green.
 
 
+- source_plan: `_bmad-output/initiative-janbot/epic-evaluation/story-metric-population-inconsistency-errored-items-are-coverage-m-plan.md`
+  owner: `stavel.jan@gmail.com`
+  summary: Decline-reason vocabulary cannot express "in-corpus but ungrounded"; `classify_decline_reason` is a text heuristic and returns `out_of_corpus` for in-corpus item 41.
+  evidence: Item 41 is `should_refuse=false` (in-corpus) but the API `reason` is `out_of_corpus` and the actual mechanism is an uncited answer (`raw-citations: <none>`). The reference prose now names all three layers. Deferred from 5.22: changing the classifier is API decline semantics, not the metric population. Reopen when decline semantics change or an artifact needs to quote `reason` as a mechanism.
+
+
 ## Maybe (2026-10-18) — recorded, deliberately unscheduled
 
 **"Maybe" is ranked below *Someday*: the owner is not convinced he will ever pick this up.**

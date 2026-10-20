@@ -1,7 +1,7 @@
 # Walkthrough — PR #36 (story 5.22)
 
 Target: PR #36, branch `eval-5.22-metric-population`, commit `5519505`.
-Current block: **8 — Periphery** (unvisited).
+Current block: **walkthrough complete** (all blocks done).
 
 ## 1. Intent — [x] done
 
@@ -92,7 +92,7 @@ stray `FAITHFUL` verdict.
 - [test_eval_runner.py](../../../tests/test_eval_runner.py) — recorded counts and reasons.
 - [test_eval_public_urls.py](../../../tests/test_eval_public_urls.py) — the non-answered URL-free failure.
 
-## 8. Periphery — [ ] current
+## 8. Periphery — [x] done
 
 - [plan](../epic-evaluation/story-metric-population-inconsistency-errored-items-are-coverage-m-plan.md) — the build record and review triage.
 - No model, retrieval, dataset, index, `/chat` or AI-core change.

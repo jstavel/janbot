@@ -8,7 +8,7 @@ baseline_revision: '1eeb890b03fae688e87026b7d0e1389b71bb1454'
 route: 'full'
 route_source: 'auto'
 risk: 'medium'
-review: 'quick'
+review: 'quick + independent walkthrough review'
 review_source: 'pinned'
 lenses_ran: ['quick']
 review_loop_iteration: 0
@@ -146,7 +146,9 @@ single reference re-registration.
 
 ## Review Triage Log
 
-Quick review, 2026-10-20. Six findings; all verified and patched. No loopback.
+The builder's quick review at `5519505` covered six findings; all were verified and patched. It is **not** the whole round: an independent walkthrough review ran afterwards and raised five more items. Both sets are recorded below, with origin, disposition and commit, so no partial list reads as complete.
+
+### Builder quick review (5519505) — six findings, all patched
 
 - **public_references passed a non-answered URL-free item — medium, patch (fixed).** Verified at `metrics.py:225`: `_item_reference_failures` used `""` for a missing response, so an item whose expected answer names no URL passed. Fixed by failing any non-answered in-corpus item; test updated. Consequence: the contract's "non-answer is a failure in every claim-quality metric" now holds, and the reference's `public_references` is 48/49.
 - **"faithfulness cannot accept" was false — medium, patch (fixed).** Verified: 45/49 leaves four non-faithful items; a 3-item gain = 0.0612 exceeds the 0.0587 floor. The old claim was an artifact of the conditional population and contradicted the symmetric-target table. Fixed to **accept ≥3 / regress ≤2** in `gate-rule.md`, the epic and the plan's design note.
@@ -155,6 +157,19 @@ Quick review, 2026-10-20. Six findings; all verified and patched. No loopback.
 - **a non-answered item could pass through a stray FAITHFUL verdict — low, patch (fixed).** Verified `faithfulness` checked only the label. Added `_responded` to the pass condition and a regression test; the runner already prevents the state, so this is contract hardening.
 - **retrieval population wording incomplete — low, patch (fixed).** Verified `_retrieval_eligible` also requires expected sources. Corrected the gate-rule sentence.
 
+### Independent walkthrough review (2026-10-20) — five items
+
+- **Item 1 — retrieval population vs the universal contract sentence — patch (fixed).** The fixed-population sentence promised more than the retrieval predicates do; scoped to claim-quality/gating metrics and named the retrieval exception with its reason. Commit `5417cad`.
+- **Item 2 — known-red full suite — recorded and corrected (fixed).** Reproduced the low-fd failure, recorded it in README/deferred-work, then corrected the cause to cumulative fd usage and refreshed the counts. Commits `c5e9818`, `a04d989`.
+- **Item 3 — decline vocabulary — prose + named follow-up (fixed).** Item 41's three layers (dataset in-corpus, API `reason=out_of_corpus`, mechanism uncited) are now stated; the code change is deferred to a named owner in `deferred-work.md` and §Follow-ups.
+- **Item 4 — optimizer faithful atom — patch (fixed).** `_judge_faithful` no longer judges a decline or empty answer; scalar-path tests pin it. Commit `415c00a`.
+- **Item 5 — this build record — docs (fixed).** The triage log now names its scope and records the independent review, so the record cannot be read as a closed six-item set.
+
+
+## Follow-ups
+
+- **Owner `stavel.jan@gmail.com`:** reconcile the decline-reason vocabulary. `classify_decline_reason` is a text heuristic that returns `out_of_corpus` for an in-corpus item (item 41) and cannot say "in-corpus but ungrounded". Deferred from 5.22: API decline semantics, not the metric population. Reopen when decline semantics change or an artifact needs to quote `reason` as a mechanism.
+- **Owner `stavel.jan@gmail.com`:** the full suite's fd pressure / unclosed Chroma clients. Recorded in `README.md` and `deferred-work.md`; a store-test resource fix is its own slice. Reopen with a store-test hygiene pass.
 
 ## Design Notes
 
