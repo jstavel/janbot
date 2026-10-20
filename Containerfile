@@ -49,17 +49,26 @@ ENV PYTHONUNBUFFERED=1 \
     JANBOT_PROJECT_ROOT=/app \
     JANBOT_MODEL_MODE=production \
     JANBOT_CORPUS_PATH=/app/public_profile_org \
-    JANBOT_INDEX_PATH=/app/index
+    JANBOT_INDEX_PATH=/app/index \
+    JANBOT_CACHE_PATH=/app/cache/answers.json
 
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:${PATH}"
 
 COPY src/ ./src/
 COPY public_profile_org/ ./public_profile_org/
+COPY eval/golden_dataset.yaml ./eval/golden_dataset.yaml
+COPY cache/ ./cache/
 COPY README.md ./
 
 # Bake: build the index and download the ONNX MiniLM model. No key; no startup ingest.
 RUN python -m janbot.ingest
+
+# Bake the pinned answer cache: validates provenance (run id, dataset sha, corpus
+# commit) and fails the build on a dataset mismatch. No key; no model call.
+RUN python -m janbot.guardrails.build_cache \
+    --source cache/answers-fc430d3e17714457b896bafdac9cc1ac.json \
+    --out /app/cache/answers.json
 
 EXPOSE 8080
 CMD ["sh", "-c", "uvicorn janbot.api.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
