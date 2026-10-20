@@ -136,17 +136,23 @@ def _judge_faithful(
 ) -> tuple[bool | None, bool, str | None]:
     """Return ``(faithful, judged, failure)`` for one prediction's judge call.
 
-    ``judged`` is ``True`` only when a verdict was obtained. A missing judge or a
+    ``judged`` is ``True`` only when a verdict was obtained. A **non-answer** — a
+    decline or an empty answer — is never faithful and is never sent to the
+    judge, mirroring the eval's ``_responded`` contract. A missing judge or a
     judge that raises fails closed: faithful is ``False``, judged is ``False`` and
     a readable failure line is returned — the verdict is unknowable, so the item
     is never a faithful demo. ``faithful`` is ``None`` only for the demo path's
     designed short-circuit (no judge call at all).
     """
     question = str(getattr(example, "question", "") or "")
+    if getattr(prediction, "status", None) == "insufficient":
+        return False, False, None
+    answer = str(getattr(prediction, "answer", "") or "").strip()
+    if not answer:
+        return False, False, None
     if judge is None:
         return False, False, f"{question} — no judge configured"
     context = str(getattr(example, "expected_answer", "") or "")
-    answer = str(getattr(prediction, "answer", "") or "")
     try:
         verdict = judge(context, answer)
     except Exception as exc:  # noqa: BLE001 - fail closed on any judge error
@@ -167,9 +173,10 @@ def make_compile_metric(
     a candidate with no citation short-circuits to ``False`` **without a judge
     call**, and a candidate that cites but is judged not faithful is rejected, so
     a citation-only win is never bootstrapped. On the scalar path (``trace is
-    None``, the deferred MIPROv2 ranking signal) it returns the continuous score
-    and never short-circuits — with ``cited_ok`` false the faithful term is only
-    knowable from the judge, so the call always happens.
+    None``, the deferred MIPROv2 ranking signal) it returns the continuous score;
+    a non-answer is the one exception — it is never faithful and is not judged —
+    otherwise the faithful term is only knowable from the judge, so the call
+    happens.
 
     The judge is injected (tests stub it); a judge error fails closed. The
     returned callable carries the recording attributes ``pairs`` (one

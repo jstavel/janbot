@@ -24,7 +24,7 @@ from janbot.store import VectorStore
 from dspy import Example
 from dspy.utils import DummyLM
 
-from janbot.api.contract import ChatResponse, Citation
+from janbot.api.contract import INSUFFICIENT_ANSWER, ChatResponse, Citation
 from janbot.api.main import create_app
 from janbot.config import load_config
 from janbot.eval import __main__ as eval_cli
@@ -289,6 +289,57 @@ def test_compile_metric_scalar_path_is_the_weighted_sum() -> None:
     uncited_metric = make_compile_metric(uncited_judge, w_c=0.6, w_f=0.4)
     assert uncited_metric(example, uncited, None) == 0.4
     assert len(uncited_judge.calls) == 1
+
+
+def test_compile_metric_does_not_judge_a_non_answer_on_the_scalar_path() -> None:
+    example = Example(
+        index=5, question="q", expected_answer="a", expected_sources=["a.org"]
+    )
+    declined = ChatResponse(
+        status="insufficient",
+        answer=INSUFFICIENT_ANSWER,
+        citations=[],
+        reason="out_of_corpus",
+    )
+    judge = StubJudge(FAITHFUL)
+    metric = make_compile_metric(judge, w_c=0.5, w_f=0.5)
+
+    assert metric(example, declined, None) == 0.0
+    assert judge.calls == []
+    assert metric.pairs == [
+        {
+            "index": 5,
+            "question": "q",
+            "cited_ok": False,
+            "faithful": False,
+            "judged": False,
+        }
+    ]
+
+
+def test_compile_metric_does_not_judge_an_empty_answer_on_the_scalar_path() -> None:
+    example = Example(
+        index=6, question="q", expected_answer="a", expected_sources=["a.org"]
+    )
+    empty = ChatResponse(
+        status="answered",
+        answer="   ",
+        citations=[Citation(source="a.org")],
+    )
+    judge = StubJudge(FAITHFUL)
+    metric = make_compile_metric(judge, w_c=0.5, w_f=0.5)
+
+    assert metric(example, empty, None) == 0.0
+    assert judge.calls == []
+    assert metric.pairs == [
+        {
+            "index": 6,
+            "question": "q",
+            "cited_ok": False,
+            "faithful": False,
+            "judged": False,
+        }
+    ]
 
 
 def test_compile_metric_tolerates_bare_string_citations() -> None:
