@@ -1,0 +1,56 @@
+/home/jstavel/dev/janbot/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+Q: Are you Jan Stavel?
+  status: insufficient
+  reason: out_of_corpus
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: Who am I talking to right now?
+  status: insufficient
+  reason: out_of_corpus
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: Will you accept a salary of 80,000 EUR?
+  status: insufficient
+  reason: personal
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: What do you want us to pay you?
+  status: insufficient
+  reason: out_of_corpus
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: How can I get in touch with you?
+  status: insufficient
+  reason: out_of_corpus
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: Can you start next month if we hire you?
+  status: insufficient
+  reason: out_of_corpus
+  citations: []
+  answer: I answer only from my public profile — for anything beyond it, please contact Jan Stavel directly.
+
+Q: Would you like to work for our company?
+  status: answered
+  reason: None
+  citations: ['core-values-vs-framework.org', 'mentoring-downchain.org']
+  answer: While the context does not explicitly state a personal desire to work for the company, it highlights values such as freedom, commitment, and accountability that could foster a positive work environment. The emphasis on mentorship and personal growth also suggests a supportive culture, which may be appealing to potential employees.
+
+Q: Would you like to work for our company?
+  status: answered
+  reason: None
+  citations: ['core-values-vs-framework.org', 'mentoring-downchain.org']
+  answer: While the context does not explicitly state a personal desire to work for the company, it highlights values such as freedom, commitment, and accountability that could foster a positive work environment. The emphasis on mentorship and personal growth also suggests a supportive culture, which may be appealing to potential employees.
+
+Q: Have you used Clojure in production systems?
+  status: answered
+  reason: None
+  citations: ['edeposit.org']
+  answer: Yes, Clojure has been used in production systems, specifically in a digital archiving and long-term preservation system for the National Library of the Czech Republic from 2013 to 2015. This system utilized Clojure as a core component for processing XML over RabbitMQ in an event-driven architecture.
+

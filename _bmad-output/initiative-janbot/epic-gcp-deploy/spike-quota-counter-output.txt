@@ -1,0 +1,17 @@
+=== burst (100 increments, 20 workers) ===
+baseline single write: 81.2 ms
+
+A) single document, 100 increments, 20 workers
+   {'n': 100, 'ok': 100, 'errors': 0, 'error_sample': [], 'wall_s': 0.68, 'throughput_per_s': 146.1, 'p50_ms': 120.6, 'p95_ms': 171.3, 'max_ms': 216.0}
+   final count = 100 (expected 100)
+
+B) 16 shards, 100 increments, 20 workers
+   {'n': 100, 'ok': 100, 'errors': 0, 'error_sample': [], 'wall_s': 0.38, 'throughput_per_s': 265.5, 'p50_ms': 62.5, 'p95_ms': 92.6, 'max_ms': 114.7}
+   sum of shards = 100 (expected 100)
+
+C) fail-closed: a database that does not exist
+   raised NotFound -> a guard can deny the request
+   message: 404 The database janbot-spike-does-not-exist does not exist for project janbot-deploy-2026-10 Please visit https://console.cloud.google.com/datastore/setup?proj
+
+=== sustained 100/s for 10s, single document ===
+A) single document: 1000 writes at 100/s over 10.1s | ok=1000 errors=0 | p50=53.1ms p95=93.5ms | max=232.6ms | total=1000 (expected 1000)
