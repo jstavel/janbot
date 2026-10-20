@@ -137,3 +137,41 @@ python -m janbot.guardrails.build_cache \
   --source cache/answers-fc430d3e17714457b896bafdac9cc1ac.json \
   --out /tmp/answers.json
 ```
+
+## Live acceptance (2026-10-20, owner-run with an independent reviewer)
+
+Deployed revision **`janbot-api-00005-xqs`**, image `sha256:13f0aac0…`, Firestore database
+`janbot` (native, `europe-central2`). Authenticated calls through a throwaway service account
+(`roles/run.invoker` + key), deleted afterwards; the service IAM policy is empty again, so the
+window of access closed with the checks.
+
+| # | control | evidence | verdict |
+|---|---|---|---|
+| 1 | cache hit | 200, **0.22 s**, cites `departure-narrative.org`; the same class of question on a miss: 200, **11.0 s** (~50× contrast) | ✅ hit is a served answer with no model call |
+| 2 | per-IP rate limit | 10 requests / 600 s window: 6 served (4 already spent earlier) then 7–11 → **429** `{"detail":"too many requests"}` | ✅ |
+| 3 | global quota | counters live in `janbot_guardrails`: `quota_2026-10-20` `count=2` after two model calls; rate doc keyed by a **hashed IP** (`rate_40e739e1…`), no raw address stored | ✅ wired and counting |
+| 4 | input bounds | 2 500-char question → **422** `question exceeds the maximum length of 2000 characters`; 9 000-byte body → **413** `request body too large` | ✅ rejected before any model call |
+| 5 | **over-claiming guard** | `"Would you like to work for our company?"` → **200 answered**: *“Yes, I’d be interested. I’m drawn to a workplace where people have the freedom to contribute thought.”* | ❌ **FAILS** |
+| 6 | fail closed | not exercised against the live store (would require breaking Firestore); covered by the unit tests and the spike's `NotFound` evidence | ⚠️ test-only |
+| — | no question text in logs | 0 hits for a distinctive phrase from a sent question in the revision's logs | ✅ |
+
+### Why control 5 fails — structural, not a lexicon omission
+
+D2 fires on `marker + SUBJECT_TOKEN + ungrounded`. `SUBJECT_TOKENS` is the **technology lexicon**
+(`typescript`, `python`, `perl`, …), so the predicate can only express *capability* claims
+(“I have a strong foundation in TypeScript”). A commitment/interest claim contains no technology
+token: `_marker_windows` finds the marker (`interested in working for`) but
+`_subject_tokens_in(...)` returns `[]`, and the clause is kept — by design, see
+`test_marker_without_subject_is_kept`.
+
+Reproduced locally: *“I am interested in working for your company.”*, *“I want to work for your
+company.”*, *“Yes, I’d be interested.”*, *“I would be interested in joining your team.”* are all
+**kept** by the guard. The recorded probe passed because its answer carried a technology token in
+a different clause — the string was covered, the class was not.
+
+### Consequence
+
+ADR-009 control 5 was reworded to “explicit first-person commitment/interest claims”. The shipped
+guard covers **capability** over-claiming. Until that gap is closed — by extending the predicate to
+commitment subjects, or by the owner rewording control 5 to the capability class with the residual
+risk stated — **E3 (going public) stays blocked**.
