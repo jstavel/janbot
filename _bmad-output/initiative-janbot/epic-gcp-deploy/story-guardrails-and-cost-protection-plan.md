@@ -3,14 +3,14 @@ title: 'E2 — minimum guardrail / cost layer in front of /chat'
 type: 'feature'
 ticket: 2
 created: '2026-10-20'
-status: 'in-progress'
+status: 'built'
 baseline_revision: 'bf0402369ab0820b7b180876f45d713c7e944e42'
 route: 'full'
 route_source: 'auto'
 risk: 'high'
-review: ''
-review_source: ''
-lenses_ran: []
+review: 'quick'
+review_source: 'pinned'
+lenses_ran: ['quick']
 review_loop_iteration: 0
 context: []
 ---
@@ -48,8 +48,8 @@ context: []
 | CACHE-HIT FLOOD | many clients hit cached questions | rate limit still applies; global quota is bypassed; bounded by rate × IPs × 2 instances | accepted availability trade |
 | CACHE MISS | novel question | rate + quota, then the program | no error |
 | RATE N+1 | same IP, N+1th request in window | refused (429); Nth served | no model call |
-| QUOTA REACHED | global count at cap, any traffic | every further model call refused; counter cannot be bypassed | fail closed |
-| CONCURRENT QUOTA | concurrent requests at the cap | exactly the cap succeeds; the rest refused | atomic increment |
+| QUOTA REACHED | global count at cap, any traffic | every further program invocation refused; the quota is a conservative request quota (pre-LM refusals consume a slot) | fail closed |
+| CONCURRENT QUOTA | concurrent requests at the cap | exactly the cap's reservations succeed; the rest refused | atomic increment |
 | INPUT TOO LONG | question over cap | 4xx before retrieval/model | no model call |
 | OVERSIZED BODY | body over cap | 4xx before parse/model | no model call |
 | STORE ERROR | Firestore unreachable | request denied | 503, fail closed |
@@ -80,7 +80,7 @@ context: []
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `src/janbot/eval/__main__.py` -- add `--cache-out`; run once on `--split val` with `JANBOT_MODEL_MODE=production`, capture the run id, date, routed model(s), dataset sha and final `ChatResponse` per non-refusal item; commit the JSON as the pinned cache artifact -- the payload is what the service actually produced, not `expected_answer`.
+- [ ] `src/janbot/eval/__main__.py` -- add `--cache-out`; run once on `--split val` with `JANBOT_MODEL_MODE=production` (the exporter supplies a no-op limiter and skips the production cache requirement, so no Firestore/key-at-build is needed), capture the run id, date, routed model(s), dataset sha and final `ChatResponse` per non-refusal item; commit the JSON as the pinned cache artifact -- the payload is what the service actually produced, not `expected_answer`.
 - [ ] `src/janbot/guardrails/cache.py` + `build_cache.py` -- normalized-question lookup, metadata validation (run id/dataset sha/corpus commit), `ChatResponse` validation, baked artifact -- the demo shield.
 - [ ] `src/janbot/api/main.py` + `config.py` -- wire input bounds, cache, rate, quota in front of the program; a hit skips the model and the global-quota pair; rate applies to every `/chat`; `JANBOT_GUARDRAILS=on|off` with production + off failing fast -- the layer.
 - [ ] `src/janbot/guardrails/limits.py` -- Firestore native single-doc window/quota, atomic increments, fail closed; state the operation count -- the shared-state controls.
@@ -96,12 +96,27 @@ context: []
 **Acceptance Criteria:**
 - Given a cached non-refusal question, when `/chat` is called, then the LM client is not invoked and the body is contract-shaped.
 - Given the Nth/N+1th request from one IP, then the Nth is served and the N+1th is refused.
-- Given the global cap, when concurrent requests race it, then exactly the cap's model calls happen and every further request is refused.
+- Given the global cap, when concurrent requests race it, then exactly the cap's reservations succeed and every further request is refused; a pre-LM refusal consumes a slot (conservative).
 - Given an over-long question or oversized body, then it is rejected before retrieval/model.
 - Given an unreachable Firestore, then `/chat` is denied.
 - Given the over-claiming probe, then no first-person commitment/interest assertion reaches the caller for "Would you like to work for our company?" (ADR-010 D2 may answer the grounded remainder) and "Have you used Clojure in production systems?" answers with citations.
 - Given `JANBOT_MODEL_MODE=production` and `JANBOT_GUARDRAILS=off`, then startup fails fast.
 - Given the docs, then the cost bound, operation count, off state and E4b/E2 ownership are stated once.
+
+## Review Triage Log
+
+Quick review, 2026-10-20. Ten findings; nine patched, one deferred with a named owner.
+
+- **X-Forwarded-For spoofing and IPv6 spelling — high, patch (fixed).** Verified `_client_ip` took the first, caller-controlled hop. Fixed to the **last** hop + `ipaddress` normalization; a test sends different spoofed first values and equivalent IPv6 spellings and asserts one counter key.
+- **Quota consumed by pre-LM refusals — medium, defer (documented).** Verified the counter increments before the program, so empty-retrieval/low-relevance refusals consume a slot. Exact model-call counting needs a pre-LM hook inside `ChatProgram`, which E2's frozen boundary forbids. Recorded as a **conservative request quota**; the availability trade and the named follow-up are in `run-e2-guardrails.md` / `deferred-work.md`.
+- **Silent partial layer outside production; production without a cache — high, patch (fixed).** Verified `JANBOT_GUARDRAILS` defaulted on in eval with no Firestore. Eval/test now default **off** (production defaults on), and production refuses to start without the baked cache; the export path supplies a no-op limiter and `require_cache=False`.
+- **Rate documents unbounded per window — medium, patch (fixed).** Verified one document per IP per window. Changed to one document per IP with an in-place window reset; storage is bounded by unique IPs, not windows. Quota remains one document per day.
+- **`--cache-out` hardcoded `split=val` — medium, patch (fixed).** Verified it labelled any split as val. The exporter now requires `--split val` before spending the run; test added.
+- **`--cache-out` accepted the output guard off — low, patch (fixed).** Verified it wrote an artifact the image build rejects. It now fails before the run; test added.
+- **The documented export command could not run — medium, patch (fixed).** Verified production + no Firestore raised before the export. The exporter now uses a no-op limiter and `require_cache=False`; the runbook carries the working command.
+- **"Refuses" contradicted the probe — low, patch (fixed).** Ticket/plan verification wording now says the first-person clause is dropped and the grounded remainder may answer (ADR-010 D2).
+- **Spike evidence did not cover the implemented transaction — medium, patch (fixed).** Added a real-Firestore verification against a throwaway database: 20 concurrent quota calls at cap 10 → exactly 10 allowed; 11 concurrent rate checks → 9 allowed + 2 fail-closed store errors (cap never exceeded); unreachable → `store_error`. Recorded in `spike-quota-counter-e2-output.txt`; the spike note states which rows the old raw file covers.
+- **`_routed_model` could report the previous item's model — low, patch (fixed).** It now returns `None` when the item made no LM call; a test pins it.
 
 ## Design Notes
 
@@ -133,7 +148,7 @@ context: []
 
 **Commands:**
 - `ulimit -n 16384 && uv run pytest -q` -- expected: green (including the new guardrail tests).
-- `JANBOT_MODEL_MODE=eval uv run python _bmad-output/initiative-janbot/epic-gcp-deploy/probe_over_claiming.py` -- expected: the over-claim refused; the Clojure control answered with citations.
+- `JANBOT_MODEL_MODE=eval uv run python _bmad-output/initiative-janbot/epic-gcp-deploy/probe_over_claiming.py` -- expected: the over-claim clause is dropped; no first-person commitment/interest assertion reaches the caller; the Clojure control answers with citations.
 - `JANBOT_MODEL_MODE=production ... uv run python -m janbot.eval --split val --cache-out cache/answers-<run>.json` -- expected: a pinned production snapshot with routed model(s) and dataset sha; no build-time key.
 - `terraform -chdir=terraform validate && terraform -chdir=terraform plan` -- expected: Firestore, `datastore.user` and the new env shown; no apply.
 - A scripted burst with the real Firestore (HITL) -- expected: N+1 refused; the quota cap holds under concurrency; fail-closed on an unreachable database.

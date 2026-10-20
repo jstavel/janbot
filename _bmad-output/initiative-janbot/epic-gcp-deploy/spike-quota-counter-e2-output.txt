@@ -1,0 +1,5 @@
+quota 20 concurrent, cap 10: Counter({'allowed': 10, 'store_error': 6, 'quota_exceeded': 4})
+allowed: 10
+rate 11 concurrent, cap 10: Counter({'allowed': 9, 'store_error': 2})
+allowed: 9
+unreachable database: store_error store_error

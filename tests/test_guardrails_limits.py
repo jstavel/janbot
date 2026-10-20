@@ -55,7 +55,7 @@ class _Transaction:
         if self.fail:
             raise RuntimeError("unreachable")
         with ref.lock:
-            ref.store[ref.doc_id] = {"count": data["count"]}
+            ref.store[ref.doc_id] = dict(data)
 
 
 class _Collection:

@@ -404,10 +404,10 @@ def test_invalid_output_guard_raises(value: str) -> None:
     assert "JANBOT_OUTPUT_GUARD" in str(excinfo.value)
 
 
-def test_guardrails_default_on() -> None:
-    config = load_config({})
-
-    assert config.guardrails == "on"
+def test_guardrails_default_off_outside_production_and_on_in_production() -> None:
+    assert load_config({}).guardrails == "off"
+    assert load_config({"JANBOT_MODEL_MODE": "production"}).guardrails == "on"
+    config = load_config({"JANBOT_MODEL_MODE": "production"})
     assert config.rate_limit == 10
     assert config.rate_window_seconds == 600
     assert config.daily_quota == 500

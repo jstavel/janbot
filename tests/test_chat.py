@@ -280,6 +280,7 @@ def test_chat_model_routing_changes_with_environment_only(
         embedder=embedder,
         lm_factory=factory,
         limiter=AllowingLimiter(),
+        require_cache=False,
     )
 
     question = {"question": "What search infrastructure have you built?"}

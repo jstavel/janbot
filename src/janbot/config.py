@@ -306,9 +306,16 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
     project_root = _resolve_path(raw_root, PROJECT_ROOT) if raw_root else PROJECT_ROOT
 
     raw_guardrails = _clean(source.get(GUARDRAILS_ENV))
-    guardrails = (
-        DEFAULT_GUARDRAILS if raw_guardrails is None else raw_guardrails.lower()
-    )
+    if raw_guardrails is None:
+        # Production is guarded by default; eval/test must not be rate-limited
+        # or require a shared store, so it defaults off and is explicit to test.
+        guardrails = (
+            DEFAULT_GUARDRAILS
+            if model_mode == MODEL_MODE_PRODUCTION
+            else GUARDRAILS_OFF
+        )
+    else:
+        guardrails = raw_guardrails.lower()
     if guardrails not in GUARDRAILS_MODES:
         allowed = ", ".join(repr(value) for value in GUARDRAILS_MODES)
         raise ValueError(

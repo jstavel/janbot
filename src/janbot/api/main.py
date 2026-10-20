@@ -123,13 +123,26 @@ class BodySizeLimitMiddleware:
 
 
 def _client_ip(request: Request) -> str:
-    """The caller's IP: the first ``X-Forwarded-For`` hop (Cloud Run) or the peer."""
+    """The caller's IP: the **last** ``X-Forwarded-For`` hop, normalized.
+
+    Cloud Run appends the peer it saw to any client-supplied header, so the last
+    value is the trusted hop; the first is caller-controlled. Normalizing with
+    ``ipaddress`` collapses equivalent IPv6 spellings to one counter key.
+    """
+    from ipaddress import ip_address
+
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
-        first = forwarded.split(",")[0].strip()
-        if first:
-            return first
-    return request.client.host if request.client else "unknown"
+        last = forwarded.split(",")[-1].strip()
+        try:
+            return ip_address(last).compressed
+        except ValueError:
+            pass
+    peer = request.client.host if request.client else "unknown"
+    try:
+        return ip_address(peer).compressed
+    except ValueError:
+        return peer
 
 
 
@@ -140,6 +153,7 @@ def create_app(
     lm_factory: LMFactory = dspy.LM,
     limiter: Limiter | None = None,
     cache: AnswerCache | None = None,
+    require_cache: bool = True,
 ) -> FastAPI:
     """Build the app: config -> store -> LM -> program, then wire the port.
 
@@ -217,6 +231,15 @@ def create_app(
                 "the guardrail layer is on in production but no Firestore "
                 "project is configured; refusing to start without the shared "
                 "rate/quota counters"
+            )
+        if (
+            require_cache
+            and config.model_mode == MODEL_MODE_PRODUCTION
+            and cache is None
+        ):
+            raise ValueError(
+                "the guardrail layer is on in production but no answer cache is "
+                "configured; refusing to start without the baked cache"
             )
 
     app = FastAPI(title="JanBot")

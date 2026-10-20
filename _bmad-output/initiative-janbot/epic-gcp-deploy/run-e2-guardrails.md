@@ -12,13 +12,20 @@ contract and the AI core are untouched.
 |---|---|---|---|
 | 1 | Answer cache (demo shield) | `src/janbot/guardrails/cache.py`; artifact `cache/answers-fc430d3e17714457b896bafdac9cc1ac.json` | `tests/test_guardrails_api.py::test_cache_hit_makes_zero_model_calls_and_is_contract_shaped`; `build_cache` validates the pinned artifact |
 | 2 | Per-IP rate limit | `src/janbot/guardrails/limits.py` | `test_nth_request_is_served_and_n_plus_one_is_refused` |
-| 3 | Hard global quota | same | `test_exactly_the_quota_is_allowed_under_concurrency` |
+| 3 | Hard global quota (conservative request quota) | same | `test_exactly_the_quota_is_allowed_under_concurrency` |
 | 4 | Input bounds | `BodySizeLimitMiddleware` + the `/chat` question check | `test_oversized_body_is_rejected_before_parsing`; `test_over_long_question_is_rejected_before_rate_and_model` |
 | 5 | Over-claiming guard | ADR-010 inside `ChatProgram.forward` | `probe_over_claiming-e2-output.txt` |
 | 6 | Abuse control | rate + quota + input bounds (CORS arrives at E3) | the two counter tests above |
 
 **Fail closed:** every Firestore error becomes a denial (`503`), never a pass.
 `test_store_error_fails_closed` pins it.
+
+**Quota semantics:** the global counter is a **conservative request quota** —
+every request that reaches the program consumes a slot, including a pre-LM
+refusal (empty retrieval / low relevance). It bounds spend from above; a refusal
+flood can exhaust the daily quota (availability trade; the per-IP rate limit
+bounds the rate, not the total). Exact model-call counting would need a pre-LM
+hook in the AI core, which E2's boundary forbids.
 
 **Off switch:** `JANBOT_GUARDRAILS=on|off`, default `on`. `off` is honoured only
 outside production; `JANBOT_MODEL_MODE=production` + `off` fails fast at startup
@@ -33,6 +40,17 @@ recorded from a **production-config** run:
 - routed models: `deepseek/deepseek-v4-flash-0731`, `deepseek/deepseek-v4.1-flash-1017`, `google/gemini-2.5-flash`, `openai/gpt-6-luna`, `z-ai/glm-5.3-flash`;
 - **49 non-refusal answers** (59 val items minus the 10 refusals); refusals stay live because θ declines them pre-LM and caching them would freeze the item-3 reason heuristic;
 - dataset sha `a8bd69dc…`, corpus commit `bf04023…`, corpus tree sha `2cc21360…`, `output_guard=on`.
+
+Regenerate the cache with one production run (the exporter uses a no-op
+guardrail limiter and does not need Firestore; the key is used only for this
+run, never at build time):
+
+```sh
+JANBOT_MODEL_MODE=production JANBOT_RETRIEVAL_MODE=hybrid \
+JANBOT_RETRIEVAL_WINDOW=chunks JANBOT_TOP_K=4 \
+JANBOT_RELEVANCE_THRESHOLD=0.26 JANBOT_OUTPUT_GUARD=on \
+uv run python -m janbot.eval --split val --cache-out cache/answers-<run>.json
+```
 
 The image build runs `python -m janbot.guardrails.build_cache`, which **fails if
 the current dataset sha or corpus tree sha differs from the artifact** — the
@@ -52,7 +70,9 @@ days = 15,500 calls**:
 | owner example `openai/gpt-6-astra` | $10 / $50 / $12.50 | $0.0341 | **$529** |
 | worst-case catalogue `openai/o1-pro` | $150 / $600 / unpriced (use prompt) | $0.258–$0.447 | **$4,006–$6,935** |
 
-`openrouter/auto` is **not pinned**: the measured row is a sample. The catalogue
+The quota is a conservative **request** quota: pre-LM refusals consume a slot, so
+the call count is an upper bound on model calls. `openrouter/auto` is **not
+pinned**: the measured row is a sample. The catalogue
 maximum is a conservative upper bound. **The quota bounds calls, not dollars.**
 The money tail is accepted explicitly, with the **500 CZK (~$20) budget alert**
 as the backstop. A hard money cap would require pinning the production model or
@@ -67,9 +87,15 @@ viable demo.
 - **Cache hit:** rate only = **1 read + 1 write (2 ops)**, **100–180 ms**; the
   global-quota read/write pair disappears because no model call is made.
 
-The counter is a **single document** per counter (`FieldValue.increment`), not
-sharded: the spike measured one document absorbing 100 sustained writes/s with
-exact counts (`spike-quota-counter.md`).
+The counter is a **single document** per counter (`FieldValue.increment`, with a
+read-then-set window reset for the rate counter), not sharded: the spike measured
+one document absorbing 100 sustained writes/s with exact counts
+(`spike-quota-counter.md`). The implemented transaction is verified against a
+throwaway Firestore native database in `spike-quota-counter-e2-output.txt`:
+20 concurrent quota increments at cap 10 → exactly 10 allowed; 11 concurrent
+rate checks at cap 10 → 9 allowed and 2 fail-closed store errors under first-write
+contention (the cap is never exceeded); an unreachable database → `store_error`
+for both.
 
 **Cache-hit quota bypass (stated consequence):** a hit makes no model call and
 skips the global quota. A flood of cache hits is bounded only by the per-IP rate

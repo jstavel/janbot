@@ -106,6 +106,8 @@ def _routed_model(program: Callable[..., ChatResponse]) -> str | None:
     ``response_model`` the provider actually served. This is observability only:
     it never enters a metric or the ``/chat`` contract.
     """
+    if getattr(program, "last_raw_answer", None) is None:
+        return None
     predict = getattr(program, "_answer", None)
     lm = getattr(predict, "lm", None)
     history = getattr(lm, "history", None)
