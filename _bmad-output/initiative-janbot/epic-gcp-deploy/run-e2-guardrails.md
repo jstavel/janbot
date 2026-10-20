@@ -116,29 +116,40 @@ The Firestore IaC moved from E4b to E2; E4b is WIF + GitHub Actions only
 `terraform plan`; the **owner runs the apply** (same blast-radius rule as E1.5),
 then verifies the phase-2 checks.
 
-## Commitment/interest class (ADR-010 Amendment 2, 2026-10-20)
+## Commitment/interest class (ADR-010 Amendment 3, 2026-10-20)
 
-Live acceptance on `janbot-api-00005-xqs` showed the gap: *“Would you like to work for our
-company?”* → *“Yes, I’d be interested. I’m drawn to a workplace where people have the
-freedom to contribute thought.”* D2’s `SUBJECT_TOKENS` is the technology lexicon, so the
-commitment claim carried no subject token and was kept.
+Iteration 1 closed the live string and its neighbours but not the class: on an independent
+12-formulation battery it refused **5/12** and leaked **7/12**. Amendment 2's marker/party
+lists were not the class: deictic prospect references (“work there”, “join you”, “what I want
+to be part of”, “move forward with you”) escaped a required `PARTY_TOKENS` match, and the
+predicate list still enumerated verbs.
 
-The guard now has a **commitment/interest class**: `COMMITMENT_MARKERS` + `PARTY_TOKENS` +
-grounding against the cited chunk. An ungrounded commitment/interest claim about the
-prospect **declines the whole answer** (`rule="commitment-claim"`); this removes the bare
-“Yes, I’d be interested.” too. Topic interest, grounded capability, grounded values and the
-Clojure control remain served. Lexicon `2026-10-20.1`.
+Iteration 2 expresses the class as a **published product**:
 
-**Independent battery:** `tests/test_output_guard_commitment.py` — 12 formulations written
-from the class description before the predicate, plus the live regression. It is not derived
-from the observed sentence. The must-not-regress cases cover topic interest, grounded
-capability, grounded values, a grounded commitment and the Clojure control.
+- **subjects:** `I`, `I'm`, `I am`, `I'd`, `I would`, `I can` (6);
+- **commitment predicates:** glad/keen/happy/eager/delighted/thrilled to, love to, want to,
+  interested in, open to, look forward to, jump at the chance to, gladly accept, available
+  for, can start, drawn/attracted to, excited about/to, like to, be part of, join, work
+  for/with, apply for, be considered for (29);
+- **prospect references:** your company/team/organisation/mission/offer, the/this
+  role/position/job/offer, workplace, come aboard, join you, work with you, there, you (19).
 
-**Residual risk (stated, owner decision):** the predicate is still a marker/party phrase list.
-Paraphrases outside it, implication, and a bare interest with no party token anywhere (the
-guard sees the answer, not the question) are not caught. This is a floor, not a semantic
-judge. The layer must be re-checked live on the **next revision**; the local test suite
-cannot prove the deployed revision.
+A first-person subject + commitment predicate + named or deictic prospect reference is an
+ungrounded commitment unless a cited chunk sentence contains the predicate and the reference.
+The clause is dropped; the answer declines if nothing defensible remains. Bare
+interest/availability/start/acceptance is a commitment without a reference.
+
+**Generated sweep:** `tests/test_output_guard_commitment.py` covers **3,306** ungrounded
+cells from the product plus the live `janbot-api-00005-xqs` cell, and **456**
+supporting-chunk cells (24 non-bare predicates × 19 references). The test method is the
+specification; it is not a hand-written battery. Topic interest (trading
+community/systems/what you do), grounded capability/values/commitment and the Clojure control
+stay served.
+
+**Residual, with a number:** **8/8 implication-only formulations with no commitment word**
+(“sounds great”, “that sounds like a good fit”, “count me in”, “I'm in”, …) are **not
+caught**. That is the floor; a predicate-based guard cannot imply a commitment from tone
+alone. The layer must be re-checked live on the **next revision**.
 
 ## Over-claiming evidence (ADR-010, control 5)
 

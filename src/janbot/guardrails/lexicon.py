@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-LEXICON_VERSION = "2026-10-20.1"
+LEXICON_VERSION = "2026-10-20.2"
 
 
 class Marker(NamedTuple):
@@ -41,103 +41,99 @@ MARKERS: tuple[Marker, ...] = (
     Marker("i have expertise", "expertise"),
 )
 
-class CommitmentMarker(NamedTuple):
-    """A first-person commitment/interest phrase about the prospect.
+SUBJECT_FORMS: tuple[str, ...] = ("I", "I'm", "I am", "I'd", "I would", "I can")
 
-    ``party_required`` distinguishes an interest/join/role claim, which needs a
-    party noun in the forward window, from a commitment that stands on its own
-    (availability, start date, acceptance). ``chunk_phrase`` is the grounded form
-    a cited chunk must contain (with a party noun, when required).
+
+class CommitmentPredicate(NamedTuple):
+    """One commitment/interest predicate on the published predicate axis.
+
+    ``lead`` is the human form used by the generated sweep; ``pattern`` is the
+    structural regex the guard matches; ``chunk_phrase`` is the grounded form a
+    cited chunk must contain. ``bare`` predicates (interest/availability) are a
+    commitment even without a prospect reference.
     """
 
-    answer_phrase: str
+    lead: str
+    pattern: str
     chunk_phrase: str
-    party_required: bool = True
+    bare: bool = False
 
 
-COMMITMENT_MARKERS: tuple[CommitmentMarker, ...] = (
-    # Interest in the prospect (party noun required)
-    CommitmentMarker("interested in", "interested in"),
-    CommitmentMarker("drawn to", "drawn to"),
-    CommitmentMarker("attracted to", "attracted to"),
-    CommitmentMarker("excited about", "excited about"),
-    CommitmentMarker("keen on", "keen on"),
-    CommitmentMarker("open to", "open to"),
-    # Join / role / working-for (party noun required)
-    CommitmentMarker("excited to join", "excited to join"),
-    CommitmentMarker("eager to join", "eager to join"),
-    CommitmentMarker("keen to join", "keen to join"),
-    CommitmentMarker("happy to join", "happy to join"),
-    CommitmentMarker("glad to join", "glad to join"),
-    CommitmentMarker("looking forward to joining", "looking forward to joining"),
-    CommitmentMarker("join your", "join your"),
-    CommitmentMarker("joining your", "joining your"),
-    CommitmentMarker("join the", "join the"),
-    CommitmentMarker("joining the", "joining the"),
-    CommitmentMarker("be part of your", "be part of your"),
-    CommitmentMarker("be part of the", "be part of the"),
-    CommitmentMarker("part of your team", "part of your team"),
-    CommitmentMarker("work for your", "work for your"),
-    CommitmentMarker("working for your", "working for your"),
-    CommitmentMarker("want to work for", "want to work for"),
-    CommitmentMarker("would like to work for", "would like to work for"),
-    CommitmentMarker("like to work for", "like to work for"),
-    CommitmentMarker("be considered for", "be considered for"),
-    CommitmentMarker("want to apply for", "want to apply for"),
-    CommitmentMarker("like to apply for", "like to apply for"),
-    # Standalone commitments (no party noun)
-    CommitmentMarker("working for you", "working for you", False),
-    CommitmentMarker("available to start", "available to start", False),
-    CommitmentMarker("available immediately", "available immediately", False),
-    CommitmentMarker("can start next month", "can start next month", False),
-    CommitmentMarker("can start immediately", "can start immediately", False),
-    CommitmentMarker("start next month", "start next month", False),
-    CommitmentMarker("start immediately", "start immediately", False),
-    CommitmentMarker("accept the offer", "accept the offer", False),
-    CommitmentMarker("accept an offer", "accept an offer", False),
-    CommitmentMarker("i accept", "accept", False),
-    CommitmentMarker("take the role", "take the role", False),
-    CommitmentMarker("take the job", "take the job", False),
-    CommitmentMarker("sign me up", "sign me up", False),
-    CommitmentMarker("come aboard", "come aboard", False),
+COMMITMENT_PREDICATES: tuple[CommitmentPredicate, ...] = (
+    CommitmentPredicate("glad to", r"glad\s+to\b", "glad to"),
+    CommitmentPredicate("keen to", r"keen\s+to\b", "keen to"),
+    CommitmentPredicate("happy to", r"happy\s+to\b", "happy to"),
+    CommitmentPredicate("eager to", r"eager\s+to\b", "eager to"),
+    CommitmentPredicate("delighted to", r"delighted\s+to\b", "delighted to"),
+    CommitmentPredicate("thrilled to", r"thrilled\s+to\b", "thrilled to"),
+    CommitmentPredicate("love to", r"love\s+to\b", "love to"),
+    CommitmentPredicate("want to", r"want\s+to\b", "want to"),
+    CommitmentPredicate("interested in", r"interested\s+in\b", "interested in"),
+    CommitmentPredicate("open to", r"open\s+to\b", "open to"),
+    CommitmentPredicate(
+        "look forward to", r"look(?:ing)?\s+forward\s+to\b", "look forward to"
+    ),
+    CommitmentPredicate(
+        "jump at the chance to",
+        r"jump\s+at\s+the\s+chance\s+to\b",
+        "jump at the chance to",
+    ),
+    CommitmentPredicate("gladly accept", r"gladly\s+accept\b", "gladly accept", True),
+    CommitmentPredicate("available for", r"available\s+for\b", "available for"),
+    CommitmentPredicate("can start", r"can\s+start\b", "can start", True),
+    CommitmentPredicate("drawn to", r"drawn\s+to\b", "drawn to"),
+    CommitmentPredicate("attracted to", r"attracted\s+to\b", "attracted to"),
+    CommitmentPredicate("excited about", r"excited\s+about\b", "excited about"),
+    CommitmentPredicate("excited to", r"excited\s+to\b", "excited to"),
+    CommitmentPredicate("like to", r"like\s+to\b", "like to"),
+    CommitmentPredicate("be part of", r"be\s+part\s+of\b", "be part of"),
+    CommitmentPredicate("join", r"join(?:ing)?\b", "join"),
+    CommitmentPredicate("work for", r"work(?:ing)?\s+for\b", "work for"),
+    CommitmentPredicate("work with", r"work(?:ing)?\s+with\b", "work with"),
+    CommitmentPredicate("apply for", r"apply(?:ing)?\s+for\b", "apply for"),
+    CommitmentPredicate(
+        "be considered for", r"be\s+considered\s+for\b", "be considered for"
+    ),
+    CommitmentPredicate("accept", r"accept\b", "accept the offer", True),
+    CommitmentPredicate(
+        "interested", r"interested\b(?!\s+in\b)", "interested in working", True
+    ),
+    CommitmentPredicate("available", r"available\b(?!\s+for\b)", "available", True),
 )
 
-PARTY_TOKENS: tuple[str, ...] = (
-    "company",
-    "companies",
-    "team",
-    "teams",
-    "role",
-    "roles",
-    "position",
-    "positions",
-    "job",
-    "jobs",
-    "offer",
-    "offers",
-    "workplace",
-    "workplaces",
-    "organization",
-    "organizations",
-    "organisation",
-    "organisations",
-    "employer",
-    "employers",
-    "your company",
-    "your team",
-    "your role",
-    "your organisation",
-    "your organization",
-    "your workplace",
-    "this role",
-    "the role",
-    "this position",
-    "the position",
-    "this job",
-    "the job",
-    "the offer",
-    "this offer",
+
+class ProspectReference(NamedTuple):
+    """A named or deictic reference to the prospect on the reference axis."""
+
+    phrase: str
+    pattern: str
+
+
+# Named, role, mission, deictic and verb-bearing references. The bare ``you`` /
+# ``there`` forms match only at the end of a clause (so "what you do" is a topic,
+# not a party reference).
+PROSPECT_REFERENCES: tuple[ProspectReference, ...] = (
+    ProspectReference("your company", r"your\s+company\b"),
+    ProspectReference("your team", r"your\s+team\b"),
+    ProspectReference("your organisation", r"your\s+organi[sz]ation\b"),
+    ProspectReference("your mission", r"your\s+mission\b"),
+    ProspectReference("your offer", r"your\s+offer\b"),
+    ProspectReference("the role", r"the\s+role\b"),
+    ProspectReference("this role", r"this\s+role\b"),
+    ProspectReference("the position", r"the\s+position\b"),
+    ProspectReference("this position", r"this\s+position\b"),
+    ProspectReference("the job", r"the\s+job\b"),
+    ProspectReference("this job", r"this\s+job\b"),
+    ProspectReference("the offer", r"the\s+offer\b"),
+    ProspectReference("this offer", r"this\s+offer\b"),
+    ProspectReference("workplace", r"workplaces?\b"),
+    ProspectReference("come aboard", r"com(?:e|ing)\s+aboard\b"),
+    ProspectReference("join you", r"join(?:ing)?\s+you\b"),
+    ProspectReference("work with you", r"work(?:ing)?\s+with\s+you\b"),
+    ProspectReference("there", r"\bthere\b(?=\s*[.!?,;]|$)"),
+    ProspectReference("you", r"\byou\b(?=\s*[.!?,;]|$)"),
 )
+
 
 SUBJECT_TOKENS: tuple[str, ...] = (
     # languages / stacks
