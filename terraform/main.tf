@@ -41,6 +41,16 @@ locals {
     for f in local.corpus_files : "${f}:${filesha1("${path.module}/../public_profile_org/${f}")}"
   ]))
 
+  # The answer cache and the frozen dataset are build inputs: a change to either
+  # must rebuild the image, or the baked answers would drift from the dataset.
+  cache_files = [
+    for f in fileset("${path.module}/../cache", "**")
+    : f if !can(regex("\\.pyc$", f))
+  ]
+  cache_hash = sha1(join("", [
+    for f in local.cache_files : "${f}:${filesha1("${path.module}/../cache/${f}")}"
+  ]))
+
   containerfile_sha = filesha1("${path.module}/../Containerfile")
 }
 
@@ -51,7 +61,7 @@ locals {
 data "external" "build_inputs_status" {
   program = [
     "bash", "-c",
-    "git -C \"$1\" status --porcelain -- src public_profile_org Containerfile pyproject.toml uv.lock .dockerignore | python3 -c 'import sys,json; print(json.dumps({\"changes\": sys.stdin.read()}))'",
+    "git -C \"$1\" status --porcelain -- src public_profile_org cache eval/golden_dataset.yaml Containerfile pyproject.toml uv.lock .dockerignore | python3 -c 'import sys,json; print(json.dumps({\"changes\": sys.stdin.read()}))'",
     "bash",
     abspath("${path.module}/.."),
   ]
@@ -124,6 +134,8 @@ resource "docker_registry_image" "janbot" {
   triggers = {
     src           = local.src_hash
     corpus        = local.corpus_hash
+    cache         = local.cache_hash
+    dataset       = filesha1("${path.module}/../eval/golden_dataset.yaml")
     containerfile = local.containerfile_sha
     pyproject     = filesha1("${path.module}/../pyproject.toml")
     uvlock        = filesha1("${path.module}/../uv.lock")
@@ -167,14 +179,44 @@ resource "google_secret_manager_secret_iam_member" "run_access" {
   member    = "serviceAccount:${google_service_account.run.email}"
 }
 
+# --- Guardrail counters: the Firestore resource E2 owns ---
+resource "google_project_service" "firestore" {
+  project            = var.project
+  service            = "firestore.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_firestore_database" "janbot" {
+  project     = var.project
+  name        = var.firestore_database_name
+  location_id = var.region
+  type        = "FIRESTORE_NATIVE"
+
+  # A guardrail counter store has no reason to be deletable by an apply slip.
+  deletion_policy         = "ABANDON"
+  delete_protection_state = "DELETE_PROTECTION_ENABLED"
+
+  depends_on = [google_project_service.firestore]
+}
+
+resource "google_project_iam_member" "run_datastore" {
+  project = var.project
+  role    = "roles/datastore.user"
+  member  = "serviceAccount:${google_service_account.run.email}"
+}
+
 # --- Cloud Run service (authenticated-only; no allUsers binding) ---
 resource "google_cloud_run_v2_service" "janbot" {
   name                = var.service_name
   location            = var.region
   deletion_protection = true
 
-  # The revision reads the secret; wait for the accessor grant to propagate.
-  depends_on = [google_secret_manager_secret_iam_member.run_access]
+  # The revision reads the secret and the Firestore counters; wait for both grants.
+  depends_on = [
+    google_secret_manager_secret_iam_member.run_access,
+    google_project_iam_member.run_datastore,
+    google_firestore_database.janbot,
+  ]
 
   template {
     service_account = google_service_account.run.email
@@ -198,6 +240,51 @@ resource "google_cloud_run_v2_service" "janbot" {
       env {
         name  = "JANBOT_MODEL_MODE"
         value = "production"
+      }
+
+      env {
+        name  = "JANBOT_GUARDRAILS"
+        value = "on"
+      }
+
+      env {
+        name  = "JANBOT_CACHE_PATH"
+        value = "/app/cache/answers.json"
+      }
+
+      env {
+        name  = "JANBOT_FIRESTORE_PROJECT"
+        value = var.project
+      }
+
+      env {
+        name  = "JANBOT_FIRESTORE_DATABASE"
+        value = google_firestore_database.janbot.name
+      }
+
+      env {
+        name  = "JANBOT_RATE_LIMIT"
+        value = tostring(var.rate_limit)
+      }
+
+      env {
+        name  = "JANBOT_RATE_WINDOW_SECONDS"
+        value = tostring(var.rate_window_seconds)
+      }
+
+      env {
+        name  = "JANBOT_DAILY_QUOTA"
+        value = tostring(var.daily_quota)
+      }
+
+      env {
+        name  = "JANBOT_MAX_QUESTION_CHARS"
+        value = tostring(var.max_question_chars)
+      }
+
+      env {
+        name  = "JANBOT_MAX_BODY_BYTES"
+        value = tostring(var.max_body_bytes)
       }
 
       env {

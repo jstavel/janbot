@@ -39,3 +39,39 @@ variable "registry_auth_file" {
   description = "Path to the Docker-format auth config the docker provider reads (a PATH, never a token)."
   default     = "~/.docker/config.json"
 }
+
+variable "firestore_database_name" {
+  type        = string
+  description = "Firestore native database id used by the guardrail counters."
+  default     = "janbot"
+}
+
+variable "rate_limit" {
+  type        = number
+  description = "Requests allowed per client IP per rate window."
+  default     = 10
+}
+
+variable "rate_window_seconds" {
+  type        = number
+  description = "Per-IP fixed rate window in seconds."
+  default     = 600
+}
+
+variable "daily_quota" {
+  type        = number
+  description = "Hard global model-call quota per UTC day."
+  default     = 500
+}
+
+variable "max_question_chars" {
+  type        = number
+  description = "Maximum accepted question length in characters."
+  default     = 2000
+}
+
+variable "max_body_bytes" {
+  type        = number
+  description = "Maximum accepted /chat request body in bytes."
+  default     = 8192
+}
