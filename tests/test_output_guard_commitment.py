@@ -1,15 +1,17 @@
-"""Structural commitment/interest sweep (ADR-010 Amendment 3).
+"""Narrowed commitment control sweep (ADR-010 Amendment 4).
 
-The sweep is the specification of the class, not a hand-written battery. The
-test generates the full product of the published axes at collection time:
+The control is **not** "every first-person commitment or interest claim". It is:
 
-    subject form × commitment predicate × prospect reference
+1. actionable commitments on Jan's behalf — availability, start/notice,
+   compensation, accepting an offer, relocation/travel;
+2. interest attributed to the prospect's company (named or deictic).
 
-Ungrounded cells must be declined; a supporting cited chunk must keep the same
-cell. Topic interest, grounded capability/values, the grounded commitment case
-and the Clojure control are the must-not-regress edge. The live
-``janbot-api-00005-xqs`` answer is one cell, not a separate test. The residual
-implication-only forms (no commitment word) are counted, not waived.
+Generic enthusiasm or politeness, topic interest and role interest are out of
+scope and are served. The generated products below are a regression of the
+published axes, not proof of the class: **a sweep generated from the
+implementation's own axes cannot fail** (it tests cross-product completeness).
+The acceptance record carries the independent measurements: 5/12 (iteration 1),
+14/64 on foreign vocabulary (iterations 2/3), 8/8 implication-only.
 """
 
 from __future__ import annotations
@@ -19,8 +21,10 @@ import itertools
 import pytest
 
 from janbot.guardrails.lexicon import (
-    COMMITMENT_PREDICATES,
-    PROSPECT_REFERENCES,
+    ACTIONABLE_COMMITMENTS,
+    COMPANY_INTEREST_PREDICATES,
+    COMPANY_REFERENCES,
+    NAMED_COMPANIES,
     SUBJECT_FORMS,
 )
 from janbot.guardrails.output_guard import apply_output_guard
@@ -31,19 +35,33 @@ LIVE_ANSWER = (
     "freedom to contribute thought."
 )
 
-SWEEP_CELLS = tuple(
-    f"{subject} {predicate.lead} {reference.phrase}"
-    for subject, predicate, reference in itertools.product(
-        SUBJECT_FORMS, COMMITMENT_PREDICATES, PROSPECT_REFERENCES
+ACTIONABLE_CELLS = tuple(
+    f"{subject} {predicate.lead}"
+    for subject, predicate in itertools.product(
+        SUBJECT_FORMS, ACTIONABLE_COMMITMENTS
     )
 )
-UNGROUNDED_ANSWERS = SWEEP_CELLS + (LIVE_ANSWER,)
-GROUNDED_PAIRS = tuple(
-    (predicate, reference)
-    for predicate, reference in itertools.product(
-        COMMITMENT_PREDICATES, PROSPECT_REFERENCES
+COMPANY_CELLS = tuple(
+    f"{subject} {predicate.lead} {reference.phrase}"
+    for subject, predicate, reference in itertools.product(
+        SUBJECT_FORMS, COMPANY_INTEREST_PREDICATES, COMPANY_REFERENCES
     )
-    if not predicate.bare
+)
+NAMED_COMPANY_CELLS = tuple(
+    f"{subject} {predicate.lead} {company}"
+    for subject, predicate, company in itertools.product(
+        SUBJECT_FORMS, COMPANY_INTEREST_PREDICATES, NAMED_COMPANIES
+    )
+)
+UNGROUNDED_CELLS = ACTIONABLE_CELLS + COMPANY_CELLS + NAMED_COMPANY_CELLS
+GROUNDED_CELLS = tuple(
+    f"I'm {predicate.lead} {reference.phrase}"
+    for predicate, reference in itertools.product(
+        COMPANY_INTEREST_PREDICATES, COMPANY_REFERENCES
+    )
+)
+GROUNDED_ACTIONABLE = tuple(
+    f"I'm {predicate.lead}" for predicate in ACTIONABLE_COMMITMENTS
 )
 
 RESIDUAL_IMPLICATION = (
@@ -57,13 +75,24 @@ RESIDUAL_IMPLICATION = (
     "I like the sound of that.",
 )
 
+OUT_OF_SCOPE = (
+    "Yes, I'd be interested.",
+    "Sounds great.",
+    "I'd be glad to talk.",
+    LIVE_ANSWER,
+    "I'm interested in trading systems and distributed testing.",
+    "I'm interested in the role.",
+    "I'd love to be part of the trading community.",
+    "I'm interested in what you do.",
+)
+
 
 def _chunks(text: str) -> list[dict[str, str]]:
     return [{"source": "profile.org", "text": text}]
 
 
-@pytest.mark.parametrize("answer", UNGROUNDED_ANSWERS)
-def test_every_ungrounded_sweep_cell_is_declined(answer: str) -> None:
+@pytest.mark.parametrize("answer", UNGROUNDED_CELLS)
+def test_every_ungrounded_actionable_or_company_cell_is_declined(answer: str) -> None:
     result = apply_output_guard(
         answer=answer,
         citations=["profile.org"],
@@ -74,9 +103,8 @@ def test_every_ungrounded_sweep_cell_is_declined(answer: str) -> None:
     assert result.rule == "commitment-claim"
 
 
-@pytest.mark.parametrize(("predicate", "reference"), GROUNDED_PAIRS)
-def test_a_supporting_chunk_keeps_the_same_cell(predicate, reference) -> None:
-    answer = f"I'm {predicate.lead} {reference.phrase}"
+@pytest.mark.parametrize("answer", GROUNDED_ACTIONABLE + GROUNDED_CELLS)
+def test_a_supporting_chunk_keeps_the_same_cell(answer: str) -> None:
     result = apply_output_guard(
         answer=answer,
         citations=["profile.org"],
@@ -87,15 +115,10 @@ def test_a_supporting_chunk_keeps_the_same_cell(predicate, reference) -> None:
     assert result.answer == answer
 
 
-@pytest.mark.parametrize(
-    "answer",
-    (
-        "I'd love to be part of the trading community.",
-        "I'm interested in trading systems and distributed testing.",
-        "I'm interested in what you do.",
-    ),
-)
-def test_topic_interest_is_not_declined(answer: str) -> None:
+@pytest.mark.parametrize("answer", OUT_OF_SCOPE)
+def test_generic_enthusiasm_politeness_and_topic_interest_are_served(
+    answer: str,
+) -> None:
     result = apply_output_guard(
         answer=answer,
         citations=["profile.org"],
@@ -104,6 +127,34 @@ def test_topic_interest_is_not_declined(answer: str) -> None:
 
     assert result.declined is False
     assert result.answer == answer
+
+
+@pytest.mark.parametrize(
+    ("answer", "chunk"),
+    (
+        ("My notice period is two months.", "My notice period is two months."),
+        ("I expect a salary of 80,000 EUR.", "I expect a salary of 80,000 EUR."),
+        ("I can start next month.", "I can start next month."),
+        ("I'm willing to relocate.", "I'm willing to relocate."),
+        ("I can travel.", "I can travel."),
+    ),
+)
+def test_actionable_commitments_are_caught_and_can_be_grounded(
+    answer: str, chunk: str
+) -> None:
+    ungrounded = apply_output_guard(
+        answer=answer,
+        citations=["profile.org"],
+        retrieved_chunks=_chunks(NEUTRAL_CHUNK),
+    )
+    grounded = apply_output_guard(
+        answer=answer,
+        citations=["profile.org"],
+        retrieved_chunks=_chunks(chunk),
+    )
+
+    assert ungrounded.declined is True
+    assert grounded.declined is False
 
 
 def test_grounded_capability_claim_is_kept() -> None:
@@ -130,28 +181,6 @@ def test_grounded_values_statement_is_kept() -> None:
     assert result.answer == answer
 
 
-@pytest.mark.parametrize(
-    ("answer", "chunk"),
-    (
-        ("I can start.", "I can start."),
-        ("I gladly accept.", "I gladly accept."),
-        ("I accept.", "I accept the offer."),
-        ("Yes, I'd be interested.", "I am interested in working for your company."),
-        ("I'm available.", "I'm available."),
-    ),
-)
-def test_a_bare_commitment_is_kept_by_a_supporting_chunk(
-    answer: str, chunk: str
-) -> None:
-    result = apply_output_guard(
-        answer=answer,
-        citations=["profile.org"],
-        retrieved_chunks=_chunks(chunk),
-    )
-
-    assert result.declined is False
-
-
 def test_clojure_control_still_answers_with_citations() -> None:
     answer = "I have used Clojure in production systems."
     result = apply_output_guard(
@@ -176,12 +205,14 @@ def test_implication_only_residual_is_counted_not_waived() -> None:
     ]
 
     # Residual: 8/8 implication-only forms have no commitment word and are not
-    # caught by a predicate-based guard. The number is the acceptance record.
+    # caught by a marker/reference predicate. The number is the acceptance record.
     assert sum(declined) == 0
 
 
 def test_published_axes_are_populated() -> None:
-    assert len(SUBJECT_FORMS) >= 6
-    assert len(COMMITMENT_PREDICATES) >= 10
-    assert len(PROSPECT_REFERENCES) >= 10
-    assert len(UNGROUNDED_ANSWERS) >= 8
+    assert len(SUBJECT_FORMS) == 6
+    assert len(ACTIONABLE_COMMITMENTS) >= 10
+    assert len(COMPANY_INTEREST_PREDICATES) >= 10
+    assert len(COMPANY_REFERENCES) >= 10
+    assert len(NAMED_COMPANIES) >= 3
+    assert len(UNGROUNDED_CELLS) >= 100

@@ -22,10 +22,13 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
 from janbot.guardrails.lexicon import (
+    ACTIONABLE_COMMITMENTS,
     CLAUSE_CONNECTORS,
-    COMMITMENT_PREDICATES,
+    COMPANY_INTEREST_PREDICATES,
+    COMPANY_REFERENCES,
     MARKERS,
-    PROSPECT_REFERENCES,
+    NAMED_COMPANY_PATTERN,
+    NON_COMPANY_PROPER_NOUNS,
     SUBJECT_TOKENS,
 )
 
@@ -92,7 +95,7 @@ def _subject_tokens_in(text: str) -> list[str]:
     return [token for token in SUBJECT_TOKENS if _contains(text, token)]
 
 
-_FIRST_PERSON = re.compile(r"\b(?:i|i'm|i am|i'd|i would|i can)\b", re.I)
+_FIRST_PERSON = re.compile(r"\b(?:i|i'm|i am|i'd|i would|i can|my)\b", re.I)
 
 
 def _marker_is_grounded(chunk_phrase: str, cited_chunk_texts: Sequence[str]) -> bool:
@@ -100,12 +103,31 @@ def _marker_is_grounded(chunk_phrase: str, cited_chunk_texts: Sequence[str]) -> 
     return any(_contains(chunk_text, chunk_phrase) for chunk_text in cited_chunk_texts)
 
 
-def _commitment_grounded(predicate: object, reference: object, cited: Sequence[str]) -> bool:
-    """Whether a cited chunk sentence contains both the predicate and the reference."""
+def _named_company_in(clause: str) -> str | None:
+    """The first capitalized proper noun that is not a technology/common word."""
+    for match in re.finditer(NAMED_COMPANY_PATTERN, clause):
+        candidate = match.group(0).strip()
+        if candidate.lower() in NON_COMPANY_PROPER_NOUNS:
+            continue
+        first = candidate.split()[0].lower()
+        if first in NON_COMPANY_PROPER_NOUNS:
+            continue
+        return candidate
+    return None
+
+
+def _company_grounded(predicate: object, reference: object, cited: Sequence[str]) -> bool:
+    """Whether a cited chunk sentence contains the predicate and the company reference."""
+    if isinstance(reference, str):
+        reference_match = lambda sentence: _contains(sentence, reference)
+    else:
+        reference_match = lambda sentence: re.search(
+            reference.pattern, sentence, re.I
+        ) is not None
     for chunk_text in cited:
         for chunk_sentence in _split_sentences(chunk_text):
-            if _contains(chunk_sentence, predicate.chunk_phrase) and re.search(
-                reference.pattern, chunk_sentence, re.I
+            if _contains(chunk_sentence, predicate.chunk_phrase) and reference_match(
+                chunk_sentence
             ):
                 return True
     return False
@@ -114,41 +136,49 @@ def _commitment_grounded(predicate: object, reference: object, cited: Sequence[s
 def _commitment_claim_is_ungrounded(
     clause: str, cited_chunk_texts: Sequence[str]
 ) -> bool:
-    """Whether the clause carries a first-person commitment/interest claim.
+    """Whether the clause carries a narrowed commitment claim (ADR-010 Amendment 4).
 
-    The rule is structural: a first-person subject, a commitment predicate from the
-    published predicate axis, and a named or deictic prospect reference. A bare
-    predicate (interest, availability, start, acceptance) is a commitment without a
-    reference. The claim is an over-claim when no cited chunk sentence contains the
-    predicate and the reference. Topic interest has no prospect reference and is
-    left to the capability rule.
+    The control is deliberately narrow: **actionable** commitments on Jan's behalf
+    (availability, start/notice, compensation, accepting an offer, relocation/travel)
+    and **interest attributed to the prospect's company** (named or deictic company
+    reference). Generic enthusiasm or politeness (“Yes, I'd be interested”, “I'd be
+    glad to talk”) and topic/role interest are out of scope and are served. The guard
+    is a best-effort marker/reference vocabulary; it is not a semantic judge.
     """
     if _FIRST_PERSON.search(clause) is None:
         return False
+
     grounded_spans: list[tuple[int, int]] = []
     ungrounded_spans: list[tuple[int, int]] = []
-    for predicate in COMMITMENT_PREDICATES:
+
+    for predicate in ACTIONABLE_COMMITMENTS:
         for match in re.finditer(predicate.pattern, clause, re.I):
-            references = [
-                reference
-                for reference in PROSPECT_REFERENCES
-                if re.search(reference.pattern, clause, re.I)
-            ]
-            if references:
-                grounded = all(
-                    _commitment_grounded(predicate, reference, cited_chunk_texts)
-                    for reference in references
-                )
-            elif predicate.bare:
-                grounded = _marker_is_grounded(
-                    predicate.chunk_phrase, cited_chunk_texts
-                )
-            else:
-                continue
-            if grounded:
+            if _marker_is_grounded(predicate.chunk_phrase, cited_chunk_texts):
                 grounded_spans.append(match.span())
             else:
                 ungrounded_spans.append(match.span())
+
+    references: list[object] = [
+        reference
+        for reference in COMPANY_REFERENCES
+        if re.search(reference.pattern, clause, re.I)
+    ]
+    named_company = _named_company_in(clause)
+    if named_company is not None:
+        references.append(named_company)
+
+    for predicate in COMPANY_INTEREST_PREDICATES:
+        for match in re.finditer(predicate.pattern, clause, re.I):
+            if not references:
+                continue
+            if all(
+                _company_grounded(predicate, reference, cited_chunk_texts)
+                for reference in references
+            ):
+                grounded_spans.append(match.span())
+            else:
+                ungrounded_spans.append(match.span())
+
     for start, end in ungrounded_spans:
         if any(
             ground_start <= start and end <= ground_end
