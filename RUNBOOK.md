@@ -159,6 +159,7 @@ gcloud run services update-traffic janbot-api --region europe-central2 --to-revi
 | file descriptors | the full suite fails in the store tests only | `ulimit -n 16384` |
 | stale state lock | `Error acquiring the state lock` after an interrupted command | confirm no terraform is running, then `terraform force-unlock <ID>` |
 | dirty build tree | `plan` fails on the dirty-build-tree precondition | commit or stash — the image is built from the working tree, not a commit |
+| Containerfile touched by a docs change | `plan` wants `1 to add, 1 to change, 1 to destroy` although no code changed — `triggers.containerfile` hashes the **file**, comments included | expected: the next `apply` rebuilds an identical-behaviour image (~3 min, new digest, new revision). Measured 2026-10-21: a single comment edit moved the trigger `a36e324b…` → `b880f5b7…`. If a rebuild must not happen, don't edit `Containerfile` in a docs commit — fix the reference in the same commit as the next real deploy |
 | image tag after a rebase merge | the deployed tag is a branch commit (`api:1aded50`) while `main` carries rewritten SHAs (`569cf4d`) | the tag records the **build input**, and the build inputs are hashed: prove the tree with `git diff <tagged sha> <main sha> --stat` (empty = same tree), and cite the `main` SHA in documentation — see [README §Merging](README.md) |
 
 ## 9. What this file does not cover
