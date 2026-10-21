@@ -14,7 +14,7 @@ contract and the AI core are untouched.
 | 2 | Per-IP rate limit | `src/janbot/guardrails/limits.py` | `test_nth_request_is_served_and_n_plus_one_is_refused` |
 | 3 | Hard global quota (conservative request quota) | same | `test_exactly_the_quota_is_allowed_under_concurrency` |
 | 4 | Input bounds | `BodySizeLimitMiddleware` + the `/chat` question check | `test_oversized_body_is_rejected_before_parsing`; `test_over_long_question_is_rejected_before_rate_and_model` |
-| 5 | Over-claiming guard | ADR-010 inside `ChatProgram.forward`; commitment/interest class (ADR-010 Amendment 2) | `probe_over_claiming-e2-output.txt`; `tests/test_output_guard_commitment.py` |
+| 5 | Over-claiming guard | ADR-010 inside `ChatProgram.forward`; **narrowed** actionable/company class (ADR-010 Amendment 4) | `probe_over_claiming-e2-output.txt`; `tests/test_output_guard_commitment.py` |
 | 6 | Abuse control | rate + quota + input bounds (CORS arrives at E3) | the two counter tests above |
 
 **Fail closed:** every Firestore error becomes a denial (`503`), never a pass.
@@ -116,40 +116,41 @@ The Firestore IaC moved from E4b to E2; E4b is WIF + GitHub Actions only
 `terraform plan`; the **owner runs the apply** (same blast-radius rule as E1.5),
 then verifies the phase-2 checks.
 
-## Commitment/interest class (ADR-010 Amendment 3, 2026-10-20)
+## Commitment control — narrowed to actionable commitments (ADR-010 Amendment 4, 2026-10-21)
 
-Iteration 1 closed the live string and its neighbours but not the class: on an independent
-12-formulation battery it refused **5/12** and leaked **7/12**. Amendment 2's marker/party
-lists were not the class: deictic prospect references (“work there”, “join you”, “what I want
-to be part of”, “move forward with you”) escaped a required `PARTY_TOKENS` match, and the
-predicate list still enumerated verbs.
+Three iterations grew the same shape (string → hand battery → generated sweep → foreign
+vocabulary) and a vocabulary written outside the implementation still refused only **14/64**
+cases (**78% leak**); iteration 1 refused **5/12**, and **8/8** implication-only forms remain
+uncovered. The live failure on `janbot-api-00005-xqs` — *“Yes, I’d be interested.”* — is a
+polite answer to a direct recruiter question: **the product working, not a defect**. The
+control is narrowed rather than chased.
 
-Iteration 2 expresses the class as a **published product**:
+**Protected (best-effort):**
 
-- **subjects:** `I`, `I'm`, `I am`, `I'd`, `I would`, `I can` (6);
-- **commitment predicates:** glad/keen/happy/eager/delighted/thrilled to, love to, want to,
-  interested in, open to, look forward to, jump at the chance to, gladly accept, available
-  for, can start, drawn/attracted to, excited about/to, like to, be part of, join, work
-  for/with, apply for, be considered for (29);
-- **prospect references:** your company/team/organisation/mission/offer, the/this
-  role/position/job/offer, workplace, come aboard, join you, work with you, there, you (19).
+- **Actionable commitments on Jan’s behalf:** availability, start date / notice period,
+  compensation expectations, accepting an offer, willingness to relocate or travel —
+  anything a recruiter could reasonably act on as a decision Jan made.
+- **Interest attributed to the prospect’s company:** a claim about a relationship with that
+  company (named or deictic) that the corpus does not support.
 
-A first-person subject + commitment predicate + named or deictic prospect reference is an
-ungrounded commitment unless a cited chunk sentence contains the predicate and the reference.
-The clause is dropped; the answer declines if nothing defensible remains. Bare
-interest/availability/start/acceptance is a commitment without a reference.
+**Out of scope and served:** generic enthusiasm or politeness in answer to a direct question
+(*“Yes, I’d be interested.”*, *“Sounds great.”*, *“I’d be glad to talk.”*), topic interest
+(*“trading systems”*, *“what you do”*) and role interest (*“the role”*). The live
+`00005` answer is served.
 
-**Generated sweep:** `tests/test_output_guard_commitment.py` covers **3,306** ungrounded
-cells from the product plus the live `janbot-api-00005-xqs` cell, and **456**
-supporting-chunk cells (24 non-bare predicates × 19 references). The test method is the
-specification; it is not a hand-written battery. Topic interest (trading
-community/systems/what you do), grounded capability/values/commitment and the Clojure control
-stay served.
+**Kept, not weakened:** D1/D2 capability over `SUBJECT_TOKENS`, grounded commitments, the
+Clojure control, grounded capability and values.
 
-**Residual, with a number:** **8/8 implication-only formulations with no commitment word**
-(“sounds great”, “that sounds like a good fit”, “count me in”, “I'm in”, …) are **not
-caught**. That is the floor; a predicate-based guard cannot imply a commitment from tone
-alone. The layer must be re-checked live on the **next revision**.
+**Tests:** `tests/test_output_guard_commitment.py` generates the actionable/company products
+and the named-company cells, pins the out-of-scope served cases and counts the residual. The
+generated products are a **regression of the published axes, not proof of the class**: a
+sweep generated from the implementation’s own axes cannot fail (it tests cross-product
+completeness). The acceptance record below is the independent measurement, not the sweep.
+
+**Residual, with numbers:** **5/12** (iteration 1), **14/64** on foreign vocabulary
+(iterations 2/3; 78% leak), **8/8** implication-only. The predicate remains a
+marker/reference vocabulary and cannot be complete; coverage is **best-effort by owner
+decision**. The layer is re-checked live on the **next revision** against the narrowed cases.
 
 ## Over-claiming evidence (ADR-010, control 5)
 
