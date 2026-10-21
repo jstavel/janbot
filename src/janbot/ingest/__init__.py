@@ -7,6 +7,8 @@ from pathlib import Path
 from janbot.ingest.org import Chunk, read_org_file
 from janbot.ingest.scope import iter_org_files, within
 from janbot.store import Embedder, VectorStore, default_embedder
+from janbot.store.embedding_model import verify_pinned_model
+from janbot.store.identity import write_index_identity
 
 __all__ = [
     "Chunk",
@@ -49,8 +51,14 @@ def index_corpus(
             continue
         chunks.extend(read_org_file(path))
 
+    if embedder is None:
+        model = verify_pinned_model()
+        embedder = default_embedder()
+    else:
+        model = {"name": "injected", "sha256": "injected", "url": "injected"}
+
     scope_key = str(root_resolved)
-    store = VectorStore(index_path, embedder or default_embedder())
+    store = VectorStore(index_path, embedder)
     store.upsert(chunks, scope_key=scope_key)
     desired = {chunk.id for chunk in chunks}
     scopes = store.scope_keys()
@@ -69,4 +77,5 @@ def index_corpus(
             if source and within(root, source):
                 stale.append(chunk_id)
     store.delete(stale)
+    write_index_identity(index_path, store, model)
     return len(chunks)

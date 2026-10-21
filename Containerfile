@@ -61,7 +61,12 @@ COPY eval/golden_dataset.yaml ./eval/golden_dataset.yaml
 COPY cache/ ./cache/
 COPY README.md ./
 
-# Bake: build the index and download the ONNX MiniLM model. No key; no startup ingest.
+# Fetch and verify the pinned ONNX MiniLM model before building the index. A
+# transient download is retried; a persistent failure or sha mismatch fails the
+# build loudly. The model identity is recorded in index-identity.json.
+RUN python -m janbot.store.embedding_model
+
+# Bake: build the index. No key; no startup ingest.
 RUN python -m janbot.ingest
 
 # Bake the pinned answer cache: validates provenance (run id, dataset sha, corpus

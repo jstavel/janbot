@@ -13,6 +13,7 @@ import pytest
 
 from janbot.ingest import index_corpus, read_org_file
 from janbot.store import VectorStore
+from janbot.store.identity import read_index_identity
 
 Embedder = Callable[[list[str]], list[list[float]]]
 
@@ -328,3 +329,23 @@ def test_rebuild_prunes_orphans_without_a_scope_key(
 
     assert legacy_id not in ids
     assert len(ids) == 1
+
+
+def test_two_clean_builds_record_the_same_index_identity(
+    tmp_path: Path, embedder: Embedder, write_org: Callable[..., None]
+) -> None:
+    corpus = tmp_path / "corpus"
+    write_org(corpus / "a.org", "Alpha")
+    write_org(corpus / "b.org", "Beta")
+    first = tmp_path / "index-a"
+    second = tmp_path / "index-b"
+
+    assert index_corpus(corpus, first, embedder) == 2
+    assert index_corpus(corpus, second, embedder) == 2
+
+    first_identity = read_index_identity(first)
+    second_identity = read_index_identity(second)
+
+    assert first_identity["index_identity"] == second_identity["index_identity"]
+    assert first_identity["chunk_count"] == second_identity["chunk_count"] == 2
+    assert first_identity["embedding_model"]["name"] == "injected"
