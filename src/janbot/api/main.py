@@ -29,6 +29,7 @@ from fastapi.exceptions import ResponseValidationError
 from fastapi.responses import JSONResponse
 
 from janbot.api.contract import ChatRequest, ChatResponse, decline
+from janbot.api.observability import log_decline
 from janbot.config import (
     GUARDRAILS_ON,
     MODEL_MODE_PRODUCTION,
@@ -99,9 +100,11 @@ class BodySizeLimitMiddleware:
             try:
                 length = int(declared)
             except ValueError:
+                log_decline("guardrail", "invalid-content-length")
                 await _send_error(send, 400, "invalid content-length")
                 return
             if length > self.max_bytes:
+                log_decline("guardrail", "body-too-large")
                 await _send_error(send, 413, "request body too large")
                 return
 
@@ -119,6 +122,7 @@ class BodySizeLimitMiddleware:
         try:
             await self.app(scope, limited_receive, send)
         except _BodyTooLarge:
+            log_decline("guardrail", "body-too-large")
             await _send_error(send, 413, "request body too large")
 
 
@@ -253,6 +257,16 @@ def create_app(
             BodySizeLimitMiddleware, max_bytes=config.max_body_bytes, path="/chat"
         )
 
+    def _program_decline_cause(exc: Exception, program) -> str:
+        action = getattr(program, "last_guard_action", None)
+        if isinstance(action, str) and action.startswith("declined: "):
+            return action.split(": ", 1)[1].strip()
+        if isinstance(exc, EmptyRetrieval):
+            return "empty-retrieval"
+        if isinstance(exc, LowRelevance):
+            return "low-relevance"
+        return "uncited"
+
     def _guard_denied(decision) -> HTTPException:
         if decision.reason == STORE_ERROR:
             return HTTPException(
@@ -278,6 +292,7 @@ def create_app(
         active_limiter = app.state.limiter
 
         if guardrails_on and len(payload.question) > config.max_question_chars:
+            log_decline("guardrail", "input-too-long")
             raise HTTPException(
                 status_code=422,
                 detail=(
@@ -289,6 +304,7 @@ def create_app(
         if active_limiter is not None:
             decision = active_limiter.check_rate(_client_ip(request))
             if not decision.allowed:
+                log_decline("guardrail", decision.reason)
                 raise _guard_denied(decision)
 
         if active_cache is not None:
@@ -299,11 +315,13 @@ def create_app(
         if active_limiter is not None:
             decision = active_limiter.consume_quota()
             if not decision.allowed:
+                log_decline("guardrail", decision.reason)
                 raise _guard_denied(decision)
 
         try:
             return app.state.program(question=payload.question)
-        except (EmptyRetrieval, LowRelevance, UncitedAnswer):
+        except (EmptyRetrieval, LowRelevance, UncitedAnswer) as exc:
+            log_decline("program", _program_decline_cause(exc, app.state.program))
             return decline(question=payload.question)
         except ValueError as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
