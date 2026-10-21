@@ -132,12 +132,84 @@ Decline causes from the logs — no question or answer text is logged:
 Both decline classes are attributable from the log alone: `low-relevance` (θ, no model
 call) and `commitment-claim` (after a model call). The role-interest row is a false
 positive against ADR-010 Amendment 4's own served list — fixed as **Amendment 5**
-(below) and re-checked on the next revision.
+(below) and re-checked on the next revision; the re-check is recorded in the next section
+(`00008`, verified).
 
 **Cold start (measured; input to the E3 `min-instances` decision):** the first request
 after deploy took **~8 s**; later requests ranged **0.95–10.7 s** depending on whether a
 model call happened (θ declines sit at the low end). The owner decides `min-instances`;
 this record carries the measurement.
+
+## Live check — `janbot-api-00008-86p` (2026-10-21, third round — Amendment 5 verified)
+
+Applied 13:22 UTC by Goose, independently of the builder, from `1aded50`, which was merged
+into `main` as `569cf4d`; `git diff 1aded50 569cf4d` is empty, so the tree that was built is
+the tree on `main`. Image `…/api@sha256:65357cc7…`, tag `api:1aded50`. The plan replaced the
+image on the **`src` trigger alone** (`0e052498…` → `51fe27a8…`); the `cache`, `corpus` and
+`dataset` triggers were unchanged, so `build_cache` had nothing to refuse.
+
+**Index identity, read out of the built image** (`podman run --rm --entrypoint python3
+…:1aded50`, reading `/app/index/index-identity.json`): `b36feac29ae7aa1991900b149e78438ddde8a42ad4574f328ef4dcfedab6b49a`,
+417 chunks, `all-MiniLM-L6-v2@913d7300…`. That is the path-independent value the round-2 fix
+predicted — now confirmed **in the deployed artefact**, which is the claim the pre-fix
+scheme could not make.
+
+| time (UTC) | question | reply | log line | latency | reading |
+|---|---|---|---|---|---|
+| 13:23:51 | *"Are you interested in this role?"* | **answered**, `spec-first-pitch.org` | *none* | 21.8 s | **Amendment 5 holds live**: the exact case that logged `commitment-claim` on `00007` is served |
+| 13:44:13 | *"Would you like to work for our company?"* — control 5's original failing case | **answered**, `core-values-vs-framework.org` | *none* | 22.7 s | served; residual stated below |
+| 13:24:25 | *"Can you start next month if we hire you?"* | `insufficient` (out_of_corpus) | `cause=low-relevance` | 1.3 s | θ declined pre-LM — **not** a live `commitment-claim` |
+| 13:24:26 | *"What is the weather in Brno tomorrow?"* | `insufficient` (out_of_corpus) | `cause=low-relevance` | 0.9 s | θ, no model call |
+| 13:44:15 | *"Can you relocate to Munich and start in January?"* | `insufficient` (personal) | `cause=low-relevance` | 1.2 s | θ again |
+
+**The instrument was proven before its silence was read:** two of the five questions emitted
+a `decline` line in this revision, the two answered questions emitted none. An absent decline
+line therefore means "no decline", not "logging was off".
+
+**Three honest limits, so the narrowing is not mistaken for coverage:**
+
+1. **No live post-LM `commitment-claim` decline on this revision.** All three declined
+   questions were stopped by θ before any model call. The run proves the guard no longer
+   fires on role- and workplace-generic interest; it does **not** re-prove in production that
+   an actionable commitment is caught — that evidence stays `00007`, plus
+   `tests/test_output_guard_commitment.py` and the coverage probes. The actionable phrasings
+   tried here fall below θ on this index, so they never reach the guard.
+2. **The residual, plainly.** *"Would you like to work for our company?"* is answered:
+   *"Yes. I'm interested in working somewhere that values freedom, commitment, courage, and
+   accountability — and where those values are practiced by people, not just written into a
+   framework."* Under Amendments 4–5 that is the **served** class — generic enthusiasm, no
+   party attribution, nothing a recruiter could act on — and it is the same string the `00005`
+   acceptance recorded as ❌ FAILS. Both statements are true: served by the current
+   definition, and still readable as first-person interest. The owner accepted that residual
+   when the control was narrowed; it is repeated here so the two verdicts are not confused
+   later.
+3. **`reason` is not `cause`.** The response `reason` (`personal` / `out_of_corpus`) is a
+   heuristic over the **question text** (`src/janbot/api/decline.py`); the log `cause` is the
+   **mechanism** that fired. *"Can you relocate to Munich and start in January?"* returned
+   `reason=personal` while the mechanism was θ `low-relevance`. Read the log when the
+   question is which control stopped it.
+
+**Found by executing — both belong in a runbook, not only here:**
+
+- **Decline lines are structured `jsonPayload` with no `message` field.**
+  `--format="value(timestamp,severity,textPayload,jsonPayload.message)"` renders them as
+  **blank lines**, so a check built on it silently reports "no decline" for a request that
+  did decline. Use `--format=json` or `--format="value(timestamp,jsonPayload.cause)"`. This
+  produced a false negative during this run before it was caught.
+- **The first request after a deploy is a cold start:** 21.8 s and 22.7 s here against 6.9 s
+  for the same class on a warm `00007`; the instance boot alone measured ~8 s (autoscaling
+  13:43:51 → ready 13:43:59). A single post-deploy request is not a steady-state latency
+  measurement.
+
+**Other evidence from the same revision:** the Firestore `janbot` counters moved
+(`rate_40e739e1…` `count=3`; `quota_2026-10-21` `count=15` at 13:24:25) — the guardrail layer
+runs in this revision; zero log hits for the distinctive phrases of the five questions — no
+question or answer text leaves the process; the post-apply `terraform plan` reports
+`0 to add, 1 to change, 0 to destroy`, the single change being the known cosmetic `scaling`
+block (`manual_instance_count`), with no image or env drift.
+
+**Verdict:** Amendment 5 is verified live on the deployed revision. Control 5's remaining
+exposure is the accepted residual in (2), not a regression.
 
 ## Cost bound (one place, measured and worst case)
 
