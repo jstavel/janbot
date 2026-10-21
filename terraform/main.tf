@@ -8,7 +8,7 @@ provider "docker" {
   # reads the host Docker config on its own). This block contains NO secret — just
   # the path to the client-side config file — so the token stays out of Terraform
   # config and state. The credential itself is written there from a short-lived
-  # gcloud token (see terraform/README.md; renegotiated marker item 1).
+  # gcloud token (see terraform/RUNBOOK.md; renegotiated marker item 1).
   registry_auth {
     address     = "${var.region}-docker.pkg.dev"
     config_file = var.registry_auth_file

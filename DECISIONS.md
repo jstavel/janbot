@@ -59,7 +59,7 @@ falsified one. Pin after the merge.
 | subject | why it is a gap | where it lives now |
 | --- | --- | --- |
 | Reversibility of "Terraform owns the image" (option (c)) | **ADR candidate.** The reversibility claim was the justification for adopting option (c); it turned out false and was corrected. A decision whose rationale was falsified deserves a dated record, not only a plan design note. | `epic-gcp-deploy/story-terraform-core-plan.md` §Design Notes — branch `m4-e15-closeout-review-fixes` (unmerged) |
-| Durable rollback: `keep_remotely`, `create_before_destroy`, per-sha tags, 30-day horizon | **ADR candidate.** A stated guarantee with a stated horizon — "what we promise" rather than "how we build it". | same plan + `terraform/README.md` — unmerged |
+| Durable rollback: `keep_remotely`, `create_before_destroy`, per-sha tags, 30-day horizon | **ADR candidate.** A stated guarantee with a stated horizon — "what we promise" rather than "how we build it". | same plan + `terraform/RUNBOOK.md` — unmerged |
 | Secret replication inside `europe-central2` | **Fold into ADR-007**, not a new ADR: it is a consequence of the recorded region claim that was not previously enforced. | unmerged round |
 | `registry_auth` block with a path, no token | Mechanically forced by provider behaviour; recorded as a `<renegotiated>` marker inside the plan's frozen block. No ADR: it is not a choice. | plan marker — unmerged |
 | Secret version stays out-of-band (no `google_secret_manager_secret_version`) | Boundary already stated in the plan's frozen `Always`; rejected as a finding (A5). ADR-worthy only if it ever becomes contested outside this plan. | plan frozen block |

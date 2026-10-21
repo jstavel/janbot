@@ -1,5 +1,10 @@
 # Terraform core (M4/E1.5) — runbook
 
+**Scope:** the *stack* procedure — engine and registry prereqs, state bootstrap, build/push,
+secret handling, rollback horizon and the destroy caveats. The project-level loop (tests,
+index, answer cache, live check) is [`../RUNBOOK.md`](../RUNBOOK.md); it links here for the
+deploy steps rather than copying them, so there is one authority for each command.
+
 Owner decision **option (c)**: **Terraform owns the whole stack, including the container
 image** — build + push happen inside `terraform apply`. One graph; the image is referenced
 by **digest**, never a tag. **Terraform owns every deployable resource except the state
@@ -153,6 +158,13 @@ gcloud run services update janbot-api --region europe-central2 \
   in prose.
 - A brand-new secret version can take a few seconds to resolve for Cloud Run; retrying the
   apply succeeds.
+- **A killed command leaves the state lock behind (observed 2026-10-21).** Piping terraform
+  into `head`/`tail` closes stdout, the process dies on SIGPIPE mid-run, and the GCS lock
+  object (`m4-e1.5/default.tflock`) is never released — the next `apply` fails with
+  `Error acquiring the state lock`. Redirect to a file and read the file. Recovery, after
+  confirming with `pgrep -af terraform` that no other operator is running:
+  `terraform force-unlock <ID from the error>`. Nothing is corrupted; the plan simply did
+  not finish.
 
 ## Rollback horizon
 
