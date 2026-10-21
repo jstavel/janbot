@@ -58,6 +58,37 @@ artifact must be regenerated when either changes. The cache key is normalized
 question text (trim, lower-case, whitespace-collapsed); novel phrasings miss by
 design.
 
+## Embedding model and index identity
+
+The baked index's embedder is **pinned and verified**, not an implicit download:
+
+- model `all-MiniLM-L6-v2`, sha256 `913d7300ceae3b2dbc2c50d1de4baacab4be7b9380491c27fab7418616a16ec3`;
+- build step `python -m janbot.store.embedding_model` asserts the installed Chroma provider uses that model/sha, warms the download with a short retry for transient network failures, re-verifies the archive sha, and **fails the build on a mismatch or persistent failure**;
+- `python -m janbot.ingest` writes `index-identity.json` beside the index: model identity, chunk count and a sha256 over the sorted chunk ids, documents and embeddings.
+
+**Reproducibility check (2026-10-21):** two clean local builds from the same commit/corpus produced the same identity file — `index_identity=a785a786a16b9d53bfb77500373fcb6b17a7440ccb438072a983ea07d892db69`, 417 chunks, model `all-MiniLM-L6-v2@913d7300…`; `diff` of the two identity files was empty. The image build runs the same two steps.
+
+**Reference retrieval:** unchanged on the pinned index — `retrieval_accuracy` **34/49 = 0.6939**, `retrieval_mrr` **0.7415**, matching the reference `156b5d1a`/`5ed5d8d7`. No re-baseline is triggered by the pin.
+
+**The 0.2604 observation:** on the pinned index the top-two similarities for *“Would you like to work for our company?”* are **0.260422 / 0.252066**. The θ gate declines only when **both** are below 0.26, so this question is **not** a θ decline on this index. The live `00006` decline must therefore be attributed by the decline logs (below), not assumed to be θ.
+
+## Decline attribution
+
+Every production decline emits one JSON line at WARNING, with no question text, answer text, citation labels or key:
+
+```json
+{"event":"decline","component":"program","cause":"low-relevance"}
+{"event":"decline","component":"program","cause":"commitment-claim"}
+{"event":"decline","component":"guardrail","cause":"rate_limited"}
+```
+
+- **`component=program`:** `empty-retrieval`, `low-relevance`, `uncited`, `D1-all-invalid`, `commitment-claim`, `guard-error`, `D2-empty`, `D1`.
+- **`component=guardrail`:** `rate_limited`, `quota_exceeded`, `store_error`, `input-too-long`, `body-too-large`, `invalid-content-length`.
+
+The `/chat` contract is unchanged; the cause is only in the logs. `tests/test_api_decline_logging.py` captures both a θ decline and a guard decline and fails if the question, a test token or key text appears.
+
+**Live check after the apply:** one θ decline (e.g. a personal/out-of-corpus question) must log `cause=low-relevance`; one guard decline (e.g. a commitment/uncited answer) must log the guard rule. Scan the log line for the cause only; no text.
+
 ## Cost bound (one place, measured and worst case)
 
 Measured production call (`openrouter/auto` → `openai/gpt-6-luna`, 2026-10-20):
@@ -181,12 +212,17 @@ decision**. The layer is re-checked live on the **next revision** against the na
 
 ```sh
 ulimit -n 16384 && uv run pytest -q
+python -m janbot.store.embedding_model
+python -m janbot.ingest --index /tmp/index-a && python -m janbot.ingest --index /tmp/index-b
+diff -u /tmp/index-a/index-identity.json /tmp/index-b/index-identity.json
 JANBOT_MODEL_MODE=eval uv run python _bmad-output/initiative-janbot/epic-gcp-deploy/probe_over_claiming.py
 terraform -chdir=terraform validate && terraform -chdir=terraform plan
 python -m janbot.guardrails.build_cache \
   --source cache/answers-fc430d3e17714457b896bafdac9cc1ac.json \
   --out /tmp/answers.json
 ```
+
+A live θ decline and a live guard decline must be attributable from the logs (`{"event":"decline","component":"program","cause":"low-relevance"}` / the guard rule), with no text content. `tests/test_api_decline_logging.py` pins the invariant.
 
 ## Live acceptance (2026-10-20, owner-run with an independent reviewer)
 

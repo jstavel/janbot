@@ -145,6 +145,11 @@ Quick review, 2026-10-20. Ten findings; nine patched, one deferred with a named 
 - Runbook/evidence: `run-e2-guardrails.md`; the cost table carries the measured and worst-case routing, the money-tail acceptance and the operation/latency arithmetic.
 - Post-acceptance fix (2026-10-21, ADR-010 Amendment 4): the control is **narrowed** to actionable commitments (availability, start/notice, compensation, accepting an offer, relocation/travel) and interest attributed to the prospect's company (named or deictic). Generic enthusiasm/politeness, topic interest and role interest are served; the live `00005` answer is desired behaviour. Lexicon `2026-10-21.1`; tests express the narrowed class and the out-of-scope served cases; the generated product is a regression of the axes, not proof. Residual: **5/12** (iteration 1), **14/64** foreign vocabulary (78% leak), **8/8** implication-only; best-effort by owner decision; live re-check on the next revision.
 
+## Implementation Notes (2026-10-21 close-out)
+
+- **Embedding model pinned.** `all-MiniLM-L6-v2` sha256 `913d7300…` is asserted against the installed Chroma provider, the archive is re-verified and transient downloads retried; the build fails loudly on mismatch. `index-identity.json` records the model identity, 417 chunks and the payload hash. Two clean local builds produced the same identity `a785a786…`; the reference retrieval is **unchanged** (34/49 = 0.6939, MRR 0.7415), so no re-baseline is triggered. The observed 0.260422/0.252066 top-two for “Would you like to work for our company?” is **not** a θ decline (the gate declines only when both are below 0.26).
+- **Decline attribution.** `/chat` declines emit a JSON log line with `component=program|guardrail` and a closed-set cause; no question/answer/key text. `tests/test_api_decline_logging.py` pins both a θ and a guard decline and the no-text invariant; the `/chat` contract is unchanged.
+
 ## Verification
 
 **Commands:**
