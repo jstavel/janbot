@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-LEXICON_VERSION = "2026-10-21.1"
+LEXICON_VERSION = "2026-10-21.2"
 
 
 class Marker(NamedTuple):
@@ -198,6 +198,15 @@ NAMED_COMPANIES: tuple[str, ...] = (
 
 # Proper nouns that are technologies/products/topics, not companies. Company
 # names (Red Hat, AWS, JanBot, …) stay eligible; a cited chunk can ground them.
+#
+# Evidence for the additions (ADR-010 Amendment 5, live `janbot-api-00007-xjj`):
+# the named-company detector read "AI-assisted" as the prospect's company and
+# turned a role-attributed interest statement ("I'm especially interested in
+# applying an architect's mindset to AI-assisted workflows") into a covered
+# party-interest claim, declining "Are you interested in this role?" as
+# `commitment-claim`. The same live answers also contained "VPN", "Layer 3"
+# and "IPsec". Roles, positions and jobs are NOT party references either
+# (Amendment 4 serves role interest); the reference list below is unchanged.
 NON_COMPANY_PROPER_NOUNS = frozenset(
     {
         "i",
@@ -230,6 +239,75 @@ NON_COMPANY_PROPER_NOUNS = frozenset(
         "while",
         "sounds",
         "count",
+        # technologies/products/topics observed in live answers (00007): "AI"
+        # and its hyphenated compounds resolve through the leading-word prefix
+        # check to "ai"; the rest are named outright.
+        "ai",
+        "vpn",
+        "ipsec",
+        "layer",
+        # AI vendors/tools — never the prospect's company in an interest claim.
+        "openai",
+        "anthropic",
+        "gemini",
+        "chatgpt",
+        "claude",
+        # cities/regions — locations, not the employer.
+        "prague",
+        "brno",
+        "czech",
+        "czechia",
+        "warsaw",
+        "europe",
+        # sentence-initial discourse, courtesy and stance words that open an
+        # answer before a first-person statement; none is a company name.
+        "certainly",
+        "absolutely",
+        "definitely",
+        "indeed",
+        "gladly",
+        "surely",
+        "obviously",
+        "clearly",
+        "honestly",
+        "frankly",
+        "personally",
+        "hopefully",
+        "basically",
+        "essentially",
+        "currently",
+        "glad",
+        "happy",
+        "pleased",
+        "excited",
+        "keen",
+        "eager",
+        "curious",
+        "motivated",
+        "grateful",
+        "welcome",
+        "thank",
+        "thanks",
+        "sure",
+        "well",
+        "good",
+        "great",
+        "true",
+        "right",
+        "exactly",
+        "also",
+        "moreover",
+        "however",
+        "overall",
+        "anyway",
+        "besides",
+        "meanwhile",
+        "ok",
+        "okay",
+        "wow",
+        "ah",
+        "oh",
+        "hmm",
         "python",
         "perl",
         "clojure",

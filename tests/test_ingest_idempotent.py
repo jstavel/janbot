@@ -58,7 +58,7 @@ def _expected_payload(
     path, so a corruption in either half of a stored payload is detected."""
     expected: dict[str, tuple[str, tuple[float, ...]]] = {}
     for path in sorted(corpus.glob("*.org")):
-        for chunk in read_org_file(path):
+        for chunk in read_org_file(path, corpus):
             expected[chunk.id] = (
                 chunk.text,
                 tuple(float(value) for value in embedder([chunk.text])[0]),
@@ -136,7 +136,7 @@ def test_removed_file_chunks_are_deleted(
     index_path = tmp_path / "index"
 
     assert index_corpus(corpus, index_path, embedder) == 2
-    dropped = _ids(index_path, embedder) & {chunk_id(corpus / "drop.org", "Drop")}
+    dropped = _ids(index_path, embedder) & {chunk_id(corpus / "drop.org", "Drop", corpus)}
     assert len(dropped) == 1
 
     (corpus / "drop.org").unlink()
@@ -144,7 +144,7 @@ def test_removed_file_chunks_are_deleted(
     assert index_corpus(corpus, index_path, embedder) == 1
     remaining = _ids(index_path, embedder)
 
-    assert remaining == {chunk_id(corpus / "keep.org", "Keep")}
+    assert remaining == {chunk_id(corpus / "keep.org", "Keep", corpus)}
     assert not remaining & dropped
 
 
@@ -160,7 +160,7 @@ def test_inserting_heading_above_leaves_chunk_id_unchanged(
     index_path = tmp_path / "index"
 
     assert index_corpus(corpus, index_path, embedder) == 2
-    target_id = chunk_id(source, "Target")
+    target_id = chunk_id(source, "Target", corpus)
     assert target_id in _ids(index_path, embedder)
 
     source.write_text("* Top\nTop body.\n* Inserted\nNew body.\n* Target\nTarget body.\n")
@@ -168,9 +168,9 @@ def test_inserting_heading_above_leaves_chunk_id_unchanged(
     assert index_corpus(corpus, index_path, embedder) == 3
     ids = _ids(index_path, embedder)
 
-    assert chunk_id(source, "Target") == target_id
+    assert chunk_id(source, "Target", corpus) == target_id
     assert target_id in ids
-    assert chunk_id(source, "Inserted") in ids
+    assert chunk_id(source, "Inserted", corpus) in ids
 
 
 def test_edited_subtree_replaces_chunk_without_duplication(
@@ -185,7 +185,7 @@ def test_edited_subtree_replaces_chunk_without_duplication(
     index_path = tmp_path / "index"
 
     assert index_corpus(corpus, index_path, embedder) == 1
-    assert _ids(index_path, embedder) == {chunk_id(source, "About")}
+    assert _ids(index_path, embedder) == {chunk_id(source, "About", corpus)}
 
     write_org(source, "About", "Rewritten body.")
 
@@ -208,12 +208,12 @@ def test_renamed_heading_removes_orphan(
     index_path = tmp_path / "index"
 
     assert index_corpus(corpus, index_path, embedder) == 1
-    assert _ids(index_path, embedder) == {chunk_id(source, "Old")}
+    assert _ids(index_path, embedder) == {chunk_id(source, "Old", corpus)}
 
     write_org(source, "New")
 
     assert index_corpus(corpus, index_path, embedder) == 1
-    assert _ids(index_path, embedder) == {chunk_id(source, "New")}
+    assert _ids(index_path, embedder) == {chunk_id(source, "New", corpus)}
 
 
 def test_empty_corpus_empties_populated_index(
@@ -245,8 +245,8 @@ def test_existing_collection_is_reused_without_corruption(
     second = tmp_path / "second"
     write_org(second / "b.org", "Beta")
     index_path = tmp_path / "index"
-    first_id = chunk_id(first / "a.org", "Alpha")
-    second_id = chunk_id(second / "b.org", "Beta")
+    first_id = chunk_id(first / "a.org", "Alpha", first)
+    second_id = chunk_id(second / "b.org", "Beta", second)
 
     assert index_corpus(first, index_path, embedder) == 1
     assert _ids(index_path, embedder) == {first_id}
@@ -277,7 +277,7 @@ def test_second_corpus_preserves_first_corpus_chunks(
 
     assert index_corpus(second, index_path, embedder) == 1
     assert first_ids <= _ids(index_path, embedder)
-    assert chunk_id(second / "b.org", "Beta") in _ids(index_path, embedder)
+    assert chunk_id(second / "b.org", "Beta", second) in _ids(index_path, embedder)
 
 
 def test_missing_corpus_root_raises_and_leaves_index_intact(
@@ -349,3 +349,37 @@ def test_two_clean_builds_record_the_same_index_identity(
     assert first_identity["index_identity"] == second_identity["index_identity"]
     assert first_identity["chunk_count"] == second_identity["chunk_count"] == 2
     assert first_identity["embedding_model"]["name"] == "injected"
+
+
+def test_identity_is_independent_of_where_the_corpus_sits_on_disk(
+    tmp_path: Path, embedder: Embedder, write_org: Callable[..., None]
+) -> None:
+    """The same corpus at two different absolute roots yields one identity.
+
+    Chunk ids hash the corpus-root-relative source, so a local build and an
+    image build of the same corpus agree — the reproducibility evidence covers
+    the deployed artefact, not one path context.
+    """
+    corpus_a = tmp_path / "corpus-a"
+    corpus_b = tmp_path / "much" / "deeper" / "corpus-b"
+    write_org(corpus_a / "a.org", "Alpha")
+    write_org(corpus_a / "sub" / "b.org", "Beta")
+    write_org(corpus_b / "a.org", "Alpha")
+    write_org(corpus_b / "sub" / "b.org", "Beta")
+    index_a = tmp_path / "index-a"
+    index_b = tmp_path / "index-b"
+
+    assert index_corpus(corpus_a, index_a, embedder) == 2
+    assert index_corpus(corpus_b, index_b, embedder) == 2
+
+    identity_a = read_index_identity(index_a)
+    identity_b = read_index_identity(index_b)
+
+    assert identity_a["index_identity"] == identity_b["index_identity"]
+    assert identity_a["chunk_count"] == identity_b["chunk_count"] == 2
+
+    ids_a = _ids(index_a, embedder)
+    ids_b = _ids(index_b, embedder)
+    assert ids_a == ids_b
+    assert all(chunk_id.startswith(("a.org::", "sub/b.org::")) for chunk_id in ids_a)
+    assert all(str(tmp_path) not in chunk_id for chunk_id in ids_a)

@@ -49,7 +49,7 @@ def index_corpus(
     for path in iter_org_files(root):
         if not within(root, path):
             continue
-        chunks.extend(read_org_file(path))
+        chunks.extend(read_org_file(path, root_resolved))
 
     if embedder is None:
         model = verify_pinned_model()

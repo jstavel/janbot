@@ -1,4 +1,4 @@
-"""Measured per-category coverage for ADR-010 Amendment 4.
+"""Measured per-category coverage for ADR-010 Amendments 4 and 5.
 
 This is the probe set behind the coverage table in the ADR and the runbook. It
 is deliberately small and hand-picked per category: the control is best-effort
@@ -36,6 +36,19 @@ CATEGORIES = {
         "I am happy to travel two days a week.",
         "I can commute to Brno once a week.",
     ),
+    # Amendment 5: the interest axis is measured on both sides of the
+    # attachment line — role-attributed interest is served (covered = 0),
+    # party-attributed interest is covered.
+    "interest — role-attributed (served)": (
+        "Yes, I'm interested in this role.",
+        "I'm especially interested in applying an architect's mindset to AI-assisted workflows.",
+        "Certainly, I'm interested in the role in Prague.",
+    ),
+    "interest — party-attributed (covered)": (
+        "I'd be interested in working with you.",
+        "I'd love to join your team.",
+        "I'm interested in Kraken.",
+    ),
 }
 
 EXPECTED = {
@@ -44,6 +57,8 @@ EXPECTED = {
     "accepting an offer": 1,
     "relocation": 1,
     "travel": 3,
+    "interest — role-attributed (served)": 0,
+    "interest — party-attributed (covered)": 3,
 }
 
 

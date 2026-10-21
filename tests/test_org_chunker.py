@@ -16,7 +16,7 @@ from janbot.ingest import read_org_file
 def _chunks(tmp_path: Path, text: str):
     source = tmp_path / "sample.org"
     source.write_text(text)
-    return read_org_file(source)
+    return read_org_file(source, tmp_path)
 
 
 def test_nested_chunk_has_breadcrumb_properties_tags_and_child(tmp_path: Path) -> None:

@@ -15,10 +15,15 @@ Org keyword lines (``#+TITLE:`` and friends) are document metadata rather than
 prose, so they are not part of the root chunk's text: a file whose root holds
 nothing but keywords yields no root chunk at all.
 
-An id derives from the chunk's own content (source, breadcrumb and text) rather
-than its document-order position, so a chunk's identity is stable across
-insertions and reorderings above it; the text is part of the hash, keeping
-sibling subtrees with an identical heading path but different bodies distinct.
+An id derives from the chunk's own content — the **corpus-root-relative**
+source, breadcrumb and text — rather than its document-order position, so a
+chunk's identity is stable across insertions and reorderings above it; the text
+is part of the hash, keeping sibling subtrees with an identical heading path
+but different bodies distinct. The relative source makes the id — and the index
+identity built from it — machine-independent: a local build and an image build
+of the same corpus at different absolute paths produce the same ids
+(ADR-010 record, 2026-10-21). ``source_path`` stays absolute: it drives the
+corpus-scope checks and the citation rewriter, which judge absolute locations.
 """
 
 from __future__ import annotations
@@ -139,22 +144,28 @@ def _iter_subtree_nodes(node: orgparse.OrgNode):
         yield from _iter_subtree_nodes(child)
 
 
-def _chunk_id(source: Path, breadcrumb: str, text: str) -> str:
+def _chunk_id(relative_source: str, breadcrumb: str, text: str) -> str:
     """Return a content-addressed id for a chunk.
 
-    The digest covers the source, breadcrumb and text, so a chunk's id depends
-    only on the chunk itself: inserting or reordering a heading above it leaves
-    its id unchanged, while editing its own body changes it. Including the text
-    keeps sibling subtrees sharing a heading path but differing in body apart.
+    The digest covers the corpus-root-relative source, breadcrumb and text, so a
+    chunk's id depends only on the chunk itself: inserting or reordering a
+    heading above it leaves its id unchanged, while editing its own body changes
+    it. Including the text keeps sibling subtrees sharing a heading path but
+    differing in body apart. The source enters in its corpus-relative form so
+    the id — and the index identity digest built from the ids — does not depend
+    on where the corpus happens to be mounted.
     """
-    digest = hashlib.sha256(f"{source}\n{breadcrumb}\n{text}".encode()).hexdigest()
-    return f"{source}::{digest}"
+    digest = hashlib.sha256(
+        f"{relative_source}\n{breadcrumb}\n{text}".encode()
+    ).hexdigest()
+    return f"{relative_source}::{digest}"
 
 
 def _append_chunk(
     chunks: list[Chunk],
     seen: dict[str, int],
-    source: Path,
+    relative_source: str,
+    absolute_source: Path,
     breadcrumb: str,
     text: str,
 ) -> None:
@@ -167,33 +178,58 @@ def _append_chunk(
     """
     if not text:
         return
-    base = _chunk_id(source, breadcrumb, text)
+    base = _chunk_id(relative_source, breadcrumb, text)
     repeat = seen.get(base, 0)
     seen[base] = repeat + 1
     chunks.append(
         Chunk(
             id=base if repeat == 0 else f"{base}::{repeat}",
             text=text,
-            source_path=str(source),
+            source_path=str(absolute_source),
             breadcrumb=breadcrumb,
         )
     )
 
 
-def read_org_file(path: str | Path) -> list[Chunk]:
+def read_org_file(path: str | Path, root: str | Path) -> list[Chunk]:
     """Read ``path`` and return one chunk per non-root subtree, plus the file root.
 
     The root chunk comes first, carrying the file's PROPERTIES drawer and the
     text above its first heading; it is omitted when the root has neither.
 
-    Ids are content-addressed (see :func:`_append_chunk`).
+    ``root`` is the corpus root the file belongs to; ids are content-addressed
+    over the corpus-root-relative source (see :func:`_append_chunk`), so the
+    caller must always state the corpus root the same way. A file located
+    outside ``root`` is refused: its relative form would be undefined.
+
+    ``source_path`` stays absolute (the located path), so the scope checks and
+    the citation rewriter are unchanged.
     """
-    source = located_path(path)
-    root = orgparse.load(source)
+    absolute = located_path(path)
+    root_resolved = Path(root).resolve()
+    try:
+        relative = absolute.relative_to(root_resolved)
+    except ValueError as exc:
+        raise ValueError(
+            f"{absolute} lies outside the corpus root {root_resolved}; "
+            "chunk ids are corpus-root-relative, so the file cannot be read"
+        ) from exc
+    relative_source = relative.as_posix() or "."
+
+    root_node = orgparse.load(absolute)
 
     chunks: list[Chunk] = []
     seen: dict[str, int] = {}
-    _append_chunk(chunks, seen, source, _ROOT_BREADCRUMB, _root_text(root))
-    for node in _iter_subtree_nodes(root):
-        _append_chunk(chunks, seen, source, _heading_path(node), _subtree_text(node))
+    _append_chunk(
+        chunks, seen, relative_source, absolute, _ROOT_BREADCRUMB, _root_text(root_node)
+    )
+    for node in _iter_subtree_nodes(root_node):
+        _append_chunk(
+            chunks,
+            seen,
+            relative_source,
+            absolute,
+            _heading_path(node),
+            _subtree_text(node),
+        )
     return chunks
