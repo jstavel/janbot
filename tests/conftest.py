@@ -38,17 +38,21 @@ def _write_org(path: Path, heading: str = "Heading", body: str = "Body.") -> Non
     path.write_text(f"* {heading}\n{body}\n")
 
 
-def _chunk_id(path: Path, breadcrumb: str) -> str:
+def _chunk_id(path: Path, breadcrumb: str, root: Path) -> str:
     """Reconstruct the expected content-hash id for a chunk independently.
 
     The chunk's text and breadcrumb come from the reader; the id is rebuilt with
     the documented formula (``{source}::{sha256(source, breadcrumb, text)}``)
     rather than read off a chunk, so a regression in the id construction is
-    caught by the assertion.
+    caught by the assertion. ``source`` is the corpus-root-relative path — the
+    id, and the index identity built from it, must not depend on where the
+    corpus sits on disk.
     """
-    source = located_path(path)
+    source = located_path(path).relative_to(Path(root).resolve()).as_posix()
     text = next(
-        chunk.text for chunk in read_org_file(path) if chunk.breadcrumb == breadcrumb
+        chunk.text
+        for chunk in read_org_file(path, root)
+        if chunk.breadcrumb == breadcrumb
     )
     digest = hashlib.sha256(f"{source}\n{breadcrumb}\n{text}".encode()).hexdigest()
     return f"{source}::{digest}"

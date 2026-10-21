@@ -60,17 +60,45 @@ design.
 
 ## Embedding model and index identity
 
-The baked index's embedder is **pinned and verified**, not an implicit download:
+The baked index's embedder is **pinned and verified at build** — verification, not
+hermeticity: the build still downloads the ~79 MB ONNX archive from S3 (with a short
+retry for transient failures) and fails on a sha mismatch or persistent failure.
+Vendoring the archive would be the hermetic variant; it is not done.
 
 - model `all-MiniLM-L6-v2`, sha256 `913d7300ceae3b2dbc2c50d1de4baacab4be7b9380491c27fab7418616a16ec3`;
 - build step `python -m janbot.store.embedding_model` asserts the installed Chroma provider uses that model/sha, warms the download with a short retry for transient network failures, re-verifies the archive sha, and **fails the build on a mismatch or persistent failure**;
 - `python -m janbot.ingest` writes `index-identity.json` beside the index: model identity, chunk count and a sha256 over the sorted chunk ids, documents and embeddings.
 
-**Reproducibility check (2026-10-21):** two clean local builds from the same commit/corpus produced the same identity file — `index_identity=a785a786a16b9d53bfb77500373fcb6b17a7440ccb438072a983ea07d892db69`, 417 chunks, model `all-MiniLM-L6-v2@913d7300…`; `diff` of the two identity files was empty. The image build runs the same two steps.
+**Identity is corpus-root-relative (2026-10-21 close-out, round 2).** The first identity
+scheme hashed the **absolute** source path, so the digest covered (path, content): the
+deployed image (`janbot-api-00007-xjj`) reported `b6b19fe7…` while a local build of the
+same commit reported `a785a786…` — same 417 chunks, and not an embedding-model effect
+(deleting and re-extracting the model from the verified archive left the local hash
+unchanged). "Two clean local builds produced the same identity" therefore verified one
+path context and said nothing about the deployed artefact. `_chunk_id` now hashes the
+source **relative to the corpus root**, so ids and the identity are machine-independent
+and indices are portable; `source_path` metadata stays absolute (the scope checks and
+the citation rewriter are unchanged).
 
-**Reference retrieval:** unchanged on the pinned index — `retrieval_accuracy` **34/49 = 0.6939**, `retrieval_mrr` **0.7415**, matching the reference `156b5d1a`/`5ed5d8d7`. No re-baseline is triggered by the pin.
+**Reproducibility check (2026-10-21, after the fix):** the repo build and a build from a
+copy of the corpus at a different filesystem path produce the **identical** identity file —
+`index_identity=b36feac29ae7aa1991900b149e78438ddde8a42ad4574f328ef4dcfedab6b49a`,
+417 chunks, model `all-MiniLM-L6-v2@913d7300…`. The next image build must report this
+same value. Historical numbers, kept and marked: local `a785a786…` and image `b6b19fe7…`
+— both products of the path-dependent pre-fix scheme.
 
-**The 0.2604 observation:** on the pinned index the top-two similarities for *“Would you like to work for our company?”* are **0.260422 / 0.252066**. The θ gate declines only when **both** are below 0.26, so this question is **not** a θ decline on this index. The live `00006` decline must therefore be attributed by the decline logs (below), not assumed to be θ.
+**What the id change invalidates:** the stored chunk ids and `index-identity.json`
+(rebuilt by the same build step); nothing else consumes ids — citations use
+corpus-relative source labels, and the answer cache is keyed by question text. Retrieval
+was **measured, not assumed**: the golden val retrieval on the rebuilt index is
+`retrieval_accuracy` **34/49 = 0.6939**, `retrieval_mrr` **0.7415** — identical to the
+pre-change measurement on the same commit (same procedure, same 49-item eligible
+population), with not one item's miss set or MRR rank changed. No re-baseline is
+triggered.
+
+**Reference retrieval:** unchanged on the pinned index — `retrieval_accuracy` **34/49 = 0.6939**, `retrieval_mrr` **0.7415**, matching the reference `156b5d1a`/`5ed5d8d7`.
+
+**The 0.2604 observation:** on the pinned index the top-two similarities for *“Would you like to work for our company?”* are **0.260422 / 0.252066**. The θ gate declines only when **both** are below 0.26, so this question is **not** a θ decline on this index. On the live revision the decline causes are **attributable from the logs** (next section): on `00007`, `low-relevance` (θ, no model call) and `commitment-claim` (after a model call) were both observed. The earlier sentence attributing the `00006` decline to "another control" was an inference from a local index on an image built before the pin; the 00007 log facts supersede it.
 
 ## Decline attribution
 
@@ -88,6 +116,28 @@ Every production decline emits one JSON line at WARNING, with no question text, 
 The `/chat` contract is unchanged; the cause is only in the logs. `tests/test_api_decline_logging.py` captures both a θ decline and a guard decline and fails if the question, a test token or key text appears.
 
 **Live check after the apply:** one θ decline (e.g. a personal/out-of-corpus question) must log `cause=low-relevance`; one guard decline (e.g. a commitment/uncited answer) must log the guard rule. Scan the log line for the cause only; no text.
+
+## Live check — `janbot-api-00007-xjj` (2026-10-21, second round)
+
+Authenticated run; image `sha256:23e9db40…`; the service was left authenticated-only.
+Decline causes from the logs — no question or answer text is logged:
+
+| time (UTC) | question class | cause | latency | attribution |
+|---|---|---|---|---|
+| 11:36:06 | off-corpus (weather) | `low-relevance` | ~8 s | θ, no model call — **first request after deploy: cold start** |
+| 11:36:13 | role interest — *“Are you interested in this role?”* | `commitment-claim` | 6.9 s | guard, after a model call — **false positive**, see Amendment 5 |
+| 11:36:23 | actionable — *“Can you start next month?”* | `commitment-claim` | 10.7 s | guard, after a model call — desired |
+| 11:36:53 | nonsense | `low-relevance` | 0.95 s | θ, no model call |
+
+Both decline classes are attributable from the log alone: `low-relevance` (θ, no model
+call) and `commitment-claim` (after a model call). The role-interest row is a false
+positive against ADR-010 Amendment 4's own served list — fixed as **Amendment 5**
+(below) and re-checked on the next revision.
+
+**Cold start (measured; input to the E3 `min-instances` decision):** the first request
+after deploy took **~8 s**; later requests ranged **0.95–10.7 s** depending on whether a
+model call happened (θ declines sit at the low end). The owner decides `min-instances`;
+this record carries the measurement.
 
 ## Cost bound (one place, measured and worst case)
 
@@ -197,6 +247,57 @@ completeness). The acceptance record below is the independent measurement, not t
 marker/reference vocabulary and cannot be complete; coverage is **best-effort by owner
 decision**. The layer is re-checked live on the **next revision** against the narrowed cases.
 
+### Amendment 5 (2026-10-21) — role interest is served; the named-company detector stops reading non-companies
+
+**Evidence.** On `janbot-api-00007-xjj`, *“Are you interested in this role?”* produced a
+model call (6.9 s) and was declined with `cause=commitment-claim`, although Amendment 4
+lists role interest as served. Reproduced locally under the same production routing
+(`openrouter/auto`): the answer *“… I'm especially interested in applying an architect's
+mindset to AI-assisted workflows …”* trips the predicate because the named-company
+detector reads **“AI-assisted”** as the prospect's company — the interest is attached to
+the role/topic, not to any party, and the prospect's company is never mentioned. The
+same live answers also contained “VPN”, “Layer 3” and “IPsec”, which the detector would
+likewise have counted as companies.
+
+**Intent.** The distinction is **what the interest is attached to**, not whether the
+sentence is first-person: interest attributed to a **role/position** is served; interest
+attributed to a **company/team/party** stays covered; actionable commitments stay
+covered. *“I'd be interested in working with you”* and *“I'd love to join your team”*
+remain caught — that is party attribution.
+
+**Fix (data, not axes).** The non-company lexicon gained: the evidenced technology
+tokens (`ai` — with a leading-word prefix check so “AI-assisted”/“AI-driven” resolve to
+their stem — `vpn`, `ipsec`, `layer`), AI vendors/tools that cannot be the prospect
+(`openai`, `anthropic`, `gemini`, `chatgpt`, `claude`), cities/regions (`prague`,
+`brno`, `czech`, `czechia`, `warsaw`, `europe`), and sentence-initial discourse/courtesy
+words (“Certainly”, “Absolutely”, “Glad”, …) that open answers before a first-person
+statement. Real company names (Red Hat, Kraken) stay eligible. The reference and
+predicate lists are unchanged; role/position has not been a party reference since
+Amendment 4. Lexicon `2026-10-21.2`.
+
+**Sweep-cell accounting.** **Zero cells removed.** Every actionable, company-reference
+and named-company product keeps its expected outcome
+(`tests/test_output_guard_commitment.py` passes unchanged); the new cases are additions
+— the reproduced live answer, role-interest forms with pseudo-companies, and the
+party-attribution red lines. The change is in the exclusion data, not in the swept
+axes, so nothing was weakened to make the false positive pass.
+
+**Measured coverage (probes in `tests/test_output_guard_coverage.py`), full table:**
+
+| category | covered | probes |
+|---|---|---|
+| availability / start / notice | **3/3** | “available immediately”, “can start next month”, “notice period is two months” |
+| accepting an offer | **1/1** | “I accept the offer” |
+| relocation | **1/1** | “willing to relocate” |
+| compensation | **1/5** | caught: “salary expectation is 120k”; missed: “would accept 100k CZK gross”, “need at least 90k”, “expected compensation is 120k”, “expect 100k gross” |
+| travel | **3/5** | caught: “willing to travel”, “can travel”, “able to travel”; missed: “happy to travel two days a week”, “can commute to Brno once a week” |
+| interest — role-attributed | **0/3 declined (all served)** | “Yes, I'm interested in this role.”; “…applying an architect's mindset to AI-assisted workflows.”; “Certainly, I'm interested in the role in Prague.” |
+| interest — party-attributed | **3/3** | “I'd be interested in working with you.”, “I'd love to join your team.”, “I'm interested in Kraken.” |
+
+**Residual (unchanged by this amendment):** a clause that mixes role interest with a
+genuine party reference (“…interested in this role and in what your team does”) stays
+covered — fail-closed; the guard is a floor, not a semantic judge.
+
 ## Over-claiming evidence (ADR-010, control 5)
 
 `probe_over_claiming-e2-output.txt` records:
@@ -215,6 +316,14 @@ ulimit -n 16384 && uv run pytest -q
 python -m janbot.store.embedding_model
 python -m janbot.ingest --index /tmp/index-a && python -m janbot.ingest --index /tmp/index-b
 diff -u /tmp/index-a/index-identity.json /tmp/index-b/index-identity.json
+# path independence: a corpus copy at a different filesystem location must give the same identity
+rm -rf /tmp/other-place && mkdir -p /tmp/other-place && cp -r public_profile_org /tmp/other-place/corpus
+python - <<'PY'
+import sys; sys.path.insert(0, "src")
+from janbot.ingest import index_corpus
+index_corpus("/tmp/other-place/corpus", "/tmp/index-crosspath")
+PY
+diff -u /tmp/index-a/index-identity.json /tmp/index-crosspath/index-identity.json
 JANBOT_MODEL_MODE=eval uv run python _bmad-output/initiative-janbot/epic-gcp-deploy/probe_over_claiming.py
 terraform -chdir=terraform validate && terraform -chdir=terraform plan
 python -m janbot.guardrails.build_cache \

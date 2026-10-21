@@ -104,13 +104,23 @@ def _marker_is_grounded(chunk_phrase: str, cited_chunk_texts: Sequence[str]) -> 
 
 
 def _named_company_in(clause: str) -> str | None:
-    """The first capitalized proper noun that is not a technology/common word."""
+    """The first capitalized proper noun that is not a technology/common word.
+
+    A candidate is excluded when the candidate itself, its first word, or the
+    first word's leading alphabetic run is in the non-company lexicon — the
+    prefix check keeps hyphenated compounds ("AI-assisted", "AI-driven") out
+    with their stem. Real company names (Red Hat, Kraken, …) stay eligible.
+    """
     for match in re.finditer(NAMED_COMPANY_PATTERN, clause):
         candidate = match.group(0).strip()
-        if candidate.lower() in NON_COMPANY_PROPER_NOUNS:
+        lowered = candidate.lower()
+        if lowered in NON_COMPANY_PROPER_NOUNS:
             continue
         first = candidate.split()[0].lower()
         if first in NON_COMPANY_PROPER_NOUNS:
+            continue
+        stem_match = re.match(r"[A-Za-z]+", first)
+        if stem_match and stem_match.group(0).lower() in NON_COMPANY_PROPER_NOUNS:
             continue
         return candidate
     return None
@@ -141,9 +151,16 @@ def _commitment_claim_is_ungrounded(
     The control is deliberately narrow: **actionable** commitments on Jan's behalf
     (availability, start/notice, compensation, accepting an offer, relocation/travel)
     and **interest attributed to the prospect's company** (named or deictic company
-    reference). Generic enthusiasm or politeness (“Yes, I'd be interested”, “I'd be
-    glad to talk”) and topic/role interest are out of scope and are served. The guard
-    is a best-effort marker/reference vocabulary; it is not a semantic judge.
+    reference). What counts is **what the interest is attached to** (Amendment 5):
+    a role/position is not a party reference — "I'm interested in this role" is
+    served — while "working with you" or "join your team" is party attribution and
+    stays covered. Generic enthusiasm or politeness ("Yes, I'd be interested",
+    "I'd be glad to talk") and topic/role interest are out of scope and are served.
+    The named-company detector contributes a reference only for tokens that can
+    be a company: technologies, places and discourse words ("AI-assisted", "VPN",
+    "Certainly") are excluded, so a role-interest clause is not flipped into a
+    party-interest claim by a pseudo-company. The guard is a best-effort
+    marker/reference vocabulary; it is not a semantic judge.
     """
     if _FIRST_PERSON.search(clause) is None:
         return False

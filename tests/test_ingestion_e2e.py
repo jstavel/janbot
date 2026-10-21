@@ -52,7 +52,10 @@ def test_e2e_index_and_query(tmp_path: Path, embedder: Embedder) -> None:
     count = index_corpus(corpus, index_path, embedder)
     assert count == 4
 
-    chunks = {chunk.breadcrumb: chunk for chunk in read_org_file(corpus / "profile.org")}
+    chunks = {
+        chunk.breadcrumb: chunk
+        for chunk in read_org_file(corpus / "profile.org", corpus)
+    }
     assert "About > Background" in chunks
     assert "engineer" in chunks["About"].text
     assert ":public:" in chunks["About"].text
