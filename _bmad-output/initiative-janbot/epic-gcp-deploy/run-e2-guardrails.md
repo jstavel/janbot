@@ -138,6 +138,20 @@ control is narrowed rather than chased.
 (*“trading systems”*, *“what you do”*) and role interest (*“the role”*). The live
 `00005` answer is served.
 
+**Measured coverage (probes in `tests/test_output_guard_coverage.py`):**
+
+| category | covered | probes |
+|---|---|---|
+| availability / start / notice | **3/3** | “available immediately”, “can start next month”, “notice period is two months” |
+| accepting an offer | **1/1** | “I accept the offer” |
+| relocation | **1/1** | “willing to relocate” |
+| compensation | **1/5** | caught: “salary expectation is 120k”; missed: “would accept 100k CZK gross”, “need at least 90k”, “expected compensation is 120k”, “expect 100k gross” |
+| travel | **3/5** | caught: “willing to travel”, “can travel”, “able to travel”; missed: “happy to travel two days a week”, “can commute to Brno once a week” |
+
+**Residual:** compensation (4/5 missed) and travel (2/5 missed) are best-effort gaps,
+not claims of coverage. Reopen the vocabulary only if a live acceptance shows a
+recruiter could act on one of the missed forms; otherwise no synonym chase.
+
 **Kept, not weakened:** D1/D2 capability over `SUBJECT_TOKENS`, grounded commitments, the
 Clojure control, grounded capability and values.
 
