@@ -13,6 +13,7 @@ import argparse
 
 from janbot.config import load_config
 from janbot.ingest import index_corpus
+from janbot.store.identity import read_index_identity
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -27,7 +28,13 @@ def main(argv: list[str] | None = None) -> int:
     config = load_config()
     index_path = args.index if args.index is not None else config.index_path
     count = index_corpus(config.corpus_path, index_path)
+    identity = read_index_identity(index_path)
     print(count)
+    print(
+        "index_identity={index_identity} embedding_model={name}@{sha256}".format(
+            **identity, **identity["embedding_model"]
+        )
+    )
     return 0
 
 

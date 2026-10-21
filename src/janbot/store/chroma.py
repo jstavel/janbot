@@ -158,6 +158,9 @@ def default_embedder() -> Embedder:
     Chroma's embedding function yields numpy arrays; the seam contract is plain
     ``list[list[float]]``.
     """
+    from janbot.store.embedding_model import assert_model_pin
+
+    assert_model_pin()
     function = embedding_functions.DefaultEmbeddingFunction()
 
     def embed(texts: list[str]) -> list[list[float]]:
