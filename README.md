@@ -4,6 +4,8 @@ An autonomous AI career assistant that answers recruiter questions accurately an
 
 JanBot parses an org-mode corpus into semantically intact units, indexes them, and exposes a single `POST /chat` endpoint that returns a grounded answer with citations. Private notes are provably never indexed: the ingestion boundary is fail-closed over an explicit public folder.
 
+> **Operating it:** [`RUNBOOK.md`](RUNBOOK.md) is the single source for *how* — local run, tests, index rebuild, answer-cache regeneration, deploy, the post-deploy live check and rollback. The stack procedure is [`terraform/RUNBOOK.md`](terraform/RUNBOOK.md). Which decisions bind is [`DECISIONS.md`](DECISIONS.md); what and why stay in `_bmad-output/`.
+
 ## Status
 
 Work in progress, built with the [BMad Method](https://github.com/bmad-code-org/BMAD-METHOD). The contract for every capability, constraint and decision lives in `_bmad-output/` — the spec is the source of truth, not the code.
