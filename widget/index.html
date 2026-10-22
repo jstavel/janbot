@@ -161,13 +161,15 @@ form.addEventListener("submit", async (event) => {
         // next window boundary), rounded up to whole minutes.
         const seconds = Number.parseInt(response.headers.get("retry-after"), 10);
         const minutes = Math.ceil(seconds / 60);
-        setError(
-          Number.isFinite(minutes) && minutes >= 1
-            ? "Too many questions from this address — try again in about " +
-                minutes +
-                " minutes."
-            : "Too many questions from this address — try again later."
-        );
+        if (Number.isFinite(minutes) && minutes >= 1) {
+          setError(
+            "Too many questions from this address — try again in about " +
+              minutes +
+              (minutes === 1 ? " minute." : " minutes.")
+          );
+        } else {
+          setError("Too many questions from this address — try again later.");
+        }
         return;
       }
       if (

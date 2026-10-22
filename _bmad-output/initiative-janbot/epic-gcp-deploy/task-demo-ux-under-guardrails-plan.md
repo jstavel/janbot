@@ -110,6 +110,26 @@ context: []
 - **Left for the owner:** the apply itself; the post-apply cold-start number
   (the runbook's procedure has a pending placeholder — the pre-flip ~50 s and
   the re-measure steps are recorded).
+- **Verified plan (2026-10-22, after commit `ff0613d` + the widget-copy fix):
+  `1 to add, 1 to change, 1 to destroy`,** validated against the matrix:
+  the image replace is driven by the `src` trigger alone (every other trigger
+  byte-identical to state); the service updates in place with exactly
+  `JANBOT_RATE_LIMIT '10'→'20'` and `startup_cpu_boost false→true` plus the
+  new digest; template scaling (min 0 / max 2) identical before/after. Two
+  findings, recorded in the runbook: (a) the `1 to destroy` is the old image
+  *object* — `keep_remotely = true` makes it a state-only removal, nothing
+  remote is deleted, the running service is untouched (the matrix's "0
+  destroy" intent holds; the literal count is 1 because the tag moves
+  `:dev`→`:<sha>`); (b) a `- scaling` block (`manual_instance_count 0→null`)
+  renders on the service — the service-level legacy block the provider's
+  post-E3-apply Read put in state, which the E3 plan predated; behavior-neutral.
+- **Finding — the expired-registry-token pitfall bites `plan`, not just
+  push:** with an expired token the provider's registry Read fails silently
+  and the refresh reports the image "deleted" outside Terraform, turning the
+  replace into a plain create (0 destroy) — measured live today; the token
+  was refreshed per the runbook and the plan then showed the true replace.
+  The runbook now says to refresh before any plan or apply that touches the
+  image.
 
 ## Plan Change Log
 

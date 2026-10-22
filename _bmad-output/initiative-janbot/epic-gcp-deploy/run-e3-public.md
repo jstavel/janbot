@@ -230,6 +230,44 @@ than an honest IP limit.
   `the daily model-call quota is exhausted` → the daily-limit copy.
   413/422/5xx keep the raw `status + ": " + detail` rendering.
 
+### What the verified plan actually showed (2026-10-22, `ff0613d` + widget fix)
+
+`terraform validate` clean; the plan is **1 to add, 1 to change, 1 to
+destroy** — the three named changes plus two findings, recorded rather than
+hidden:
+
+1. **The `1 to destroy` is the old `docker_registry_image` object, and it
+   deletes nothing.** The plan command pins the tag to the HEAD sha
+   (`image_tag=$(git rev-parse --short HEAD)`), so the image resource's name
+   moves `:dev` → `:<sha>`; with `keep_remotely = true` the destroy is a
+   state-only removal — the old digest stays in Artifact Registry (the cleanup
+   policies own it) and the running service (referenced by digest, update
+   in-place) is never touched. The "0 destroy" in the flip table above held
+   for that round's rendering; a rebuild with this provider counts the old
+   object's state-only destroy. The intent — no infrastructure torn down —
+   holds.
+2. **A `- scaling` block (`manual_instance_count = 0 -> null`) appears on the
+   service.** It is the *service-level* legacy scaling block that the
+   provider's post-apply Read wrote into state at the E3 apply (the E3 plan
+   predates it, which is why that plan didn't show it); the config never
+   declared it. The *template* scaling (min 0 / max 2) is identical before and
+   after — no behavior change. Post-apply check: confirm the revision still
+   scales 0–2.
+
+3. **The expired registry token also poisons `plan`, not just push** (the
+   pitfall below says "before any apply that rebuilds the image"; measured
+   today it bites earlier): with an expired token, the provider's registry
+   Read fails silently and the refresh reports
+   `docker_registry_image.janbot has been deleted` — the plan then rebuilds
+   the image as a plain *create* (0 destroy) instead of a replace. Refresh
+   the token before **any** plan or apply that touches the image; a
+   `plan -refresh-only` saying "has been deleted" for an image you can see in
+   `gcloud artifacts docker tags list` is the symptom.
+
+The image replace is driven by the `src` trigger alone (only `limits.py` +
+`main.py` changed); `corpus`, `cache`, `dataset`, `Containerfile`,
+`pyproject`, `uvlock`, `dockerignore` triggers are byte-identical to state.
+
 ### Cold-start re-measure (after the owner's apply)
 
 `startup_cpu_boost = true` is free but only observable post-apply. Measure the

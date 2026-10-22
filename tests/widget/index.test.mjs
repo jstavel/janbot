@@ -137,6 +137,23 @@ test("a rate 429 rounds the wait up: 300 s is about 5 minutes", async () => {
   );
 });
 
+test("a rate 429 under a minute renders the singular minute", async () => {
+  const w = widgetRuntime();
+  w.stage(
+    response({
+      status: 429,
+      body: { detail: "too many requests" },
+      headers: { "Retry-After": "30" },
+    }),
+  );
+  await w.submit("What is your search experience?");
+
+  assert.equal(
+    w.element("error").textContent,
+    "Too many questions from this address — try again in about 1 minute.",
+  );
+});
+
 test("a rate 429 without a readable Retry-After renders the copy without a number", async () => {
   const w = widgetRuntime();
   w.stage(response({ status: 429, body: { detail: "too many requests" } }));
