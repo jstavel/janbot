@@ -53,6 +53,44 @@ items observed in both runs (brief §6.8, Amendment 2), as a second guard beside
 population. It is a **re-baseline, not a gate verdict**; the principle (1.5σ, symmetric
 floor) is unchanged.
 
+## Re-registration pending measurement — 2026-10-22 (n = 55, frozen before any run)
+
+The instrument moved under the reference, so the next reference is measured on a
+new instrument and its thresholds are frozen **now**, before any measurement:
+
+- **Corpus re-extract at `339359e`** (`~/org`, view commit): 62 objects (the
+  view's full selection) + `public-proof-map.org` + `thesis-map.md`; the three
+  Czech objects (`growth-in-any-role`, `intent-based-delegation`,
+  `style-references-as-intent`) enter as English translations with injected
+  `:SOURCE-ID:`/`:SOURCE-SHA256:` pins. Extract committed at janbot `1aae1d8`;
+  index rebuilt: **440 chunks / 63 sources**, identity `930e0a3d…`
+  (`all-MiniLM-L6-v2@913d7300…`); `out_of_scope_sources` empty at startup.
+- **Dataset `c4786e1c…`** (120 items; train 51 / val 69; val `should_refuse` 14
+  → **gate-eligible n = 55**, verified against the dataset file).
+- **Thresholds, derived at the outgoing reference's own p and projected to
+  n = 55** (`156b5d1a` is the only honest pre-measurement p):
+  - **Gain-carrier `citation_correctness`** (p = 33/49 = 0.6735):
+    σ = √(0.6735·0.3265/55) ≈ 0.0632; 1.5σ ≈ 0.0948. 5/55 = 0.0909 is inside it;
+    6/55 = 0.1091 exceeds it → **accept ≥ 6 items up; a regression is allowed up
+    to 5 items down**.
+  - **Guard `faithfulness`** (p = 45/49 = 0.9184): σ = √(0.9184·0.0816/55) ≈
+    0.0369; 1.5σ ≈ 0.0554. 3/55 = 0.0545 is inside it — exactly the noise-carry
+    the re-baseline warns about, which is why the frozen n=49 floor (≤2) must
+    **not** be carried forward; 4/55 = 0.0727 exceeds it → **accept ≥ 4 items
+    up; a regression is allowed up to 3 items down**.
+- **Integer thresholds, frozen: citation accept ≥ 6 / regress ≤ 5; faithfulness
+  accept ≥ 4 / regress ≤ 3.** The principle is untouched: 1.5σ per metric at the
+  reference's own p, symmetric floor, one fixed population per claim-quality
+  metric, judge failure = faithfulness failure. If the new reference's own p
+  shifts materially from `156b5d1a`'s, that is recorded — these frozen floors
+  still govern this round.
+- **`156b5d1a` and `c6ced445` are historical from here on** — older corpus
+  (59-object extract, 417 chunks), older dataset (`a8bd69dc…`, 106 items) and
+  older population (n = 49); not comparable to runs on this instrument.
+- **Owner sign-off: pending** — the pre-registration is committed unsigned; the
+  owner signs it **before** the reference run is measured (the sign-off line is
+  appended here, never retroactively).
+
 ## Metrics
 
 - **Gate metrics: `citation_correctness` is the GAIN-CARRIER** (baseline **0.6735**,
