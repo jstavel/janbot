@@ -197,7 +197,7 @@ def parse_drawer(text: str) -> dict[str, str]:
     properties: dict[str, str] = {}
     key = None
     for line in lines[:end]:
-        match = re.match(r"^:([A-Z-]+):\s?(.*)$", line)
+        match = re.match(r"^:([A-Z0-9-]+):\s?(.*)$", line)
         if match:
             key = match.group(1)
             properties[key] = match.group(2).strip()
@@ -250,11 +250,6 @@ def load_translation(
             f"translation artifact {path} carries :ID: {recorded!r}, "
             f"expected the object's {object_id!r} — wrong object or drift"
         )
-    if text.count(SOURCE_ID_PLACEHOLDER) != 1 or text.count(SOURCE_SHA_PLACEHOLDER) != 1:
-        raise ExtractError(
-            f"translation artifact {path} must carry exactly one "
-            f"{SOURCE_ID_PLACEHOLDER} and one {SOURCE_SHA_PLACEHOLDER} placeholder"
-        )
     for key in ("SOURCE-ID", "SOURCE-SHA256"):
         value = properties.get(key)
         if value is not None and value not in (
@@ -265,6 +260,11 @@ def load_translation(
                 f"translation artifact {path} carries a hand-written :{key}: "
                 f"({value!r}) — pins are injected, never hand-written"
             )
+    if text.count(SOURCE_ID_PLACEHOLDER) != 1 or text.count(SOURCE_SHA_PLACEHOLDER) != 1:
+        raise ExtractError(
+            f"translation artifact {path} must carry exactly one "
+            f"{SOURCE_ID_PLACEHOLDER} and one {SOURCE_SHA_PLACEHOLDER} placeholder"
+        )
     text = text.replace(SOURCE_ID_PLACEHOLDER, object_id)
     text = text.replace(SOURCE_SHA_PLACEHOLDER, object_sha256)
     return text.encode("utf-8")
