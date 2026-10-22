@@ -27,22 +27,35 @@ class CountingLMFactory:
 
 
 class RecordingLimiter:
-    def __init__(self, *, rate_allowed: bool = True, quota_allowed: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        rate_allowed: bool = True,
+        quota_allowed: bool = True,
+        rate_retry_after: int | None = None,
+        quota_retry_after: int | None = None,
+    ) -> None:
         self.rate_allowed = rate_allowed
         self.quota_allowed = quota_allowed
+        self.rate_retry_after = rate_retry_after
+        self.quota_retry_after = quota_retry_after
         self.rate_calls: list[str] = []
         self.quota_calls = 0
 
     def check_rate(self, client_ip: str) -> GuardDecision:
         self.rate_calls.append(client_ip)
         if not self.rate_allowed:
-            return GuardDecision.deny(RATE_LIMITED)
+            if self.rate_retry_after is None:
+                return GuardDecision.deny(RATE_LIMITED)
+            return GuardDecision.deny_with_retry(RATE_LIMITED, self.rate_retry_after)
         return GuardDecision.allow()
 
     def consume_quota(self) -> GuardDecision:
         self.quota_calls += 1
         if not self.quota_allowed:
-            return GuardDecision.deny(QUOTA_EXCEEDED)
+            if self.quota_retry_after is None:
+                return GuardDecision.deny(QUOTA_EXCEEDED)
+            return GuardDecision.deny_with_retry(QUOTA_EXCEEDED, self.quota_retry_after)
         return GuardDecision.allow()
 
 
@@ -262,3 +275,75 @@ def test_guardrail_off_bypasses_cache_rate_and_quota(indexed_corpus, embedder) -
     assert app.state.model_calls["model"] == 1
     assert limiter.rate_calls == []
     assert limiter.quota_calls == 0
+
+
+def test_rate_429_carries_retry_after_and_the_body_is_unchanged(
+    indexed_corpus, embedder
+) -> None:
+    corpus, index_path = indexed_corpus
+    limiter = RecordingLimiter(rate_allowed=False, rate_retry_after=600)
+    app = _app(corpus, index_path, embedder, limiter=limiter)
+
+    response = TestClient(app).post("/chat", json={"question": "A question?"})
+
+    assert response.status_code == 429
+    # The error envelope is byte-identical — the widget keys on the detail
+    # string; Retry-After travels only as a header.
+    assert response.json() == {"detail": "too many requests"}
+    assert response.headers["retry-after"] == "600"
+
+
+def test_rate_429_exposes_retry_after_to_the_browser_across_origins(
+    indexed_corpus, embedder
+) -> None:
+    # Retry-After is not a CORS-safelisted response header: without the expose
+    # header the widget's cross-origin fetch reads null and can render no wait.
+    corpus, index_path = indexed_corpus
+    limiter = RecordingLimiter(rate_allowed=False, rate_retry_after=600)
+    app = create_app(
+        env=_env(
+            corpus,
+            index_path,
+            JANBOT_GUARDRAILS="on",
+            JANBOT_CORS_ORIGINS="https://jstavel.github.io",
+        ),
+        embedder=embedder,
+        lm_factory=CountingLMFactory(),
+        limiter=limiter,
+    )
+
+    response = TestClient(app).post(
+        "/chat",
+        json={"question": "A question?"},
+        headers={"Origin": "https://jstavel.github.io"},
+    )
+
+    assert response.status_code == 429
+    assert response.headers["retry-after"] == "600"
+    assert response.headers["access-control-expose-headers"] == "Retry-After"
+    assert response.headers["access-control-allow-origin"] == "https://jstavel.github.io"
+
+
+def test_quota_429_carries_retry_after_to_the_next_midnight(
+    indexed_corpus, embedder
+) -> None:
+    corpus, index_path = indexed_corpus
+    limiter = RecordingLimiter(quota_allowed=False, quota_retry_after=43_200)
+    app = _app(corpus, index_path, embedder, limiter=limiter)
+
+    response = TestClient(app).post("/chat", json={"question": "A question?"})
+
+    assert response.status_code == 429
+    assert response.json() == {"detail": "the daily model-call quota is exhausted"}
+    assert response.headers["retry-after"] == "43200"
+
+
+def test_store_error_503_carries_no_retry_after(indexed_corpus, embedder) -> None:
+    corpus, index_path = indexed_corpus
+    app = _app(corpus, index_path, embedder, limiter=StoreErrorLimiter())
+
+    response = TestClient(app).post("/chat", json={"question": "A question?"})
+
+    assert response.status_code == 503
+    assert "retry-after" not in response.headers
+    assert response.json() == {"detail": "the guardrail store is unavailable"}

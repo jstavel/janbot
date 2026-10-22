@@ -307,6 +307,10 @@ resource "google_cloud_run_v2_service" "janbot" {
           cpu    = "1"
           memory = "2Gi"
         }
+
+        # Free: a short CPU burst at instance start (the ~50 s cold start is a
+        # visitor's first impression). It does not raise steady-state capacity.
+        startup_cpu_boost = true
       }
     }
   }

@@ -185,6 +185,79 @@ constrains only which origins a browser lets read responses. The abuse controls
 are the per-IP rate limit + global quota (ADR-009 control 7); that is why rows
 1–3 must re-prove live.
 
+## Guardrail tuning (round of 2026-10-22, parts 1–3)
+
+Three flips ride one revision: the honest refusal header (`Retry-After`), the
+rate default 10 → 20, and `startup_cpu_boost`. The verified plan for the round
+shows **exactly**: 1 replace — `docker_registry_image.janbot` (the `src`
+trigger's new hash: `limits.py` + `main.py` changed), 1 update in place —
+`google_cloud_run_v2_service.janbot` (new digest + `JANBOT_RATE_LIMIT` 10 → 20 +
+`startup_cpu_boost`), **0 destroy**. Anything else is a finding.
+
+### Why the per-IP rate limit is 20 / 10 min (and what risk that carries)
+
+A 12-request burst from one address produced a bare `429` (measured
+2026-10-22): a corporate NAT shares one IP, so a whole office got ten questions
+per window — anti-abuse at ten per office is a UX defect, not protection. The
+**cost guard was never the per-IP window**: the global daily quota (500
+model-call slots) plus the baked answer cache bound spend; the per-IP window
+only bounds abuse rate. Raising it to 20 halves the false-refusal rate for a
+shared address.
+
+**Residual risk (recorded on purpose):** more model calls per office before
+the daily quota bites — up to 20 un-cached calls per IP per 10 min, so one
+office can spend ~2 880 quota slots/day at the theoretical max (20 × 144
+windows); the 500/day quota is what actually stops the spend. No IP-less
+identity (cookies/sessions) is introduced: a public endpoint without auth
+cannot reliably identify a caller, and pretending otherwise would be worse
+than an honest IP limit.
+
+### The refusal now says when to come back
+
+- A **rate** 429 carries `Retry-After` = seconds to the caller's next window
+  boundary (the earliest moment a slot frees; two refusals in one window
+  shrink the header — pinned by `test_two_refusals_in_one_window_shrink_the_header`).
+- A **quota** 429 carries `Retry-After` = seconds to the next UTC midnight
+  (the daily counter's reset point).
+- A **503 store** error carries **no** `Retry-After` — a store error's
+  recovery time is unknown, and a fabricated wait would be dishonest.
+- `Retry-After` is not CORS-safelisted, so the 429 also carries
+  `Access-Control-Expose-Headers: Retry-After`; without it the widget's
+  cross-origin fetch would read `null` and render no wait.
+- The `/chat` JSON schema is unchanged; the `detail` strings are byte-identical
+  (the widget keys on them): `too many requests` → "Too many questions from
+  this address — try again in about N minutes" (N = ceil(Retry-After/60));
+  `the daily model-call quota is exhausted` → the daily-limit copy.
+  413/422/5xx keep the raw `status + ": " + detail` rendering.
+
+### Cold-start re-measure (after the owner's apply)
+
+`startup_cpu_boost = true` is free but only observable post-apply. Measure the
+**cold** path, not the warm one:
+
+1. Wait ≥ 15 minutes after the last request (Cloud Run scales to 0; a warm
+   instance would silently invalidate the measurement).
+2. Time exactly one request against a **baked** question (cache hit — no model
+   call, so the number isolates the cold start):
+
+```sh
+SERVICE_URL=$(terraform -chdir=terraform output -raw service_url)
+curl -sS -o /dev/null -w '%{time_total}\n' -X POST "$SERVICE_URL/chat" \
+  -H 'content-type: application/json' \
+  -d '{"question":"What search infrastructure have you built?"}'
+```
+
+3. Record it below, next to the pre-flip numbers. One request is an anecdote;
+   if the number looks off, repeat the cold wait once before concluding.
+
+**Measured:** pre-flip cold start ~50 s (owner, 2026-10-22, before this
+round); post-apply (with `startup_cpu_boost`): *pending the owner's apply —
+record the number here*.
+
+Note: the live-acceptance row-1 probe above ("11 rapid requests") was written
+at rate 10; with the new default the N+1th refusal is the **21st** request in
+the window.
+
 ## Usage visibility (no redeploy)
 
 ```sh

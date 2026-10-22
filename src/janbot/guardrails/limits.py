@@ -17,9 +17,10 @@ model call is made).
 from __future__ import annotations
 
 import hashlib
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time, timedelta
 from typing import Any, Protocol
 
 RATE_LIMITED = "rate_limited"
@@ -32,10 +33,18 @@ COLLECTION = "janbot_guardrails"
 
 @dataclass(frozen=True)
 class GuardDecision:
-    """The guard's verdict: allowed, or denied with a closed-set reason."""
+    """The guard's verdict: allowed, or denied with a closed-set reason.
+
+    A denial may carry ``retry_after_seconds`` — the honest number of seconds
+    until the earliest moment the same call would be allowed again: the next
+    window boundary for a rate refusal, the next UTC midnight for a quota
+    refusal. ``None`` means the wait is unknown and must not be fabricated —
+    the 503 store error stays header-free.
+    """
 
     allowed: bool
     reason: str
+    retry_after_seconds: int | None = None
 
     @classmethod
     def allow(cls) -> GuardDecision:
@@ -44,6 +53,10 @@ class GuardDecision:
     @classmethod
     def deny(cls, reason: str) -> GuardDecision:
         return cls(False, reason)
+
+    @classmethod
+    def deny_with_retry(cls, reason: str, retry_after_seconds: int) -> GuardDecision:
+        return cls(False, reason, retry_after_seconds=retry_after_seconds)
 
 
 class Limiter(Protocol):
@@ -103,7 +116,13 @@ class FirestoreLimits:
         )
 
     def check_rate(self, client_ip: str) -> GuardDecision:
-        """Count one request for ``client_ip``; deny the N+1th request in the window."""
+        """Count one request for ``client_ip``; deny the N+1th request in the window.
+
+        The refusal's ``retry_after_seconds`` points at the next window
+        boundary — the earliest moment this IP's count resets and a slot
+        frees. ``int(now)`` floors the truncation on purpose: the header never
+        promises a slot earlier than the boundary.
+        """
         now = self._clock()
         window = int(now.timestamp() // self._rate_window_seconds)
         ref = self._collection.document(_rate_doc_id(client_ip or "unknown"))
@@ -113,7 +132,12 @@ class FirestoreLimits:
             )
         except Exception:
             return GuardDecision.deny(STORE_ERROR)
-        return GuardDecision.allow() if allowed else GuardDecision.deny(RATE_LIMITED)
+        if allowed:
+            return GuardDecision.allow()
+        boundary = (window + 1) * self._rate_window_seconds
+        return GuardDecision.deny_with_retry(
+            RATE_LIMITED, boundary - int(now.timestamp())
+        )
 
     def consume_quota(self) -> GuardDecision:
         """Count one request that reached the program for the UTC day.
@@ -125,6 +149,11 @@ class FirestoreLimits:
         per-IP rate limit bounds its rate, not the total). Exact model-call
         counting would need a pre-LM hook inside the AI core, which E2's boundary
         forbids.
+
+        The refusal's ``retry_after_seconds`` is the seconds to the next UTC
+        midnight — the daily counter's honest reset point, not a per-IP window
+        boundary. ``math.ceil`` keeps the header from promising a slot before
+        the day actually rolls over.
         """
         now = self._clock()
         ref = self._collection.document(f"quota_{now.date().isoformat()}")
@@ -132,7 +161,14 @@ class FirestoreLimits:
             allowed = self._increment_within(ref, self._daily_quota, now)
         except Exception:
             return GuardDecision.deny(STORE_ERROR)
-        return GuardDecision.allow() if allowed else GuardDecision.deny(QUOTA_EXCEEDED)
+        if allowed:
+            return GuardDecision.allow()
+        midnight = datetime.combine(
+            now.date() + timedelta(days=1), time.min, tzinfo=UTC
+        )
+        return GuardDecision.deny_with_retry(
+            QUOTA_EXCEEDED, math.ceil((midnight - now).total_seconds())
+        )
 
     def _increment_within(
         self,

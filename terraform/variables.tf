@@ -48,8 +48,8 @@ variable "firestore_database_name" {
 
 variable "rate_limit" {
   type        = number
-  description = "Requests allowed per client IP per rate window."
-  default     = 10
+  description = "Requests allowed per client IP per rate window. 20 (not 10): a corporate NAT shares one address, so an office would false-refuse after ten questions per window — the daily quota (500) and the answer cache are the cost guard; the per-IP window is anti-abuse, and anti-abuse at ten per office is a UX defect."
+  default     = 20
 }
 
 variable "rate_window_seconds" {

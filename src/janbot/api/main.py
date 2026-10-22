@@ -320,10 +320,21 @@ def create_app(
 
     def _guard_denied(decision) -> HTTPException:
         if decision.reason == STORE_ERROR:
+            # A store error's recovery time is unknown — the honest header is
+            # no header. Never fabricate a Retry-After here.
             return HTTPException(
                 status_code=503,
                 detail="the guardrail store is unavailable",
             )
+        headers = None
+        wait = decision.retry_after_seconds
+        if wait is not None:
+            # Retry-After is not a CORS-safelisted response header, so the
+            # widget's cross-origin fetch cannot read it unless it is exposed.
+            headers = {
+                "Retry-After": str(wait),
+                "Access-Control-Expose-Headers": "Retry-After",
+            }
         return HTTPException(
             status_code=429,
             detail=(
@@ -331,6 +342,7 @@ def create_app(
                 if decision.reason == RATE_LIMITED
                 else "the daily model-call quota is exhausted"
             ),
+            headers=headers,
         )
 
     @app.get("/health")

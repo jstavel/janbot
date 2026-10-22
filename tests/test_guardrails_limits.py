@@ -161,6 +161,8 @@ def test_store_error_fails_closed_for_rate() -> None:
 
     assert decision.allowed is False
     assert decision.reason == STORE_ERROR
+    # A store error's recovery time is unknown — the 503 must stay header-free.
+    assert decision.retry_after_seconds is None
 
 
 def test_store_error_fails_closed_for_quota() -> None:
@@ -168,3 +170,83 @@ def test_store_error_fails_closed_for_quota() -> None:
 
     assert decision.allowed is False
     assert decision.reason == STORE_ERROR
+    assert decision.retry_after_seconds is None
+
+
+def test_allowed_and_refused_decisions_without_a_wait_carry_no_retry_after() -> None:
+    limits = _limits(FakeFirestore(), rate_limit=1)
+
+    allowed = limits.check_rate("203.0.113.7")
+    refused = limits.check_rate("203.0.113.7")
+
+    assert allowed.retry_after_seconds is None
+    assert refused.retry_after_seconds is not None
+
+
+def test_rate_refusal_carries_retry_after_to_the_window_boundary() -> None:
+    # 12:00:00 inside the 12:00–12:10 window → the boundary is 12:10:00,
+    # exactly 600 s away.
+    limits = _limits(FakeFirestore(), rate_limit=1)
+
+    decision = limits.check_rate("203.0.113.7")
+    refusal = limits.check_rate("203.0.113.7")
+
+    assert decision.allowed is True
+    assert refusal.allowed is False
+    assert refusal.reason == RATE_LIMITED
+    assert refusal.retry_after_seconds == 600
+
+
+def test_two_refusals_in_one_window_shrink_the_header() -> None:
+    # The boundary acceptance: the second refusal served in the same window
+    # must carry a strictly smaller Retry-After than the first.
+    clock = [datetime(2026, 10, 20, 12, 0, tzinfo=UTC)]
+    limits = _limits(FakeFirestore(), rate_limit=1, clock=lambda: clock[0])
+
+    limits.check_rate("203.0.113.7")  # the allowed Nth request
+    first = limits.check_rate("203.0.113.7")
+    clock[0] = datetime(2026, 10, 20, 12, 1, 40, tzinfo=UTC)  # +100 s, same window
+    second = limits.check_rate("203.0.113.7")
+
+    assert first.retry_after_seconds == 600
+    assert second.retry_after_seconds == 500
+    assert second.retry_after_seconds < first.retry_after_seconds
+
+
+def test_rate_retry_after_survives_across_the_boundary_gap() -> None:
+    # A refusal 1 s before the boundary must wait 1 s, and a refusal in the
+    # fresh window restarts at the full window length.
+    clock = [datetime(2026, 10, 20, 12, 9, 59, tzinfo=UTC)]
+    limits = _limits(FakeFirestore(), rate_limit=1, clock=lambda: clock[0])
+
+    limits.check_rate("203.0.113.7")
+    near_boundary = limits.check_rate("203.0.113.7")
+    clock[0] = datetime(2026, 10, 20, 12, 10, 30, tzinfo=UTC)
+    fresh_window = limits.check_rate("203.0.113.7")
+
+    assert near_boundary.retry_after_seconds == 1
+    assert fresh_window.allowed is True
+
+
+def test_quota_refusal_carries_retry_after_to_the_next_utc_midnight() -> None:
+    limits = _limits(FakeFirestore(), daily_quota=1)
+    limits.consume_quota()  # consumes the day's only slot
+
+    refusal = limits.consume_quota()
+
+    assert refusal.allowed is False
+    assert refusal.reason == QUOTA_EXCEEDED
+    # 2026-10-20 12:00 UTC → next UTC midnight is 12 h later.
+    assert refusal.retry_after_seconds == 43_200
+
+
+def test_quota_retry_after_rounds_up_to_whole_seconds() -> None:
+    # Half a second to midnight must not promise 0 s — ceil keeps the header
+    # honest (never earlier than the actual rollover).
+    clock = [datetime(2026, 10, 20, 23, 59, 59, 500_000, tzinfo=UTC)]
+    limits = _limits(FakeFirestore(), daily_quota=1, clock=lambda: clock[0])
+    limits.consume_quota()
+
+    refusal = limits.consume_quota()
+
+    assert refusal.retry_after_seconds == 1

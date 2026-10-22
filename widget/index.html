@@ -147,12 +147,37 @@ form.addEventListener("submit", async (event) => {
     hide(loading);
     if (!response.ok) {
       // Refusals (429/413/422, 5xx) use the /chat error envelope: {detail}.
+      // The 429 refusals get human copy keyed on the stable detail strings;
+      // everything else keeps the raw status + detail rendering.
       let detail = "the service refused the request";
       try {
         const body = await response.json();
         if (typeof body.detail === "string") detail = body.detail;
       } catch (_) {
         // A non-JSON refusal body keeps the generic copy.
+      }
+      if (response.status === 429 && detail === "too many requests") {
+        // The rate refusal carries Retry-After (seconds to this address's
+        // next window boundary), rounded up to whole minutes.
+        const seconds = Number.parseInt(response.headers.get("retry-after"), 10);
+        const minutes = Math.ceil(seconds / 60);
+        setError(
+          Number.isFinite(minutes) && minutes >= 1
+            ? "Too many questions from this address — try again in about " +
+                minutes +
+                " minutes."
+            : "Too many questions from this address — try again later."
+        );
+        return;
+      }
+      if (
+        response.status === 429 &&
+        detail === "the daily model-call quota is exhausted"
+      ) {
+        setError(
+          "The daily question limit has been reached — please try again tomorrow."
+        );
+        return;
       }
       setError(response.status + ": " + detail);
       return;
