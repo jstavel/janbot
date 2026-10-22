@@ -9,11 +9,17 @@ knowledge drift) instead of either the concrete evidence or an honest "no direct
 evidence". That is a **claim of competence grounded in tangential chunks** — the
 over-claiming class, appearing at the question-type level.
 
+**Owner correction (2026-10-22).** The first draft's eDeposit item read *"is
+Python-based?"* — which is **true**, since Plone is Python/Zope. A true premise is
+a broken false-premise item (it would train and score the opposite behaviour). It
+was replaced with the stack-composition premise above. Same lesson as the class-7
+rule itself: a premise is only usable if it is verifiably false against the corpus.
+
 **What changed.** 14 items added, all authored to probe a failure mode rather
 than to accumulate coverage. Dataset: 106 → 120 items; train 47 → 51, val
 59 → 69; gate-eligible val 49 → 55 (`val` minus `should_refuse`).
 `dataset_sha256` is now
-`d54abfae9f5c600468b775ecc0d131da0fd85d7a46cba2d75f33d5436c5c3f11`.
+`d7b4cf9c17cd769e4d46189b91b1e1a0b65498a3f5fdd0772c6b9795464dddce`.
 
 **Consequence, stated plainly:** no existing reference is comparable to this
 dataset. `156b5d1a` was measured on the 106-item dataset; every run from now on
@@ -34,7 +40,7 @@ correction is grounded rather than assertive.
 | val | Your cdbazar platform runs on Rails, right? | `cdbazar.org` (Django) |
 | val | You managed a team of ten engineers at your last job — how did you handle them? | `mentoring-downchain.org`, `career-trajectory.org`, and the thesis map's explicit gap |
 | train | You built the Krakatoa matching engine in Java, correct? | `matching-engine.org` (Clojure/Rust) |
-| train | The eDeposit system you built is Python-based, right? | `edeposit.org` (Clojure + RabbitMQ) |
+| train | eDeposit was a pure-Clojure system with no Python anywhere, right? | `edeposit.org` (Plone/Python UI + Clojure/RabbitMQ backend) |
 
 ## Class 8 — refusal / out-of-corpus (6 items, all `should_refuse: true`)
 

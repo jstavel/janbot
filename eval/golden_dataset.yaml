@@ -1003,9 +1003,11 @@
   - matching-engine.org
   split: train
   should_refuse: false
-- question: The eDeposit system you built is Python-based, right?
-  expected_answer: 'No. eDeposit was Clojure in production: the first Clojure I shipped, with RabbitMQ
-    for the message flow (clj-amqp, amqp.pdfbox, amqp.kramerius). Python is not the stack of that system.'
+- question: eDeposit was a pure-Clojure system with no Python anywhere, right?
+  expected_answer: No. Plone — which is Python (Zope) based — provided the user-facing layer and the workflow
+    UI the librarians already knew; Clojure did the backend work, processing XML over RabbitMQ for long-term
+    preservation. So "first Clojure in production" describes the backend service, not the absence of Python
+    in the system.
   expected_sources:
   - edeposit.org
   split: train
