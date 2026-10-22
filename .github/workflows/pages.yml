@@ -1,0 +1,46 @@
+name: Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "widget/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: deploy widget
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # One-time precondition (run-e3-public.md): Pages must be enabled for the
+      # repo with GitHub Actions as the source, or this step fails confusingly.
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload the widget artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: widget
+
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

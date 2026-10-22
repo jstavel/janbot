@@ -31,6 +31,7 @@ def _clear_janbot_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "JANBOT_RETRIEVAL_WINDOW",
         "JANBOT_RELEVANCE_THRESHOLD",
         "JANBOT_OUTPUT_GUARD",
+        "JANBOT_CORS_ORIGINS",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -440,3 +441,72 @@ def test_invalid_guardrails_value_fails_fast() -> None:
 def test_non_positive_limits_are_rejected(name: str) -> None:
     with pytest.raises(ValueError, match=name):
         load_config({name: "0"})
+
+
+def test_cors_origins_accept_an_explicit_origin() -> None:
+    config = load_config({"JANBOT_CORS_ORIGINS": "https://jstavel.github.io"})
+
+    assert config.cors_origins == ("https://jstavel.github.io",)
+
+
+def test_cors_origins_accept_an_explicit_port() -> None:
+    config = load_config({"JANBOT_CORS_ORIGINS": "http://localhost:8000"})
+
+    assert config.cors_origins == ("http://localhost:8000",)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "*",
+        "https://*",
+        "https://",
+        "jstavel.github.io",
+        "//jstavel.github.io",
+        "ftp://jstavel.github.io",
+        "https://jstavel.github.io/",
+        "https://jstavel.github.io/x",
+        "https://jstavel.github.io?x=1",
+        "https://jstavel.github.io#x",
+        "https://user:pass@jstavel.github.io",
+        "https://user@jstavel.github.io",
+    ],
+)
+def test_invalid_cors_origins_fail_fast(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        load_config({"JANBOT_CORS_ORIGINS": value})
+
+    message = str(excinfo.value)
+    assert "JANBOT_CORS_ORIGINS" in message
+    assert value in message
+
+
+def test_default_cors_origins_is_unset() -> None:
+    assert load_config({}).cors_origins is None
+
+
+def test_cors_origins_are_parsed_and_entries_trimmed() -> None:
+    config = load_config(
+        {
+            "JANBOT_CORS_ORIGINS": (
+                " https://jstavel.github.io , https://example.com  "
+            )
+        }
+    )
+
+    assert config.cors_origins == ("https://jstavel.github.io", "https://example.com")
+
+
+def test_blank_cors_entries_are_dropped() -> None:
+    config = load_config({"JANBOT_CORS_ORIGINS": "https://jstavel.github.io, , "})
+
+    assert config.cors_origins == ("https://jstavel.github.io",)
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_cors_origins_falls_back_to_unset(blank: str) -> None:
+    assert load_config({"JANBOT_CORS_ORIGINS": blank}).cors_origins is None
+
+
+def test_only_blank_cors_entries_count_as_unset() -> None:
+    assert load_config({"JANBOT_CORS_ORIGINS": " ,  ,"}).cors_origins is None

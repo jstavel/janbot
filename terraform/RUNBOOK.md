@@ -8,7 +8,8 @@ deploy steps rather than copying them, so there is one authority for each comman
 Owner decision **option (c)**: **Terraform owns the whole stack, including the container
 image** — build + push happen inside `terraform apply`. One graph; the image is referenced
 by **digest**, never a tag. **Terraform owns every deployable resource except the state
-bucket bootstrap, the secret value, and invoker grants.**
+bucket bootstrap and the secret value; since E3 the public-ingress grant (`allUsers` +
+`roles/run.invoker`) and the Pages CORS origin are Terraform-owned too.**
 
 The deploy takes **two applies**. The secret version is out of band by design (its value
 must never enter state), so the first apply creates the container and Cloud Run fails until
@@ -233,8 +234,11 @@ read it, do not assume it changed.
 
 ## Named secrets / config
 
-- Service `janbot-api`, region `europe-central2`, **authenticated-only** (no `allUsers`
-  binding). To let someone invoke the service for a demo later: `gcloud run services
-  add-iam-policy-binding janbot-api --region=europe-central2 --member=… --role=roles/run.invoker`.
+- Service `janbot-api`, region `europe-central2`. Since the E3 flip (ADR-008) it is
+  **public**: `GET /health` and `POST /chat` need no identity token — the `allUsers` +
+  `roles/run.invoker` binding is Terraform-owned
+  (`google_cloud_run_v2_service_iam_member.public_invoker`; never grant it by hand).
+  Browser calls are allowed only from the Pages origin
+  (`JANBOT_CORS_ORIGINS=https://jstavel.github.io`, POST-only).
 - Env: `JANBOT_MODEL_MODE=production`, `OPENROUTER_API_KEY` from Secret Manager.
   `JANBOT_PROGRAM_PATH` stays unset (the image runs the baseline program).

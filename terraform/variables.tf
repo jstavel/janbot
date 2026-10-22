@@ -75,3 +75,9 @@ variable "max_body_bytes" {
   description = "Maximum accepted /chat request body in bytes."
   default     = 8192
 }
+
+variable "cors_origins" {
+  type        = string
+  description = "Comma-separated exact origins allowed to call /chat from a browser (JANBOT_CORS_ORIGINS). Blank = the CORS middleware is absent. ADR-008 allows only the GitHub Pages origin."
+  default     = "https://jstavel.github.io"
+}
