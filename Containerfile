@@ -72,7 +72,7 @@ RUN python -m janbot.ingest
 # Bake the pinned answer cache: validates provenance (run id, dataset sha, corpus
 # commit) and fails the build on a dataset mismatch. No key; no model call.
 RUN python -m janbot.guardrails.build_cache \
-    --source cache/answers-fc430d3e17714457b896bafdac9cc1ac.json \
+    --source cache/answers-9f51134f4ac94c8396b093761e394814.json \
     --out /app/cache/answers.json
 
 EXPOSE 8080

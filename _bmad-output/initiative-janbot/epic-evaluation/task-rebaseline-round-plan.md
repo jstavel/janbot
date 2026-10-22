@@ -67,11 +67,11 @@ context: []
 - [x] `tools/extract_public_profile.py` + translations + `--check` green against the `05b11a7` fixture — the deficit closes. (commits `c8279d5` + mkdir fix; fixture 62 files byte-equal; edge-case matrix verified on a synthetic mini-corpus)
 - [x] Regenerated extract + MANIFEST at pin `339359e`; committed (the corpus commit the cache pins). (janbot `1aae1d8`; 62 objects + 2 generated = 64 content files + MANIFEST)
 - [x] Index rebuilt; chunk count + identity recorded; startup scope guard passes. (440 chunks / 63 sources, identity `930e0a3d…`, path-independent, `out_of_scope_sources` empty)
-- [ ] `gate-rule.md` n=55 pre-registration committed and **owner-signed** before the run. (committed `7161460`, arithmetic shown; **owner sign-off pending**)
-- [ ] Reference run + artifact + registration + round note; historical refs named. (round note drafted `rebaseline-round-20261022.md` with pending markers; the run waits for the sign-off)
-- [ ] Cache regenerated; Containerfile repointed; `build_cache` validation green.
+- [x] `gate-rule.md` n=55 pre-registration committed and **owner-signed** before the run. (committed `7161460`; signed 2026-10-22 before measuring, line recorded in `gate-rule.md`)
+- [x] Reference run + artifact + registration + round note; historical refs named. (run `e1a0fa4e…`, artifact `run-e1a0fa4e-output.txt`, citation 34/55, faithfulness 47/55; `gate-rule.md` repointed; `156b5d1a`/`c6ced445` historical)
+- [x] Cache regenerated; Containerfile repointed; `build_cache` validation green. (run `9f51134f…`, 55 entries, dataset `c4786e1c…`, corpus `a7752a0…`)
 - [ ] Verified `terraform plan` → **owner applies** → cold start measured and recorded.
-- [ ] gemini re-run on the new instrument; measurement note supersession recorded.
+- [x] gemini re-run on the new instrument; measurement note supersession recorded. (run `3a7d8151…`, artifact `run-3a7d8151-output.txt`; fails the old "no regression on all four" rule: refusal_pass 14/14 → 13/14, citations dip 34 → 32; routing untouched)
 
 **Acceptance Criteria:**
 - Given the script and pin `339359e`, when the extract is emitted, then `--check` is byte-green, the MANIFEST count line matches reality, and every Czech selection carries pins.
@@ -97,6 +97,15 @@ context: []
   62/64) is recorded as a finding in `rebaseline-round-20261022.md` with the
   stale-pointer pattern (the task's number came from the stale extract's
   inventory; the view selects 62 ids — `05b11a7` selects exactly the previous 59).
+- **2026-10-22 (continuation).** The owner signed the n=55 pre-registration with
+  the plan approval (`approve and continue`) before any measurement; the sign-off
+  line is recorded in `gate-rule.md`. Reference run `e1a0fa4e…` (n=55: citation
+  34/55, faithfulness 47/55) is registered, `156b5d1a`/`c6ced445` are historical.
+  Cache regenerated from run `9f51134f…` (55 entries, dataset `c4786e1c…`,
+  corpus `a7752a0…`), Containerfile repointed, `build_cache` green. Gemini
+  re-measured on the new instrument (`3a7d8151…`): faithfulness/coverage improve,
+  `refusal_pass_rate` regresses by one item, citations dip — no routing change
+  proposed. Deploy remains owner-run.
 
 ## Review Triage Log
 

@@ -1,8 +1,8 @@
 # Re-baseline round 2026-10-22 — one corpus state, one index, one pre-registered gate
 
 **Task:** `task-rebaseline-round.md` · **Plan:** `task-rebaseline-round-plan.md` ·
-**Status:** extract, index and pre-registration **done**; reference run, cache,
-deploy and the gemini re-measure **pending the owner's sign-off** (see §Pending).
+**Status:** extract, index, pre-registration, reference and cache **done**;
+deploy (owner-run) and the gemini re-measure **pending** (see §Pending).
 
 The three divergences this round closes: the `~/org` view (`339359e`) was ahead of
 the extract, the 120-item dataset (`c4786e1c…`) was ahead of the baked cache
@@ -105,24 +105,63 @@ are stated historical for the new instrument (older corpus/dataset/population).
 **Owner sign-off: pending** — required before the reference run is measured; the
 signature is appended to the pre-registration section, never retroactively.
 
+## 5. The new reference is measured and registered
+
+The owner signed the n = 55 pre-registration before any measurement (recorded in
+`gate-rule.md`, not retroactively). Reference run:
+
+```sh
+JANBOT_JUDGE_MODEL=anthropic/claude-haiku-4.5 uv run python -m janbot.eval --split val
+```
+
+- **Run id:** `e1a0fa4ef96f4f47b37dcea1e0bfba36` (MLflow, `sqlite:///mlflow.db`,
+  experiment `janbot-eval`), artifact `run-e1a0fa4e-output.txt`.
+- **Config:** eval mode, snapshot `openai/gpt-4o-mini-2024-07-18` (shipped
+  default), judge pinned `anthropic/claude-haiku-4.5`, `chunks`, k=4, hybrid,
+  θ=0.26, `program=baseline`, `output_guard=on`; dataset `c4786e1c…` (120 items,
+  train 51 / val 69, val `should_refuse` 14); corpus `339359e`, index 440/63.
+- **Measured (n = 55):** `citation_correctness` **0.6182** (34/55),
+  `faithfulness` **0.8545** (47/55), `answer_coverage` 0.9636 (53/55),
+  `citation_precision` 0.6348, `public_references` 0.9636,
+  `retrieval_accuracy` 0.6545, `retrieval_mrr` 0.7121, `refusal_pass_rate` 1.0
+  (n=14), `spurious_refusal_rate` 2/55. Diagnostics: 0 hard errors, 2 in-corpus
+  declines, 0 judge failures.
+- **Registration:** `gate-rule.md` now points at `e1a0fa4e` with run
+  id/config/n=55; the frozen floors are the pre-registration (citation ≥6/≤5,
+  faithfulness ≥4/≤3). `156b5d1a` and `c6ced445` are stated historical.
+  This is a **re-baseline, not a verdict**; the principle is untouched.
+
+## 6. The baked cache is regenerated
+
+One production run on the new index and the 120-item dataset:
+
+```sh
+JANBOT_MODEL_MODE=production JANBOT_RETRIEVAL_MODE=hybrid \
+JANBOT_RETRIEVAL_WINDOW=chunks JANBOT_TOP_K=4 \
+JANBOT_RELEVANCE_THRESHOLD=0.26 JANBOT_OUTPUT_GUARD=on \
+uv run python -m janbot.eval --split val --cache-out cache/answers-9f51134f4ac94c8396b093761e394814.json
+```
+
+- **Run id:** `9f51134f4ac94c8396b093761e394814`; **55** non-refusal answers.
+- **Artifact metadata:** `dataset_sha256` `c4786e1c…`, `corpus_commit`
+  `a7752a0…`, `corpus_sha256` `40966e97…`, `requested_model` `openrouter/auto`,
+  `output_guard` on.
+- `Containerfile` `--source` repointed to the new artifact; the old artifact is
+  removed (git history keeps it). `python -m janbot.guardrails.build_cache
+  --source … --corpus-commit a7752a0…` validates: **55 entries written**.
+  (The cache run needs `JANBOT_FIRESTORE_PROJECT` and a `JANBOT_CACHE_PATH` only
+  because the API module builds its default app at import time in production
+  mode; the eval app itself receives the no-op limiter and does not serve.)
+
 ## Pending (in order, with the commands ready)
 
-1. **Reference run** (after the owner signs the pre-registration):
-   `JANBOT_JUDGE_MODEL=anthropic/claude-haiku-4.5 OPENROUTER_API_KEY=… uv run python -m janbot.eval --split val`
-   → run id + artifact `run-<ref-id>-output.txt`; the Reference section of
-   `gate-rule.md` repointed to it (config, n=55) and the re-registration history
-   appended; this round note updated with the four metrics.
-2. **Cache regenerated** (one production run per `RUNBOOK.md` §4):
-   `JANBOT_MODEL_MODE=production … uv run python -m janbot.eval --split val --cache-out cache/answers-<run>.json`
-   → `Containerfile:74-76` `--source` repointed; `python -m janbot.guardrails.build_cache --source … --out /tmp/answers.json`
-   validates the new dataset sha + corpus tree sha + corpus commit (the extract
-   commit `1aae1d8` exists first).
-3. **Deploy:** verified `terraform plan` (image replace via corpus+cache+
+1. **Deploy:** verified `terraform plan` (image replace via corpus+cache+
    Containerfile triggers; `JANBOT_RATE_LIMIT` already 20, `startup_cpu_boost`
    already on; nothing else may drift) → **owner applies** → cold start measured
    per the runbook (≥15 min idle, one timed baked-question request) and recorded
    beside ~50 s in `epic-gcp-deploy/run-e3-public.md`.
-4. **gemini-2.5-flash re-measured** on the new instrument (eval mode, judge
+2. **gemini-2.5-flash re-measured** on the new instrument (eval mode, judge
    pinned `anthropic/claude-haiku-4.5`), superseding `effd4854` in
    `epic-gcp-deploy/measurement-gemini-2.5-flash-val.md` with the four metrics +
    the citation-precision dip; production routing untouched.
+

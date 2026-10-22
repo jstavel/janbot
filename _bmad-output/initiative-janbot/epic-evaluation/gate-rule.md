@@ -38,20 +38,28 @@ per-item evidence remains valid historical record.
 
 ## Reference
 
-Reference: the val baseline **`156b5d1a76694867bd92e7a03feda76b`** (status `FINISHED`),
-registered 2026-10-20 under the population contract above. Nominal gate-eligible
-**n = 49** (val 59 minus the 10 `should_refuse`); the claim-quality metrics now aggregate
-over that same **n = 49** — the nominal/observed split is gone. Config: `chunks` window,
-`top_k=4`, hybrid, θ = 0.26; judge `anthropic/claude-haiku-4.5`; `program=baseline`
-(`JANBOT_PROGRAM_PATH` unset); **`output_guard=on`** (ADR-010); `dataset_sha256`
-`a8bd69dc…`; corpus `05b11a7` (61 content files), index **417 chunks / 60 sources**;
-train 47 / val 59; `should_refuse` 13 (10 val). This reference supersedes `5ed5d8d7`
-under a **contract change**, not a corpus/index/dataset re-base: the per-item retrieval,
-citation, judge, failure and decline lines are byte-identical to `5ed5d8d7`; only the
-aggregates and populations changed. Gate comparisons are still evaluated on the common
-items observed in both runs (brief §6.8, Amendment 2), as a second guard beside the fixed
-population. It is a **re-baseline, not a gate verdict**; the principle (1.5σ, symmetric
-floor) is unchanged.
+Reference: the val baseline **`e1a0fa4ef96f4f47b37dcea1e0bfba36`** (status
+`FINISHED`), measured 2026-10-22 on the re-based instrument under the population
+contract above. Nominal gate-eligible **n = 55** (val 69 minus the 14
+`should_refuse`); every claim-quality metric aggregates over that same **n = 55**.
+Config: `chunks` window, `top_k=4`, hybrid, θ = 0.26; judge
+`anthropic/claude-haiku-4.5`; `program=baseline` (`JANBOT_PROGRAM_PATH` unset);
+**`output_guard=on`** (ADR-010); `dataset_sha256`
+`c4786e1c9e3f6f5c677b3ecbbee8fbc03ff19628b9bcf374aea958fc9cd9af20` (120 items;
+train 51 / val 69); corpus `~/org` `339359e` (64 content files), index **440
+chunks / 63 sources**; val `should_refuse` 14. Measured: `citation_correctness`
+**0.6182** (34/55), `faithfulness` **0.8545** (47/55); context: `answer_coverage`
+0.9636 (53/55), `citation_precision` 0.6348, `public_references` 0.9636,
+`retrieval_accuracy` 0.6545, `retrieval_mrr` 0.7121, `refusal_pass_rate` 1.0
+(n=14), `spurious_refusal_rate` 2/55. Diagnostics: `hard_error__n` = 0,
+`in_corpus_decline__n` = 2, `judge_failure__n` = 0, `non_answered__n` = 2.
+Artifact: `run-e1a0fa4e-output.txt`. The frozen floors for this reference are the
+n = 55 pre-registration above (**citation accept ≥6 / regress ≤5; faithfulness
+accept ≥4 / regress ≤3**). `156b5d1a` and `c6ced445` are **historical**: older
+corpus (59-object extract, 417 chunks), older dataset (`a8bd69dc…`, 106 items)
+and older population (n = 49), so their absolute claim-quality values are not
+comparable to this run. It is a **re-baseline, not a gate verdict**; the
+principle (1.5σ, symmetric floor) is unchanged.
 
 ## Re-registration pending measurement — 2026-10-22 (n = 55, frozen before any run)
 
@@ -87,11 +95,15 @@ new instrument and its thresholds are frozen **now**, before any measurement:
 - **`156b5d1a` and `c6ced445` are historical from here on** — older corpus
   (59-object extract, 417 chunks), older dataset (`a8bd69dc…`, 106 items) and
   older population (n = 49); not comparable to runs on this instrument.
-- **Owner sign-off: pending** — the pre-registration is committed unsigned; the
-  owner signs it **before** the reference run is measured (the sign-off line is
-  appended here, never retroactively).
+- **Owner sign-off: signed 2026-10-22 before the reference run.** The owner
+  approved the plan that carries this pre-registration (`approve and continue`),
+  so these frozen thresholds govern the run below; the signature is recorded
+  here before the measurement, never retroactively.
 
 ## Metrics
+
+*Historical derivation at `156b5d1a` (n = 49); the governing floors for the
+current reference are the n = 55 pre-registration above.*
 
 - **Gate metrics: `citation_correctness` is the GAIN-CARRIER** (baseline **0.6735**,
   33/49 — room to move) and **`faithfulness` is the GUARD** (baseline **0.9184**,
@@ -113,6 +125,9 @@ new instrument and its thresholds are frozen **now**, before any measurement:
   It is a failure in the claim-quality metrics.
 
 ## Target and threshold
+
+*Historical derivation at `156b5d1a` (n = 49); the governing floors for the
+current reference are the n = 55 pre-registration above.*
 
 - **Symmetric target:** either gate metric may carry the gain; **neither may regress
   beyond the floor**. A cross-floor trade — one up beyond the floor, the other down
@@ -179,6 +194,14 @@ A re-registration moves the reference and re-derives its n-specific thresholds; 
   and dataset; the per-item evidence is byte-identical to `5ed5d8d7`. Every earlier run is
   incomparable on absolute claim-quality values. Floors: citation accept ≥5 / regress ≤4;
   faithfulness accept ≥3 / regress ≤2. This is a re-registration, not a verdict.
+- **2026-10-22** — **`156b5d1a…` → `e1a0fa4ef96f4f47b37dcea1e0bfba36`** (corpus
+  re-extract at `~/org` `339359e`: 62 objects + 2 generated = 64 content files; three
+  Czech objects enter as pinned English translations; index 440/63; dataset
+  `c4786e1c…`, 120 items, train 51 / val 69, **n = 55**). Floors were frozen before
+  the run from `156b5d1a`'s own p projected to n = 55: citation accept ≥6 / regress
+  ≤5; faithfulness accept ≥4 / regress ≤3. Measured: citation 34/55 (0.6182),
+  faithfulness 47/55 (0.8545), zero hard errors and zero judge failures. `156b5d1a`
+  and `c6ced445` are historical from here on. This is a re-registration, not a verdict.
 
 ## Verdict record
 
