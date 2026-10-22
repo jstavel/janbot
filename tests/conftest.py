@@ -71,3 +71,52 @@ def write_org() -> Callable[..., None]:
 @pytest.fixture
 def chunk_id() -> Callable[..., str]:
     return _chunk_id
+
+
+@pytest.fixture(autouse=True)
+def release_per_test_stores():
+    """Close the chroma Systems and mlflow engines a test created.
+
+    Chroma keeps a process-global, refcounted cache of its ``System``
+    instances keyed by the persist path, and a ``VectorStore`` opens a
+    ``chromadb.PersistentClient`` per instance without closing it. A per-test
+    index (a fresh ``tmp_path``) therefore pins its System — sqlite
+    connections, HNSW artifacts, telemetry sockets — for the whole run, which
+    exhausts the 1024-fd CI limit near the suite's end (measured: 1021/1024
+    fds open at session finish, ~11-12 leaked per store-building test, 50
+    failures + 10 errors). Releasing exactly the references the test added
+    drives each new System to chroma's own last-reference stop
+    (``_release_system`` stops and pops it); systems opened *before* the test
+    — the shared repo-index system behind ``janbot.api.main``'s module-level
+    app, or an index built by an e2e subprocess — keep their references and
+    stay open.
+
+    mlflow caches one SQLAlchemy engine per tracking URI (and one store per
+    resolved URI); each eval test's tmp ``mlflow.db`` would otherwise keep its
+    pooled connections open for the rest of the run, so every engine the test
+    created is disposed *and popped*, and the store cache is cleared — a later
+    test that reuses a URI therefore gets a fresh store and engine instead of
+    reconnecting the disposed one.
+
+    The private cache attributes are read on purpose: if chromadb or mlflow
+    changes them, this fixture fails loudly rather than silently
+    reintroducing the leak. Measure, never assert: the evidence for this fix
+    is the fd-count delta in the plan's Implementation Notes.
+    """
+    from chromadb.api.client import SharedSystemClient
+    from mlflow.store.tracking.sqlalchemy_store import SqlAlchemyStore
+    from mlflow.tracking._tracking_service.utils import _tracking_store_registry
+
+    chroma_before = dict(SharedSystemClient._identifier_to_refcount)
+    mlflow_before = set(SqlAlchemyStore._engine_map)
+    yield
+    for identifier, count in list(SharedSystemClient._identifier_to_refcount.items()):
+        for _ in range(max(count - chroma_before.get(identifier, 0), 0)):
+            SharedSystemClient._release_system(identifier)
+    disposed = False
+    for uri in list(SqlAlchemyStore._engine_map):
+        if uri not in mlflow_before:
+            SqlAlchemyStore._engine_map.pop(uri).dispose()
+            disposed = True
+    if disposed:
+        _tracking_store_registry._get_store_with_resolved_uri.cache_clear()

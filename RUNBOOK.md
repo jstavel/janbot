@@ -34,12 +34,15 @@ it cannot reach the network. `production` needs `OPENROUTER_API_KEY`. Every knob
 ## 2. Tests
 
 ```sh
-ulimit -n 16384 && uv run pytest -q
+uv run pytest -q
 ```
 
-The limit is not decoration: without it the store tests fail with SQLite `CANTOPEN` /
-`Too many open files` in the full run and pass in isolation. Do not pin a pass count here —
-it changes with every story; the criterion is **green**.
+The suite closes its per-test resources — an autouse release fixture in
+[`tests/conftest.py`](tests/conftest.py) stops the chroma systems and disposes the
+mlflow engines each test created — so the default file-descriptor limit is enough.
+The old `ulimit -n 16384` wrapper existed to mask a resource leak, not to fix one;
+do not reintroduce it. Do not pin a pass count here — it changes with every story;
+the criterion is **green**.
 
 ## 3. Index
 
@@ -160,7 +163,7 @@ gcloud run services update-traffic janbot-api --region europe-central2 --to-revi
 |---|---|---|
 | cold start | first request after a deploy takes 20+ s (instance boot ~8 s measured on `00008`) | do not read a single post-deploy request as steady-state latency |
 | `reason` vs `cause` | the API says `reason=personal`, the log says `cause=low-relevance` | `reason` is the question class, `cause` is the mechanism that fired — read the log |
-| file descriptors | the full suite fails in the store tests only | `ulimit -n 16384` |
+| file descriptors | the full suite fails in the store tests only | the per-test chroma/mlflow release fixture in [`tests/conftest.py`](tests/conftest.py) closes this (2026-10-22: measured 1021 → 26 fds at session end under `ulimit -n 1024`, suite green). A reappearance is a regression in that fixture — do not raise the limit |
 | stale state lock | `Error acquiring the state lock` after an interrupted command | confirm no terraform is running, then `terraform force-unlock <ID>` |
 | dirty build tree | `plan` fails on the dirty-build-tree precondition | commit or stash — the image is built from the working tree, not a commit |
 | Containerfile touched by a docs change | `plan` wants `1 to add, 1 to change, 1 to destroy` although no code changed — `triggers.containerfile` hashes the **file**, comments included | expected: the next `apply` rebuilds an identical-behaviour image (~3 min, new digest, new revision). Measured 2026-10-21: a single comment edit moved the trigger `a36e324b…` → `b880f5b7…`. If a rebuild must not happen, don't edit `Containerfile` in a docs commit — fix the reference in the same commit as the next real deploy |
