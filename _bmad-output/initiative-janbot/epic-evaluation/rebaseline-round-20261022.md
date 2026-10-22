@@ -153,15 +153,29 @@ uv run python -m janbot.eval --split val --cache-out cache/answers-9f51134f4ac94
   because the API module builds its default app at import time in production
   mode; the eval app itself receives the no-op limiter and does not serve.)
 
-## Pending (in order, with the commands ready)
+## 7. Deploy plan verified — the apply is the owner's
 
-1. **Deploy:** verified `terraform plan` (image replace via corpus+cache+
-   Containerfile triggers; `JANBOT_RATE_LIMIT` already 20, `startup_cpu_boost`
-   already on; nothing else may drift) → **owner applies** → cold start measured
-   per the runbook (≥15 min idle, one timed baked-question request) and recorded
-   beside ~50 s in `epic-gcp-deploy/run-e3-public.md`.
-2. **gemini-2.5-flash re-measured** on the new instrument (eval mode, judge
-   pinned `anthropic/claude-haiku-4.5`), superseding `effd4854` in
-   `epic-gcp-deploy/measurement-gemini-2.5-flash-val.md` with the four metrics +
-   the citation-precision dip; production routing untouched.
+`terraform validate` passes. `terraform plan` with `-var image_tag=7e2d69e` (the
+round's commit) shows exactly the named changes and nothing else:
+
+- `docker_registry_image.janbot` **replaced** (`:dev` → `:7e2d69e`; triggers
+  `cache`, `containerfile`, `corpus`, `dataset`, `src` all changed);
+- `google_cloud_run_v2_service.janbot` **updated in place**: the image digest
+  moves, `JANBOT_RATE_LIMIT` 10 → 20, `startup_cpu_boost` false → true. The last
+  two are the E3 config already in the code, not drift — the plan surfaces them
+  because the deployed revision predates that commit;
+- `Plan: 1 to add, 1 to change, 1 to destroy` (the replace), plus the
+  `image_digest` output.
+
+**The apply is owner-run.** After it, the cold start is measured per the runbook:
+wait ≥15 min for the instance to be idle, then time one baked-question request
+and record the seconds beside the ~50 s pre-change number in
+`epic-gcp-deploy/run-e3-public.md`. A docs-only commit after this plan does
+not change any image trigger, so the apply may use the final HEAD sha as its
+`image_tag`; no source, corpus, cache or Containerfile byte moves.
+
+## Pending (the owner's remaining steps)
+
+1. **Owner applies** the verified plan above, then records the post-apply cold
+   start beside ~50 s in `epic-gcp-deploy/run-e3-public.md`.
 
