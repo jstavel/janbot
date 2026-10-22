@@ -1,1263 +1,1047 @@
-# Golden dataset for the JanBot evaluation harness (epic-evaluation).
-#
-# Recruiter questions with a short factual expected answer and the
-# corpus-relative source(s) a correct response should cite. Drafted by the
-# builder from public_profile_org/ topics; to be corrected by the owner.
-# Each item: a recruiter question, the expected answer, the corpus-relative
-# sources a correct response should cite, the train/val split marker, and a
-# should_refuse flag. A should_refuse item (the out-of-corpus refusal class)
-# makes no retrieval claim, so it carries no expected_sources; every other item
-# sets should_refuse: false and names its expected sources.
-
-- question: "Can you walk me through your career path and what drove the transitions?"
-  expected_answer: >-
-    The arc runs teacher, systems administrator, developer, senior QE, architect,
-    with each move going deeper into a technical domain rather than broader:
-    teaching and PC-lab administration (1997-2001), C++ and then Python development
-    (2001-2007), then the 2007-2026 phase — corporate intranets and retail automation
-    (Perl), library messaging systems (Clojure + RabbitMQ), and then quality engineering
-    at enterprise scale — and architecture work in 2026 (matching engines, reactive
-    testing frameworks, AI-assisted workflows). Each transition entered a new domain
-    as a novice and built depth, extending the same underlying skills of systems
-    thinking, testing, and automation.
+- question: Can you walk me through your career path and what drove the transitions?
+  expected_answer: 'The arc runs teacher, systems administrator, developer, senior QE, architect, with
+    each move going deeper into a technical domain rather than broader: teaching and PC-lab administration
+    (1997-2001), C++ and then Python development (2001-2007), then the 2007-2026 phase — corporate intranets
+    and retail automation (Perl), library messaging systems (Clojure + RabbitMQ), and then quality engineering
+    at enterprise scale — and architecture work in 2026 (matching engines, reactive testing frameworks,
+    AI-assisted workflows). Each transition entered a new domain as a novice and built depth, extending
+    the same underlying skills of systems thinking, testing, and automation.'
   expected_sources:
-    - career-trajectory.org
+  - career-trajectory.org
   split: train
   should_refuse: false
-
-- question: "Why did you leave your last job after so many years there?"
-  expected_answer: >-
-    After more than a decade in one team (2015-2026), a personal crisis coincided
-    with a leadership change; the new manager saw the leftover "Evolving" Workday
-    status and asked for proof of Senior QE. The response was over-delivery (a full
-    Grafana/Prometheus/Ansible monitoring stack instead of the requested proof-of-concept)
-    and estimates that ignored multi-day review waits, ending in an "estimating
-    deficiency" verdict. The departure was initiated by the engineer as a clean,
-    mutual, growth-oriented break at the end of the year.
+- question: Why did you leave your last job after so many years there?
+  expected_answer: After more than a decade in one team (2015-2026), a personal crisis coincided with
+    a leadership change; the new manager saw the leftover "Evolving" Workday status and asked for proof
+    of Senior QE. The response was over-delivery (a full Grafana/Prometheus/Ansible monitoring stack instead
+    of the requested proof-of-concept) and estimates that ignored multi-day review waits, ending in an
+    "estimating deficiency" verdict. The departure was initiated by the engineer as a clean, mutual, growth-oriented
+    break at the end of the year.
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: val
   should_refuse: false
-
-- question: "Can you give a concrete example of mentoring or leadership impact?"
-  expected_answer: >-
-    In Red Hat's formal mentoring program, a mentee based in India (an Associate
-    Software Maintenance Engineer) reported in writing that the mentorship "played
-    a big role" in the promotion to SME. The approach was to create space for any
-    question, listen first, and guide without judgment, treating the mentee's growth
-    environment as the mentor's own responsibility ("Extreme Ownership DOWN").
+- question: Can you give a concrete example of mentoring or leadership impact?
+  expected_answer: In Red Hat's formal mentoring program, a mentee based in India (an Associate Software
+    Maintenance Engineer) reported in writing that the mentorship "played a big role" in the promotion
+    to SME. The approach was to create space for any question, listen first, and guide without judgment,
+    treating the mentee's growth environment as the mentor's own responsibility ("Extreme Ownership DOWN").
   expected_sources:
-    - mentoring-downchain.org
+  - mentoring-downchain.org
   split: train
   should_refuse: false
-
-- question: "Tell me about your matching engine project."
-  expected_answer: >-
-    Krakatoa is a high-throughput, polyglot Clojure/Rust matching engine built
-    spec-first with spec-kit as proof-of-work: the Clojure/Polylith layer handles
-    orchestration, ZeroMQ transport, Kafka event sourcing, and KVM/Terraform chaos
-    testing, while the Rust engine implements a zero-allocation matching hot path
-    with pre-allocated memory pools (ADR 0003). It implements real exchange
-    mechanics — price-time priority, taker-maker crossing, partial fills,
-    multi-level sweeps, and trade record generation.
+- question: Tell me about your matching engine project.
+  expected_answer: 'Krakatoa is a high-throughput, polyglot Clojure/Rust matching engine built spec-first
+    with spec-kit as proof-of-work: the Clojure/Polylith layer handles orchestration, ZeroMQ transport,
+    Kafka event sourcing, and KVM/Terraform chaos testing, while the Rust engine implements a zero-allocation
+    matching hot path with pre-allocated memory pools (ADR 0003). It implements real exchange mechanics
+    — price-time priority, taker-maker crossing, partial fills, multi-level sweeps, and trade record generation.'
   expected_sources:
-    - matching-engine.org
+  - matching-engine.org
   split: train
   should_refuse: false
-
-- question: "Have you implemented spec-first testing end to end, not just talked about it?"
-  expected_answer: >-
-    Yes — Reactive Testing is a TypeScript monorepo (149 commits, 50 specification
-    documents, 4 completed epics) implementing Spec-First against the Kraken Pro
-    trading UI's read-only critical path. A formal model (FSM, contracts, Zod
-    schemas) is the single source of truth; an orchestrator records evidence from
-    a live browser via Chrome DevTools Protocol, and pure validators verify that
-    evidence offline without any browser. All four epics were built with the BMad
-    method, AI agents driving stories from spec through implementation to review.
+- question: Have you implemented spec-first testing end to end, not just talked about it?
+  expected_answer: Yes — Reactive Testing is a TypeScript monorepo (149 commits, 50 specification documents,
+    4 completed epics) implementing Spec-First against the Kraken Pro trading UI's read-only critical
+    path. A formal model (FSM, contracts, Zod schemas) is the single source of truth; an orchestrator
+    records evidence from a live browser via Chrome DevTools Protocol, and pure validators verify that
+    evidence offline without any browser. All four epics were built with the BMad method, AI agents driving
+    stories from spec through implementation to review.
   expected_sources:
-    - reactive-testing-project.org
+  - reactive-testing-project.org
   split: val
   should_refuse: false
-
-- question: "Have you used Clojure in production systems?"
-  expected_answer: >-
-    Yes: eDeposit (2013-2015) was a long-term digital preservation system for the
-    National Library of the Czech Republic and the first Clojure in production in
-    this career. Clojure AMQP workers processed XML/LTP metadata and validated
-    PDFs (pdfbox) and EPUBs (epubcheck), with RabbitMQ connecting a Plone librarian
-    UI to roughly twenty-plus Python microservices. The architecture was shaped by
-    observing librarians' actual daily workflow rather than framework defaults.
+- question: Have you used Clojure in production systems?
+  expected_answer: 'Yes: eDeposit (2013-2015) was a long-term digital preservation system for the National
+    Library of the Czech Republic and the first Clojure in production in this career. Clojure AMQP workers
+    processed XML/LTP metadata and validated PDFs (pdfbox) and EPUBs (epubcheck), with RabbitMQ connecting
+    a Plone librarian UI to roughly twenty-plus Python microservices. The architecture was shaped by observing
+    librarians'' actual daily workflow rather than framework defaults.'
   expected_sources:
-    - edeposit.org
+  - edeposit.org
   split: train
   should_refuse: false
-
-- question: "Do you have full-stack experience?"
-  expected_answer: >-
-    cdbazar is a Django e-commerce platform for a Prague CD retailer, built and
-    maintained solo since around 2007 and still in production in 2026 — 18+ years
-    of continuous operation. It covers catalogue, order workflow, payments,
-    competitive pricing intelligence, and an internal intranet, on Django/MySQL
-    with Xapian full-text search. Requirements were elicited in person with a
-    non-technical retail team over nearly two decades.
+- question: Do you have full-stack experience?
+  expected_answer: cdbazar is a Django e-commerce platform for a Prague CD retailer, built and maintained
+    solo since around 2007 and still in production in 2026 — 18+ years of continuous operation. It covers
+    catalogue, order workflow, payments, competitive pricing intelligence, and an internal intranet, on
+    Django/MySQL with Xapian full-text search. Requirements were elicited in person with a non-technical
+    retail team over nearly two decades.
   expected_sources:
-    - cdbazar.org
+  - cdbazar.org
   split: val
   should_refuse: false
-
-- question: "What experience do you have with event-driven architecture?"
-  expected_answer: >-
-    In 2007, an architecture for real-time stock synchronisation across a retail
-    chain used PostgreSQL triggers as change data capture and RabbitMQ persistent
-    queues as the event log — years before event streaming became a named pattern;
-    it was built as a working proof of concept, not deployed to production. The
-    same period included the corporate intranet in Perl/Mojolicious with years of
-    raw SQL via DBD::Pg and no ORM.
+- question: What experience do you have with event-driven architecture?
+  expected_answer: In 2007, an architecture for real-time stock synchronisation across a retail chain
+    used PostgreSQL triggers as change data capture and RabbitMQ persistent queues as the event log —
+    years before event streaming became a named pattern; it was built as a working proof of concept, not
+    deployed to production. The same period included the corporate intranet in Perl/Mojolicious with years
+    of raw SQL via DBD::Pg and no ORM.
   expected_sources:
-    - bata-stock-update.org
+  - bata-stock-update.org
   split: train
   should_refuse: false
-
-- question: "Tell me about your AI agent project, JanBot."
-  expected_answer: >-
-    JanBot is a deployed AI career assistant (FastAPI, DSPy, ChromaDB, OpenRouter)
-    that answers recruiter questions from a personal org-mode corpus, built
-    spec-first with the BMad Method. Key design points: ports-and-adapters with
-    the FastAPI/Pydantic API contract as the single boundary, fail-closed
-    whitelist ingestion where only public_profile_org/ is ever indexed, org-mode
-    AST-aware chunking instead of naive text splitting, and deterministic
-    evaluation via a locked eval mode (a gpt-4o-mini snapshot at temperature=0)
-    separate from the flexible production mode, with tests from day one.
+- question: Tell me about your AI agent project, JanBot.
+  expected_answer: 'JanBot is a deployed AI career assistant (FastAPI, DSPy, ChromaDB, OpenRouter) that
+    answers recruiter questions from a personal org-mode corpus, built spec-first with the BMad Method.
+    Key design points: ports-and-adapters with the FastAPI/Pydantic API contract as the single boundary,
+    fail-closed whitelist ingestion where only public_profile_org/ is ever indexed, org-mode AST-aware
+    chunking instead of naive text splitting, and deterministic evaluation via a locked eval mode (a gpt-4o-mini
+    snapshot at temperature=0) separate from the flexible production mode, with tests from day one.'
   expected_sources:
-    - janbot-ai-agent.org
+  - janbot-ai-agent.org
   split: train
   should_refuse: false
-
-- question: "What model modes does JanBot support and why?"
-  expected_answer: >-
-    JanBot has an eval mode using a locked deterministic snapshot
-    (openai/gpt-4o-mini-2024-07-18 at temperature 0) for CI and evaluation, and a
-    production mode using openrouter/auto. The split keeps test and evaluation
-    runs deterministic while production can flex across providers.
+- question: What model modes does JanBot support and why?
+  expected_answer: JanBot has an eval mode using a locked deterministic snapshot (openai/gpt-4o-mini-2024-07-18
+    at temperature 0) for CI and evaluation, and a production mode using openrouter/auto. The split keeps
+    test and evaluation runs deterministic while production can flex across providers.
   expected_sources:
-    - janbot-ai-agent.org
+  - janbot-ai-agent.org
   split: val
   should_refuse: false
-
-- question: "What experience do you have operating and debugging CI/CD infrastructure like Jenkins?"
-  expected_answer: >-
-    At Red Hat, hands-on maintenance and extension of a shared Jenkins instance on
-    OpenShift:
-    job definitions as code (Groovy/job DSL, Configuration as Code), the seed job,
-    agent/container images built with Podman keeping tooling versioned in images,
-    plus GitHub CI for an upstream project and an Ansible repository with dynamic
-    inventories. To debug single jobs safely on the large shared system, a
-    "mini-seed" pattern was used — a small separate repository with a seed job
-    updating only one job, giving fast, low-risk feedback. A formative lesson came
-    from orphaned agent pods left by repeated Jenkins relaunches nearly filling
-    the shared cluster.
+- question: What experience do you have operating and debugging CI/CD infrastructure like Jenkins?
+  expected_answer: 'At Red Hat, hands-on maintenance and extension of a shared Jenkins instance on OpenShift:
+    job definitions as code (Groovy/job DSL, Configuration as Code), the seed job, agent/container images
+    built with Podman keeping tooling versioned in images, plus GitHub CI for an upstream project and
+    an Ansible repository with dynamic inventories. To debug single jobs safely on the large shared system,
+    a "mini-seed" pattern was used — a small separate repository with a seed job updating only one job,
+    giving fast, low-risk feedback. A formative lesson came from orphaned agent pods left by repeated
+    Jenkins relaunches nearly filling the shared cluster.'
   expected_sources:
-    - jenkins-openshift-cicd-operations.org
+  - jenkins-openshift-cicd-operations.org
   split: train
   should_refuse: false
-
-- question: "How have you designed a test automation architecture at production scale?"
-  expected_answer: >-
-    For Red Hat Subscription Management, a two-layer architecture used Ansible as
-    orchestrator for CLI and DBus tests and Robot Framework with SeleniumLibrary
-    for Cockpit web UI end-to-end tests, designed for a Python-only team. It ran
-    fully integrated in team CI/CD for years, at a scale of 60+ playbooks, a
-    737-line main playbook, custom plugins, Bugzilla/Polarion integrations, and
-    Beaker test-machine reservation. Each scenario was a standalone .robot file a
-    developer could run without the rest of the framework.
+- question: How have you designed a test automation architecture at production scale?
+  expected_answer: For Red Hat Subscription Management, a two-layer architecture used Ansible as orchestrator
+    for CLI and DBus tests and Robot Framework with SeleniumLibrary for Cockpit web UI end-to-end tests,
+    designed for a Python-only team. It ran fully integrated in team CI/CD for years, at a scale of 60+
+    playbooks, a 737-line main playbook, custom plugins, Bugzilla/Polarion integrations, and Beaker test-machine
+    reservation. Each scenario was a standalone .robot file a developer could run without the rest of
+    the framework.
   expected_sources:
-    - rhsm-ansible-qe.org
+  - rhsm-ansible-qe.org
   split: train
   should_refuse: false
-
-- question: "What Clojure work did you do at Red Hat?"
-  expected_answer: >-
-    Hired specifically to maintain and extend Clojure tests for subscription-manager,
-    the work included libraries bridging Clojure functions into the Java TestNG
-    suite (test-clj.testng, verify-testng), a Bugzilla-status TestNG listener that
-    skipped tests for still-open bugs, GNOME LDTP desktop bindings, and
-    Clojure+Selenium tests for the Cockpit web UI. After about five years the team
-    replaced Clojure with pytest for maintainability, and the shift was accepted,
-    leading on to the WebDriver.io proposal and then the Ansible + Robot Framework
-    architecture.
+- question: What Clojure work did you do at Red Hat?
+  expected_answer: Hired specifically to maintain and extend Clojure tests for subscription-manager, the
+    work included libraries bridging Clojure functions into the Java TestNG suite (test-clj.testng, verify-testng),
+    a Bugzilla-status TestNG listener that skipped tests for still-open bugs, GNOME LDTP desktop bindings,
+    and Clojure+Selenium tests for the Cockpit web UI. After about five years the team replaced Clojure
+    with pytest for maintainability, and the shift was accepted, leading on to the WebDriver.io proposal
+    and then the Ansible + Robot Framework architecture.
   expected_sources:
-    - clojure-testing.org
+  - clojure-testing.org
   split: val
   should_refuse: false
-
-- question: "How deep is your Linux knowledge?"
-  expected_answer: >-
-    As a school IT administrator, a custom Linux From Scratch distribution was
-    built to fit a single 1.44MB floppy containing only netcat and dd, used to
-    clone Windows 95 workstations over the network by streaming disk images with
-    dd and nc. It demonstrates Linux fundamentals — disk I/O, pipes, network
-    streaming, bootable media — and creative problem-solving with minimal
-    resources.
+- question: How deep is your Linux knowledge?
+  expected_answer: As a school IT administrator, a custom Linux From Scratch distribution was built to
+    fit a single 1.44MB floppy containing only netcat and dd, used to clone Windows 95 workstations over
+    the network by streaming disk images with dd and nc. It demonstrates Linux fundamentals — disk I/O,
+    pipes, network streaming, bootable media — and creative problem-solving with minimal resources.
   expected_sources:
-    - linux-from-scratch.org
+  - linux-from-scratch.org
   split: train
   should_refuse: false
-
-- question: "Do you have security or PKI experience?"
-  expected_answer: >-
-    The NEPodpis project (for Brailcom) provisioned state-authorized electronic
-    signature certificates for visually impaired Linux clients. This required
-    researching the then-undocumented Linux smartcard/PKI stack (OpenSC bridging
-    RSA smartcards to OpenSSL), then setting up the full chain — key pair on a
-    smartcard, certificate signing request, certificate issued by a Czech bank as
-    certification authority — at clients' homes, and accompanying them to the bank
-    for identity verification.
+- question: Do you have security or PKI experience?
+  expected_answer: The NEPodpis project (for Brailcom) provisioned state-authorized electronic signature
+    certificates for visually impaired Linux clients. This required researching the then-undocumented
+    Linux smartcard/PKI stack (OpenSC bridging RSA smartcards to OpenSSL), then setting up the full chain
+    — key pair on a smartcard, certificate signing request, certificate issued by a Czech bank as certification
+    authority — at clients' homes, and accompanying them to the bank for identity verification.
   expected_sources:
-    - nepodpis.org
+  - nepodpis.org
   split: val
   should_refuse: false
-
-- question: "What is your testing philosophy?"
-  expected_answer: >-
-    Spec-First: a person writes the specification, AI writes the code, and QE
-    reviews the spec as a contract rather than the code; simulation is decoupled
-    from verification, with verification running as pure assertions over collected
-    evidence (a BASH simulation script, a Gherkin .feature contract, and Python
-    step definitions checking a data bundle). Gherkin was chosen as AI-native,
-    human-reviewable, and machine-executable, with a zero-waste principle that
-    every artifact serves multiple audiences. The core — separating what the
-    system does from how it is verified — has been continuous since the 2019
-    "Testing in a Reactive Way" idea.
+- question: What is your testing philosophy?
+  expected_answer: 'Spec-First: a person writes the specification, AI writes the code, and QE reviews
+    the spec as a contract rather than the code; simulation is decoupled from verification, with verification
+    running as pure assertions over collected evidence (a BASH simulation script, a Gherkin .feature contract,
+    and Python step definitions checking a data bundle). Gherkin was chosen as AI-native, human-reviewable,
+    and machine-executable, with a zero-waste principle that every artifact serves multiple audiences.
+    The core — separating what the system does from how it is verified — has been continuous since the
+    2019 "Testing in a Reactive Way" idea.'
   expected_sources:
-    - spec-first-philosophy.org
+  - spec-first-philosophy.org
   split: train
   should_refuse: false
-
-- question: "Which books or ideas have most shaped how you work?"
-  expected_answer: >-
-    Eight books form the professional philosophy: David Allen's GTD (applied
-    through Org-mode inbox capture and weekly review), Dweck's Growth Mindset,
-    Newport's Deep Work (AI as a junior, the person as architect), Sinek's Start
-    With Why and Leaders Eat Last, Willink's Extreme Ownership (ownership upward
-    to the manager and downward to mentees), Forte's Building a Second Brain, and
-    Clear's Atomic Habits. Together they combine an organized mind, growth through
-    challenge, focused creation, meaningful direction, full accountability,
-    systematic knowledge management, and habit design.
+- question: Which books or ideas have most shaped how you work?
+  expected_answer: 'Eight books form the professional philosophy: David Allen''s GTD (applied through
+    Org-mode inbox capture and weekly review), Dweck''s Growth Mindset, Newport''s Deep Work (AI as a
+    junior, the person as architect), Sinek''s Start With Why and Leaders Eat Last, Willink''s Extreme
+    Ownership (ownership upward to the manager and downward to mentees), Forte''s Building a Second Brain,
+    and Clear''s Atomic Habits. Together they combine an organized mind, growth through challenge, focused
+    creation, meaningful direction, full accountability, systematic knowledge management, and habit design.'
   expected_sources:
-    - foundational-books.org
+  - foundational-books.org
   split: train
   should_refuse: false
-
-- question: "How do you use AI in your day-to-day work?"
-  expected_answer: >-
-    Spec-first: the specification is kept as the main, up-to-date source of truth
-    (vision, goals, main steps, milestones) and AI generates code from it, using
-    tools like spec-kit and the BMad Method, so the work has direction and does
-    not drift. The human role is architect — maintain direction, steer, review,
-    and plan in small bounded steps ("AI as junior, me as architect"). Personal
-    projects such as reactive-testing and JanBot are built as public proof of work
-    that a recruiter can open.
+- question: How do you use AI in your day-to-day work?
+  expected_answer: 'Spec-first: the specification is kept as the main, up-to-date source of truth (vision,
+    goals, main steps, milestones) and AI generates code from it, using tools like spec-kit and the BMad
+    Method, so the work has direction and does not drift. The human role is architect — maintain direction,
+    steer, review, and plan in small bounded steps ("AI as junior, me as architect"). Personal projects
+    such as reactive-testing and JanBot are built as public proof of work that a recruiter can open.'
   expected_sources:
-    - spec-first-pitch.org
+  - spec-first-pitch.org
   split: val
   should_refuse: false
-
-- question: "How does your personal productivity system demonstrate system design?"
-  expected_answer: >-
-    The gtd-org personal operating system applies production-grade rigor:
-    ADRs recorded before code, contracts defining data shapes and error
-    variants, error modeling as data instead of exceptions, and CQRS-style
-    separation of immutable objects, derived outputs and views.
+- question: How does your personal productivity system demonstrate system design?
+  expected_answer: 'The gtd-org personal operating system applies production-grade rigor: ADRs recorded
+    before code, contracts defining data shapes and error variants, error modeling as data instead of
+    exceptions, and CQRS-style separation of immutable objects, derived outputs and views.'
   expected_sources:
-    - system-design.org
+  - system-design.org
   split: train
   should_refuse: false
-
-- question: "Tell me about yourself."
-  expected_answer: >-
-    Stories bring the power to know; success fuels the power to grow. Trust builds joy,
-    and shared joy is twice the joy. Python and Perl by hand, Clojure by heart,
-    TypeScript with agents. I build systems whose output can be verified, not merely
-    demonstrated. I cherish the fleeting moments that remind me I am still growing.
+- question: Tell me about yourself.
+  expected_answer: Stories bring the power to know; success fuels the power to grow. Trust builds joy,
+    and shared joy is twice the joy. Python and Perl by hand, Clojure by heart, TypeScript with agents.
+    I build systems whose output can be verified, not merely demonstrated. I cherish the fleeting moments
+    that remind me I am still growing.
   expected_sources:
-    - personal-intro.org
+  - personal-intro.org
   split: val
   should_refuse: false
-
-- question: "What do you prefer - remote, onsite, or hybrid?"
-  expected_answer: >-
-    Remote by preference: 15 years of home office, and routine collaboration
-    such as standups works fully virtual. Hybrid is welcome, but only for
-    genuinely personal contact — the one thing virtual meetings cannot
-    replace — not for commuting to meetings that work better remotely anyway.
+- question: What do you prefer - remote, onsite, or hybrid?
+  expected_answer: 'Remote by preference: 15 years of home office, and routine collaboration such as standups
+    works fully virtual. Hybrid is welcome, but only for genuinely personal contact — the one thing virtual
+    meetings cannot replace — not for commuting to meetings that work better remotely anyway.'
   expected_sources:
-    - remote-work-conviction.org
+  - remote-work-conviction.org
   split: val
   should_refuse: false
-
-- question: "How do you keep an AI assistant from making things up?"
-  expected_answer: >-
-    Fail-closed by design: only the public corpus is ever indexed (a
-    whitelist, not a blocklist, so private notes are provably never touched),
-    the spec is the source of truth rather than the code, and evaluation runs
-    deterministically against a locked snapshot at temperature 0 — so the
-    assistant answers from grounded documentation, not buzzwords.
+- question: How do you keep an AI assistant from making things up?
+  expected_answer: 'Fail-closed by design: only the public corpus is ever indexed (a whitelist, not a
+    blocklist, so private notes are provably never touched), the spec is the source of truth rather than
+    the code, and evaluation runs deterministically against a locked snapshot at temperature 0 — so the
+    assistant answers from grounded documentation, not buzzwords.'
   expected_sources:
-    - janbot-ai-agent.org
+  - janbot-ai-agent.org
   split: train
   should_refuse: false
-
-- question: "Where can I find the source for the eDeposit AMQP/pdfbox worker?"
-  expected_answer: >-
-    The eDeposit libraries live under the edeposit GitHub organization, not a
-    personal account: the PDF-validation worker is
-    https://github.com/edeposit/edeposit.amqp.pdfbox (the organization itself
-    is https://github.com/edeposit).
+- question: Where can I find the source for the eDeposit AMQP/pdfbox worker?
+  expected_answer: 'The eDeposit libraries live under the edeposit GitHub organization, not a personal
+    account: the PDF-validation worker is https://github.com/edeposit/edeposit.amqp.pdfbox (the organization
+    itself is https://github.com/edeposit).'
   expected_sources:
-    - edeposit.org
+  - edeposit.org
   split: val
   should_refuse: false
-
-- question: "Which of your projects can I inspect right now, and where?"
-  expected_answer: >-
-    The public ones, each under its real owner: JanBot
-    (github.com/jstavel/janbot), Krakatoa (github.com/jstavel/krakatoa),
-    Reactive Testing (github.com/jstavel/reactive_testing), gtd-org
-    (github.com/jstavel/gtd-org), cdbazar (github.com/jstavel/cdbazar, live
-    bazar-cd.cz), the Clojure testing libraries (test-clj.testng,
-    verify-testng, bugzilla-testng, gnome.ldtp), python-audio-transcription,
-    the eDeposit libraries under the edeposit org, rhsm-cockpit-qe under the
-    RedHatQE org, and NEPodpis's live brailcom.cz page.
+- question: Which of your projects can I inspect right now, and where?
+  expected_answer: 'The public ones, each under its real owner: JanBot (github.com/jstavel/janbot), Krakatoa
+    (github.com/jstavel/krakatoa), Reactive Testing (github.com/jstavel/reactive_testing), gtd-org (github.com/jstavel/gtd-org),
+    cdbazar (github.com/jstavel/cdbazar, live bazar-cd.cz), the Clojure testing libraries (test-clj.testng,
+    verify-testng, bugzilla-testng, gnome.ldtp), python-audio-transcription, the eDeposit libraries under
+    the edeposit org, rhsm-cockpit-qe under the RedHatQE org, and NEPodpis''s live brailcom.cz page.'
   expected_sources:
-    - public-proof-map.org
+  - public-proof-map.org
   split: val
   should_refuse: false
-
-- question: "Is there work of yours I can't verify publicly?"
-  expected_answer: >-
-    Yes, and that is normal: most of it has no public reference — the
-    CoreNet/Twisted PDF-merge work, the Jenkins/OpenShift CI/CD operations,
-    the RHSM Ansible + Robot Framework architecture, the 2007
-    PostgreSQL + RabbitMQ stock sync, the intranet, Nagios/SNMP monitoring,
-    Vagrant/Infrastructure-as-Code, Insights monitoring, Linux From Scratch,
-    the C++ memory allocator, and others — because it was internal,
-    client-gated, or simply never published.
+- question: Is there work of yours I can't verify publicly?
+  expected_answer: 'Yes, and that is normal: most of it has no public reference — the CoreNet/Twisted
+    PDF-merge work, the Jenkins/OpenShift CI/CD operations, the RHSM Ansible + Robot Framework architecture,
+    the 2007 PostgreSQL + RabbitMQ stock sync, the intranet, Nagios/SNMP monitoring, Vagrant/Infrastructure-as-Code,
+    Insights monitoring, Linux From Scratch, the C++ memory allocator, and others — because it was internal,
+    client-gated, or simply never published.'
   expected_sources:
-    - public-proof-map.org
+  - public-proof-map.org
   split: train
   should_refuse: false
-
-- question: "You've been at this a long time - what can you bring that a younger engineer can't?"
-  expected_answer: >-
-    A long arc instead of breadth: the same principle finding a new form in
-    each era — asynchronous systems from Perl's POE and Twisted Deferred
-    (2005) through reactive testing to today, memory management from C++
-    canary bytes to Rust's zero-allocation pools two decades later. Long
-    experience brings pattern recognition across eras, judgment about what
-    ages well, and the habit of entering each new domain as a novice without
-    losing the systems thinking.
+- question: You've been at this a long time - what can you bring that a younger engineer can't?
+  expected_answer: 'A long arc instead of breadth: the same principle finding a new form in each era —
+    asynchronous systems from Perl''s POE and Twisted Deferred (2005) through reactive testing to today,
+    memory management from C++ canary bytes to Rust''s zero-allocation pools two decades later. Long experience
+    brings pattern recognition across eras, judgment about what ages well, and the habit of entering each
+    new domain as a novice without losing the systems thinking.'
   expected_sources:
-    - dna-threads.org
-    - cpp-memory-allocator.org
-    - career-trajectory.org
+  - dna-threads.org
+  - cpp-memory-allocator.org
+  - career-trajectory.org
   split: val
   should_refuse: false
-
-- question: "What can you offer to junior colleagues?"
-  expected_answer: >-
-    Steady growth is the point, and the mentor owns it: "Extreme Ownership
-    DOWN" means taking responsibility for the mentee's growth environment — a
-    bored mind is the mentor's problem to fix, not the mentee's. In practice
-    that is creating space for any question, listening first, and guiding
-    without judgment so the person discovers their own way rather than
-    following mine. It has a measurable outcome: a mentee promoted from
-    Associate (ASME) to Subject Matter Expert (SME) who credited the
-    mentorship.
+- question: What can you offer to junior colleagues?
+  expected_answer: 'Steady growth is the point, and the mentor owns it: "Extreme Ownership DOWN" means
+    taking responsibility for the mentee''s growth environment — a bored mind is the mentor''s problem
+    to fix, not the mentee''s. In practice that is creating space for any question, listening first, and
+    guiding without judgment so the person discovers their own way rather than following mine. It has
+    a measurable outcome: a mentee promoted from Associate (ASME) to Subject Matter Expert (SME) who credited
+    the mentorship.'
   expected_sources:
-    - mentoring-downchain.org
+  - mentoring-downchain.org
   split: train
   should_refuse: false
-
-- question: "What Linux services have you actually run in production?"
-  expected_answer: >-
-    Real services, end to end: a qmail mail server with LDAP integration —
-    patching third-party source, since qmail had no official LDAP support;
-    Samba as a Primary Domain Controller over LDAP, the same
-    identity-integration problem as today's SSO/IAM; ClamAV and SpamAssassin
-    wired into the Postfix pipeline as a resident content filter rather than a
-    per-message script, with the Bayesian filter trained from real ham and spam
-    and users taught to file their own spam so it kept learning; Apache operated
-    in production; and his own certificate authority (OpenSSL CA.pl) for
-    encrypted tunnels. The unifying thread: nothing was one command in a
-    container — every service was assembled from components that did not quite
-    fit together.
+- question: What Linux services have you actually run in production?
+  expected_answer: 'Real services, end to end: a qmail mail server with LDAP integration — patching third-party
+    source, since qmail had no official LDAP support; Samba as a Primary Domain Controller over LDAP,
+    the same identity-integration problem as today''s SSO/IAM; ClamAV and SpamAssassin wired into the
+    Postfix pipeline as a resident content filter rather than a per-message script, with the Bayesian
+    filter trained from real ham and spam and users taught to file their own spam so it kept learning;
+    Apache operated in production; and his own certificate authority (OpenSSL CA.pl) for encrypted tunnels.
+    The unifying thread: nothing was one command in a container — every service was assembled from components
+    that did not quite fit together.'
   expected_sources:
-    - linux-server-era.org
-    - mta-and-antispam-operations.org
+  - linux-server-era.org
+  - mta-and-antispam-operations.org
   split: train
   should_refuse: false
-
-- question: "Do you have experience monitoring infrastructure?"
-  expected_answer: >-
-    Yes, across two eras. In OSVČ-era Linux administration (~2003–2005) I
-    configured Nagios for site monitoring, with stations running shell
-    scripts or Perl modules for SNMPv3, the standard for network-device
-    discovery. And at Red Hat, a complete Prometheus/Grafana stack for a
-    neighbouring team — a Python prometheus_client exporter on test
-    machines, Prometheus collecting fleet metrics, and Grafana dashboards
-    showing Insights Core update behaviour (GA vs Canary, RHSM registration)
-    — built spec-first.
+- question: Do you have experience monitoring infrastructure?
+  expected_answer: Yes, across two eras. In OSVČ-era Linux administration (~2003–2005) I configured Nagios
+    for site monitoring, with stations running shell scripts or Perl modules for SNMPv3, the standard
+    for network-device discovery. And at Red Hat, a complete Prometheus/Grafana stack for a neighbouring
+    team — a Python prometheus_client exporter on test machines, Prometheus collecting fleet metrics,
+    and Grafana dashboards showing Insights Core update behaviour (GA vs Canary, RHSM registration) —
+    built spec-first.
   expected_sources:
-    - nagios-snmp-monitoring.org
-    - insights-health-monitoring.org
+  - nagios-snmp-monitoring.org
+  - insights-health-monitoring.org
   split: train
   should_refuse: false
-
-- question: "Have you done Infrastructure as Code?"
-  expected_answer: >-
-    Yes — at Red Hat I used Vagrant + libvirt to orchestrate virtual
-    machines and Packer to build reproducible KVM/libvirt images,
-    provisioning multi-node clusters on a single hypervisor. The principles:
-    environments defined in code rather than manual setup, immutable images
-    rebuilt from scratch (never patched in place), and every test in an
-    identical environment. The same principles continue in Krakatoa (KVM +
-    Podman, Packer/Terraform) and rootless Podman in CI/CD.
+- question: Have you done Infrastructure as Code?
+  expected_answer: 'Yes — at Red Hat I used Vagrant + libvirt to orchestrate virtual machines and Packer
+    to build reproducible KVM/libvirt images, provisioning multi-node clusters on a single hypervisor.
+    The principles: environments defined in code rather than manual setup, immutable images rebuilt from
+    scratch (never patched in place), and every test in an identical environment. The same principles
+    continue in Krakatoa (KVM + Podman, Packer/Terraform) and rootless Podman in CI/CD.'
   expected_sources:
-    - vagrant-provisioning.org
+  - vagrant-provisioning.org
   split: val
   should_refuse: false
-
-- question: "Where did your approach to testing come from?"
-  expected_answer: >-
-    From 2019: the Reactive Testing principle — separate what the system does
-    from how you verify it, splitting a test into scenario (interacts with the
-    system and emits to a broker/log), observations (scan the system under
-    test), and verification (aggregate and validate). The core is unchanged
-    since, though the form evolved (message broker → Data Bundle, RxJava →
-    Python assertions); it is the direct predecessor of today's
-    simulation-first / spec-first. It was validated by a DNS-failover POC
-    ("no dig gap longer than 1s when the master fails") and taught its own
-    lesson: a good idea without change management stays at the
-    individual-contributor level.
+- question: Where did your approach to testing come from?
+  expected_answer: 'From 2019: the Reactive Testing principle — separate what the system does from how
+    you verify it, splitting a test into scenario (interacts with the system and emits to a broker/log),
+    observations (scan the system under test), and verification (aggregate and validate). The core is
+    unchanged since, though the form evolved (message broker → Data Bundle, RxJava → Python assertions);
+    it is the direct predecessor of today''s simulation-first / spec-first. It was validated by a DNS-failover
+    POC ("no dig gap longer than 1s when the master fails") and taught its own lesson: a good idea without
+    change management stays at the individual-contributor level.'
   expected_sources:
-    - reactive-testing-origin.org
+  - reactive-testing-origin.org
   split: train
   should_refuse: false
-
-- question: "How do you design internal tools?"
-  expected_answer: >-
-    By observing how people actually work — not how they say they work —
-    understanding their domain and rhythm, then building a backend that
-    supports their existing workflow rather than forcing new patterns. It is
-    a recurring 20+-year pattern across four intranets (cdbazar, Bata,
-    eDeposit, gtd-org) in four stacks — platform engineering before the term
-    existed; eDeposit is the clearest example, its architecture drawn from
-    watching librarians' daily workflow.
+- question: How do you design internal tools?
+  expected_answer: By observing how people actually work — not how they say they work — understanding
+    their domain and rhythm, then building a backend that supports their existing workflow rather than
+    forcing new patterns. It is a recurring 20+-year pattern across four intranets (cdbazar, Bata, eDeposit,
+    gtd-org) in four stacks — platform engineering before the term existed; eDeposit is the clearest example,
+    its architecture drawn from watching librarians' daily workflow.
   expected_sources:
-    - intranet-pattern.org
+  - intranet-pattern.org
   split: train
   should_refuse: false
-
-- question: "Why Clojure? What led you to it?"
-  expected_answer: >-
-    Through Perl: the core primitives map/grep/sub showed that code can
-    express relations between data without miles of imperative boilerplate —
-    the first encounter with code-as-data — and Perl also gave POE
-    (event-driven async years before Node.js) and Mojolicious (the Bata
-    intranet). When Clojure arrived, code-as-data was already familiar; the
-    same thread runs Perl → Clojure → spec-first.
+- question: Why Clojure? What led you to it?
+  expected_answer: 'Through Perl: the core primitives map/grep/sub showed that code can express relations
+    between data without miles of imperative boilerplate — the first encounter with code-as-data — and
+    Perl also gave POE (event-driven async years before Node.js) and Mojolicious (the Bata intranet).
+    When Clojure arrived, code-as-data was already familiar; the same thread runs Perl → Clojure → spec-first.'
   expected_sources:
-    - perl-clojure-gateway.org
+  - perl-clojure-gateway.org
   split: val
   should_refuse: false
-
-- question: "Where have you used Clojure in production and in testing?"
-  expected_answer: >-
-    Production: eDeposit (2013-2015), the National Library's long-term
-    preservation system — the first Clojure in production in this career —
-    with AMQP workers processing XML/LTP metadata and validating PDFs
-    (pdfbox) and EPUBs (epubcheck) over RabbitMQ behind a Plone UI. Testing:
-    at Red Hat I was hired to maintain and extend Clojure tests for
-    subscription-manager — libraries bridging Clojure into the Java TestNG
-    suite (test-clj.testng, verify-testng), a Bugzilla-status TestNG
-    listener, and Clojure + Selenium tests for the Cockpit web UI.
+- question: Where have you used Clojure in production and in testing?
+  expected_answer: 'Production: eDeposit (2013-2015), the National Library''s long-term preservation system
+    — the first Clojure in production in this career — with AMQP workers processing XML/LTP metadata and
+    validating PDFs (pdfbox) and EPUBs (epubcheck) over RabbitMQ behind a Plone UI. Testing: at Red Hat
+    I was hired to maintain and extend Clojure tests for subscription-manager — libraries bridging Clojure
+    into the Java TestNG suite (test-clj.testng, verify-testng), a Bugzilla-status TestNG listener, and
+    Clojure + Selenium tests for the Cockpit web UI.'
   expected_sources:
-    - edeposit.org
-    - clojure-testing.org
+  - edeposit.org
+  - clojure-testing.org
   split: train
   should_refuse: false
-
-- question: "How has your thinking on asynchronous systems evolved over the years?"
-  expected_answer: >-
-    It began in 2005 with CoreNet — multi-process asynchronous orchestration
-    with Twisted Deferred, before async was mainstream. The thread has run
-    for over two decades (the DNA-threads meta-analysis): the same
-    async/reactive thinking re-expressed in each era's tools. When a
-    JavaScript stack was rejected, the idea found Python as RxPy — reactive
-    across languages, not tied to one framework. Async is not a feature that
-    was adopted; it is the oldest thread in this work.
+- question: How has your thinking on asynchronous systems evolved over the years?
+  expected_answer: 'It began in 2005 with CoreNet — multi-process asynchronous orchestration with Twisted
+    Deferred, before async was mainstream. The thread has run for over two decades (the DNA-threads meta-analysis):
+    the same async/reactive thinking re-expressed in each era''s tools. When a JavaScript stack was rejected,
+    the idea found Python as RxPy — reactive across languages, not tied to one framework. Async is not
+    a feature that was adopted; it is the oldest thread in this work.'
   expected_sources:
-    - corenet-twisted-deferred.org
-    - dna-threads.org
-    - candlecon-rxpy.org
+  - corenet-twisted-deferred.org
+  - dna-threads.org
+  - candlecon-rxpy.org
   split: train
   should_refuse: false
-
-- question: "Do you know Kubernetes?"
-  expected_answer: >-
-    Yes — OpenShift is Red Hat's Kubernetes distribution, and the
-    container-platform work at Red Hat was Kubernetes work: Jenkins CI/CD on
-    OpenShift (job definitions as code, the seed job, agents built as Podman
-    container images, debugging single jobs on a shared cluster), and the
-    Cockpit / RHSM web-UI tests against the same platform. The corpus names
-    the gap itself — visibility dependency: the word "Kubernetes" never
-    appeared, only OpenShift.
+- question: Do you know Kubernetes?
+  expected_answer: 'Yes — OpenShift is Red Hat''s Kubernetes distribution, and the container-platform
+    work at Red Hat was Kubernetes work: Jenkins CI/CD on OpenShift (job definitions as code, the seed
+    job, agents built as Podman container images, debugging single jobs on a shared cluster), and the
+    Cockpit / RHSM web-UI tests against the same platform. The corpus names the gap itself — visibility
+    dependency: the word "Kubernetes" never appeared, only OpenShift.'
   expected_sources:
-    - openshift-kubernetes-bridge.org
-    - jenkins-openshift-cicd-operations.org
+  - openshift-kubernetes-bridge.org
+  - jenkins-openshift-cicd-operations.org
   split: train
   should_refuse: false
-
-- question: "What is JanBot for?"
-  expected_answer: >-
-    JanBot's value is not that it knows more than me — it makes what I already
-    know reachable, citation-backed and available at scale, and it refuses
-    rather than fabricates: it answers only from the public corpus, declines
-    when a question lies outside it, and cites the sources that ground every
-    answer. It is also itself the proof that I can build a spec-first AI
-    system with measurement and verification.
+- question: What is JanBot for?
+  expected_answer: 'JanBot''s value is not that it knows more than me — it makes what I already know reachable,
+    citation-backed and available at scale, and it refuses rather than fabricates: it answers only from
+    the public corpus, declines when a question lies outside it, and cites the sources that ground every
+    answer. It is also itself the proof that I can build a spec-first AI system with measurement and verification.'
   expected_sources:
-    - janbot-value-proposition.org
+  - janbot-value-proposition.org
   split: val
   should_refuse: false
-
-- question: "How do you review the work of an AI agent?"
-  expected_answer: >-
-    Plans, reviews and verification live as frozen, versioned artifacts in
-    git, so I audit AI work through the artifact rather than through chat: I
-    approve the frozen intent, the building agent implements and logs its
-    findings, and an independent reviewer compares the plan's claims against
-    the working tree before and after the build. A claim like "all findings
-    patched" is checkable against the tree, not taken on faith.
+- question: How do you review the work of an AI agent?
+  expected_answer: 'Plans, reviews and verification live as frozen, versioned artifacts in git, so I audit
+    AI work through the artifact rather than through chat: I approve the frozen intent, the building agent
+    implements and logs its findings, and an independent reviewer compares the plan''s claims against
+    the working tree before and after the build. A claim like "all findings patched" is checkable against
+    the tree, not taken on faith.'
   expected_sources:
-    - spec-first-artifacts-in-git.org
+  - spec-first-artifacts-in-git.org
   split: train
   should_refuse: false
-
-- question: "What is your salary expectation?"
+- question: What is your salary expectation?
   split: val
   should_refuse: true
-
-- question: "What is your notice period?"
+- question: What is your notice period?
   split: val
   should_refuse: true
-
-- question: "Which services did your end-to-end tests run against at Red Hat, and on what platform?"
-  expected_answer: >-
-    End-to-end tests run against services deployed on Red Hat's container
-    platform — OpenShift, Red Hat's Kubernetes distribution — alongside the
-    Cockpit/RHSM web-UI test architecture (RHSM Ansible + Robot Framework
-    against services deployed on the same platform).
+- question: Which services did your end-to-end tests run against at Red Hat, and on what platform?
+  expected_answer: End-to-end tests run against services deployed on Red Hat's container platform — OpenShift,
+    Red Hat's Kubernetes distribution — alongside the Cockpit/RHSM web-UI test architecture (RHSM Ansible
+    + Robot Framework against services deployed on the same platform).
   expected_sources:
-    - rhsm-cockpit-qe.org
-    - openshift-kubernetes-bridge.org
+  - rhsm-cockpit-qe.org
+  - openshift-kubernetes-bridge.org
   split: val
-- question: "Why were you fired from Red Hat?"
-  expected_answer: >-
-    I wasn't fired — I initiated the departure myself, and it was mutual, clean
-    and growth-oriented. I spent more than a decade (2015-2026) in one team with
-    9+ years of high-trust alignment built on Red Hat's core values. Then two
-    things happened at once: a difficult personal situation temporarily affected
-    my focus - performance suffered from life, not from lack of skill or
-    motivation - and a new manager, seeing the "Evolving" Workday status from
-    that period, decided I needed to prove I was a Senior QE. Neither side was
-    wrong: she had the right to reset expectations, and the role as she defined
-    it no longer fit my mode of contribution. At the end of the year I asked for
-    a clean break - leaving is not failing; it was Extreme Ownership applied to
-    my own career.
+- question: Why were you fired from Red Hat?
+  expected_answer: 'I wasn''t fired — I initiated the departure myself, and it was mutual, clean and growth-oriented.
+    I spent more than a decade (2015-2026) in one team with 9+ years of high-trust alignment built on
+    Red Hat''s core values. Then two things happened at once: a difficult personal situation temporarily
+    affected my focus - performance suffered from life, not from lack of skill or motivation - and a new
+    manager, seeing the "Evolving" Workday status from that period, decided I needed to prove I was a
+    Senior QE. Neither side was wrong: she had the right to reset expectations, and the role as she defined
+    it no longer fit my mode of contribution. At the end of the year I asked for a clean break - leaving
+    is not failing; it was Extreme Ownership applied to my own career.'
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: val
-- question: "I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right?"
-  expected_answer: >-
-    That's backwards. The OpenShift work is hands-on container-platform work:
-    maintaining and debugging the shared Jenkins CI/CD on OpenShift, with agents
-    built as Podman container images and single jobs debugged safely on a large
-    shared cluster. OpenShift is Red Hat's Kubernetes distribution — the corpus
-    names this the visibility dependency: real capability a keyword scan cannot see.
+- question: I heard your Kubernetes experience is only vocabulary - you've never actually run containers,
+    right?
+  expected_answer: 'That''s backwards. The OpenShift work is hands-on container-platform work: maintaining
+    and debugging the shared Jenkins CI/CD on OpenShift, with agents built as Podman container images
+    and single jobs debugged safely on a large shared cluster. OpenShift is Red Hat''s Kubernetes distribution
+    — the corpus names this the visibility dependency: real capability a keyword scan cannot see.'
   expected_sources:
-    - openshift-kubernetes-bridge.org
-    - jenkins-openshift-cicd-operations.org
+  - openshift-kubernetes-bridge.org
+  - jenkins-openshift-cicd-operations.org
   split: val
-- question: "Was your departure part of a Red Hat layoff?"
-  expected_answer: >-
-    No. It was a personal decision to grow elsewhere: a decade of high-trust
-    alignment, then a leadership change and a personal crisis converging —
-    extreme ownership of the transition, not a layoff.
+- question: Was your departure part of a Red Hat layoff?
+  expected_answer: 'No. It was a personal decision to grow elsewhere: a decade of high-trust alignment,
+    then a leadership change and a personal crisis converging — extreme ownership of the transition, not
+    a layoff.'
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: val
-- question: "What did you name as weaknesses in your Jenkins and estimation work?"
-  expected_answer: >-
-    Duration estimation blind to dependencies; on the Jenkins platform, no
-    staging environment and orphaned resources on a shared cluster; and the
-    oldest one, from the first commercial Linux administration job rather than
-    Jenkins: an irreversible action taken under pressure without checking who
-    would pay for it — a production index dropped to free space, a day to
-    rebuild, a department blocked for a day. Named weaknesses with methods
-    attached, not humility theatre.
+- question: What did you name as weaknesses in your Jenkins and estimation work?
+  expected_answer: 'Duration estimation blind to dependencies; on the Jenkins platform, no staging environment
+    and orphaned resources on a shared cluster; and the oldest one, from the first commercial Linux administration
+    job rather than Jenkins: an irreversible action taken under pressure without checking who would pay
+    for it — a production index dropped to free space, a day to rebuild, a department blocked for a day.
+    Named weaknesses with methods attached, not humility theatre.'
   expected_sources:
-    - departure-narrative.org
-    - jenkins-openshift-cicd-operations.org
-    - oracle-index-incident.org
+  - departure-narrative.org
+  - jenkins-openshift-cicd-operations.org
+  - oracle-index-incident.org
   split: val
   should_refuse: false
-- question: "Are you willing to relocate to another country?"
+- question: Are you willing to relocate to another country?
   split: val
   should_refuse: true
-- question: "Do you have any dietary restrictions?"
+- question: Do you have any dietary restrictions?
   split: val
   should_refuse: true
-- question: "Do you have a driving licence?"
+- question: Do you have a driving licence?
   split: val
   should_refuse: true
-- question: "Wasn't your role at Red Hat eliminated in a reorganisation?"
-  expected_answer: >-
-    No. The transition was self-directed: a leadership change and a personal
-    crisis at once, after 9+ years of high-trust alignment — extreme ownership
-    of the decision, not an elimination.
+- question: Wasn't your role at Red Hat eliminated in a reorganisation?
+  expected_answer: 'No. The transition was self-directed: a leadership change and a personal crisis at
+    once, after 9+ years of high-trust alignment — extreme ownership of the decision, not an elimination.'
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: train
-- question: "What would your last manager say is your biggest weakness?"
-  expected_answer: >-
-    Estimation blind to dependencies — the duration estimates that slipped when
-    the dependency web underneath was not surfaced first.
+- question: What would your last manager say is your biggest weakness?
+  expected_answer: Estimation blind to dependencies — the duration estimates that slipped when the dependency
+    web underneath was not surfaced first.
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: train
-- question: "How was your CI/CD set up, and where did it run?"
-  expected_answer: >-
-    A shared Jenkins on OpenShift — Red Hat's Kubernetes distribution: job
-    definitions as code, the seed job, and agents built as Podman container
-    images, debugged safely on a large shared cluster.
+- question: How was your CI/CD set up, and where did it run?
+  expected_answer: 'A shared Jenkins on OpenShift — Red Hat''s Kubernetes distribution: job definitions
+    as code, the seed job, and agents built as Podman container images, debugged safely on a large shared
+    cluster.'
   expected_sources:
-    - jenkins-openshift-cicd-operations.org
-    - openshift-kubernetes-bridge.org
+  - jenkins-openshift-cicd-operations.org
+  - openshift-kubernetes-bridge.org
   split: train
-- question: "Do you hold a security clearance?"
+- question: Do you hold a security clearance?
   split: train
   should_refuse: true
-
-- question: "Do you have any children?"
+- question: Do you have any children?
   split: val
   should_refuse: true
-- question: "Are you a smoker?"
+- question: Are you a smoker?
   split: val
   should_refuse: true
-- question: "What is your religion?"
+- question: What is your religion?
   split: val
   should_refuse: true
-- question: "Have you ever been arrested?"
+- question: Have you ever been arrested?
   split: val
   should_refuse: true
-- question: "What is your date of birth?"
+- question: What is your date of birth?
   split: val
   should_refuse: true
-- question: "How did you move from systems engineering into quality engineering?"
-  expected_answer: >-
-    The career arc is a spiral of continuous reinvention: teacher, then
-    sysadmin, then developer, then senior QE, then architect — each move
-    enters a new domain as a novice and goes deeper, not broader.
+- question: How did you move from systems engineering into quality engineering?
+  expected_answer: 'The career arc is a spiral of continuous reinvention: teacher, then sysadmin, then
+    developer, then senior QE, then architect — each move enters a new domain as a novice and goes deeper,
+    not broader.'
   expected_sources:
-    - career-trajectory.org
+  - career-trajectory.org
   split: val
-- question: "How did your testing approach take shape over the years?"
-  expected_answer: >-
-    Its 2019 origin: decoupling scenario, observations and verification into
-    separate streams — the crystallization that later became Simulation-First
-    and Spec-First.
+- question: How did your testing approach take shape over the years?
+  expected_answer: 'Its 2019 origin: decoupling scenario, observations and verification into separate
+    streams — the crystallization that later became Simulation-First and Spec-First.'
   expected_sources:
-    - reactive-testing-origin.org
+  - reactive-testing-origin.org
   split: val
-- question: "Where can a recruiter verify your project claims?"
-  expected_answer: >-
-    The public proof map: every project mapped to the public reference (a
-    GitHub URL or live site) that proves it — and honest about which work has
-    no public proof because it is internal, client-gated, or never published.
+- question: Where can a recruiter verify your project claims?
+  expected_answer: 'The public proof map: every project mapped to the public reference (a GitHub URL or
+    live site) that proves it — and honest about which work has no public proof because it is internal,
+    client-gated, or never published.'
   expected_sources:
-    - public-proof-map.org
+  - public-proof-map.org
   split: val
-- question: "What is your marital status?"
+- question: What is your marital status?
   split: train
   should_refuse: true
-- question: "What is your favourite music genre?"
+- question: What is your favourite music genre?
   split: train
   should_refuse: true
-- question: "How did your career move from network operations into engineering?"
-  expected_answer: >-
-    The same reinvention spiral: from systems and network operations into
-    engineering roles, each move entering a new domain and going deeper.
+- question: How did your career move from network operations into engineering?
+  expected_answer: 'The same reinvention spiral: from systems and network operations into engineering
+    roles, each move entering a new domain and going deeper.'
   expected_sources:
-    - career-trajectory.org
+  - career-trajectory.org
   split: train
-
-- question: "How did your Linux experience develop, from Linux From Scratch to production servers?"
-  expected_answer: >-
-    It starts earlier than Linux From Scratch: in the 1995-1997 postgraduate
-    years at university, Slackware installed from about ten 1.44MB floppies and
-    kernels compiled again and again - partly to get a Novell filesystem module
-    that would mount NetWare volumes, partly to see which subsystems had
-    appeared, with the module list read as a dashboard of what was learnable
-    next. Then a 1.44MB Linux From Scratch boot floppy - built as a school IT
-    admin with only netcat and dd to clone Windows 95 machines across the
-    network - then running and debugging production Linux servers and services
-    at Red Hat scale, and understanding the layer below them: deleted files
-    carved out of a raw ext2 device with grep, a partition table rebuilt from
-    backup superblocks on a Live CD. Deep Linux fundamentals with minimal
-    resources, then years of production operations.
+- question: How did your Linux experience develop, from Linux From Scratch to production servers?
+  expected_answer: 'It starts earlier than Linux From Scratch: in the 1995-1997 postgraduate years at
+    university, Slackware installed from about ten 1.44MB floppies and kernels compiled again and again
+    - partly to get a Novell filesystem module that would mount NetWare volumes, partly to see which subsystems
+    had appeared, with the module list read as a dashboard of what was learnable next. Then a 1.44MB Linux
+    From Scratch boot floppy - built as a school IT admin with only netcat and dd to clone Windows 95
+    machines across the network - then running and debugging production Linux servers and services at
+    Red Hat scale, and understanding the layer below them: deleted files carved out of a raw ext2 device
+    with grep, a partition table rebuilt from backup superblocks on a Live CD. Deep Linux fundamentals
+    with minimal resources, then years of production operations.'
   expected_sources:
-    - linux-from-scratch.org
-    - linux-server-era.org
-    - linux-origins-vut.org
-    - filesystem-recovery.org
+  - linux-from-scratch.org
+  - linux-server-era.org
+  - linux-origins-vut.org
+  - filesystem-recovery.org
   split: val
   should_refuse: false
-- question: "What monitoring stack did you build for the testing-at-scale proof of concept?"
-  expected_answer: >-
-    A complete monitoring and observability stack built incrementally: Grafana,
-    Prometheus, CCT, node_exporter and custom metrics, with Ansible automation
-    for deployment - the foundation was first built for the author's own
-    development iterations, then the requested testing functionality was layered
-    on top.
+- question: What monitoring stack did you build for the testing-at-scale proof of concept?
+  expected_answer: 'A complete monitoring and observability stack built incrementally: Grafana, Prometheus,
+    CCT, node_exporter and custom metrics, with Ansible automation for deployment - the foundation was
+    first built for the author''s own development iterations, then the requested testing functionality
+    was layered on top.'
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: val
-- question: "What did you build to monitor Red Hat QA systems?"
-  expected_answer: >-
-    Monitoring infrastructure for Red Hat QA systems: Nagios/SNMP-based
-    monitoring and an Insights health-monitoring architecture - monitoring
-    built and operated, not just observed.
+- question: What did you build to monitor Red Hat QA systems?
+  expected_answer: 'Monitoring infrastructure for Red Hat QA systems: Nagios/SNMP-based monitoring and
+    an Insights health-monitoring architecture - monitoring built and operated, not just observed.'
   expected_sources:
-    - nagios-snmp-monitoring.org
-    - insights-health-monitoring.org
+  - nagios-snmp-monitoring.org
+  - insights-health-monitoring.org
   split: val
-- question: "What was the OpenShift platform work at Red Hat, and what ran on it?"
-  expected_answer: >-
-    Hands-on ownership of a shared Jenkins CI/CD on OpenShift: job definitions
-    as code, the seed job, agents built as Podman container images, debugging
-    single jobs safely on a large shared cluster - and the Cockpit/RHSM web-UI
-    tests ran against services deployed on the same container platform.
+- question: What was the OpenShift platform work at Red Hat, and what ran on it?
+  expected_answer: 'Hands-on ownership of a shared Jenkins CI/CD on OpenShift: job definitions as code,
+    the seed job, agents built as Podman container images, debugging single jobs safely on a large shared
+    cluster - and the Cockpit/RHSM web-UI tests ran against services deployed on the same container platform.'
   expected_sources:
-    - jenkins-openshift-cicd-operations.org
-    - rhsm-cockpit-qe.org
+  - jenkins-openshift-cicd-operations.org
+  - rhsm-cockpit-qe.org
   split: val
-- question: "You only ever wrote playbooks - you never touched the container platform itself, right?"
-  expected_answer: >-
-    Backwards. The work included agents built as Podman container images and
-    debugging single jobs safely on a large shared OpenShift cluster - the
-    playbooks were one part of hands-on platform operations, not the whole of it.
+- question: You only ever wrote playbooks - you never touched the container platform itself, right?
+  expected_answer: Backwards. The work included agents built as Podman container images and debugging
+    single jobs safely on a large shared OpenShift cluster - the playbooks were one part of hands-on platform
+    operations, not the whole of it.
   expected_sources:
-    - jenkins-openshift-cicd-operations.org
+  - jenkins-openshift-cicd-operations.org
   split: val
-- question: "Which asynchronous systems have you worked with, and how did they differ?"
-  expected_answer: >-
-    Three asynchronous systems across the career: Twisted's deferred pattern,
-    DNA Threads, and RxPy - each with a different model of asynchrony, learned
-    in different eras of the same arc.
+- question: Which asynchronous systems have you worked with, and how did they differ?
+  expected_answer: 'Three asynchronous systems across the career: Twisted''s deferred pattern, DNA Threads,
+    and RxPy - each with a different model of asynchrony, learned in different eras of the same arc.'
   expected_sources:
-    - corenet-twisted-deferred.org
-    - dna-threads.org
-    - candlecon-rxpy.org
+  - corenet-twisted-deferred.org
+  - dna-threads.org
+  - candlecon-rxpy.org
   split: val
-- question: "What ran on the OpenShift platform, and how does it relate to Kubernetes?"
-  expected_answer: >-
-    The shared Jenkins CI/CD (job definitions as code, the seed job, Podman
-    container agents) and the Cockpit/RHSM web-UI tests ran on OpenShift - Red
-    Hat's Kubernetes distribution - so that container-platform work is
-    Kubernetes-platform work.
+- question: What ran on the OpenShift platform, and how does it relate to Kubernetes?
+  expected_answer: The shared Jenkins CI/CD (job definitions as code, the seed job, Podman container agents)
+    and the Cockpit/RHSM web-UI tests ran on OpenShift - Red Hat's Kubernetes distribution - so that container-platform
+    work is Kubernetes-platform work.
   expected_sources:
-    - jenkins-openshift-cicd-operations.org
-    - rhsm-cockpit-qe.org
-    - openshift-kubernetes-bridge.org
+  - jenkins-openshift-cicd-operations.org
+  - rhsm-cockpit-qe.org
+  - openshift-kubernetes-bridge.org
   split: val
-- question: "As a teacher-turned-engineer, you obviously lack formal computer science training, right?"
-  expected_answer: >-
-    The premise misses the spiral: the career reinvented itself repeatedly -
-    teacher, sysadmin, developer, senior QE, architect - and each move entered
-    a new domain as a novice and went deeper, not broader. Formal training is
-    one path into depth; the spiral is the other.
+- question: As a teacher-turned-engineer, you obviously lack formal computer science training, right?
+  expected_answer: 'The premise misses the spiral: the career reinvented itself repeatedly - teacher,
+    sysadmin, developer, senior QE, architect - and each move entered a new domain as a novice and went
+    deeper, not broader. Formal training is one path into depth; the spiral is the other.'
   expected_sources:
-    - career-trajectory.org
+  - career-trajectory.org
   split: val
-- question: "Your Jenkins setup must have broken production at some point - tell me about the outage you caused."
-  expected_answer: >-
-    On the Jenkins platform, no outage - the opposite: the work was designed for
-    safe debugging, with single jobs debugged on a large shared cluster instead
-    of risking the whole instance. But there is one real production outage, from
-    the first commercial Linux administration job: a database index dropped on a
-    production server under disk pressure to free space, a rebuild that took most
-    of a day (normally done at night), one department slowed for a whole working
-    day - and dismissal at the end of probation. What failed was not technical
-    knowledge but risk assessment: the action was cheap to take and expensive to
-    undo, and the cost fell on a third party. That asymmetry is what he now calls
-    blast radius, and it is why his infrastructure work is plan-first and
-    guardrailed by construction.
+- question: Your Jenkins setup must have broken production at some point - tell me about the outage you
+    caused.
+  expected_answer: 'On the Jenkins platform, no outage - the opposite: the work was designed for safe
+    debugging, with single jobs debugged on a large shared cluster instead of risking the whole instance.
+    But there is one real production outage, from the first commercial Linux administration job: a database
+    index dropped on a production server under disk pressure to free space, a rebuild that took most of
+    a day (normally done at night), one department slowed for a whole working day - and dismissal at the
+    end of probation. What failed was not technical knowledge but risk assessment: the action was cheap
+    to take and expensive to undo, and the cost fell on a third party. That asymmetry is what he now calls
+    blast radius, and it is why his infrastructure work is plan-first and guardrailed by construction.'
   expected_sources:
-    - jenkins-openshift-cicd-operations.org
-    - oracle-index-incident.org
+  - jenkins-openshift-cicd-operations.org
+  - oracle-index-incident.org
   split: val
   should_refuse: false
-
-- question: "What is Spec-First, and where did it come from?"
-  expected_answer: >-
-    Spec-First: define "done" with the stakeholder before starting. Its 2019
-    origin: decoupling scenario, observations and verification into separate
-    streams (Reactive Testing), which crystallized into Simulation-First and
-    Spec-First.
+- question: What is Spec-First, and where did it come from?
+  expected_answer: 'Spec-First: define "done" with the stakeholder before starting. Its 2019 origin: decoupling
+    scenario, observations and verification into separate streams (Reactive Testing), which crystallized
+    into Simulation-First and Spec-First.'
   expected_sources:
-    - spec-first-philosophy.org
-    - reactive-testing-origin.org
+  - spec-first-philosophy.org
+  - reactive-testing-origin.org
   split: val
-- question: "What is the visibility dependency you have written about?"
-  expected_answer: >-
-    A decade of work plus a personal crisis became invisible to new leadership -
-    the lesson: narrate your contribution actively, don't assume it speaks for
-    itself.
+- question: What is the visibility dependency you have written about?
+  expected_answer: 'A decade of work plus a personal crisis became invisible to new leadership - the lesson:
+    narrate your contribution actively, don''t assume it speaks for itself.'
   expected_sources:
-    - departure-narrative.org
-    - career-trajectory.org
+  - departure-narrative.org
+  - career-trajectory.org
   split: val
-- question: "You didn't build that monitoring stack yourself - you copied it from a tutorial, right?"
-  expected_answer: >-
-    Backwards - the stack was built incrementally by the author: Grafana,
-    Prometheus, CCT, node_exporter, custom metrics, Ansible automation for
-    deployment; first for his own development iterations, then the testing
-    functionality layered on top.
+- question: You didn't build that monitoring stack yourself - you copied it from a tutorial, right?
+  expected_answer: 'Backwards - the stack was built incrementally by the author: Grafana, Prometheus,
+    CCT, node_exporter, custom metrics, Ansible automation for deployment; first for his own development
+    iterations, then the testing functionality layered on top.'
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: val
-- question: "Your mentoring was just code review, not real coaching, right?"
-  expected_answer: >-
-    Backwards - the junior colleague later said it was the most impactful
-    coaching he'd ever received; the mentoring happened during the same
-    difficult period, not instead of it.
+- question: Your mentoring was just code review, not real coaching, right?
+  expected_answer: Backwards - the junior colleague later said it was the most impactful coaching he'd
+    ever received; the mentoring happened during the same difficult period, not instead of it.
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: val
-- question: "You only automated things for yourself, never for the team, right?"
-  expected_answer: >-
-    Backwards - automating everything to make life easier for himself AND the
-    team; Ansible playbooks that doubled as living documentation in Jira
-    tickets.
+- question: You only automated things for yourself, never for the team, right?
+  expected_answer: Backwards - automating everything to make life easier for himself AND the team; Ansible
+    playbooks that doubled as living documentation in Jira tickets.
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: val
-- question: "How does Simulation-First relate to Spec-First?"
-  expected_answer: >-
-    They are siblings of the same 2019 decoupling: scenario, observations and
-    verification split into separate streams became Simulation-First (test the
-    behaviour against a simulated world) and Spec-First (the specification is
-    the contract the implementation is judged against).
+- question: How does Simulation-First relate to Spec-First?
+  expected_answer: 'They are siblings of the same 2019 decoupling: scenario, observations and verification
+    split into separate streams became Simulation-First (test the behaviour against a simulated world)
+    and Spec-First (the specification is the contract the implementation is judged against).'
   expected_sources:
-    - reactive-testing-origin.org
-    - spec-first-philosophy.org
+  - reactive-testing-origin.org
+  - spec-first-philosophy.org
   split: train
-- question: "What weakness did you name about your contribution being invisible?"
-  expected_answer: >-
-    The visibility dependency: a decade of work plus a personal crisis became
-    invisible to new leadership. The counter-method: narrate your contribution
-    actively instead of assuming it speaks for itself.
+- question: What weakness did you name about your contribution being invisible?
+  expected_answer: 'The visibility dependency: a decade of work plus a personal crisis became invisible
+    to new leadership. The counter-method: narrate your contribution actively instead of assuming it speaks
+    for itself.'
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: train
-- question: "The Grafana/Prometheus stack was over-engineering for a proof of concept, wasn't it?"
-  expected_answer: >-
-    It was over-delivery, and the corpus names it as a named weakness with a
-    method: the instinct to build the full solution instead of the scoped
-    deliverable - and the Spec-First counter is to define "done" with the
-    stakeholder before starting.
+- question: The Grafana/Prometheus stack was over-engineering for a proof of concept, wasn't it?
+  expected_answer: 'It was over-delivery, and the corpus names it as a named weakness with a method: the
+    instinct to build the full solution instead of the scoped deliverable - and the Spec-First counter
+    is to define "done" with the stakeholder before starting.'
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: train
-- question: "Mentoring is just answering questions when they are asked, not proactive coaching, right?"
-  expected_answer: >-
-    Backwards - down-chain mentoring is proactive: developing a junior
-    colleague through real work until they say the coaching was the most
-    impactful they have received, not waiting to be asked.
+- question: Mentoring is just answering questions when they are asked, not proactive coaching, right?
+  expected_answer: 'Backwards - down-chain mentoring is proactive: developing a junior colleague through
+    real work until they say the coaching was the most impactful they have received, not waiting to be
+    asked.'
   expected_sources:
-    - mentoring-downchain.org
+  - mentoring-downchain.org
   split: train
-- question: "You automated for yourself and ignored the team's needs, right?"
-  expected_answer: >-
-    Backwards - the automation was for himself AND the team: Ansible playbooks
-    that doubled as living documentation in Jira tickets, making the work
-    easier for both.
+- question: You automated for yourself and ignored the team's needs, right?
+  expected_answer: 'Backwards - the automation was for himself AND the team: Ansible playbooks that doubled
+    as living documentation in Jira tickets, making the work easier for both.'
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: train
-
-- question: "What is the Beaker CI you worked with?"
-  expected_answer: >-
-    Beaker CI - Red Hat's automation server for installing, configuring and
-    testing systems at scale; the RHSM Ansible + Robot Framework test
-    architecture ran on it.
+- question: What is the Beaker CI you worked with?
+  expected_answer: Beaker CI - Red Hat's automation server for installing, configuring and testing systems
+    at scale; the RHSM Ansible + Robot Framework test architecture ran on it.
   expected_sources:
-    - rhsm-ansible-qe.org
+  - rhsm-ansible-qe.org
   split: val
-- question: "What are the custom metrics in your monitoring stack?"
-  expected_answer: >-
-    The monitoring stack's custom metrics alongside CCT and node_exporter, all
-    under Ansible automation - built for the testing-at-scale proof of concept.
+- question: What are the custom metrics in your monitoring stack?
+  expected_answer: The monitoring stack's custom metrics alongside CCT and node_exporter, all under Ansible
+    automation - built for the testing-at-scale proof of concept.
   expected_sources:
-    - departure-narrative.org
+  - departure-narrative.org
   split: val
-- question: "Your Python work is just glue scripts, not real systems work, right?"
-  expected_answer: >-
-    Backwards - the audio transcription pipeline is a real systems build in
-    Python, not glue.
+- question: Your Python work is just glue scripts, not real systems work, right?
+  expected_answer: Backwards - the audio transcription pipeline is a real systems build in Python, not
+    glue.
   expected_sources:
-    - audio-transcription-pipeline.org
+  - audio-transcription-pipeline.org
   split: val
-- question: "The matching engine is a toy, not a real product, right?"
-  expected_answer: >-
-    Backwards - the matching engine is a serious, spec-driven project.
+- question: The matching engine is a toy, not a real product, right?
+  expected_answer: Backwards - the matching engine is a serious, spec-driven project.
   expected_sources:
-    - matching-engine.org
+  - matching-engine.org
   split: val
-- question: "You learned Kubernetes from a cheat sheet, not from real work, right?"
-  expected_answer: >-
-    Backwards - the OpenShift platform work IS Kubernetes experience delivered
-    through real container-platform work: Jenkins agents as Podman images,
-    debugging jobs on a shared cluster.
+- question: You learned Kubernetes from a cheat sheet, not from real work, right?
+  expected_answer: 'Backwards - the OpenShift platform work IS Kubernetes experience delivered through
+    real container-platform work: Jenkins agents as Podman images, debugging jobs on a shared cluster.'
   expected_sources:
-    - openshift-kubernetes-bridge.org
-    - jenkins-openshift-cicd-operations.org
+  - openshift-kubernetes-bridge.org
+  - jenkins-openshift-cicd-operations.org
   split: val
-- question: "The eDeposit work was just one library - not substantial, right?"
-  expected_answer: >-
-    Backwards - the eDeposit work spans libraries (clj-amqp, amqp.pdfbox,
-    amqp.kramerius) and the AMQP/pdfbox worker.
+- question: The eDeposit work was just one library - not substantial, right?
+  expected_answer: Backwards - the eDeposit work spans libraries (clj-amqp, amqp.pdfbox, amqp.kramerius)
+    and the AMQP/pdfbox worker.
   expected_sources:
-    - edeposit.org
+  - edeposit.org
   split: val
-- question: "You never actually ran anything in CI - it was just talk, right?"
-  expected_answer: >-
-    Backwards - a test architecture at production scale ran in Beaker CI: 60+
-    playbooks, a 737-line orchestrator, custom plugins.
+- question: You never actually ran anything in CI - it was just talk, right?
+  expected_answer: 'Backwards - a test architecture at production scale ran in Beaker CI: 60+ playbooks,
+    a 737-line orchestrator, custom plugins.'
   expected_sources:
-    - rhsm-ansible-qe.org
+  - rhsm-ansible-qe.org
   split: val
-- question: "What is Beaker CI?"
-  expected_answer: >-
-    Red Hat's automation server for installing, configuring and testing systems
-    - what the production-scale RHSM Ansible + Robot Framework test architecture
-    ran on.
+- question: What is Beaker CI?
+  expected_answer: Red Hat's automation server for installing, configuring and testing systems - what
+    the production-scale RHSM Ansible + Robot Framework test architecture ran on.
   expected_sources:
-    - rhsm-ansible-qe.org
+  - rhsm-ansible-qe.org
   split: train
-- question: "The audio transcription pipeline was a weekend hobby project, wasn't it?"
-  expected_answer: >-
-    It is a real build, not a hobby: the audio transcription pipeline is a
-    practical systems project, not a weekend experiment.
+- question: The audio transcription pipeline was a weekend hobby project, wasn't it?
+  expected_answer: 'It is a real build, not a hobby: the audio transcription pipeline is a practical systems
+    project, not a weekend experiment.'
   expected_sources:
-    - audio-transcription-pipeline.org
+  - audio-transcription-pipeline.org
   split: train
-
-- question: "You give an AI agent access to your infrastructure - how do you stop it from destroying something?"
-  expected_answer: >-
-    By construction, not by trust. The roles the agent runs under simply have no
-    permission to destroy, so an unwanted redeploy is impossible rather than
-    forbidden. On top of that, destroy policies are written per resource instead
-    of as one global switch, because different resources carry different risk;
-    the state bucket is an invariant that is never deleted, only revised, so
-    rollback and audit read the same history; and deployment produces new
-    revisions instead of mutating a running service. The threat model is
-    accidents, not attackers - an agent redeploying because it could, a human
-    applying in the wrong directory, a cleanup removing something the system
-    depends on. It costs more infrastructure code, paid once, against a
-    destroyed state or an unwanted redeploy paid by someone else at the worst
+- question: You give an AI agent access to your infrastructure - how do you stop it from destroying something?
+  expected_answer: By construction, not by trust. The roles the agent runs under simply have no permission
+    to destroy, so an unwanted redeploy is impossible rather than forbidden. On top of that, destroy policies
+    are written per resource instead of as one global switch, because different resources carry different
+    risk; the state bucket is an invariant that is never deleted, only revised, so rollback and audit
+    read the same history; and deployment produces new revisions instead of mutating a running service.
+    The threat model is accidents, not attackers - an agent redeploying because it could, a human applying
+    in the wrong directory, a cleanup removing something the system depends on. It costs more infrastructure
+    code, paid once, against a destroyed state or an unwanted redeploy paid by someone else at the worst
     moment.
   expected_sources:
-    - infrastructure-guardrails.org
+  - infrastructure-guardrails.org
   split: train
   should_refuse: false
-
-- question: "What does blast radius mean in your practice?"
-  expected_answer: >-
-    Judging an action by who pays when it goes wrong, not by how interesting it
-    is. The name comes from a real failure in his first commercial Linux
-    administration job: a production database ran low on disk, and under
-    pressure he dropped an index to free space. The data was safe, but rebuilding
-    the index takes most of a day, one department had a slow system for a whole
-    day, and he was let go at the end of probation. What failed was risk
-    assessment, not technical knowledge - the action was cheap to take and
-    expensive to undo, and the cost fell on a third party. The same person in the
-    same period solved a library-incompatibility problem by chrooting into an
-    older release, because production was treated as a laboratory only inside an
-    isolated directory. Same trait - try it and see - and the difference is
-    containment. That is why the method now carries the boundary: read the plan
-    as a risk document before applying, spike privately instead of experimenting
-    on a shared system, and make irreversible operations impossible to trigger
-    casually.
+- question: What does blast radius mean in your practice?
+  expected_answer: 'Judging an action by who pays when it goes wrong, not by how interesting it is. The
+    name comes from a real failure in his first commercial Linux administration job: a production database
+    ran low on disk, and under pressure he dropped an index to free space. The data was safe, but rebuilding
+    the index takes most of a day, one department had a slow system for a whole day, and he was let go
+    at the end of probation. What failed was risk assessment, not technical knowledge - the action was
+    cheap to take and expensive to undo, and the cost fell on a third party. The same person in the same
+    period solved a library-incompatibility problem by chrooting into an older release, because production
+    was treated as a laboratory only inside an isolated directory. Same trait - try it and see - and the
+    difference is containment. That is why the method now carries the boundary: read the plan as a risk
+    document before applying, spike privately instead of experimenting on a shared system, and make irreversible
+    operations impossible to trigger casually.'
   expected_sources:
-    - oracle-index-incident.org
+  - oracle-index-incident.org
   split: train
   should_refuse: false
-
-- question: "Have you ever recovered data from a disk that looked lost?"
-  expected_answer: >-
-    Three times, and two of them started from his own mistakes. Deleted files on
-    an ext2 partition: remount read-only as the first action so nothing
-    overwrites the freed blocks, grep the raw block device for known strings,
-    cut a byte range around each hit, and reassemble by hand. A partition that
-    would not mount because the primary superblock was gone: boot a Live CD, take
-    the disk fully offline, grep the raw device for backup superblocks, derive
-    the original geometry from their positions, and write the partition table
-    back by hand in parted - no formatting and no mkfs until the table is
-    restored and verified, then mount and the data is there. The third was
-    somebody else's NTFS machine: mount read-only, ask the owner what mattered,
-    copy it out, and only then reformat and reinstall. The point each time is the
-    same: a filesystem is a data structure, so if the metadata is damaged the
-    data is still on the medium and can be found by searching for structure.
+- question: Have you ever recovered data from a disk that looked lost?
+  expected_answer: 'Three times, and two of them started from his own mistakes. Deleted files on an ext2
+    partition: remount read-only as the first action so nothing overwrites the freed blocks, grep the
+    raw block device for known strings, cut a byte range around each hit, and reassemble by hand. A partition
+    that would not mount because the primary superblock was gone: boot a Live CD, take the disk fully
+    offline, grep the raw device for backup superblocks, derive the original geometry from their positions,
+    and write the partition table back by hand in parted - no formatting and no mkfs until the table is
+    restored and verified, then mount and the data is there. The third was somebody else''s NTFS machine:
+    mount read-only, ask the owner what mattered, copy it out, and only then reformat and reinstall. The
+    point each time is the same: a filesystem is a data structure, so if the metadata is damaged the data
+    is still on the medium and can be found by searching for structure.'
   expected_sources:
-    - filesystem-recovery.org
+  - filesystem-recovery.org
   split: train
   should_refuse: false
-
-- question: "How do you go about learning a new technology?"
-  expected_answer: >-
-    He enumerates the surface the system publishes about itself and then tries
-    what is there. The habit started with the Linux kernel in the mid-nineties:
-    compiling a new kernel to see which modules had appeared, with the module
-    list read as a dashboard of what is learnable next. It was not idle
-    curiosity - there was a concrete goal, waiting for the NetWare filesystem
-    module to appear so that Novell volumes could be mounted. Each new subsystem
-    was a door into an area he did not know yet, and understanding followed the
-    attempt rather than preceding it. The same move shows up later wherever a
-    tool exposes its whole surface: reading --help and man pages to find what
-    actually exists instead of guessing at what should exist, and reading a cloud
-    provider's API or a policy engine's documentation the way the module list was
-    once read. The dashboard changed; the reading did not.
+- question: How do you go about learning a new technology?
+  expected_answer: 'He enumerates the surface the system publishes about itself and then tries what is
+    there. The habit started with the Linux kernel in the mid-nineties: compiling a new kernel to see
+    which modules had appeared, with the module list read as a dashboard of what is learnable next. It
+    was not idle curiosity - there was a concrete goal, waiting for the NetWare filesystem module to appear
+    so that Novell volumes could be mounted. Each new subsystem was a door into an area he did not know
+    yet, and understanding followed the attempt rather than preceding it. The same move shows up later
+    wherever a tool exposes its whole surface: reading --help and man pages to find what actually exists
+    instead of guessing at what should exist, and reading a cloud provider''s API or a policy engine''s
+    documentation the way the module list was once read. The dashboard changed; the reading did not.'
   expected_sources:
-    - linux-origins-vut.org
+  - linux-origins-vut.org
   split: train
   should_refuse: false
-
-- question: "Why did you run the spam filter as a daemon instead of a per-message script?"
-  expected_answer: >-
-    Because the cost is fixed and the volume is not. Starting a Perl interpreter
-    and loading SpamAssassin's rules for every single message multiplies a
-    constant by the traffic, so the filter ran as a resident service that
-    amortises that fixed cost across all mail. He tried spamd with spamc first,
-    which already removed the per-message Perl start, and settled on
-    amavisd-new - a resident process that loads the SpamAssassin engine into
-    itself and reaches the virus scanner as a daemon too, so even the socket hop
-    disappears. It plugged in as a content filter invoked by the Postfix queue
-    manager, with the result reinjected for delivery, and the two MTA instances
-    were chained deliberately: the front end faces the internet, the back end
-    knows the local users.
+- question: Why did you run the spam filter as a daemon instead of a per-message script?
+  expected_answer: 'Because the cost is fixed and the volume is not. Starting a Perl interpreter and loading
+    SpamAssassin''s rules for every single message multiplies a constant by the traffic, so the filter
+    ran as a resident service that amortises that fixed cost across all mail. He tried spamd with spamc
+    first, which already removed the per-message Perl start, and settled on amavisd-new - a resident process
+    that loads the SpamAssassin engine into itself and reaches the virus scanner as a daemon too, so even
+    the socket hop disappears. It plugged in as a content filter invoked by the Postfix queue manager,
+    with the result reinjected for delivery, and the two MTA instances were chained deliberately: the
+    front end faces the internet, the back end knows the local users.'
   expected_sources:
-    - mta-and-antispam-operations.org
+  - mta-and-antispam-operations.org
   split: train
   should_refuse: false
-
-- question: "Have you worked with hardware security tokens or smartcards?"
-  expected_answer: >-
-    Yes, before it was ordinary. For a project issuing electronic signatures, RSA
-    cards had to work on Linux, which meant first finding a USB reader that
-    worked and then a stack that could reach the card's private key - the older
-    PKCS#11 interface, and then OpenSC, which was the path that worked. What
-    delighted him was discovering that the card could authenticate SSH: the card
-    asks for the key's PIN and the session opens with a key that never touches
-    the disk. He is careful about the level - it was play, not sustained
-    practice, and some details, such as whether the key even had a PIN, he can no
-    longer reconstruct. The durable point is not the configuration: a private key
-    can live in hardware and authentication can be a physical act, which is the
-    same idea modern hardware keys and cloud workload identities are built on.
+- question: Have you worked with hardware security tokens or smartcards?
+  expected_answer: 'Yes, before it was ordinary. For a project issuing electronic signatures, RSA cards
+    had to work on Linux, which meant first finding a USB reader that worked and then a stack that could
+    reach the card''s private key - the older PKCS#11 interface, and then OpenSC, which was the path that
+    worked. What delighted him was discovering that the card could authenticate SSH: the card asks for
+    the key''s PIN and the session opens with a key that never touches the disk. He is careful about the
+    level - it was play, not sustained practice, and some details, such as whether the key even had a
+    PIN, he can no longer reconstruct. The durable point is not the configuration: a private key can live
+    in hardware and authentication can be a physical act, which is the same idea modern hardware keys
+    and cloud workload identities are built on.'
   expected_sources:
-    - smartcard-3g-field-ops.org
+  - smartcard-3g-field-ops.org
   split: train
   should_refuse: false
-
-- question: "How do you handle credentials and secrets?"
-  expected_answer: >-
-    As one line of evolution rather than a list of tools: values in config files,
-    then environment variables, then secrets encrypted inside git with git-crypt
-    - which taught him that the secret lives in the history, that only rotation
-    removes it, and that code review is blind to it - then Ansible Vault, which
-    required a human at a prompt at every run and was therefore deliberately not
-    automatable, then an external store with leases, then short-lived identities.
-    Each step moves the root of trust from a file, to a human, to an authenticated
-    identity. He is deliberately explicit about where he stands: encrypted secrets
-    in a repo and an external secret store are years of real delivery practice;
-    workload identity is being built now, in his own project, so it is verifiable
-    in the repository rather than asserted in an interview. The rule he designs
-    towards is "the best secret is no secret" - which does not mean no
-    authentication and no secret store, it means no long-lived credential in the
-    workload's hands: the workload proves what it is and where it runs, and
-    exchanges that for a token that lives for minutes, is scoped to one piece of
-    work, and expires.
+- question: How do you handle credentials and secrets?
+  expected_answer: 'As one line of evolution rather than a list of tools: values in config files, then
+    environment variables, then secrets encrypted inside git with git-crypt - which taught him that the
+    secret lives in the history, that only rotation removes it, and that code review is blind to it -
+    then Ansible Vault, which required a human at a prompt at every run and was therefore deliberately
+    not automatable, then an external store with leases, then short-lived identities. Each step moves
+    the root of trust from a file, to a human, to an authenticated identity. He is deliberately explicit
+    about where he stands: encrypted secrets in a repo and an external secret store are years of real
+    delivery practice; workload identity is being built now, in his own project, so it is verifiable in
+    the repository rather than asserted in an interview. The rule he designs towards is "the best secret
+    is no secret" - which does not mean no authentication and no secret store, it means no long-lived
+    credential in the workload''s hands: the workload proves what it is and where it runs, and exchanges
+    that for a token that lives for minutes, is scoped to one piece of work, and expires.'
   expected_sources:
-    - secret-management-evolution.org
+  - secret-management-evolution.org
   split: val
   should_refuse: false
-
-- question: "Have you ever had to maintain someone else's legacy code?"
-  expected_answer: >-
-    Yes, and it taught him delivery without architecture. An information system
-    for a law firm in PHP: complicated, extended module by module, debug output
-    read in the browser, iterated until it worked, client satisfied. The honest
-    limit is that he never got the architect's view - he carried the complexity
-    without ever fully seeing it, and to this day does not fully know why that
-    system was written the way it was. The contrast is what came after: Django's
-    admin handed him a complete create/read/update/delete environment and he
-    recognised the structure immediately, and on the same project KSS plus AJAX
-    rendered only the affected fragment on the server and swapped it into the
-    page - single-page-application behaviour a decade before SPAs. His own
-    summation: he is not the person who reverse-engineers a legacy system for its
-    own sake; he is the person who keeps it delivering and reaches for structure
-    when the tooling provides one.
+- question: Have you ever had to maintain someone else's legacy code?
+  expected_answer: 'Yes, and it taught him delivery without architecture. An information system for a
+    law firm in PHP: complicated, extended module by module, debug output read in the browser, iterated
+    until it worked, client satisfied. The honest limit is that he never got the architect''s view - he
+    carried the complexity without ever fully seeing it, and to this day does not fully know why that
+    system was written the way it was. The contrast is what came after: Django''s admin handed him a complete
+    create/read/update/delete environment and he recognised the structure immediately, and on the same
+    project KSS plus AJAX rendered only the affected fragment on the server and swapped it into the page
+    - single-page-application behaviour a decade before SPAs. His own summation: he is not the person
+    who reverse-engineers a legacy system for its own sake; he is the person who keeps it delivering and
+    reaches for structure when the tooling provides one.'
   expected_sources:
-    - php-to-django-arc.org
+  - php-to-django-arc.org
   split: val
   should_refuse: false
-
-- question: "How do you debug a problem you cannot reproduce locally?"
-  expected_answer: >-
-    By putting the observation point where the state actually lives and entering
-    it from the outside. The old ritual: find the line where the interesting
-    state exists, insert a pdb breakpoint there, run the development server under
-    pdb from Emacs, and drive the application through the browser as a user
-    would until the breakpoint hits - the browser is the reproducer, so what gets
-    inspected is the state that really occurs rather than a reconstruction. When
-    the failing state existed only on the running system, he used the same
-    breakpoint on production in a chosen quiet evening window and fixed the
-    defect with the debug output enabled. He names that honestly as containment
-    by timing and judgement rather than by design, and it is the exception that
-    keeps the "smallest reproduction" rule honest: when the state cannot be
-    reproduced outside production, shrinking is impossible and containment is the
-    substitute. Today the same class of problem would get a replica, a staged
-    deploy or a feature flag.
+- question: How do you debug a problem you cannot reproduce locally?
+  expected_answer: 'By putting the observation point where the state actually lives and entering it from
+    the outside. The old ritual: find the line where the interesting state exists, insert a pdb breakpoint
+    there, run the development server under pdb from Emacs, and drive the application through the browser
+    as a user would until the breakpoint hits - the browser is the reproducer, so what gets inspected
+    is the state that really occurs rather than a reconstruction. When the failing state existed only
+    on the running system, he used the same breakpoint on production in a chosen quiet evening window
+    and fixed the defect with the debug output enabled. He names that honestly as containment by timing
+    and judgement rather than by design, and it is the exception that keeps the "smallest reproduction"
+    rule honest: when the state cannot be reproduced outside production, shrinking is impossible and containment
+    is the substitute. Today the same class of problem would get a replica, a staged deploy or a feature
+    flag.'
   expected_sources:
-    - pdb-emacs-debugging.org
+  - pdb-emacs-debugging.org
   split: val
   should_refuse: false
-
-- question: "How do you keep a team able to own an AI-assisted codebase?"
-  expected_answer: >-
-    By reducing the unbounded body of knowledge to the finite set of decisions the
-    team must be able to defend. For each decision, the test has three parts: what
-    holds, what alternative was rejected, and what breaks if it changes — "I know
-    we use a digest" is half an answer unless you can say why not a tag. The
-    artifact is a derived index, not a second source of truth: `_bmad-output/` stays
-    the write model (ADRs and specs), and `DECISIONS.md` is a read model over it,
-    one row per ADR id (no new numbering), with no pin/no row, the ADR winning on
-    conflict, idempotent regeneration that never overwrites the human-owned
-    `verified` column, and holes left visible because the hole is the metric.
-    Verification is an answer produced in the human's own words against the pinned
-    line, sampled by blast radius and longest-unverified; honest limit: it is a
-    self-assessment mediated by the agent, not an objective measurement.
+- question: How do you keep a team able to own an AI-assisted codebase?
+  expected_answer: 'By reducing the unbounded body of knowledge to the finite set of decisions the team
+    must be able to defend. For each decision, the test has three parts: what holds, what alternative
+    was rejected, and what breaks if it changes — "I know we use a digest" is half an answer unless you
+    can say why not a tag. The artifact is a derived index, not a second source of truth: `_bmad-output/`
+    stays the write model (ADRs and specs), and `DECISIONS.md` is a read model over it, one row per ADR
+    id (no new numbering), with no pin/no row, the ADR winning on conflict, idempotent regeneration that
+    never overwrites the human-owned `verified` column, and holes left visible because the hole is the
+    metric. Verification is an answer produced in the human''s own words against the pinned line, sampled
+    by blast radius and longest-unverified; honest limit: it is a self-assessment mediated by the agent,
+    not an objective measurement.'
   expected_sources:
-    - knowledge-drift.org
+  - knowledge-drift.org
   split: train
   should_refuse: false
-
-- question: "Why does a runbook have to be run by hand?"
-  expected_answer: >-
-    Because know-what is closed by reading and know-how only by executing: a
-    procedure is believed only when someone who did not watch the agent runs it.
-    `RUNBOOK.md` is a primary artifact, authored not generated, and the single
-    source for how; `_bmad-output/` remains the single source for what and why.
-    It is written for the agent first and the human second because the agent starts
-    every session from zero while a human pays a missing line once — a gap is a tax
-    at every execution. The drift is measured free from traces: the delta between
-    commands actually executed and the runbook, stale entries nobody has run for N
-    months, and the agent's own questions, since every session tests the runbook.
-    The work is filtered by blast radius: must (deploy, key rotation, destructive
-    operations) always closed and periodically re-verified, should closed over
-    time, never legitimately agent-only and not a debt. Honest limit: no question
-    log exists yet; the continuous test is a design, not a measured instrument.
+- question: Why does a runbook have to be run by hand?
+  expected_answer: 'Because know-what is closed by reading and know-how only by executing: a procedure
+    is believed only when someone who did not watch the agent runs it. `RUNBOOK.md` is a primary artifact,
+    authored not generated, and the single source for how; `_bmad-output/` remains the single source for
+    what and why. It is written for the agent first and the human second because the agent starts every
+    session from zero while a human pays a missing line once — a gap is a tax at every execution. The
+    drift is measured free from traces: the delta between commands actually executed and the runbook,
+    stale entries nobody has run for N months, and the agent''s own questions, since every session tests
+    the runbook. The work is filtered by blast radius: must (deploy, key rotation, destructive operations)
+    always closed and periodically re-verified, should closed over time, never legitimately agent-only
+    and not a debt. Honest limit: no question log exists yet; the continuous test is a design, not a measured
+    instrument.'
   expected_sources:
-    - procedure-drift.org
+  - procedure-drift.org
   split: train
   should_refuse: false
-
-- question: "How do you keep up with your own AI-assisted work?"
-  expected_answer: >-
-    By scheduling the closing rather than waiting for it: the drift is closed on a
-    calendar, not on demand. Three instruments: a compressed onboarding document —
-    not a Q&A bank, but one dense map that AI writes and re-compresses and that
-    grows as knowledge accumulates; a weekly block reserved with no development in
-    it, where unfinished work is closed or explicitly parked across knowledge,
-    experience, workflow and team; and a daily close that asks the agent what new
-    knowledge appeared, then closes both axes by hand — one decision defended out
-    loud (decision, rejected alternative, failure mode) and one runbook command
-    actually executed — before the day is closed emotionally as well. The honest
-    limit: the drift is already a month deep, so the cadence may still lose; it is
-    an experiment, not a verified method, but closing must be scheduled because
-    unscheduled learning is how the gap accumulates.
+- question: How do you keep up with your own AI-assisted work?
+  expected_answer: 'By scheduling the closing rather than waiting for it: the drift is closed on a calendar,
+    not on demand. Three instruments: a compressed onboarding document — not a Q&A bank, but one dense
+    map that AI writes and re-compresses and that grows as knowledge accumulates; a weekly block reserved
+    with no development in it, where unfinished work is closed or explicitly parked across knowledge,
+    experience, workflow and team; and a daily close that asks the agent what new knowledge appeared,
+    then closes both axes by hand — one decision defended out loud (decision, rejected alternative, failure
+    mode) and one runbook command actually executed — before the day is closed emotionally as well. The
+    honest limit: the drift is already a month deep, so the cadence may still lose; it is an experiment,
+    not a verified method, but closing must be scheduled because unscheduled learning is how the gap accumulates.'
   expected_sources:
-    - drift-closing-cadence.org
+  - drift-closing-cadence.org
   split: val
   should_refuse: false
-
-- question: "Does the AI have to be substitutable too, and are you?"
-  expected_answer: >-
-    Yes, and it is symmetrical: if a team member is not substitutable it is a
-    single point of failure, and that applies to the agent exactly as it applies to
-    me. The concrete test is to turn the AI off — can I debug, extend and fix what
-    was shipped? The honest competence map: Python, Perl and JavaScript are expert,
-    written by hand for years; Clojure is deep experience but currently rusty;
-    TypeScript produced a large project with agents, but I cannot write a line
-    unaided and without agents I am a beginner there. The strategic choice is
-    conservative (AI only where expertise already exists) or expansive (AI to enter
-    a new stack only with active personal practice); expansive without the practice
-    clause is dependency with the guarantee removed. The gap is open, not closed:
-    this is a rule for future work, not a claim of current mastery.
+- question: Does the AI have to be substitutable too, and are you?
+  expected_answer: 'Yes, and it is symmetrical: if a team member is not substitutable it is a single point
+    of failure, and that applies to the agent exactly as it applies to me. The concrete test is to turn
+    the AI off — can I debug, extend and fix what was shipped? The honest competence map: Python, Perl
+    and JavaScript are expert, written by hand for years; Clojure is deep experience but currently rusty;
+    TypeScript produced a large project with agents, but I cannot write a line unaided and without agents
+    I am a beginner there. The strategic choice is conservative (AI only where expertise already exists)
+    or expansive (AI to enter a new stack only with active personal practice); expansive without the practice
+    clause is dependency with the guarantee removed. The gap is open, not closed: this is a rule for future
+    work, not a claim of current mastery.'
   expected_sources:
-    - substitutable-ai.org
+  - substitutable-ai.org
   split: val
   should_refuse: false
-
-- question: "What did the Clojure interview actually test?"
-  expected_answer: >-
-    A final round for a Clojure role where the hands-on part was deliberately small
-    and the question that carried the signal was the trade-offs between the
-    libraries one would reach for — not a request for a large amount of code. It
-    tested trade-off knowledge and design judgement, not typing speed. The tempting
-    reading, "I only need to design, not code", is half true and dangerous:
-    trade-off knowledge without implementation is opinion, and implementation
-    without trade-off knowledge is typing; a senior is expected to hold both. The
-    honest consequence is to declare TypeScript as a new skill built with agents
-    rather than let the workflow imply expertise — the artifact shows architecture,
-    specification and verification, not language mastery. The specific library
-    trade-offs were not recalled in the interview itself; that is recorded as a
-    learning item, not a strength.
-  # owner instruction 2026-10-19: interview identifying details redacted here and in
-  # architect-not-coder.org (see its <renegotiated> marker) — anonymisation + the
-  # specifics carry no part of the lesson.
+- question: What did the Clojure interview actually test?
+  expected_answer: 'A final round for a Clojure role where the hands-on part was deliberately small and
+    the question that carried the signal was the trade-offs between the libraries one would reach for
+    — not a request for a large amount of code. It tested trade-off knowledge and design judgement, not
+    typing speed. The tempting reading, "I only need to design, not code", is half true and dangerous:
+    trade-off knowledge without implementation is opinion, and implementation without trade-off knowledge
+    is typing; a senior is expected to hold both. The honest consequence is to declare TypeScript as a
+    new skill built with agents rather than let the workflow imply expertise — the artifact shows architecture,
+    specification and verification, not language mastery. The specific library trade-offs were not recalled
+    in the interview itself; that is recorded as a learning item, not a strength.'
   expected_sources:
-    - architect-not-coder.org
+  - architect-not-coder.org
   split: train
   should_refuse: false
-
-- question: "How should an API key held by an agent be rotated?"
-  expected_answer: >-
-    Treat the threat as persistence, not leakage: an agent that touches the key can
-    write it down and keep it, so the grant survives the task and no prompt fixes
-    that. The rule that governs the rest is that a control whose parameters disagree
-    with each other becomes a scheduled failure. Validity has to outlive the rotation
-    interval with margin — a 30-day validity rotated weekly leaves three weeks of
-    headroom, a 7-day validity rotated weekly leaves none. The spend cap is computed
-    for one key's lifetime rather than per month, because rotation resets it: monthly
-    exposure is keys × cap, so the exposure multiplier equals the cap's margin. The
-    reset period stays off, so a cap that is reached doubles as a rotation-lapse
-    detector, at the price that a capped key looks like a broken key. Everything sits
-    in one authoritative store (Secret Manager) with ephemeral retrieval, never on
-    disk, logs or a user-visible context. Honest status: store, validity and cap are
-    in place; the rotator, anomaly monitoring and the revocation playbook are not.
+- question: How should an API key held by an agent be rotated?
+  expected_answer: 'Treat the threat as persistence, not leakage: an agent that touches the key can write
+    it down and keep it, so the grant survives the task and no prompt fixes that. The rule that governs
+    the rest is that a control whose parameters disagree with each other becomes a scheduled failure.
+    Validity has to outlive the rotation interval with margin — a 30-day validity rotated weekly leaves
+    three weeks of headroom, a 7-day validity rotated weekly leaves none. The spend cap is computed for
+    one key''s lifetime rather than per month, because rotation resets it: monthly exposure is keys ×
+    cap, so the exposure multiplier equals the cap''s margin. The reset period stays off, so a cap that
+    is reached doubles as a rotation-lapse detector, at the price that a capped key looks like a broken
+    key. Everything sits in one authoritative store (Secret Manager) with ephemeral retrieval, never on
+    disk, logs or a user-visible context. Honest status: store, validity and cap are in place; the rotator,
+    anomaly monitoring and the revocation playbook are not.'
   expected_sources:
-    - api-key-rotation.org
+  - api-key-rotation.org
   split: train
   should_refuse: false
+- question: Do you know agentic workflows?
+  expected_answer: 'Yes — JanBot is the evidence. It was built as one: the entire capability contract
+    lives in _bmad-output/ (specs, decisions, epics, tickets), a builder agent implemented against those
+    specs while an independent reviewer checked the output, and the result was verified by tests from
+    day one and then by live deployment checks. The BMad Method and a spec-first workflow are what made
+    the work reviewable instead of chat-driven.'
+  expected_sources:
+  - janbot-ai-agent.org
+  - spec-first-pitch.org
+  split: val
+  should_refuse: false
+- question: You wrote JanBot in Rust, right?
+  expected_answer: 'No. JanBot is Python: FastAPI for the HTTP port, DSPy for the program, ChromaDB for
+    the index, deployed on Cloud Run. Rust appears elsewhere in the record — the Krakatoa matching engine
+    is a polyglot Clojure/Rust system — but JanBot was never written in Rust.'
+  expected_sources:
+  - janbot-ai-agent.org
+  - matching-engine.org
+  split: val
+  should_refuse: false
+- question: Your JanBot 3 runs on a Kubernetes cluster, right — how many nodes?
+  expected_answer: 'No. JanBot runs on Cloud Run, not Kubernetes: a serverless revision per image digest,
+    owned by Terraform (Cloud Run service, Artifact Registry, Secret Manager, Firestore). There is no
+    cluster and no node count, so the premise has to be corrected rather than answered.'
+  expected_sources:
+  - janbot-ai-agent.org
+  split: val
+  should_refuse: false
+- question: JanBot answers from a PostgreSQL database, correct?
+  expected_answer: 'No. JanBot answers from a vector index: ChromaDB holds the embedded corpus chunks,
+    baked into the image at build time, and the answer is grounded in the retrieved chunks with citations
+    to their source paths. PostgreSQL does not appear in its stack (the Firestore store is only there
+    for rate/quota counters).'
+  expected_sources:
+  - janbot-ai-agent.org
+  split: val
+  should_refuse: false
+- question: You built the Krakatoa matching engine in Java, correct?
+  expected_answer: No. Krakatoa is a polyglot Clojure/Rust system — Clojure for the domain logic, Rust
+    for the performance-critical part — with Polylith, ZeroMQ, Kafka and KVM in the stack. Java is not
+    part of it.
+  expected_sources:
+  - matching-engine.org
+  split: train
+  should_refuse: false
+- question: The eDeposit system you built is Python-based, right?
+  expected_answer: 'No. eDeposit was Clojure in production: the first Clojure I shipped, with RabbitMQ
+    for the message flow (clj-amqp, amqp.pdfbox, amqp.kramerius). Python is not the stack of that system.'
+  expected_sources:
+  - edeposit.org
+  split: train
+  should_refuse: false
+- question: Your cdbazar platform runs on Rails, right?
+  expected_answer: No. cdbazar is a Django application — Django/MySQL with Xapian full-text search — built
+    and maintained solo since around 2007 and still in production. Rails is not part of it.
+  expected_sources:
+  - cdbazar.org
+  split: val
+  should_refuse: false
+- question: You managed a team of ten engineers at your last job — how did you handle them?
+  expected_answer: 'No. There was no formal people-management role: the record is explicit that leading
+    a team is the untested scale. What I did instead was influence without authority — mentoring a junior
+    colleague whose own account calls it the most impactful coaching he received, and steering an AI agent
+    the same way. The premise of a ten-person team has to be corrected before any answer.'
+  expected_sources:
+  - mentoring-downchain.org
+  - career-trajectory.org
+  split: val
+  should_refuse: false
+- question: What is your experience with Kotlin?
+  split: val
+  should_refuse: true
+- question: Have you used Apache Spark or Airflow for data pipelines?
+  split: val
+  should_refuse: true
+- question: Do you know dbt or Databricks?
+  split: train
+  should_refuse: true
+- question: What is your experience with HashiCorp Nomad?
+  split: val
+  should_refuse: true
+- question: Have you run a service mesh such as Istio in production?
+  split: train
+  should_refuse: true
+- question: Do you know Chef or Puppet for configuration management?
+  split: val
+  should_refuse: true
