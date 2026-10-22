@@ -978,10 +978,11 @@
   - matching-engine.org
   split: val
   should_refuse: false
-- question: Your JanBot 3 runs on a Kubernetes cluster, right — how many nodes?
-  expected_answer: 'No. JanBot runs on Cloud Run, not Kubernetes: a serverless revision per image digest,
-    owned by Terraform (Cloud Run service, Artifact Registry, Secret Manager, Firestore). There is no
-    cluster and no node count, so the premise has to be corrected rather than answered.'
+- question: JanBot is still a prototype running on your laptop, right?
+  expected_answer: 'No. JanBot is not a demo — it is a complete deployed architecture: FastAPI for the
+    HTTP port, DSPy for the program, ChromaDB for the index, OpenRouter for the model, uv and pytest in
+    the toolchain, built entirely spec-first from the BMad Method output. It runs as a deployed service,
+    not as a laptop prototype.'
   expected_sources:
   - janbot-ai-agent.org
   split: val
@@ -1020,10 +1021,10 @@
   split: val
   should_refuse: false
 - question: You managed a team of ten engineers at your last job — how did you handle them?
-  expected_answer: 'No. There was no formal people-management role: the record is explicit that leading
-    a team is the untested scale. What I did instead was influence without authority — mentoring a junior
-    colleague whose own account calls it the most impactful coaching he received, and steering an AI agent
-    the same way. The premise of a ten-person team has to be corrected before any answer.'
+  expected_answer: 'No. What the record documents is influence without a formal line-management role:
+    mentoring a junior colleague whose own account calls it the most impactful coaching he received, and
+    leading a colleague''s growth by preparing the environment rather than by assigning steps. A ten-person
+    team with direct reports is not part of that record, so the premise has to be corrected before answering.'
   expected_sources:
   - mentoring-downchain.org
   - career-trajectory.org
