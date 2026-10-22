@@ -1,0 +1,117 @@
+:PROPERTIES:
+:ID:       20261020-style-references-as-intent
+:TITLE:    Naming a book as the style of work — a prompt as a pointer to a tradition
+:CREATED:  <2026-10-20>
+:AUTHOR:   goose
+:REVIEWED: <2026-10-20>
+:DOMAIN:   way-of-working
+:TAGS:     promptovani ai-agenti spec-stylu komprese knihy gtd turn-the-ship-around six-thinking-hats zamer delegovani slovnik
+:SYNOPSIS: When I need an agent to work a certain way, I do not enumerate rules — I name a book and say "we will work in the style of this book", because a consistent published method is a denser and more internally coherent specification of intent than any list of instructions I could write myself.
+:STRENGTHS:  compression-of-intent knows-his-references names-the-dependency-on-shared-reading
+:WEAKNESSES: requires-shared-reading citation-can-be-misremembered book-is-not-an-acceptance-criterion never-used-with-a-human-team
+:SOURCE-ID: @@SOURCE-ID@@
+:SOURCE-SHA256: @@SOURCE-SHA256@@
+:END:
+
+# Naming a book as the style of work
+
+Use this when someone asks how I write prompts — or how I get a collaborator, an
+agent or a person to work the way I want without writing out a set of rules for
+them.
+
+* The method in one sentence
+
+> In a prompt I refer to a book that matters to me — *GTD* by David Allen,
+> *Turn the Ship Around* by L. David Marquet, *Six Thinking Hats* by Edward de
+> Bono — and tell the agent: **we will now work in the style of this book.**
+
+That is the whole technique. It is a pointer, not a specification.
+
+* Why the pointer wins over the rulebook
+
+A published method has three properties that a hand-written list of instructions
+does not:
+
+| Property | What it buys |
+|-----------|-----------|
+| **it is internally coherent** | the author has already resolved the conflicts between their own rules; my improvised list has not |
+| **it is dense** | one sentence carries the whole attitude — how to decide, what to ignore, what "done" looks like |
+| **it can be looked up** | both sides can return to the same text when they disagree about what "in that style" means |
+
+Writing an equivalent spec myself would take pages and would still be less
+coherent. The book is a compression of intent that both sides know how to
+decompress.
+
+This is the vocabulary layer of
+[[id:20261020-intent-based-delegation][delegation by intent]]: leading by intent
+needs a language in which the intent is spoken, and a named tradition is the
+shortest such language I have found. It also builds on
+[[id:20261007-foundational-books][the books that shaped how I work]] — the same
+references I use to explain myself, I also use to give briefs.
+
+* What each of the references concretely does
+
+- **GTD (Allen)** — the shape of the workflow: capture, clarify, organize,
+  review. Named when I want the agent to treat a backlog as a system, not as a
+  list.
+- **Turn the Ship Around (Marquet)** — the shape of leadership: intent, not
+  orders; competence and clarity passed down; *trust, but verify*.
+- **Six Thinking Hats (de Bono)** — the shape of thinking: deliberate switching
+  between modes (facts, feelings, risk, benefit, creativity, process) instead of
+  mixing them in one argument.
+
+* In practice (2026-10-20)
+
+The first place where this is more than intent: since 2026-10-20 the personal
+system in `~/org` stands **explicitly on GTD** (Allen) for actions and projects
+and on **CODE** (Forte) for capture and distill. The discipline is described in a
+single file — `workflows.org` — and the other files (`projects.org`,
+`actions.org`) only point at it.
+
+What that concretely bought: the brief **"do it according to GTD" is complete.**
+Nobody has to write twenty rules or work out what is taste and what is method;
+when the execution diverges from the book, it is an execution error, not a
+different opinion. And because the rules live in one place and are referenced
+from there, a second source of truth about how the system works cannot arise.
+
+* Honest limits
+
+- **The reference has to be genuinely shared.** An agent that has not read the
+  book, or knows only its summary, will produce a believable imitation of the
+  style, not the style. The pointer is only as good as the copy on the other
+  side.
+- **The citation can be wrong even when the behaviour is right.** Hedge the
+  attribution — *"Turn the Ship Around … I think that was David Marquet"*. The
+  attribution is worth verifying before publishing; the behaviour it points at is
+  not in doubt.
+- **A book is not an acceptance criterion.** "In the style of X" says how to
+  work, not what is done. It cannot replace a definition of the done state — and
+  on its own it turns verification into a question of taste.
+- **Never used with a human team** — observed in the prompts I write for agents.
+  Whether colleagues would accept the same shortcut is untested.
+
+* Related
+
+- [[id:20261020-intent-based-delegation][Delegate the intent, not the steps]] — the principle this is the vocabulary for.
+- [[id:20261007-foundational-books][Foundational books]] — the same library, but used to explain a philosophy, not
+  to set the style of a session.
+- [[id:20261015-spec-first-artifacts-in-git][Spec-first artifacts in git]] — where the intent goes when a conversation
+  is not enough: a frozen artifact, not a remembered style.
+- [[id:20261016-respectful-partnership][Respectful partnership]] — the stance behind borrowing someone's method instead
+  of dictating steps.
+
+* Sources
+
+- corpus/texts/20261020-style-references-in-prompts-transcript.txt — the owner's
+  answer in full: the references to GTD, *Turn the Ship Around*, *Six Thinking
+  Hats*; "we will work in the style of this book"; also the hedging of the
+  author's name.
+  git ref: 5f16a97:corpus/texts/20261020-style-references-in-prompts-transcript.txt
+  sha256: cf9b6cf5024d2b9fd8e6279564ffa2f5d37ebd7592b2f1ccd05728da904a8232
+- corpus/generated/10-20 Poznámka_ Stylové reference v promptech pro agenty-Summary.txt
+  — a Plaud AI restatement, used only to check the reading; not a source of
+  claims.
+- The application in practice (2026-10-20): `workflows.org` in `~/org` — the
+  discipline built on GTD and CODE, the single place with rules that the other
+  files reference.
+  git ref: e98555c:workflows.org

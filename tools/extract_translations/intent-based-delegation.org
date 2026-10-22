@@ -1,0 +1,123 @@
+:PROPERTIES:
+:ID:       20261020-intent-based-delegation
+:TITLE:    Delegate the intent, not the steps — and verify the output
+:CREATED:  <2026-10-20>
+:AUTHOR:   goose
+:REVIEWED: <2026-10-20>
+:DOMAIN:   way-of-working
+:TAGS:     delegovani micromanagement vedeni ai-agenti opencode janbot zamer akceptacni-kriteria duveruj-ale-overuj marquet dve-autority
+:SYNOPSIS: When the executor knows both the method and the context, dictating the steps is micromanagement — the leader states the intent, the definition of the done state, the limits and the autonomy, then verifies the output against the intent instead of auditing the internal process.
+:STRENGTHS:  delegation-by-intent output-based-verification names-the-failure-mode self-correction-on-his-own-practice
+:WEAKNESSES: observed-with-one-agent-only no-acceptance-criteria-template-yet untested-on-a-human-team
+:SOURCE-ID: @@SOURCE-ID@@
+:SOURCE-SHA256: @@SOURCE-SHA256@@
+:END:
+
+# Delegate the intent, not the steps — and verify the output
+
+Use this when someone asks how I work with an AI agent — or how I lead people who
+understand their work better than I understand their steps.
+
+* The correction I made to my own practice
+
+In the JanBot project the executing agent knows the methodology (BMAD) and carries
+the repository's context. Up to now, though, I still handed it precise
+instructions: *do A, then B, then C.* From the outside that is **micromanagement**
+— and it is not what I claim to do. The claim and the practice were diverging, and
+that is the only reason fixing it was worth it.
+
+The role I want is not the one that gives orders, but the **independent leader and
+observer**: hold clean outputs, do not touch the internal process.
+
+* What replaces it
+
+| Micromanagement | Delegation by intent |
+|-----------------|----------------------|
+| *do A, then B* | *this is the change the output must cause* |
+| the process is controlled by watching it | the process is checked at agreed points |
+| quality is judged by resemblance to my process | quality is judged by acceptance criteria |
+| deviation = disobedience | deviation = information (either my intent was unclear, or the method found something I could not see) |
+
+The brief that gets handed over is therefore: **intent — definition of the done
+state — constraints — autonomy — verification.** What happens inside that frame is
+the executor's decision and responsibility.
+
+The formulation is deliberately borrowed from *Turn the Ship Around* (L. David
+Marquet): **trust, but verify.** Trust is what makes autonomy real; verification is
+what makes it safe. Either without the other is an error state — trust without
+verification is abdicating the steering, and verification without trust is the
+micromanagement we started from.
+
+* Three concrete damages of micromanagement
+
+This is not an aesthetic objection; each of the three produces a concrete defect:
+
+1. **Two authorities.** My step-by-step instruction competes with the methodology
+   the executor is supposed to follow. When the two diverge, the executor must
+   choose which master to obey — and that choice is invisible to me.
+2. **An executor instead of an engineer.** The executor stops reporting conflicts
+   with convention, because reporting is not in the instruction. The most valuable
+   signal — *"this step you gave me contradicts the method"* — disappears exactly
+   when it is needed most.
+3. **Drift when the methodology changes.** My instruction does not age together
+   with the method. It stays in the record as a rule even after the methodology it
+   was derived from has moved on — and the next person (or the next session)
+   inherits it as if it still held.
+
+* Verification is against the intent, not against the instruction
+
+The check after delivery is not *"it did what I told it"* — that would smuggle
+micromanagement back into the review. The questions are:
+
+- does the result match the problem I posed?
+- are the claims evidenced (not merely asserted)?
+- did a silent drift occur — did something change that nobody reported?
+- do the decisions the executor made stand on their own?
+
+When it was my intent that was wrong, that is a finding about me, not about the
+executor. The signal worth pursuing is the solution that exposes a defective brief;
+that is the moment to say so — not the moment to correct the direction.
+
+* Honest limits
+
+- Observed on **one agent, in one project**. The principle comes from a submarine
+  crew, not from a team I led — the transfer to people is an expectation, not a
+  result.
+- Without acceptance criteria written in advance, "verify the output" falls back
+  into a question of taste. The template (intent / done / constraints / autonomy /
+  verification) is described here, but is not yet in routine use.
+- Autonomy without an explicitly stated risk budget produces either a stuck
+  executor (asking permission for everything) or an overshooting one. That
+  boundary must be part of the intent, not something discovered after the fact.
+
+* Related
+
+- [[id:20261020-style-references-as-intent][Naming a book as the style of work]] — the compression that makes the intent
+  handable in one sentence.
+- [[id:20261018-substitutable-ai][AI must be substitutable — and so must I]] — why autonomy is safe only when the
+  output can be checked by a person who could have done the work themselves.
+- [[id:20261018-procedure-drift][Procedure drift]] — why an instruction nobody re-verifies becomes a stale rule
+  (damage #3 above).
+- [[id:20261015-spec-first-artifacts-in-git][Spec-first artifacts in git]] — the same shift from supervising the process
+  to reviewing a frozen artifact.
+- [[id:20261007-mentoring-downchain][Extreme Ownership DOWN]] — the human counterpart: prepare the environment, not the steps.
+
+* Sources
+
+- corpus/texts/20261020-intent-based-delegation-transcript.txt — the correction in
+  the owner's own words: the executor knows the method and the context; dictating
+  the steps is micromanagement; an independent leader holds clean outputs and does
+  not enter the internal process; the reference to *Turn the Ship Around* and its
+  "trust, but verify".
+  git ref: 5f16a97:corpus/texts/20261020-intent-based-delegation-transcript.txt
+  sha256: 79dacca8549b6c221f199c5ed0cae84c97ecc2db63f49287723e5e24bd3a17a7
+- Owner formulation (chat, 2026-10-20) — the three damages of micromanagement (two
+  authorities, an executor instead of an engineer, drift when the methodology
+  changes) and the rule that the review asks "does it stand against the intent",
+  not "did it do what I wrote". Not in the recording; recorded because it is the
+  owner's own reasoning.
+- corpus/generated/10-20 Implementace intent-based vedení a eliminace
+  mikromanagementu v projektu Jan bot-Summary.txt — a Plaud AI restatement, used
+  only to check the reading. Its operational section (templates, checkpoints,
+  metrics) is **assistant synthesis, not the owner's words**, and is not a source
+  of the claims in this object.
