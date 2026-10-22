@@ -207,6 +207,53 @@ handler), 405s for non-POST methods on `/chat`, `/health` hits, and 5xx. The
 `quota_<date>` doc undercounts relative to it: cache hits, input-bounds
 refusals, rate refusals and store errors never reach the quota check.
 
+## Known pitfalls (verified during the E3 apply, 2026-10-22)
+
+### The Artifact Registry push auth is a short-lived token, not a stored credential
+
+The `docker_registry_image.janbot` build pushes through the podman socket
+(`DOCKER_HOST=unix:///run/user/1000/podman/podman.sock`). The push fails with
+a bare `500 (Internal Server Error)` when the registry credentials the client
+hands the daemon have expired, and the error names nothing — the symptom hides
+the cause. Two independent credential paths are in play:
+
+- a manual `podman push` reads `~/.config/containers/auth.json` (`podman login`);
+- the Terraform docker provider reads `~/.docker/config.json` and forwards the
+  credentials as the request's `X-Registry-Auth` header — the podman compat
+  push endpoint trusts that header, not the local authfile.
+
+Both must be refreshed before any apply that rebuilds the image:
+
+```sh
+TOKEN=$(gcloud auth print-access-token)   # expires in ~1 hour
+printf 'oauth2accesstoken:%s' "$TOKEN" | base64 -w0 > /tmp/ar.b64
+# refresh ~/.docker/config.json auths entry for europe-central2-docker.pkg.dev
+```
+
+Diagnosing this cost one apply attempt that read as a registry outage and was
+actually credential expiry. A future improvement (not done here): bake a
+credential helper (`gcloud auth configure-docker` writes a helper entry) so
+the refresh is automatic.
+
+### CORS is a browser read-back policy, not an access control — the IP gate is the limiter
+
+State it explicitly, because it is easy to misread what the allowance defends.
+CORS checks **only the `Origin` header value**; it never inspects the caller's
+IP and cannot — any non-browser client (`curl`, a script, another server) sends
+an arbitrary `Origin` and the server cannot tell forgery from truth. Verified
+during live acceptance: a forged `Origin: https://jstavel.github.io` POST from
+`curl` was answered `200`. Therefore:
+
+- `JANBOT_CORS_ORIGINS` defends against **browser drive-by** — a page the
+  visitor opens cannot silently make the browser call `/chat` cross-origin
+  (the failed preflight stops the request before it is sent) and cannot read
+  the response.
+- It does **not** defend the endpoint itself: with `allUsers` ingress,
+  `POST /chat` is reachable by any client on the internet regardless of origin.
+- The actual per-IP perimeter is `FirestoreLimits` (rate window keyed on the
+  last trusted `X-Forwarded-For` hop) plus the global daily quota. CORS never
+  substitutes for them, and they never rely on CORS.
+
 ## Rollback
 
 A Terraform change, never a console flip: revert the commit (or remove the IAM
