@@ -349,6 +349,7 @@ def check(
 
 
 def write(target: Path, emission: dict[str, bytes]) -> int:
+    target.mkdir(parents=True, exist_ok=True)
     tree = read_target_tree(target)
     for name in sorted(set(tree) - set(emission)):
         if not (name == MANIFEST_NAME or name.endswith((".org", ".md"))):
