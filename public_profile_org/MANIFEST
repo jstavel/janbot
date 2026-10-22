@@ -1,6 +1,6 @@
 # public_profile_org extract manifest
-# source: ~/org @ 05b11a78049190838069b5f5c6ad123ae420a104 (corpus/)
-# files: 61 — 59 objects + public-proof-map.org + thesis-map.md
+# source: ~/org @ 339359e29484e2c57a1a546ccd8e19ae94571238 (corpus/)
+# files: 64 — 62 objects + public-proof-map.org + thesis-map.md
 # format: sha256sum, sorted by filename; MANIFEST does not list itself
 4374ae8803f82a5f906c5866748d50a3df3cc7eacefe24c67a393fa991a3a675  ai-era-paradigm.org
 2551275aac6836554850ac5ba529c4a21e41cf00dd91eb7e73ef5aeb84c883ad  ai-fast-failback.org
@@ -22,9 +22,11 @@ d7db6ceb3a511b40d16ae7f4654799dfcdfa8ca1bed9b9e3ac642a3ff7174775  edeposit.org
 efa2746c7ea893e0e53652be8e797fc27173953d14a61484fbbf345eb676b77e  entering-an-unknown-system.org
 25625fd4ccc6b3cbb3ee5f95d6987665d9d095c6ba26f24031e66ca0171af4e1  filesystem-recovery.org
 bbbab211026a8ad833cc9c0dfdb1df7551aaf89904d5dc7a58d232d54766e206  foundational-books.org
+609c750a9a3f784b59addcdfb82f2bc78d22fb9c67979bf70bf5315551ffa5b2  growth-in-any-role.org
 7c55d472cfeb4e0cc05ce9b6e79532d452b68cd3342d6c6220750466a532dcc0  gtd-trading-descriptive-phase.org
 f2e404d429672184d807446ce3bd685d9a2ca38d382ccc94008daa89b4d13084  infrastructure-guardrails.org
 7568ae3a85cec002db57468acd9708a44545d24b4e1f8884f1ca923622aeb11f  insights-health-monitoring.org
+ad7003e5be0987122b222cc05bd9a102935cba845f4ea789f0935d00a057c3e3  intent-based-delegation.org
 1e429d8897ba6c4f0e7c91f61478d83d7c729fb30ec3113d1d3e4b3ae8e30798  intranet-pattern.org
 9d2a17ea9d8f342b313cff345d16f2f2f0524153973055ea44a7acb5ab7e2bdb  janbot-ai-agent.org
 9c6867434b2f35a9dd974ead610a380630e5ce168daea3ec9d414983f50c89b6  janbot-value-proposition.org
@@ -59,6 +61,7 @@ a8811297e0b59652004bed2b8aaefd4a1c52b552bd5da567346195e5f7e0020a  spec-first-art
 12368ba30bb34af09c60eb4665fe02f45e5295e20e94063fc56ea5ae7e491779  spec-first-philosophy.org
 a8390ba50d839620e3f65fc2d472c5f4495bad01d477061abb2c3065f70097c1  spec-first-pitch.org
 01dde63cb2ed3f85cabccad078fc4720284e2c12045596ef2df9afac67b7902e  spyscope-hotreload.org
+6ff2d11ac41e89f242224292f16b3b3fd260e2c200ef00837b56480d22018500  style-references-as-intent.org
 5ff139dfa60e8beea9f422899c30d3552e0618a918461f9bace2cf0042e3f82a  substitutable-ai.org
 650bd6f2e3306b8b6b49786aafcae0bf3628d1a7c15a9af0346a46bd1e58a091  system-design.org
 4d598e8c5fc19280c4219bdf863d6ddd524b76c83cc1c3f8a538f73568211696  thesis-map.md
