@@ -205,7 +205,7 @@ resource "google_project_iam_member" "run_datastore" {
   member  = "serviceAccount:${google_service_account.run.email}"
 }
 
-# --- Cloud Run service (authenticated-only; no allUsers binding) ---
+# --- Cloud Run service (public ingress via the IAM binding below) ---
 resource "google_cloud_run_v2_service" "janbot" {
   name                = var.service_name
   location            = var.region
@@ -288,6 +288,11 @@ resource "google_cloud_run_v2_service" "janbot" {
       }
 
       env {
+        name  = "JANBOT_CORS_ORIGINS"
+        value = var.cors_origins
+      }
+
+      env {
         name = "OPENROUTER_API_KEY"
         value_source {
           secret_key_ref {
@@ -305,6 +310,15 @@ resource "google_cloud_run_v2_service" "janbot" {
       }
     }
   }
+}
 
-  # No google_cloud_run_v2_service_iam_member for allUsers -> authenticated-only.
+# --- Public ingress (ADR-008): the single non-authenticated caller grant ---
+# Terraform owns the flip. Pre-apply check (run-e3-public.md): the org
+# policies (iam.allowedPolicyMemberDomains and neighbours) can refuse an
+# allUsers member at apply time even when the plan is clean.
+resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
+  name     = google_cloud_run_v2_service.janbot.name
+  location = google_cloud_run_v2_service.janbot.location
+  role     = "roles/run.invoker"
+  member   = "allUsers"
 }

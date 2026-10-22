@@ -26,6 +26,7 @@ from collections.abc import Mapping
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import ResponseValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from janbot.api.contract import ChatRequest, ChatResponse, decline
@@ -44,6 +45,7 @@ from janbot.guardrails.limits import (
     FirestoreLimits,
     Limiter,
 )
+from janbot.guardrails.usage import UsageCounter
 from janbot.store import Embedder, VectorStore, default_embedder
 
 import dspy
@@ -126,6 +128,25 @@ class BodySizeLimitMiddleware:
             await _send_error(send, 413, "request body too large")
 
 
+class StrictPreflightCORSMiddleware(CORSMiddleware):
+    """The CORS allowance whose refused preflights carry no allow header.
+
+    Stock starlette echoes ``Access-Control-Allow-Origin`` on a 400 preflight
+    refusal whenever the origin itself is allowed (only the method or headers
+    failed). A browser already fails such a preflight on the status code; the
+    subclass makes the refusal header-exact — a refused preflight hands any
+    reader no ``Access-Control-Allow-Origin`` at all. Simple responses,
+    including the echoed-origin refusals (429/413/422) a browser caller must
+    be able to read, are untouched.
+    """
+
+    def preflight_response(self, request_headers):
+        response = super().preflight_response(request_headers)
+        if response.status_code >= 300:
+            del response.headers["access-control-allow-origin"]
+        return response
+
+
 def _client_ip(request: Request) -> str:
     """The caller's IP: the **last** ``X-Forwarded-For`` hop, normalized.
 
@@ -157,6 +178,7 @@ def create_app(
     lm_factory: LMFactory = dspy.LM,
     limiter: Limiter | None = None,
     cache: AnswerCache | None = None,
+    usage: UsageCounter | None = None,
     require_cache: bool = True,
 ) -> FastAPI:
     """Build the app: config -> store -> LM -> program, then wire the port.
@@ -171,6 +193,13 @@ def create_app(
     baked cache. Production leaves them unset: the Firestore limiter is built
     from ``JANBOT_FIRESTORE_PROJECT`` and the cache is loaded from
     ``JANBOT_CACHE_PATH``. There is no other ``/chat`` path around the layer.
+
+    ``usage`` is the test seam for the daily served/declined counters; when
+    the guardrail layer is on and no seam is passed, production builds
+    :class:`UsageCounter` from ``JANBOT_FIRESTORE_PROJECT``. Counters are
+    fail-open — an error is logged and never denies a request. A
+    ``JANBOT_CORS_ORIGINS`` value adds the CORS allowance as the outermost
+    middleware; unset means no CORS middleware at all.
 
     Raises:
         ValueError: if the resolved configuration is invalid, if
@@ -230,6 +259,8 @@ def create_app(
             cache = load_cache(config.cache_path)
         if limiter is None:
             limiter = FirestoreLimits.from_config(config)
+        if usage is None:
+            usage = UsageCounter.from_config(config)
         if config.model_mode == MODEL_MODE_PRODUCTION and limiter is None:
             raise ValueError(
                 "the guardrail layer is on in production but no Firestore "
@@ -246,15 +277,35 @@ def create_app(
                 "configured; refusing to start without the baked cache"
             )
 
-    app = FastAPI(title="JanBot")
+    # With allUsers ingress the interactive docs and the OpenAPI schema would
+    # be publicly callable; ADR-008's public posture is GET /health + POST
+    # /chat, so production mode serves none of them. Eval keeps the defaults.
+    production = config.model_mode == MODEL_MODE_PRODUCTION
+    app = FastAPI(
+        title="JanBot",
+        docs_url=None if production else "/docs",
+        redoc_url=None if production else "/redoc",
+        openapi_url=None if production else "/openapi.json",
+    )
     app.state.program = program
     app.state.cache = cache if guardrails_on else None
     app.state.limiter = limiter if guardrails_on else None
+    app.state.usage = usage if guardrails_on else None
     app.state.config = config
 
     if guardrails_on:
         app.add_middleware(
             BodySizeLimitMiddleware, max_bytes=config.max_body_bytes, path="/chat"
+        )
+    if config.cors_origins is not None:
+        # The ADR-008 allowance, outermost (added last): preflights are
+        # answered at this edge and never reach the route, and refusal
+        # responses from inside still carry the echoed origin.
+        app.add_middleware(
+            StrictPreflightCORSMiddleware,
+            allow_origins=list(config.cors_origins),
+            allow_methods=["POST"],
+            allow_headers=["content-type"],
         )
 
     def _program_decline_cause(exc: Exception, program) -> str:
@@ -290,9 +341,26 @@ def create_app(
     def chat(request: Request, payload: ChatRequest) -> ChatResponse:
         active_cache = app.state.cache
         active_limiter = app.state.limiter
+        active_usage = app.state.usage
+
+        def _record_reply(response: ChatResponse) -> ChatResponse:
+            # The sync handler runs on the threadpool, so the blocking
+            # Firestore write is safe. The middleware-emitted 413/400 stay in
+            # the decline log and never reach a counter.
+            if active_usage is not None:
+                if response.status == "answered":
+                    active_usage.record_served()
+                else:
+                    active_usage.record_declined()
+            return response
+
+        def _record_declined() -> None:
+            if active_usage is not None:
+                active_usage.record_declined()
 
         if guardrails_on and len(payload.question) > config.max_question_chars:
             log_decline("guardrail", "input-too-long")
+            _record_declined()
             raise HTTPException(
                 status_code=422,
                 detail=(
@@ -305,24 +373,26 @@ def create_app(
             decision = active_limiter.check_rate(_client_ip(request))
             if not decision.allowed:
                 log_decline("guardrail", decision.reason)
+                _record_declined()
                 raise _guard_denied(decision)
 
         if active_cache is not None:
             cached = active_cache.lookup(payload.question)
             if cached is not None:
-                return cached
+                return _record_reply(cached)
 
         if active_limiter is not None:
             decision = active_limiter.consume_quota()
             if not decision.allowed:
                 log_decline("guardrail", decision.reason)
+                _record_declined()
                 raise _guard_denied(decision)
 
         try:
-            return app.state.program(question=payload.question)
+            return _record_reply(app.state.program(question=payload.question))
         except (EmptyRetrieval, LowRelevance, UncitedAnswer) as exc:
             log_decline("program", _program_decline_cause(exc, app.state.program))
-            return decline(question=payload.question)
+            return _record_reply(decline(question=payload.question))
         except ValueError as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
         except HTTPException:

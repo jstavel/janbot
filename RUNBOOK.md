@@ -104,15 +104,19 @@ dirty `src/`, `public_profile_org/`, `cache/`, `Containerfile`, `pyproject.toml`
 
 ## 6. Live check — after every deploy
 
-The service is **authenticated-only**; use your own identity token.
+Since the E3 flip (ADR-008), `GET /health` and `POST /chat` are
+**unauthenticated** — no identity token is needed. Browser calls are allowed
+only from the Pages origin `https://jstavel.github.io` (`JANBOT_CORS_ORIGINS`;
+the `allUsers` `roles/run.invoker` grant is Terraform-owned). Before the flip
+is applied the service is authenticated-only and the calls below need
+`Authorization: Bearer $(gcloud auth print-identity-token)`.
 
 ```sh
-TOK=$(gcloud auth print-identity-token)
 URL=$(terraform -chdir=terraform output -raw service_url)
 
-curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $TOK" "$URL/health"
+curl -s -o /dev/null -w '%{http_code}\n' "$URL/health"
 
-curl -s -X POST "$URL/chat" -H "Authorization: Bearer $TOK" \
+curl -s -X POST "$URL/chat" \
   -H 'content-type: application/json' \
   -d '{"question":"Are you interested in this role?"}'
 ```

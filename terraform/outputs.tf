@@ -1,5 +1,5 @@
 output "service_url" {
-  description = "The deployed Cloud Run service URL (authenticated-only)."
+  description = "The deployed Cloud Run service URL (public since E3: GET /health and POST /chat are unauthenticated via the Terraform-owned allUsers invoker grant; browser calls allowed only from the Pages CORS origin)."
   value       = google_cloud_run_v2_service.janbot.uri
 }
 

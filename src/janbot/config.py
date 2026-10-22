@@ -39,6 +39,12 @@ reads a documented set of variables, each with a default:
   unset. Production mode requires it.
 - ``JANBOT_FIRESTORE_DATABASE`` -- Firestore native database id; default
   ``"(default)"``
+- ``JANBOT_CORS_ORIGINS`` -- comma-separated exact origins allowed to call
+  ``/chat`` from a browser (the ADR-008 CORS allowance); default unset, which
+  adds no ``CORSMiddleware`` at all. Each entry is trimmed and must be an
+  explicit ``http(s)://host[:port]`` origin — no ``*``, no path/query/fragment
+  (a trailing slash included), no userinfo — and any other shape fails fast
+  with a ``ValueError`` naming the variable. Blank = unset.
 
 Values are trimmed, and a blank or whitespace-only value counts as unset (so it
 takes the documented default). The model mode, the retrieval mode, the
@@ -69,6 +75,7 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlsplit
 
 MODEL_MODE_EVAL = "eval"
 MODEL_MODE_PRODUCTION = "production"
@@ -113,6 +120,7 @@ MAX_QUESTION_CHARS_ENV = "JANBOT_MAX_QUESTION_CHARS"
 MAX_BODY_BYTES_ENV = "JANBOT_MAX_BODY_BYTES"
 FIRESTORE_PROJECT_ENV = "JANBOT_FIRESTORE_PROJECT"
 FIRESTORE_DATABASE_ENV = "JANBOT_FIRESTORE_DATABASE"
+CORS_ORIGINS_ENV = "JANBOT_CORS_ORIGINS"
 
 DEFAULT_MODEL_MODE = MODEL_MODE_EVAL
 DEFAULT_MODEL_SNAPSHOT = "openai/gpt-4o-mini-2024-07-18"
@@ -160,6 +168,7 @@ class Config:
     daily_quota: int
     max_question_chars: int
     max_body_bytes: int
+    cors_origins: tuple[str, ...] | None
     firestore_project: str | None
     firestore_database: str
 
@@ -178,6 +187,26 @@ def _resolve_path(value: str, root: Path) -> Path:
     if not path.is_absolute():
         path = root / path
     return path.resolve()
+
+
+def _valid_origin(origin: str) -> bool:
+    """True only for an explicit ``http(s)://host[:port]`` origin.
+
+    ``*`` (standalone or as a host) would make Starlette's ``CORSMiddleware``
+    allow every origin; a path, query, fragment or trailing slash is not an
+    origin; userinfo is never part of one.
+    """
+    if "*" in origin:
+        return False
+    parts = urlsplit(origin)
+    return (
+        parts.scheme in ("http", "https")
+        and parts.netloc != ""
+        and "@" not in parts.netloc
+        and parts.path == ""
+        and parts.query == ""
+        and parts.fragment == ""
+    )
 
 
 def load_config(env: Mapping[str, str] | None = None) -> Config:
@@ -355,6 +384,24 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
         _clean(source.get(FIRESTORE_DATABASE_ENV)) or DEFAULT_FIRESTORE_DATABASE
     )
 
+    raw_cors_origins = _clean(source.get(CORS_ORIGINS_ENV))
+    cors_origins: tuple[str, ...] | None = None
+    if raw_cors_origins is not None:
+        origins: list[str] = []
+        for entry in raw_cors_origins.split(","):
+            origin = entry.strip()
+            if not origin:
+                continue
+            if not _valid_origin(origin):
+                raise ValueError(
+                    f"{CORS_ORIGINS_ENV}={raw_cors_origins!r} holds {origin!r}; "
+                    "each entry must be an explicit origin of the form "
+                    "'https://host[:port]' — no '*', no path/query/fragment "
+                    "(including a trailing slash), no userinfo"
+                )
+            origins.append(origin)
+        cors_origins = tuple(origins) or None
+
     corpus_value = _clean(source.get(CORPUS_PATH_ENV)) or DEFAULT_CORPUS_PATH
     index_value = _clean(source.get(INDEX_PATH_ENV)) or DEFAULT_INDEX_PATH
     program_value = _clean(source.get(PROGRAM_PATH_ENV))
@@ -389,6 +436,7 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
         daily_quota=daily_quota,
         max_question_chars=max_question_chars,
         max_body_bytes=max_body_bytes,
+        cors_origins=cors_origins,
         firestore_project=firestore_project,
         firestore_database=firestore_database,
     )
