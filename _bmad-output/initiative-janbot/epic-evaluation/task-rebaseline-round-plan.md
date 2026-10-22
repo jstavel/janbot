@@ -3,14 +3,14 @@ title: 'Re-baseline round — extract procedure, index, pre-registered gate, new
 type: 'feature'
 ticket: ''
 created: '2026-10-22'
-status: 'in-progress'
+status: 'built'
 baseline_revision: '63a55cf'
 route: 'full'
 route_source: 'auto'
 risk: 'high'
-review: ''
-review_source: ''
-lenses_ran: []
+review: 'quick'
+review_source: 'pinned'
+lenses_ran: ['quick']
 review_loop_iteration: 0
 context: []
 ---
@@ -65,12 +65,12 @@ context: []
 
 **Execution (dependency order):**
 - [x] `tools/extract_public_profile.py` + translations + `--check` green against the `05b11a7` fixture — the deficit closes. (commits `c8279d5` + mkdir fix; fixture 62 files byte-equal; edge-case matrix verified on a synthetic mini-corpus)
-- [x] Regenerated extract + MANIFEST at pin `339359e`; committed (the corpus commit the cache pins). (janbot `1aae1d8`; 62 objects + 2 generated = 64 content files + MANIFEST)
+- [x] Regenerated extract + MANIFEST at pin `339359e`; committed. (branch janbot `1aae1d8`; 62 objects + 2 generated = 64 content files + MANIFEST; the cache artifact's `corpus_commit` is the repo HEAD at cache-run time, `a7752a0…`)
 - [x] Index rebuilt; chunk count + identity recorded; startup scope guard passes. (440 chunks / 63 sources, identity `930e0a3d…`, path-independent, `out_of_scope_sources` empty)
 - [x] `gate-rule.md` n=55 pre-registration committed and **owner-signed** before the run. (committed `7161460`; signed 2026-10-22 before measuring, line recorded in `gate-rule.md`)
 - [x] Reference run + artifact + registration + round note; historical refs named. (run `e1a0fa4e…`, artifact `run-e1a0fa4e-output.txt`, citation 34/55, faithfulness 47/55; `gate-rule.md` repointed; `156b5d1a`/`c6ced445` historical)
 - [x] Cache regenerated; Containerfile repointed; `build_cache` validation green. (run `9f51134f…`, 55 entries, dataset `c4786e1c…`, corpus `a7752a0…`)
-- [ ] Verified `terraform plan` → **owner applies** → cold start measured and recorded.
+- [ ] Verified `terraform plan` → **owner applies** → cold start measured and recorded. (plan verified: image replace + rate 10→20 / cpu-boost off→on in place, `Plan: 1 add / 1 change / 1 destroy`; **apply + cold start are owner-run and pending**)
 - [x] gemini re-run on the new instrument; measurement note supersession recorded. (run `3a7d8151…`, artifact `run-3a7d8151-output.txt`; fails the old "no regression on all four" rule: refusal_pass 14/14 → 13/14, citations dip 34 → 32; routing untouched)
 
 **Acceptance Criteria:**
@@ -109,13 +109,27 @@ context: []
 
 ## Review Triage Log
 
+- **gate-rule pointer direction (`gate-rule.md` Reference/re-registration)** — `medium` bad outcome: a reader follows "below" for the floors and lands on the historical n=49 derivation. Verified: the n=55 floors section followed the Reference section, while the text said "above"/"below" the wrong way. **patch applied:** pointers corrected and the pre-registration wording made past-tense.
+- **`c6ced445` provenance collapsed with `156b5d1a`** — `medium` bad outcome: a future reader attributes `a8bd69dc…`/106 items/n=49/417 chunks to a run that was `1c3864bd…`/91 items/n=44/~291 chunks (epic ledger). **patch applied:** the two historical runs are now stated separately.
+- **"Breadth gates optimization" present tense stale** — `medium` bad outcome: the rule claims the val is 59/49 when the current reference is 69/55. **patch applied:** updated to the current instrument and marked when it changed.
+- **Sign-off claimed "recorded before, never retroactively"** — `medium` bad outcome: git shows the "signed" line first committed with the registration (`7e2d69e`), after the run; the claim as written is not evidenced by the repository. The substantive freeze is intact (`7161460` predates the run). **patch applied:** wording now cites the frozen threshold commit and explicitly says commit time does not prove the ordering.
+- **Round note §4 says sign-off pending while §5 says signed** — `low` contradiction. **patch applied:** §4 now states the approval and the threshold-commit evidence.
+- **Docs pin unmerged branch SHAs against the README rule** — `medium` bad outcome: SHA citations become dangling after a rebase-merge (README "Merging"). The durable pins are run ids/dataset sha/`~/org` commit. **patch applied:** round note carries the pinning rule and marks janbot SHAs as branch provenance; cache artifact `corpus_commit` is described as the repo HEAD at run time.
+- **RUNBOOK §3 current-state index identity stale (417 / `b36feac2`)** — `medium` bad outcome: an operator comparing the deployed artifact to the documented identity sees a false mismatch. **patch applied:** `930e0a3d…`, 440 chunks / 63 sources.
+- **Epic registration ledger missing `e1a0fa4e`** — `medium` bad outcome: the ledger's "last registration" remains `156b5d1a`, which this change declares historical. **patch applied:** REFERENCE REGISTERED entry E appended.
+- **Plan Design Note overclaims the demo fix** — `medium` bad outcome: the plan says the named question now cites the new objects; the round note and a live k=4 query show it still ranks `spec-first-pitch`/`procedure-drift`. **patch applied:** the Design Note now states "citable" vs "moves the named question" honestly.
+- **Czech invariant checks only TITLE/SYNOPSIS; translations keep Czech tags; an English-title/Czech-body object would byte-copy** — `low` for the tags (metadata, no everyday retrieval harm; changing them now would invalidate the proven corpus/cache chain), `false` for the body case (no such object is reachable in this corpus; the frozen contract guards TITLE/SYNOPSIS). **rejected** (tags: fix exceeds a direct correction and would force a re-baseline; body: claim not reachable).
+- **`object_file_at` rejects an object dir with an auxiliary file** — `low` latent bug: `len(listing) != 1` contradicted the "one .org file" message; all 72 dirs happen to have one entry. **patch applied:** condition now counts `.org` entries; a test covers an auxiliary file.
+- **"Extract commit the cache pins" vs cache metadata `a7752a0`** — `low` doc inconsistency. **patch applied:** plan/round note now distinguish the extract commit from the cache artifact's `corpus_commit` (repo HEAD at run time).
+- **Deploy/cold-start acceptance unmet** — `defer` (owner-run): the plan and task designate the apply and cold-start measurement as owner-run; the verified plan is recorded and the checkbox stays open. Not a defect caused by this change.
+
 ## Design Notes
 
 - **Extract conventions discovered (the script encodes them, they are not invented):** extract filename = the object's internal filename (no rename table needed — the directory carries the dated id, e.g. `20261007-spec-first-evolution/spec-first-philosophy.org`); English extract files are **byte-identical** to their objects (verified across originals and the re-filed five at both `05b11a7` and `339359e`); `:ID:` stays the object's id, so citations and the golden dataset's `expected_sources` are filename-stable.
 - **Why pins are injected, not hand-written:** the pin is a mechanical function of (object file, pinned commit); a hand-written pin is a second place to drift. When an object changes, the pin breaks — the README's named "translation drift" risk, caught mechanically.
 - **Threshold arithmetic at n=55 (p from the outgoing reference `156b5d1a`, the only honest pre-measurement p):** citation p=33/49=0.6735 → σ=√(0.6735·0.3265/55)≈0.0632, 1.5σ≈0.0948 → 5/55=0.0909 is inside it, 6/55=0.1091 exceeds it → **accept ≥6, regress ≤5**; faithfulness p=45/49=0.9184 → σ≈0.0369, 1.5σ≈0.0554 → 3/55=0.0545 is inside it, 4/55=0.0727 exceeds it → **accept ≥4, regress ≤3**. If the new reference's own p shifts materially, that is recorded — the frozen floors still govern this round.
 - **Cost:** the reference run (69 answers on the locked snapshot + 55 judge calls) and the gemini re-run (69 + 55) are paid but small; the key is present locally.
-- **The demo's visible fix:** the index gains `growth-in-any-role`, `intent-based-delegation` (and `style-references-as-intent`), so *"Do you know agentic workflow?"* can cite the objects that describe the work.
+- **The demo's visible change, stated honestly:** the index gains `growth-in-any-role`, `intent-based-delegation` (and `style-references-as-intent`), so those objects are now citable. The named question *"Do you know agentic workflow?"* still ranks pre-existing sources (`spec-first-pitch.org`, `procedure-drift.org`) at hybrid/chunks k=4 — the dataset item's `expected_sources` are unchanged, so this round does not move that specific question.
 
 ## Verification
 

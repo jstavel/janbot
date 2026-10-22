@@ -62,7 +62,7 @@ uv run python -m janbot.ingest --index /tmp/index-b
 diff -u /tmp/index-a/index-identity.json /tmp/index-b/index-identity.json
 ```
 
-The identity the current corpus produces is `b36feac2…`, 417 chunks, model
+The identity the current corpus produces is `930e0a3d…`, 440 chunks (63 sources), model
 `all-MiniLM-L6-v2@913d7300…`. To check the **deployed** artefact rather than a local build,
 read the file out of the image:
 

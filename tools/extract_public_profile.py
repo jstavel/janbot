@@ -218,7 +218,7 @@ def object_file_at(org: Path, commit: str, object_id: str) -> tuple[str, bytes]:
         org, "ls-tree", "--name-only", f"{commit}:{OBJECTS_PREFIX}{object_id}"
     ).decode("utf-8").split()
     names = [name.split("/")[-1] for name in listing if name.endswith(".org")]
-    if len(listing) != 1 or len(names) != 1:
+    if len(names) != 1:
         raise ExtractError(
             f"object {object_id} must contain exactly one .org file at {commit[:7]}; "
             f"found {listing!r}"

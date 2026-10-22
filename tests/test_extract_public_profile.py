@@ -253,3 +253,14 @@ def test_manifest_count_matches_reality_and_excludes_itself(
     assert "MANIFEST" not in listed
     assert len(listed) == len(files) - 1
     assert "alpha.org" in listed and "beta.org" in listed
+
+
+def test_auxiliary_file_beside_the_object_is_ignored(
+    extract_module, org_repo, translations
+):
+    repo, commit = org_repo
+    aux = repo / "corpus" / "objects" / "20260101-alpha" / "notes.txt"
+    aux.write_text("auxiliary, not an object\n", encoding="utf-8")
+    commit = _commit(repo, "add auxiliary file")
+    files, _ = extract_module.emit(repo, commit, translations)
+    assert files["alpha.org"] == ALPHA.encode("utf-8")

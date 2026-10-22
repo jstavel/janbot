@@ -54,17 +54,17 @@ chunks / 63 sources**; val `should_refuse` 14. Measured: `citation_correctness`
 (n=14), `spurious_refusal_rate` 2/55. Diagnostics: `hard_error__n` = 0,
 `in_corpus_decline__n` = 2, `judge_failure__n` = 0, `non_answered__n` = 2.
 Artifact: `run-e1a0fa4e-output.txt`. The frozen floors for this reference are the
-n = 55 pre-registration above (**citation accept ≥6 / regress ≤5; faithfulness
-accept ≥4 / regress ≤3**). `156b5d1a` and `c6ced445` are **historical**: older
-corpus (59-object extract, 417 chunks), older dataset (`a8bd69dc…`, 106 items)
-and older population (n = 49), so their absolute claim-quality values are not
-comparable to this run. It is a **re-baseline, not a gate verdict**; the
+n = 55 pre-registration **below** (**citation accept ≥6 / regress ≤5; faithfulness
+accept ≥4 / regress ≤3**). `156b5d1a` is **historical** (corpus `05b11a7`,
+59-object extract, 417 chunks; dataset `a8bd69dc…`, 106 items; n = 49) and
+`c6ced445` is older still (dataset `1c3864bd…`, 91 items, 44 gate-eligible,
+~291 chunks). Their absolute claim-quality values are not comparable to this run. It is a **re-baseline, not a gate verdict**; the
 principle (1.5σ, symmetric floor) is unchanged.
 
-## Re-registration pending measurement — 2026-10-22 (n = 55, frozen before any run)
+## Re-registration — 2026-10-22 (n = 55, thresholds frozen before the run)
 
-The instrument moved under the reference, so the next reference is measured on a
-new instrument and its thresholds are frozen **now**, before any measurement:
+The instrument moved under the reference, so the reference was measured on a new
+instrument and its thresholds were frozen **before** that measurement:
 
 - **Corpus re-extract at `339359e`** (`~/org`, view commit): 62 objects (the
   view's full selection) + `public-proof-map.org` + `thesis-map.md`; the three
@@ -92,13 +92,14 @@ new instrument and its thresholds are frozen **now**, before any measurement:
   metric, judge failure = faithfulness failure. If the new reference's own p
   shifts materially from `156b5d1a`'s, that is recorded — these frozen floors
   still govern this round.
-- **`156b5d1a` and `c6ced445` are historical from here on** — older corpus
-  (59-object extract, 417 chunks), older dataset (`a8bd69dc…`, 106 items) and
-  older population (n = 49); not comparable to runs on this instrument.
-- **Owner sign-off: signed 2026-10-22 before the reference run.** The owner
-  approved the plan that carries this pre-registration (`approve and continue`),
-  so these frozen thresholds govern the run below; the signature is recorded
-  here before the measurement, never retroactively.
+- **`156b5d1a` and `c6ced445` are historical from here on** — `156b5d1a` on
+  dataset `a8bd69dc…` (106 items, n = 49) and 417 chunks; `c6ced445` on dataset
+  `1c3864bd…` (91 items, n = 44) and ~291 chunks; neither is comparable to runs
+  on this instrument.
+- **Owner sign-off: given with the plan approval (2026-10-22), before the
+  reference run.** The frozen threshold commit `7161460` predates the run; this
+  sign-off line was committed with the registration, so the repository's commit
+  time does not by itself prove the ordering — the threshold commit does.
 
 ## Metrics
 
@@ -162,12 +163,13 @@ current reference are the n = 55 pre-registration above.*
 ## Breadth gates optimization
 
 Detecting a ~5% effect needs val ≈ 100 items; until then **"no decision" is the
-honest expected outcome** of a stage, not a failure. **Breadth has arrived** (2026-10-15):
-the val is now **59 items (49 gate-eligible)** across the ten-class failure taxonomy, and
-the N confirmation on the previous 54-item val passed (citation-moved 9 under hybrid vs
-the floor 5); that confirmation is carried forward as the breadth evidence — it was **not**
-re-measured on the new val. The gate is now **decidable** for a lever that moves
-`citation_correctness`.
+honest expected outcome** of a stage, not a failure. **Breadth has arrived**: as of
+the 2026-10-22 re-baseline the val is **69 items (55 gate-eligible)** across the
+ten-class failure taxonomy (it was 59/49 at the 2026-10-20 reference), and the N
+confirmation on the earlier 54-item val passed (citation-moved 9 under hybrid vs
+the floor 5); that confirmation is carried forward as the breadth evidence — it was
+**not** re-measured on each new val. The gate is **decidable** for a lever that
+moves `citation_correctness`.
 
 Threshold note on record: 2σ would be off-spec — chosen after the fact — and would
 weaken the pre-registration; 1.5σ is the value entry 18 pre-registered, re-instantiated

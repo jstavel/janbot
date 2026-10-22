@@ -1,8 +1,8 @@
 # Re-baseline round 2026-10-22 — one corpus state, one index, one pre-registered gate
 
 **Task:** `task-rebaseline-round.md` · **Plan:** `task-rebaseline-round-plan.md` ·
-**Status:** extract, index, pre-registration, reference and cache **done**;
-deploy (owner-run) and the gemini re-measure **pending** (see §Pending).
+**Status:** extract, index, pre-registration, reference, cache and the gemini
+re-measure **done**; the deploy (owner-run) is **pending** (see §Pending).
 
 The three divergences this round closes: the `~/org` view (`339359e`) was ahead of
 the extract, the 120-item dataset (`c4786e1c…`) was ahead of the baked cache
@@ -45,11 +45,18 @@ Commits: `c8279d5` (the script), plus a `--write` mkdir fix.
 
 62 objects (the view's full selection) + `public-proof-map.org` + `thesis-map.md`
 = **64 content files**, + `MANIFEST` (pin `339359e29484e2c57a1a546ccd8e19ae94571238`,
-count line `# files: 64 — 62 objects + …`). Committed as janbot **`1aae1d8`** —
-the corpus commit the cache will pin. The 59 previously extracted objects are
+count line `# files: 64 — 62 objects + …`). Committed on the branch as janbot **`1aae1d8`**. The cache artifact's
+`corpus_commit` is the repository HEAD at cache-run time (`a7752a0…`, which
+contains the extract); the durable content pin is the MANIFEST's `~/org` commit
+`339359e`. The 59 previously extracted objects are
 byte-identical to their objects at both `05b11a7` and `339359e` (verified); the
 two generated sections are byte-identical to the previous round (the view's
 Thesis map and Public proof map sections did not change between the pins).
+
+**Pinning rule (README):** the janbot commit SHAs in this note are branch
+provenance for review and will be rewritten on merge; per the README they are
+**not** durable references. The durable pins are the `~/org` commit `339359e`,
+the dataset sha `c4786e1c…`, the run ids, and the cache artifact's own metadata.
 
 **The three Czech objects enter as pinned English translations:**
 `growth-in-any-role.org`, `intent-based-delegation.org`,
@@ -99,16 +106,20 @@ the outgoing reference's own p projected to n = 55 —
 6/55 = 0.1091 exceeds it), **faithfulness accept ≥4 / regress ≤3** (3/55 = 0.0545
 ≤ 0.0554 — exactly the noise-carry the task warns about; the frozen n=49 floor
 ≤2 must not be carried forward). Principle untouched: 1.5σ per metric at the
-reference's own p, symmetric floor, fixed populations. `156b5d1a` and `c6ced445`
-are stated historical for the new instrument (older corpus/dataset/population).
+reference's own p, symmetric floor, fixed populations. `156b5d1a` is stated historical for the new instrument (corpus `05b11a7`,
+dataset `a8bd69dc…`, 106 items); `c6ced445` is older still (dataset `1c3864bd…`,
+91 items).
 
-**Owner sign-off: pending** — required before the reference run is measured; the
-signature is appended to the pre-registration section, never retroactively.
+**Owner sign-off:** given with the plan approval (`approve and continue`) before
+the reference run; the frozen threshold commit `7161460` predates the run. The
+sign-off line was committed with the registration, so the commit time does not
+by itself prove the ordering — the threshold commit does.
 
 ## 5. The new reference is measured and registered
 
-The owner signed the n = 55 pre-registration before any measurement (recorded in
-`gate-rule.md`, not retroactively). Reference run:
+The owner approved the plan carrying the n = 55 pre-registration before any
+measurement; the frozen threshold commit `7161460` predates the run. Reference
+run:
 
 ```sh
 JANBOT_JUDGE_MODEL=anthropic/claude-haiku-4.5 uv run python -m janbot.eval --split val
