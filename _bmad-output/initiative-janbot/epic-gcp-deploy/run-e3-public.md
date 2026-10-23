@@ -292,6 +292,14 @@ curl -sS -o /dev/null -w '%{time_total}\n' -X POST "$SERVICE_URL/chat" \
 round); post-apply (with `startup_cpu_boost`): *pending the owner's apply —
 record the number here*.
 
+**Measured (owner, 2026-10-23, digest `80b39d1c…`, rate 20 live):** cold
+(baked question, cache hit, after ~16 min idle) **6.0 s**, warm control
+**1.0 s** → cold-start penalty **≈ 5 s** (pre-flip ≈ 40–50 s — roughly an
+8–10× reduction). One request, one repeat; the note above stands: an anecdote
+until repeated, but both repetitions landed near 6 s (a fresh-question run the
+same morning read 10.6 s *including* the model call, consistent with warm
+latency ~10.5 s + ~0 penalty, i.e. the bound, not the isolated number).
+
 Note: the live-acceptance row-1 probe above ("11 rapid requests") was written
 at rate 10; with the new default the N+1th refusal is the **21st** request in
 the window.
