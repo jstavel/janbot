@@ -172,7 +172,7 @@ gcloud logging read \
 
 | # | probe | expected | attribution |
 |---|---|---|---|
-| 1 | 11 rapid requests from one IP | the N+1th is **429** `{"detail":"too many requests"}` | `{"event":"decline","component":"guardrail","cause":"rate_limited"}` |
+| 1 | 21 rapid requests from one IP | the 20th is served; the 21st is **429** `{"detail":"too many requests"}` | `{"event":"decline","component":"guardrail","cause":"rate_limited"}` |
 | 2 | a 2 500-char question | **422** with the maximum-length detail | `cause=input-too-long`; no model call |
 | 3 | a 9 KB body | **413** `request body too large` | `cause=body-too-large`; **not** in the usage counters (pre-route) |
 | 4 | *"Are you interested in this role?"* | **answered** | Amendment 5 holds live on the public revision; no decline line |
@@ -189,10 +189,12 @@ are the per-IP rate limit + global quota (ADR-009 control 7); that is why rows
 
 Three flips ride one revision: the honest refusal header (`Retry-After`), the
 rate default 10 → 20, and `startup_cpu_boost`. The verified plan for the round
-shows **exactly**: 1 replace — `docker_registry_image.janbot` (the `src`
-trigger's new hash: `limits.py` + `main.py` changed), 1 update in place —
-`google_cloud_run_v2_service.janbot` (new digest + `JANBOT_RATE_LIMIT` 10 → 20 +
-`startup_cpu_boost`), **0 destroy**. Anything else is a finding.
+names these changes: `docker_registry_image.janbot` replaced (the `src`
+trigger's new hash: `limits.py` + `main.py` changed), and
+`google_cloud_run_v2_service.janbot` updated in place (new digest +
+`JANBOT_RATE_LIMIT` 10 → 20 + `startup_cpu_boost`). Anything else is a finding;
+the measured action counts — including the state-only image-object destroy — are
+recorded in the findings below.
 
 ### Why the per-IP rate limit is 20 / 10 min (and what risk that carries)
 
@@ -300,9 +302,6 @@ until repeated, but both repetitions landed near 6 s (a fresh-question run the
 same morning read 10.6 s *including* the model call, consistent with warm
 latency ~10.5 s + ~0 penalty, i.e. the bound, not the isolated number).
 
-Note: the live-acceptance row-1 probe above ("11 rapid requests") was written
-at rate 10; with the new default the N+1th refusal is the **21st** request in
-the window.
 
 ## Usage visibility (no redeploy)
 

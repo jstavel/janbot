@@ -91,8 +91,9 @@ uv run python -m janbot.eval --split val
   top_k 4, retrieval hybrid/chunks, relevance threshold 0.26, output guard on,
   program baseline, dataset sha `a8bd69dc…` — identical to `156b5d1a`'s params
   in every field except `model_snapshot`.
-- 59 val items: 49 non-refusal answered (1 declined in-corpus), 10 should-refuse
-  declined pre-LM; 48/49 judged, 0 judge failures, 0 hard errors.
+- 59 val items: 49 non-refusal items → 48 answered, 1 declined in-corpus (the
+  run's single spurious refusal), 10 should-refuse declined pre-LM; 48/49
+  judged, 0 judge failures, 0 hard errors.
 
 ## The four metrics vs the reference (`156b5d1a`)
 
@@ -104,11 +105,12 @@ uv run python -m janbot.eval --split val
 | spurious_refusal_rate (n=49) | 0.0204 | **0.0204** | 0 |
 
 Side observation, recorded for completeness (not among the four compared
-metrics, which the task's decision rule fixes): citation_correctness moved
-0.6735 → 0.6327 and citation_precision 0.6769 → 0.6071 on the same 49 items —
-the citation-noise concern the task file raised ("What is JanBot?" citing an
-unrelated org file) shows up here, mildly. Retrieval metrics are identical
-(same corpus/index/program).
+metrics, which the task's decision rule fixes): on the same 49 items
+citation_correctness moved 0.6735 → 0.6327, citation_precision 0.6769 → 0.6071
+and public_references 0.9796 → 0.9592 (48/49 → 47/49 items) — the citation-noise
+concern the task file raised ("What is JanBot?" citing an unrelated org file)
+shows up here, mildly. Retrieval metrics are identical (same
+corpus/index/program).
 
 ## Conclusion
 

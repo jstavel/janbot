@@ -8,9 +8,9 @@ baseline_revision: '440b6d3'
 route: 'full'
 route_source: 'auto'
 risk: 'medium'
-review: ''
-review_source: ''
-lenses_ran: []
+review: 'quick'
+review_source: 'pinned'
+lenses_ran: ['quick']
 review_loop_iteration: 0
 context: []
 ---
@@ -134,6 +134,14 @@ context: []
 ## Plan Change Log
 
 ## Review Triage Log
+
+Quick lens, 2026-10-22. Five findings: one refuted, four patched; nothing deferred.
+
+- **Runbook intro asserted "0 destroy" while its own findings section records the measured `1 to destroy` — low — patch (fixed).** Verified both paragraphs in the same section; the intro now names the three changes without a destroy count and defers the counts to the findings (the frozen PLAN row's "anything else is a finding" clause was satisfied — both extras are recorded as findings with their explanations).
+- **`Retry-After` is second-quantized, so two refusals inside one wall-clock second carry equal headers — false.** Refuted as a defect: the header is `boundary − floor(now)`, which never promises a slot earlier than the boundary (honest by construction), `Retry-After` is an integer header by HTTP spec, and the widget rounds to minutes — both calls render the same "about N minutes". The strictly-smaller acceptance describes calls in different seconds of one window, which `test_two_refusals_in_one_window_shrink_the_header` exercises (100 s apart).
+- **Live-acceptance row 1 still said "11 rapid requests" — medium — patch (fixed).** Verified the table row contradicted the new rate default (the 11th would be served at 20/10min), so the owner-run table could not produce the 429 it claims; row 1 now reads 21 rapid requests (20th served, 21st → 429) and the redundant trailing note is gone.
+- **The measurement note's run counts contradicted themselves ("49 non-refusal answered (1 declined in-corpus)" vs "48/49 judged") — low — patch (fixed).** Reworded to 49 non-refusal items → 48 answered, 1 in-corpus decline (the run's single spurious refusal), 48/49 judged.
+- **The side observation claimed completeness but omitted `public_references` (0.9796 → 0.9592, 48/49 → 47/49) — low — patch (fixed).** Verified in MLflow (`156b5d1a` vs `effd4854`); the changed-metric list now includes it, so the completeness claim is true.
 
 ## Design Notes
 
