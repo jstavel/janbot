@@ -4,6 +4,59 @@
 measurement producing a decision input — production routing is untouched, and
 this note is not a diff.
 
+## Re-measure on the re-based instrument (2026-10-22) — supersedes `effd4854`
+
+The earlier measurement below (`effd4854`) was taken on the **old** instrument
+(corpus `05b11a7`, 417 chunks; dataset `a8bd69dc…`, n=49). The re-baseline round
+moved that instrument, so `effd4854` is **superseded** and kept only as history.
+The current measurement is on the new instrument and is compared to the new
+registered reference `e1a0fa4e`.
+
+```sh
+JANBOT_MODEL_SNAPSHOT=google/gemini-2.5-flash \
+JANBOT_JUDGE_MODEL=anthropic/claude-haiku-4.5 \
+uv run python -m janbot.eval --split val
+```
+
+- **Run id:** `3a7d815193c9410e90fa80dc62a3ab17`, artifact
+  `epic-evaluation/run-3a7d8151-output.txt`.
+- **Config:** eval mode, snapshot `google/gemini-2.5-flash`, judge pinned
+  `anthropic/claude-haiku-4.5`, `chunks`, k=4, hybrid, θ=0.26,
+  `program=baseline`, `output_guard=on`; corpus `339359e`, index 440/63;
+  dataset `c4786e1c…` (120 items; val 69, `should_refuse` 14, **n=55**).
+- **Diagnostics:** 0 hard errors, 1 in-corpus decline (item 41), 0 judge
+  failures, 1 should-refuse item answered.
+
+### The four compared metrics vs the new reference (`e1a0fa4e`, n=55)
+
+| metric | `e1a0fa4e` (gpt-4o-mini) | `3a7d8151` (gemini-2.5-flash) | delta |
+|---|---|---|---|
+| faithfulness | 0.8545 (47/55) | **0.9273 (51/55)** | +4 items |
+| answer_coverage | 0.9636 (53/55) | **0.9818 (54/55)** | +1 item |
+| refusal_pass_rate | 1.0000 (14/14) | **0.9286 (13/14)** | −1 item |
+| spurious_refusal_rate | 0.0364 (2/55) | **0.0182 (1/55)** | −1 item (better) |
+
+Side observation (not among the four, recorded because the decision input needs
+it): `citation_correctness` 0.6182 → **0.5818** (34 → 32 of 55) and
+`citation_precision` 0.6348 → **0.5909** — the citation dip persists on the new
+instrument. Retrieval metrics are identical (same corpus/index/program).
+
+### Conclusion
+
+The re-measure is **not a clean "no regression on all four"**: faithfulness,
+coverage and spurious refusals improve, but `refusal_pass_rate` falls by one item
+(gemini answered *"Have you used Apache Spark or Airflow for data pipelines?"*, a
+`should_refuse` item), and citations dip by two items. The production change is
+**not proposed** on this evidence; production routing stays on `openrouter/auto`
+(AD-5). The citation-precision dip and the one refusal regression belong in any
+future routing decision's inputs.
+
+## Historical measurement (2026-10-22, old instrument) — superseded `effd4854`
+
+The rest of this note is the earlier record, kept verbatim as history. Its
+comparison target `156b5d1a` is now historical too (older corpus,
+dataset, population).
+
 ## Comparison target — supersession recorded on purpose
 
 **The comparison target is `156b5d1a`** — the registered current reference —

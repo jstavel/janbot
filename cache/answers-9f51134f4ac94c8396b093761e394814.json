@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "run_id": "fc430d3e17714457b896bafdac9cc1ac",
-    "date": "2026-10-20",
+    "run_id": "9f51134f4ac94c8396b093761e394814",
+    "date": "2026-10-22",
     "model_mode": "production",
     "requested_model": "openrouter/auto",
     "routed_models": [
@@ -12,18 +12,18 @@
       "z-ai/glm-5.3-flash"
     ],
     "dataset": "eval/golden_dataset.yaml",
-    "dataset_sha256": "a8bd69dc10f0c9da5dc1b4d0c9639908c75323b7ced9671a0266a7d33ac11c90",
-    "corpus_commit": "bf0402369ab0820b7b180876f45d713c7e944e42",
+    "dataset_sha256": "c4786e1c9e3f6f5c677b3ecbbee8fbc03ff19628b9bcf374aea958fc9cd9af20",
+    "corpus_commit": "a7752a0981e9c73c7f52977ff2f0cd72050541c8",
+    "corpus_sha256": "40966e9787cdca961c7de0b47d2dfda0ef811067de04c0e1d3c035cd6b0a8204",
     "output_guard": "on",
-    "split": "val",
-    "corpus_sha256": "2cc21360c28f19eae7d635fb5adf860a18067950ba2a71b12bd331495f469670"
+    "split": "val"
   },
   "entries": [
     {
       "question": "Why did you leave your last job after so many years there?",
       "response": {
         "status": "answered",
-        "answer": "After about a decade in a high-trust role where I felt aligned with the work, there was a leadership change, and I also went through a personal crisis. It made me reflect on what I wanted next, and I decided it was the right time to grow elsewhere. I’m grateful for what I learned during those years, and I see the move as a growth decision rather than a failure story.",
+        "answer": "After about a decade, the leadership changed and I was also dealing with a personal crisis. The role had been a strong, high-trust fit for many years, but the circumstances changed, and I decided it was time to grow elsewhere. It was a thoughtful transition, not a reflection of the value of the years I spent there.",
         "citations": [
           {
             "source": "departure-narrative.org"
@@ -116,7 +116,7 @@
       "question": "How do you use AI in your day-to-day work?",
       "response": {
         "status": "answered",
-        "answer": "I use AI in a spec-first workflow: I set the direction and constraints, break work into small steps, and review the outputs rather than handing over responsibility. I check the artifacts and evidence, not just whether I trust the AI, so its work stays verifiable. To keep my understanding aligned with what it produces, I also use a daily close: defend one decision against the ADR and run one runbook command by hand. The goal is for AI to help build while I remain the architect and take responsibility for the result.",
+        "answer": "I use AI in a spec-first workflow: I define the direction and constraints, then steer the AI in small steps and review what it produces. I stay responsible for the decisions and check the work rather than trusting the output blindly. To keep up with AI-assisted work, I also capture what matters in an onboarding document and use a daily close to defend a decision against the ADR and run a runbook command by hand.",
         "citations": [
           {
             "source": "spec-first-pitch.org"
@@ -184,7 +184,7 @@
       "question": "Which of your projects can I inspect right now, and where?",
       "response": {
         "status": "answered",
-        "answer": "You can inspect these public references now:\n- JanBot: https://github.com/jstavel/janbot\n- Krakatoa matching engine: https://github.com/jstavel/krakatoa\n- Reactive Testing: https://github.com/jstavel/reactive_testing. Note: another project note says the prototype’s code is on Red Hat internal GitLab and has no public content, so that code may not be available in the public repository.\n- Personal OS / system design (gtd-org): https://github.com/jstavel/gtd-org\n- cdbazar: https://github.com/jstavel/cdbazar; live site: https://www.bazar-cd.cz\n- Clojure testing era: https://github.com/jstavel/test-clj.testng, https://github.com/jstavel/verify-testng, https://github.com/jstavel/bugzilla-testng, and https://github.com/jstavel/gnome.ldtp\n- Audio transcription pipeline: https://github.com/jstavel/python-audio-transcription\n- eDeposit: https://github.com/edeposit (including clj-amqp, amqp.pdfbox, and amqp.kramerius; this is the eDeposit organization)\n- rhsm-cockpit-qe: https://github.com/RedHatQE/rhsm-cockpit-qe\n- NEPodpis: https://www.brailcom.cz/projects (live site; no repository listed).\n\nOther work has no public reference in the proof map because it is internal, client-gated, or unpublished.",
+        "answer": "Right now you can inspect these projects at their public references:\n\n- **JanBot** — https://github.com/jstavel/janbot\n- **Krakatoa matching engine** — https://github.com/jstavel/krakatoa\n- **Reactive Testing** — https://github.com/jstavel/reactive_testing\n- **Personal OS / system design (gtd-org)** — https://github.com/jstavel/gtd-org\n- **cdbazar** — https://github.com/jstavel/cdbazar, with a live site at https://www.bazar-cd.cz\n- **Clojure testing era** — https://github.com/jstavel/test-clj.testng, plus verify-testng, bugzilla-testng, and gnome.ldtp\n- **Audio transcription pipeline** — https://github.com/jstavel/python-audio-transcription\n- **eDeposit** — https://github.com/edeposit (libraries: clj-amqp, amqp.pdfbox, amqp.kramerius) — note this is the edeposit organization, not a personal account\n- **rhsm-cockpit-qe** — https://github.com/RedHatQE/rhsm-cockpit-qe — under the RedHatQE organization\n- **NEPodpis** — https://www.brailcom.cz/projects (live site only; there is no public repository)\n\nEverything else has no public reference — that work is internal, client-gated, or unpublished, and the honest answer is to say so rather than invent a link. One caveat on Reactive Testing: while a public GitHub repo is listed, the framework document notes that its code (as built at Red Hat) lives on Red Hat internal GitLab with no public content to inspect — the public repo represents the prototype/concept side that was promoted at conferences and tech talks.",
         "citations": [
           {
             "source": "public-proof-map.org"
@@ -195,7 +195,7 @@
         ],
         "reason": null
       },
-      "routed_model": "openai/gpt-6-luna"
+      "routed_model": "z-ai/glm-5.3-flash"
     },
     {
       "question": "You've been at this a long time - what can you bring that a younger engineer can't?",
@@ -365,7 +365,7 @@
       "question": "How did your testing approach take shape over the years?",
       "response": {
         "status": "answered",
-        "answer": "The approach began taking shape in 2019 as Reactive Testing: separate what the system does from how it is verified, and use observations from real system runs as evidence rather than relying only on test-framework pass/fail results. The idea also emphasized reusing scenarios and other artifacts across development and testing, including in systems with many asynchronous parts. An attempt to apply this through ARA with Ansible and Robot Framework did not work because the platform was not suited to post-hoc validation. The philosophy later developed through Simulation-First shift-left testing into Spec-First: a human writes and reviews the specification as a contract, AI writes the code, and verification evaluates collected evidence.",
+        "answer": "My approach evolved from thinking of tests as reactive signal streams rather than step-by-step sequences. In 2019, I explored that idea with RxPy and RxJS, then built a 2020 prototype monitoring DBus, inotify, and REST APIs. I also experimented with using ARA to validate completed Ansible test runs against real system data, but that platform wasn’t suited to post-hoc validation. The underlying idea persisted: reuse real system data and make testing artifacts useful across teams. Today, the approach is Spec-First: a person writes and reviews the specification as a contract, AI writes the code, and verification runs over collected evidence. [reactive-testing-framework.org] [rhsm-ansible-qe.org] [reactive-testing-origin.org] [spec-first-philosophy.org]",
         "citations": [
           {
             "source": "spec-first-philosophy.org"
@@ -375,6 +375,9 @@
           },
           {
             "source": "reactive-testing-origin.org"
+          },
+          {
+            "source": "reactive-testing-framework.org"
           }
         ],
         "reason": null
@@ -458,7 +461,7 @@
       "question": "You only ever wrote playbooks - you never touched the container platform itself, right?",
       "response": {
         "status": "answered",
-        "answer": "No. You did more than write playbooks: you worked with Jenkins CI/CD on OpenShift, including Jenkins agents running as pods, and dealt with the lifecycle of resources left behind on the shared cluster. The Cockpit tests and RHSM Ansible/Robot Framework work also ran against services on that platform. Since OpenShift is Red Hat’s Kubernetes distribution, that counts as container-platform experience—not just playbook work.",
+        "answer": "No. The work went beyond writing playbooks: I ran Jenkins on OpenShift, iterated on a containerized Jenkins instance, and dealt with its agent pods and the cleanup of resources left behind. There was also Cockpit testing against services deployed on the platform. That shows hands-on work using OpenShift, though the context doesn’t establish that I administered the platform itself.",
         "citations": [
           {
             "source": "jenkins-openshift-cicd-operations.org"
@@ -605,10 +608,13 @@
       "question": "You only automated things for yourself, never for the team, right?",
       "response": {
         "status": "answered",
-        "answer": "No. I automated things to make life easier for both myself and the team—for example, writing Ansible playbooks that also served as living documentation in Jira tickets.",
+        "answer": "No. I automated things to make life easier for myself and the team, including writing Ansible playbooks that also served as living documentation. I’ve also looked for improvements that benefit people around me, including the team and other teams.",
         "citations": [
           {
             "source": "departure-narrative.org"
+          },
+          {
+            "source": "growth-in-any-role.org"
           }
         ],
         "reason": null
@@ -709,7 +715,7 @@
       "question": "You never actually ran anything in CI - it was just talk, right?",
       "response": {
         "status": "answered",
-        "answer": "No. The context says the Ansible test architecture ran in the team’s daily CI/CD pipeline for years. It also describes Jenkins work validated against a production instance, with a mini-seed job used to iterate on individual job changes. There was no dedicated staging environment for CI changes, but that’s different from not running anything in CI.",
+        "answer": "No. The context says the test architecture ran in the team’s daily CI/CD pipeline for years, and describes Beaker CI. It also describes hands-on work with Jenkins: validating job changes on the production instance and using a mini-seed job to test changes to individual jobs. So this was more than talk, though the Jenkins changes lacked a dedicated staging environment.",
         "citations": [
           {
             "source": "rhsm-ansible-qe.org"
@@ -740,7 +746,7 @@
       "question": "Have you ever had to maintain someone else's legacy code?",
       "response": {
         "status": "answered",
-        "answer": "Yes. As an independent contractor he took over and extended a complicated information system for a law firm written in PHP, extending it module by module, following browser debug output, and iterating until it worked. Around the same period he also worked on WordPress — templates, hosting configuration, `.htaccess`, and debugging other people's installations. The honest limit he states is that he never got the architect's view: he carried the complexity without ever fully seeing it, and to this day does not fully know why that system was written the way it was.",
+        "answer": "Yes. I took over and extended a complicated PHP information system for a law firm, adding functionality module by module and debugging through iteration. The client was satisfied, though I never fully understood the system’s overall architecture or why it had been designed that way.",
         "citations": [
           {
             "source": "php-to-django-arc.org"
@@ -748,7 +754,7 @@
         ],
         "reason": null
       },
-      "routed_model": "deepseek/deepseek-v4.1-flash-1017"
+      "routed_model": "openai/gpt-6-luna"
     },
     {
       "question": "How do you debug a problem you cannot reproduce locally?",
@@ -794,6 +800,102 @@
         "reason": null
       },
       "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Do you know agentic workflows?",
+      "response": {
+        "status": "answered",
+        "answer": "Yes. In this context, an agentic workflow means using AI to carry out work while the human sets direction, reviews the results, and remains responsible for decisions. A useful approach is to work from a clear specification and keep the work reviewable. It also helps to maintain a usable runbook and be able to defend the key decisions, so people can operate and own the project even when the agent is not there.",
+        "citations": [
+          {
+            "source": "procedure-drift.org"
+          },
+          {
+            "source": "spec-first-pitch.org"
+          },
+          {
+            "source": "knowledge-drift.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "You wrote JanBot in Rust, right?",
+      "response": {
+        "status": "answered",
+        "answer": "No. The context identifies JanBot as a Python project (it lists `pyproject.toml` and Python source files). Rust is associated with the Krakatoa matching engine, not JanBot.",
+        "citations": [
+          {
+            "source": "janbot-ai-agent.org"
+          },
+          {
+            "source": "matching-engine.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "JanBot is still a prototype running on your laptop, right?",
+      "response": {
+        "status": "answered",
+        "answer": "The context doesn’t say whether JanBot is still a prototype or running on your laptop. It only describes JanBot as a project with an executing agent that knows BMAD and has repository context.",
+        "citations": [
+          {
+            "source": "intent-based-delegation.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "JanBot answers from a PostgreSQL database, correct?",
+      "response": {
+        "status": "answered",
+        "answer": "No. JanBot answers from its content corpus, which it reads at runtime; the golden dataset is used for evaluation and compilation, not as its runtime knowledge base. PostgreSQL is mentioned in the context as part of a separate corporate intranet project.",
+        "citations": [
+          {
+            "source": "janbot-value-proposition.org"
+          },
+          {
+            "source": "bata-stock-update.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "Your cdbazar platform runs on Rails, right?",
+      "response": {
+        "status": "answered",
+        "answer": "No. cdbazar is a Django application, not a Rails platform.",
+        "citations": [
+          {
+            "source": "cdbazar.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "openai/gpt-6-luna"
+    },
+    {
+      "question": "You managed a team of ten engineers at your last job — how did you handle them?",
+      "response": {
+        "status": "answered",
+        "answer": "The provided context does not describe managing a team of ten engineers. It only describes mentoring a single mentee in a formal company mentoring program, including listening without judgment, providing direction and confidence, and contributing to that mentee’s promotion from ASME to SME. I can’t answer how a ten-engineer team was managed based on this context.",
+        "citations": [
+          {
+            "source": "mentoring-downchain.org"
+          }
+        ],
+        "reason": null
+      },
+      "routed_model": "deepseek/deepseek-v4.1-flash-1017"
     }
   ]
 }

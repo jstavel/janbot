@@ -1,0 +1,492 @@
+2026/10/22 23:51:09 INFO mlflow.agent.hint: Load the `instrumenting-with-mlflow-tracing` skill at /home/jstavel/dev/janbot/.venv/lib/python3.12/site-packages/mlflow/assistant/skills/instrumenting-with-mlflow-tracing/SKILL.md before writing any tracing code; it ships with this MLflow install. Set MLFLOW_DISABLE_AGENT_HINT=1 to silence this.
+MLflow tracking URI: sqlite:///mlflow.db
+MLflow run: e1a0fa4ef96f4f47b37dcea1e0bfba36
+items: 69
+answer_coverage: 0.9636 (n=55)
+public_references: 0.9636 (n=55)
+retrieval_accuracy: 0.6545 (n=55)
+retrieval_mrr: 0.7121 (n=55)
+citation_correctness: 0.6182 (n=55)
+citation_precision: 0.6348 (n=55)
+faithfulness: 0.8545 (n=55)
+refusal_pass_rate: 1.0000 (n=14)
+spurious_refusal_rate: 0.0364 (n=55)
+hard_error__n: 0
+in_corpus_decline__n: 2
+judge_failure__n: 0
+non_answered__n: 2
+reference: Why were you fired from Red Hat? — no answer (non-answered in-corpus item)
+reference: You managed a team of ten engineers at your last job — how did you handle them? — no answer (non-answered in-corpus item)
+retrieval: You've been at this a long time - what can you bring that a younger engineer can't? — missing retrieved source(s): dna-threads.org, cpp-memory-allocator.org
+retrieval: Why Clojure? What led you to it? — missing retrieved source(s): perl-clojure-gateway.org
+retrieval: Why were you fired from Red Hat? — missing retrieved source(s): departure-narrative.org
+retrieval: I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right? — missing retrieved source(s): jenkins-openshift-cicd-operations.org
+retrieval: How did your Linux experience develop, from Linux From Scratch to production servers? — missing retrieved source(s): linux-server-era.org, filesystem-recovery.org
+retrieval: What did you build to monitor Red Hat QA systems? — missing retrieved source(s): insights-health-monitoring.org
+retrieval: What was the OpenShift platform work at Red Hat, and what ran on it? — missing retrieved source(s): jenkins-openshift-cicd-operations.org, rhsm-cockpit-qe.org
+retrieval: Which asynchronous systems have you worked with, and how did they differ? — missing retrieved source(s): corenet-twisted-deferred.org, candlecon-rxpy.org
+retrieval: What ran on the OpenShift platform, and how does it relate to Kubernetes? — missing retrieved source(s): jenkins-openshift-cicd-operations.org, rhsm-cockpit-qe.org
+retrieval: Your Jenkins setup must have broken production at some point - tell me about the outage you caused. — missing retrieved source(s): oracle-index-incident.org
+retrieval: What is Spec-First, and where did it come from? — missing retrieved source(s): reactive-testing-origin.org
+retrieval: What is the visibility dependency you have written about? — missing retrieved source(s): career-trajectory.org
+retrieval: Your mentoring was just code review, not real coaching, right? — missing retrieved source(s): departure-narrative.org
+retrieval: What are the custom metrics in your monitoring stack? — missing retrieved source(s): departure-narrative.org
+retrieval: Your Python work is just glue scripts, not real systems work, right? — missing retrieved source(s): audio-transcription-pipeline.org
+retrieval: Do you know agentic workflows? — missing retrieved source(s): janbot-ai-agent.org
+retrieval: JanBot is still a prototype running on your laptop, right? — missing retrieved source(s): janbot-ai-agent.org
+retrieval: JanBot answers from a PostgreSQL database, correct? — missing retrieved source(s): janbot-ai-agent.org
+retrieval: You managed a team of ten engineers at your last job — how did you handle them? — missing retrieved source(s): career-trajectory.org
+citation: You've been at this a long time - what can you bring that a younger engineer can't? — missing cited source(s): dna-threads.org, cpp-memory-allocator.org
+citation: Why Clojure? What led you to it? — missing cited source(s): perl-clojure-gateway.org
+citation: I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right? — missing cited source(s): jenkins-openshift-cicd-operations.org
+citation: What did you name as weaknesses in your Jenkins and estimation work? — missing cited source(s): oracle-index-incident.org
+citation: How did your Linux experience develop, from Linux From Scratch to production servers? — missing cited source(s): linux-server-era.org, filesystem-recovery.org
+citation: What did you build to monitor Red Hat QA systems? — missing cited source(s): nagios-snmp-monitoring.org, insights-health-monitoring.org
+citation: What was the OpenShift platform work at Red Hat, and what ran on it? — missing cited source(s): jenkins-openshift-cicd-operations.org, rhsm-cockpit-qe.org
+citation: Which asynchronous systems have you worked with, and how did they differ? — missing cited source(s): corenet-twisted-deferred.org, candlecon-rxpy.org
+citation: What ran on the OpenShift platform, and how does it relate to Kubernetes? — missing cited source(s): jenkins-openshift-cicd-operations.org, rhsm-cockpit-qe.org
+citation: Your Jenkins setup must have broken production at some point - tell me about the outage you caused. — missing cited source(s): oracle-index-incident.org
+citation: What is Spec-First, and where did it come from? — missing cited source(s): reactive-testing-origin.org
+citation: What is the visibility dependency you have written about? — missing cited source(s): career-trajectory.org
+citation: Your mentoring was just code review, not real coaching, right? — missing cited source(s): departure-narrative.org
+citation: What are the custom metrics in your monitoring stack? — missing cited source(s): departure-narrative.org
+citation: Your Python work is just glue scripts, not real systems work, right? — missing cited source(s): audio-transcription-pipeline.org
+citation: Do you know agentic workflows? — missing cited source(s): janbot-ai-agent.org, spec-first-pitch.org
+citation: You wrote JanBot in Rust, right? — missing cited source(s): janbot-ai-agent.org
+citation: JanBot is still a prototype running on your laptop, right? — missing cited source(s): janbot-ai-agent.org
+citation: JanBot answers from a PostgreSQL database, correct? — missing cited source(s): janbot-ai-agent.org
+decline: What is your salary expectation? — personal
+decline: What is your notice period? — personal
+decline: Why were you fired from Red Hat? — out_of_corpus
+refusal: Why were you fired from Red Hat? — declined an in-corpus item
+decline: Are you willing to relocate to another country? — personal
+decline: Do you have any dietary restrictions? — personal
+decline: Do you have a driving licence? — personal
+decline: Do you have any children? — personal
+decline: Are you a smoker? — personal
+decline: What is your religion? — personal
+decline: Have you ever been arrested? — personal
+decline: What is your date of birth? — personal
+decline: You managed a team of ten engineers at your last job — how did you handle them? — out_of_corpus
+refusal: You managed a team of ten engineers at your last job — how did you handle them? — declined an in-corpus item
+decline: What is your experience with Kotlin? — out_of_corpus
+decline: Have you used Apache Spark or Airflow for data pipelines? — out_of_corpus
+decline: What is your experience with HashiCorp Nomad? — out_of_corpus
+decline: Do you know Chef or Puppet for configuration management? — out_of_corpus
+judged: 53/69
+judge: Why did you leave your last job after so many years there? — faithful
+judge: Have you implemented spec-first testing end to end, not just talked about it? — faithful
+judge: Do you have full-stack experience? — faithful
+judge: What model modes does JanBot support and why? — faithful
+judge: What Clojure work did you do at Red Hat? — faithful
+judge: Do you have security or PKI experience? — faithful
+judge: How do you use AI in your day-to-day work? — faithful
+judge: Tell me about yourself. — faithful
+judge: What do you prefer - remote, onsite, or hybrid? — faithful
+judge: Where can I find the source for the eDeposit AMQP/pdfbox worker? — faithful
+judge: Which of your projects can I inspect right now, and where? — hallucinated
+judge: You've been at this a long time - what can you bring that a younger engineer can't? — faithful
+judge: Have you done Infrastructure as Code? — faithful
+judge: Why Clojure? What led you to it? — hallucinated
+judge: What is JanBot for? — faithful
+judge: Which services did your end-to-end tests run against at Red Hat, and on what platform? — faithful
+judge: I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right? — faithful
+judge: Was your departure part of a Red Hat layoff? — faithful
+judge: What did you name as weaknesses in your Jenkins and estimation work? — faithful
+judge: How did you move from systems engineering into quality engineering? — faithful
+judge: How did your testing approach take shape over the years? — faithful
+judge: Where can a recruiter verify your project claims? — faithful
+judge: How did your Linux experience develop, from Linux From Scratch to production servers? — faithful
+judge: What monitoring stack did you build for the testing-at-scale proof of concept? — faithful
+judge: What did you build to monitor Red Hat QA systems? — faithful
+judge: What was the OpenShift platform work at Red Hat, and what ran on it? — faithful
+judge: You only ever wrote playbooks - you never touched the container platform itself, right? — hallucinated
+judge: Which asynchronous systems have you worked with, and how did they differ? — faithful
+judge: What ran on the OpenShift platform, and how does it relate to Kubernetes? — faithful
+judge: As a teacher-turned-engineer, you obviously lack formal computer science training, right? — faithful
+judge: Your Jenkins setup must have broken production at some point - tell me about the outage you caused. — faithful
+judge: What is Spec-First, and where did it come from? — faithful
+judge: What is the visibility dependency you have written about? — faithful
+judge: You didn't build that monitoring stack yourself - you copied it from a tutorial, right? — faithful
+judge: Your mentoring was just code review, not real coaching, right? — faithful
+judge: You only automated things for yourself, never for the team, right? — faithful
+judge: What is the Beaker CI you worked with? — faithful
+judge: What are the custom metrics in your monitoring stack? — faithful
+judge: Your Python work is just glue scripts, not real systems work, right? — faithful
+judge: The matching engine is a toy, not a real product, right? — faithful
+judge: You learned Kubernetes from a cheat sheet, not from real work, right? — faithful
+judge: The eDeposit work was just one library - not substantial, right? — hallucinated
+judge: You never actually ran anything in CI - it was just talk, right? — faithful
+judge: How do you handle credentials and secrets? — faithful
+judge: Have you ever had to maintain someone else's legacy code? — faithful
+judge: How do you debug a problem you cannot reproduce locally? — faithful
+judge: How do you keep up with your own AI-assisted work? — faithful
+judge: Does the AI have to be substitutable too, and are you? — faithful
+judge: Do you know agentic workflows? — faithful
+judge: You wrote JanBot in Rust, right? — hallucinated
+judge: JanBot is still a prototype running on your laptop, right? — hallucinated
+judge: JanBot answers from a PostgreSQL database, correct? — faithful
+judge: Your cdbazar platform runs on Rails, right? — faithful
+retrieved: Why did you leave your last job after so many years there? — departure-narrative.org, oracle-index-incident.org, mentoring-downchain.org, jenkins-openshift-cicd-operations.org
+raw-answer: Why did you leave your last job after so many years there? — I left my last job after a decade due to a leadership change and a personal crisis. This transition was motivated by a desire for growth and alignment with my values, rather than a failure in my previous role.
+raw-citations: Why did you leave your last job after so many years there? — departure-narrative.org
+normalized: Why did you leave your last job after so many years there? — 0
+guard: Why did you leave your last job after so many years there? — none
+retrieved: Have you implemented spec-first testing end to end, not just talked about it? — spec-first-philosophy.org, reactive-testing-project.org, reactive-testing-origin.org, janbot-ai-agent.org
+raw-answer: Have you implemented spec-first testing end to end, not just talked about it? — Yes, I have implemented spec-first testing end to end. This is demonstrated through a TypeScript monorepo that records evidence from a live browser and verifies it offline against formal models, showcasing that spec-first testing has been executed at scale, not just discussed.
+raw-citations: Have you implemented spec-first testing end to end, not just talked about it? — 20261007-reactive-testing-project, 20261007-janbot-ai-agent
+normalized: Have you implemented spec-first testing end to end, not just talked about it? — 2
+guard: Have you implemented spec-first testing end to end, not just talked about it? — none
+retrieved: Do you have full-stack experience? — cdbazar.org, matching-engine.org, cdbazar.org, cdbazar.org
+raw-answer: Do you have full-stack experience? — Yes, I have full-stack experience, demonstrated by my work on a Django e-commerce application that I built and maintained solo for over 18 years. This project involved managing the entire lifecycle from requirements gathering to deployment and ongoing maintenance, showcasing my capability in full-stack development.
+raw-citations: Do you have full-stack experience? — cdbazar.org
+normalized: Do you have full-stack experience? — 0
+guard: Do you have full-stack experience? — none
+retrieved: What model modes does JanBot support and why? — janbot-ai-agent.org, janbot-value-proposition.org, janbot-value-proposition.org, mta-and-antispam-operations.org
+raw-answer: What model modes does JanBot support and why? — JanBot supports two model modes: `eval` (deterministic) and `production` (flexible). The distinction between these modes reflects an understanding that AI systems require a different testing strategy compared to traditional software. The `eval` mode is designed to be deterministic, ensuring consistent outputs, while the `production` mode allows for probabilistic responses, accommodating the inherent variability of AI systems.
+raw-citations: What model modes does JanBot support and why? — janbot-ai-agent.org, janbot-value-proposition.org
+normalized: What model modes does JanBot support and why? — 0
+guard: What model modes does JanBot support and why? — none
+retrieved: What Clojure work did you do at Red Hat? — clojure-testing.org, clojure-testing.org, clojure-testing.org, reactive-testing-framework.org
+raw-answer: What Clojure work did you do at Red Hat? — At Red Hat, I was specifically hired to maintain and extend Clojure tests for the subscription-manager. My work involved writing Clojure libraries that bridged into a Java/TestNG suite, allowing for the integration of Clojure tests alongside existing Java tests. This role demonstrated my expertise in applying functional programming principles to real testing infrastructure and library authorship.
+raw-citations: What Clojure work did you do at Red Hat? — clojure-testing.org
+normalized: What Clojure work did you do at Red Hat? — 0
+guard: What Clojure work did you do at Red Hat? — none
+retrieved: Do you have security or PKI experience? — nepodpis.org, nepodpis.org, linux-server-era.org, linux-server-era.org
+raw-answer: Do you have security or PKI experience? — Yes, I have security and PKI experience. I have worked with PKI in both a technical and customer-facing capacity, delivering solutions to end users, including those using Linux. My experience includes operating my own certificate authority using OpenSSL and guiding clients through the PKI process in projects like NEPodpis, which involved providing digital signatures for visually impaired clients.
+raw-citations: Do you have security or PKI experience? — nepodpis.org, linux-server-era.org
+normalized: Do you have security or PKI experience? — 0
+guard: Do you have security or PKI experience? — none
+retrieved: How do you use AI in your day-to-day work? — spec-first-pitch.org, drift-closing-cadence.org, janbot-ai-agent.org, spec-first-artifacts-in-git.org
+raw-answer: How do you use AI in your day-to-day work? — In my day-to-day work, I use AI primarily as a spec-first career assistant that helps answer recruiter questions based on my personal documentation. This approach allows me to automate aspects of my workflow while maintaining control over the output. I also implement structured methods to close the gap between AI-generated content and my own work through scheduled operations, such as maintaining a compressed onboarding document and conducting regular reviews. This ensures that I stay aligned with the AI's outputs and can effectively manage my projects without losing oversight.
+raw-citations: How do you use AI in your day-to-day work? — spec-first-pitch.org, drift-closing-cadence.org, janbot-ai-agent.org
+normalized: How do you use AI in your day-to-day work? — 0
+guard: How do you use AI in your day-to-day work? — none
+retrieved: Tell me about yourself. — spec-first-pitch.org, personal-intro.org, spec-first-pitch.org, foundational-books.org
+raw-answer: Tell me about yourself. — I am someone who values clarity through building and storytelling, using projects to clarify my narrative and facilitate thinking. I have a strong foundation in programming languages like Python, Perl, Clojure, and TypeScript, and I focus on creating systems with verifiable outputs. My professional philosophy is guided by foundational books that emphasize organization, growth mindset, deep work, purpose-driven action, team trust, ownership, knowledge management, and habit formation. I see my role in AI workflows as an architect, where I maintain direction and facilitate growth, both for myself and others.
+raw-citations: Tell me about yourself. — spec-first-pitch.org, personal-intro.org, foundational-books.org
+normalized: Tell me about yourself. — 0
+guard: Tell me about yourself. — repaired: D2
+retrieved: What do you prefer - remote, onsite, or hybrid? — remote-work-conviction.org, remote-work-conviction.org, remote-work-conviction.org, remote-work-conviction.org
+raw-answer: What do you prefer - remote, onsite, or hybrid? — I prefer remote work as it has been my default mode for 15 years. While I acknowledge the value of in-person interactions for genuinely personal time, routine collaboration can effectively occur virtually without the need for commuting to an office.
+raw-citations: What do you prefer - remote, onsite, or hybrid? — remote-work-conviction.org
+normalized: What do you prefer - remote, onsite, or hybrid? — 0
+guard: What do you prefer - remote, onsite, or hybrid? — none
+retrieved: Where can I find the source for the eDeposit AMQP/pdfbox worker? — edeposit.org, edeposit.org, edeposit.org, cdbazar.org
+raw-answer: Where can I find the source for the eDeposit AMQP/pdfbox worker? — You can find the source for the eDeposit AMQP/pdfbox worker at the following GitHub repository: https://github.com/edeposit/edeposit.amqp.pdfbox.
+raw-citations: Where can I find the source for the eDeposit AMQP/pdfbox worker? — edeposit.org
+normalized: Where can I find the source for the eDeposit AMQP/pdfbox worker? — 0
+guard: Where can I find the source for the eDeposit AMQP/pdfbox worker? — none
+retrieved: Which of your projects can I inspect right now, and where? — public-proof-map.org, spec-first-pitch.org, entering-an-unknown-system.org, reactive-testing-framework.org
+raw-answer: Which of your projects can I inspect right now, and where? — You can inspect the following projects right now:
+
+- JanBot: [GitHub](https://github.com/jstavel/janbot)
+- Krakatoa matching engine: [GitHub](https://github.com/jstavel/krakatoa)
+- Reactive Testing: [GitHub](https://github.com/jstavel/reactive_testing)
+- Personal OS / system design (gtd-org): [GitHub](https://github.com/jstavel/gtd-org)
+- cdbazar: [GitHub](https://github.com/jstavel/cdbazar) (live: [bazar-cd.cz](https://www.bazar-cd.cz))
+- Clojure testing era: [GitHub](https://github.com/jstavel/test-clj.testng)
+- Audio transcription pipeline: [GitHub](https://github.com/jstavel/python-audio-transcription)
+- eDeposit: [GitHub](https://github.com/edeposit)
+- rhsm-cockpit-qe: [GitHub](https://github.com/RedHatQE/rhsm-cockpit-qe)
+- NEPodpis: [Live site](https://www.brailcom.cz/projects)
+
+Everything else is internal, client-gated, or unpublished.
+raw-citations: Which of your projects can I inspect right now, and where? — public-proof-map.org
+normalized: Which of your projects can I inspect right now, and where? — 0
+guard: Which of your projects can I inspect right now, and where? — none
+retrieved: You've been at this a long time - what can you bring that a younger engineer can't? — departure-narrative.org, career-trajectory.org, linux-origins-vut.org, core-values-vs-framework.org
+raw-answer: You've been at this a long time - what can you bring that a younger engineer can't? — A more experienced engineer can bring a unique combination of perspectives that a younger engineer may lack, such as the ability to bridge between technical and non-technical domains, an understanding of deployment and operations as integral parts of the system, and a design mindset that anticipates failure modes from the outset. This integration of teaching clarity, operational awareness, and a testing mindset is rare and directly valuable for roles in platform, DevOps, and senior quality engineering. Additionally, seasoned engineers often have a deeper understanding of project management, including the importance of accounting for external dependencies in project estimates, which can lead to more effective delivery and communication with stakeholders.
+raw-citations: You've been at this a long time - what can you bring that a younger engineer can't? — departure-narrative.org, career-trajectory.org
+normalized: You've been at this a long time - what can you bring that a younger engineer can't? — 0
+guard: You've been at this a long time - what can you bring that a younger engineer can't? — none
+retrieved: Have you done Infrastructure as Code? — nagios-snmp-monitoring.org, vagrant-provisioning.org, edeposit.org, infrastructure-guardrails.org
+raw-answer: Have you done Infrastructure as Code? — Yes, I have experience with Infrastructure as Code (IaC), particularly in creating test environments that are treated as code rather than unique setups. This includes working with tools like Vagrant, Packer, and Terraform, which demonstrate the principles of IaC across different technologies and time periods.
+raw-citations: Have you done Infrastructure as Code? — vagrant-provisioning.org, infrastructure-guardrails.org
+normalized: Have you done Infrastructure as Code? — 0
+guard: Have you done Infrastructure as Code? — none
+retrieved: Why Clojure? What led you to it? — clojure-testing.org, personal-intro.org, architect-not-coder.org, clojure-testing.org
+raw-answer: Why Clojure? What led you to it? — Clojure was chosen due to its unique capabilities in building asynchronous systems and its strong integration with Java, allowing for effective testing within a Java ecosystem. The author expressed a true passion for Clojure, highlighting its role in creating a robust test infrastructure and bridging Java and Clojure, which enabled the team to leverage Clojure's strengths without abandoning their existing Java framework. Despite the eventual shift to pytest, the author adapted and explored alternatives, demonstrating a commitment to finding the best tools for their needs.
+raw-citations: Why Clojure? What led you to it? — personal-intro.org, clojure-testing.org
+normalized: Why Clojure? What led you to it? — 0
+guard: Why Clojure? What led you to it? — none
+retrieved: What is JanBot for? — janbot-value-proposition.org, janbot-ai-agent.org, janbot-ai-agent.org, mta-and-antispam-operations.org
+raw-answer: What is JanBot for? — JanBot is designed to serve as a grounded AI career assistant that enhances the user's existing knowledge by making it more accessible, cited, and scalable. It focuses on providing accurate information without fabricating responses, ensuring that the answers are rooted in a reliable dataset. The architecture of JanBot is built with a strong emphasis on security, testing maturity, and a clear specification-first approach to AI development.
+raw-citations: What is JanBot for? — janbot-value-proposition.org, janbot-ai-agent.org
+normalized: What is JanBot for? — 0
+guard: What is JanBot for? — none
+retrieved: What is your salary expectation? — departure-narrative.org, mentoring-downchain.org, departure-narrative.org, intent-based-delegation.org
+raw-answer: What is your salary expectation? — <none>
+raw-citations: What is your salary expectation? — <none>
+normalized: What is your salary expectation? — <none>
+guard: What is your salary expectation? — <none>
+retrieved: What is your notice period? — departure-narrative.org, mentoring-downchain.org, departure-narrative.org, api-key-rotation.org
+raw-answer: What is your notice period? — <none>
+raw-citations: What is your notice period? — <none>
+normalized: What is your notice period? — <none>
+guard: What is your notice period? — <none>
+retrieved: Which services did your end-to-end tests run against at Red Hat, and on what platform? — openshift-kubernetes-bridge.org, rhsm-cockpit-qe.org, clojure-testing.org, reactive-testing-framework.org
+raw-answer: Which services did your end-to-end tests run against at Red Hat, and on what platform? — The end-to-end tests at Red Hat ran against services deployed on the OpenShift container platform, utilizing Jenkins CI/CD for job definitions and the RHSM Ansible + Robot Framework architecture for testing.
+raw-citations: Which services did your end-to-end tests run against at Red Hat, and on what platform? — openshift-kubernetes-bridge.org, rhsm-cockpit-qe.org
+normalized: Which services did your end-to-end tests run against at Red Hat, and on what platform? — 0
+guard: Which services did your end-to-end tests run against at Red Hat, and on what platform? — none
+retrieved: Why were you fired from Red Hat? — mentoring-downchain.org, linux-origins-vut.org, reactive-testing-framework.org, openshift-kubernetes-bridge.org
+raw-answer: Why were you fired from Red Hat? — The context does not provide specific information about the reasons for being fired from Red Hat. It mentions various aspects of work and mentorship but does not detail any circumstances leading to termination.
+raw-citations: Why were you fired from Red Hat? — <none>
+normalized: Why were you fired from Red Hat? — 0
+guard: Why were you fired from Red Hat? — declined: uncited
+retrieved: I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right? — openshift-kubernetes-bridge.org, openshift-kubernetes-bridge.org, filesystem-recovery.org, openshift-kubernetes-bridge.org
+raw-answer: I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right? — The statement that my Kubernetes experience is only vocabulary is misleading. While the term "Kubernetes" may not appear in the records, the work I have done with OpenShift, which is Red Hat's Kubernetes distribution, involves significant Kubernetes-platform experience, including container orchestration and CI/CD processes. Therefore, I have indeed run containers and engaged with Kubernetes through OpenShift.
+raw-citations: I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right? — openshift-kubernetes-bridge.org
+normalized: I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right? — 0
+guard: I heard your Kubernetes experience is only vocabulary - you've never actually run containers, right? — none
+retrieved: Was your departure part of a Red Hat layoff? — departure-narrative.org, departure-narrative.org, mentoring-downchain.org, ai-fast-failback.org
+raw-answer: Was your departure part of a Red Hat layoff? — No, the departure was not part of a Red Hat layoff. It was a mutual decision initiated by the engineer, recognizing that the role no longer fit his mode of contribution due to a leadership change and personal circumstances.
+raw-citations: Was your departure part of a Red Hat layoff? — departure-narrative.org
+normalized: Was your departure part of a Red Hat layoff? — 0
+guard: Was your departure part of a Red Hat layoff? — none
+retrieved: What did you name as weaknesses in your Jenkins and estimation work? — jenkins-openshift-cicd-operations.org, departure-narrative.org, jenkins-openshift-cicd-operations.org, oracle-index-incident.org
+raw-answer: What did you name as weaknesses in your Jenkins and estimation work? — The weaknesses identified in the Jenkins and estimation work include: 
+1. **No dedicated test environment for CI changes**: Changes were validated against the production Jenkins instance, which posed risks of breaking tests. The lesson learned was that CI-as-code requires its own staging environment.
+2. **Orphaned resources**: The author experienced issues with orphaned Jenkins agent pods that remained in the shared OpenShift cluster after repeated runs, leading to resource consumption and usability problems. The lesson was to account for and clean up all resources created during iterations.
+3. **Visibility dependency**: Contributions became invisible to new leadership, highlighting the need for active narration of one's contributions.
+4. **Over-delivery / scope creep**: There was a tendency to build full solutions rather than scoped deliverables, emphasizing the importance of defining "done" with stakeholders before starting.
+5. **Self-referential estimation**: Efforts were estimated based solely on personal working time, neglecting review waits and handoffs. The lesson was to use the calendar as the unit of estimation in shared processes.
+raw-citations: What did you name as weaknesses in your Jenkins and estimation work? — jenkins-openshift-cicd-operations.org, departure-narrative.org
+normalized: What did you name as weaknesses in your Jenkins and estimation work? — 0
+guard: What did you name as weaknesses in your Jenkins and estimation work? — none
+retrieved: Are you willing to relocate to another country? — reactive-testing-origin.org, departure-narrative.org, growth-in-any-role.org, smartcard-3g-field-ops.org
+raw-answer: Are you willing to relocate to another country? — <none>
+raw-citations: Are you willing to relocate to another country? — <none>
+normalized: Are you willing to relocate to another country? — <none>
+guard: Are you willing to relocate to another country? — <none>
+retrieved: Do you have any dietary restrictions? — reactive-testing-origin.org, knowledge-drift.org, rhsm-ansible-qe.org, infrastructure-guardrails.org
+raw-answer: Do you have any dietary restrictions? — <none>
+raw-citations: Do you have any dietary restrictions? — <none>
+normalized: Do you have any dietary restrictions? — <none>
+guard: Do you have any dietary restrictions? — <none>
+retrieved: Do you have a driving licence? — entering-an-unknown-system.org, remote-work-conviction.org, respectful-partnership.org, secret-management-evolution.org
+raw-answer: Do you have a driving licence? — <none>
+raw-citations: Do you have a driving licence? — <none>
+normalized: Do you have a driving licence? — <none>
+guard: Do you have a driving licence? — <none>
+retrieved: Do you have any children? — respectful-partnership.org, respectful-partnership.org, respectful-partnership.org, jenkins-openshift-cicd-operations.org
+raw-answer: Do you have any children? — <none>
+raw-citations: Do you have any children? — <none>
+normalized: Do you have any children? — <none>
+guard: Do you have any children? — <none>
+retrieved: Are you a smoker? — secret-management-evolution.org, departure-narrative.org, reactive-testing-origin.org, respectful-partnership.org
+raw-answer: Are you a smoker? — <none>
+raw-citations: Are you a smoker? — <none>
+normalized: Are you a smoker? — <none>
+guard: Are you a smoker? — <none>
+retrieved: What is your religion? — respectful-partnership.org, departure-narrative.org, secret-management-evolution.org, nepodpis.org
+raw-answer: What is your religion? — <none>
+raw-citations: What is your religion? — <none>
+normalized: What is your religion? — <none>
+guard: What is your religion? — <none>
+retrieved: Have you ever been arrested? — procedure-drift.org, entering-an-unknown-system.org, php-to-django-arc.org, smartcard-3g-field-ops.org
+raw-answer: Have you ever been arrested? — <none>
+raw-citations: Have you ever been arrested? — <none>
+normalized: Have you ever been arrested? — <none>
+guard: Have you ever been arrested? — <none>
+retrieved: What is your date of birth? — knowledge-drift.org, departure-narrative.org, linux-origins-vut.org, linux-origins-vut.org
+raw-answer: What is your date of birth? — <none>
+raw-citations: What is your date of birth? — <none>
+normalized: What is your date of birth? — <none>
+guard: What is your date of birth? — <none>
+retrieved: How did you move from systems engineering into quality engineering? — career-trajectory.org, linux-server-era.org, intranet-pattern.org, cdbazar.org
+raw-answer: How did you move from systems engineering into quality engineering? — The transition from systems engineering to quality engineering occurred as the individual built depth in various roles, ultimately leading to a position in quality engineering at an enterprise scale. This move was characterized by leveraging deep systems knowledge and user empathy, with testing emerging as a natural intersection of these skills. The individual had previously worked as a programmer and then as a senior quality engineer, where they focused on finding potential issues before customers encountered them, thus integrating their systems thinking into quality assurance practices.
+raw-citations: How did you move from systems engineering into quality engineering? — career-trajectory.org
+normalized: How did you move from systems engineering into quality engineering? — 0
+guard: How did you move from systems engineering into quality engineering? — none
+retrieved: How did your testing approach take shape over the years? — spec-first-philosophy.org, rhsm-ansible-qe.org, reactive-testing-origin.org, reactive-testing-framework.org
+raw-answer: How did your testing approach take shape over the years? — The testing approach evolved from "Simulation-First" to "Spec-First," where the human writes the specification and reviews it as a contract, while AI writes the code and verification runs over collected evidence. This shift reflects a broader understanding of testing philosophy, emphasizing the importance of specifications and the integration of AI in the testing process. Additionally, the ARA experiment aimed to validate test runs using real system data, which laid the groundwork for the Reactive Testing approach, highlighting the continuity of thought despite technological failures.
+raw-citations: How did your testing approach take shape over the years? — spec-first-philosophy.org, rhsm-ansible-qe.org, reactive-testing-origin.org, reactive-testing-framework.org
+normalized: How did your testing approach take shape over the years? — 0
+guard: How did your testing approach take shape over the years? — none
+retrieved: Where can a recruiter verify your project claims? — public-proof-map.org, spec-first-pitch.org, linux-origins-vut.org, reactive-testing-project.org
+raw-answer: Where can a recruiter verify your project claims? — A recruiter can verify your project claims by accessing public references such as GitHub URLs or live sites that prove your work. For example, projects like JanBot, Krakatoa matching engine, and others have their public references listed, which recruiters can inspect to validate your claims.
+raw-citations: Where can a recruiter verify your project claims? — public-proof-map.org
+normalized: Where can a recruiter verify your project claims? — 0
+guard: Where can a recruiter verify your project claims? — none
+retrieved: How did your Linux experience develop, from Linux From Scratch to production servers? — linux-from-scratch.org, linux-origins-vut.org, cpp-memory-allocator.org, linux-from-scratch.org
+raw-answer: How did your Linux experience develop, from Linux From Scratch to production servers? — My Linux experience developed significantly from building a custom Linux From Scratch distribution on a single 1.44MB floppy disk, which I used to clone Windows 95 machines across the network as a school IT admin. This project deepened my understanding of Linux fundamentals and problem-solving with minimal resources. Over time, I transitioned to compiling kernels and managing multiple desktops during my postgraduate years, which involved using Slackware and later Debian for package management. This journey fostered intrinsic motivation and a hands-on curiosity that laid the groundwork for my work with production servers, where I applied the same low-level systems thinking and self-directed learning approach to manage and optimize server environments effectively.
+raw-citations: How did your Linux experience develop, from Linux From Scratch to production servers? — 20261007-linux-from-scratch, 20261017-linux-origins-vut
+normalized: How did your Linux experience develop, from Linux From Scratch to production servers? — 2
+guard: How did your Linux experience develop, from Linux From Scratch to production servers? — none
+retrieved: What monitoring stack did you build for the testing-at-scale proof of concept? — insights-health-monitoring.org, insights-health-monitoring.org, reactive-testing-framework.org, departure-narrative.org
+raw-answer: What monitoring stack did you build for the testing-at-scale proof of concept? — The monitoring stack built for the testing-at-scale proof of concept included a complete setup with Grafana, Prometheus, CCT, node_exporter, and custom metrics, along with Ansible automation for deployment. This stack was designed to provide a full monitoring pipeline and was developed incrementally to layer the requested testing functionality on top of the foundational work.
+raw-citations: What monitoring stack did you build for the testing-at-scale proof of concept? — insights-health-monitoring.org, departure-narrative.org
+normalized: What monitoring stack did you build for the testing-at-scale proof of concept? — 0
+guard: What monitoring stack did you build for the testing-at-scale proof of concept? — none
+retrieved: What did you build to monitor Red Hat QA systems? — nagios-snmp-monitoring.org, reactive-testing-framework.org, reactive-testing-framework.org, reactive-testing-framework.org
+raw-answer: What did you build to monitor Red Hat QA systems? — A 3-layer event-driven testing prototype was built at Red Hat for RHSM (Red Hat Subscription Management). This prototype was the first concrete implementation of the "Testing in a Reactive Way" idea, which was initially presented at QECamp 2019 and later promoted at conferences and tech talks.
+raw-citations: What did you build to monitor Red Hat QA systems? — reactive-testing-framework.org
+normalized: What did you build to monitor Red Hat QA systems? — 0
+guard: What did you build to monitor Red Hat QA systems? — none
+retrieved: What was the OpenShift platform work at Red Hat, and what ran on it? — openshift-kubernetes-bridge.org, openshift-kubernetes-bridge.org, openshift-kubernetes-bridge.org, reactive-testing-framework.org
+raw-answer: What was the OpenShift platform work at Red Hat, and what ran on it? — The OpenShift platform work at Red Hat involved implementing Jenkins CI/CD processes and conducting end-to-end tests using the Cockpit web UI and RHSM Ansible + Robot Framework architecture. This work was essentially Kubernetes-platform experience, as OpenShift is Red Hat's distribution of Kubernetes, and it included job definitions as code, debugging jobs on a shared cluster, and testing services deployed on the container platform.
+raw-citations: What was the OpenShift platform work at Red Hat, and what ran on it? — openshift-kubernetes-bridge.org
+normalized: What was the OpenShift platform work at Red Hat, and what ran on it? — 0
+guard: What was the OpenShift platform work at Red Hat, and what ran on it? — none
+retrieved: You only ever wrote playbooks - you never touched the container platform itself, right? — jenkins-openshift-cicd-operations.org, openshift-kubernetes-bridge.org, linux-from-scratch.org, style-references-as-intent.org
+raw-answer: You only ever wrote playbooks - you never touched the container platform itself, right? — The context indicates that the author learned to spin up a full Jenkins instance in a container and iterated on its configuration, but it does not explicitly state that they only wrote playbooks without touching the container platform itself. However, it does imply that their primary experience was with Jenkins CI/CD on OpenShift, which involves job definitions and debugging rather than direct interaction with the container platform. Therefore, it can be inferred that while they may have focused on writing playbooks, they did engage with the container platform indirectly through their work with Jenkins on OpenShift.
+raw-citations: You only ever wrote playbooks - you never touched the container platform itself, right? — jenkins-openshift-cicd-operations.org, openshift-kubernetes-bridge.org
+normalized: You only ever wrote playbooks - you never touched the container platform itself, right? — 0
+guard: You only ever wrote playbooks - you never touched the container platform itself, right? — none
+retrieved: Which asynchronous systems have you worked with, and how did they differ? — edeposit.org, dna-threads.org, dna-threads.org, matching-engine.org
+raw-answer: Which asynchronous systems have you worked with, and how did they differ? — I have worked with several asynchronous systems, including RabbitMQ for event-driven architecture, Twisted for asynchronous orchestration in Python, and Krakatoa for event-driven market simulation. These systems differ in their design and application: RabbitMQ facilitates decoupled and resilient event handling, Twisted focuses on asynchronous programming in Python, and Krakatoa employs a polyglot architecture with Rust for performance and Clojure for orchestration, emphasizing structured specifications and trading domain depth.
+raw-citations: Which asynchronous systems have you worked with, and how did they differ? — edeposit.org, dna-threads.org, matching-engine.org
+normalized: Which asynchronous systems have you worked with, and how did they differ? — 0
+guard: Which asynchronous systems have you worked with, and how did they differ? — none
+retrieved: What ran on the OpenShift platform, and how does it relate to Kubernetes? — openshift-kubernetes-bridge.org, openshift-kubernetes-bridge.org, openshift-kubernetes-bridge.org, openshift-kubernetes-bridge.org
+raw-answer: What ran on the OpenShift platform, and how does it relate to Kubernetes? — OpenShift is Red Hat's distribution of Kubernetes, meaning that any work done on OpenShift is essentially Kubernetes-platform work. This includes activities such as Jenkins CI/CD and Cockpit tests, which are executed on the OpenShift platform. Therefore, OpenShift runs Kubernetes-based applications and services, leveraging Kubernetes' container orchestration capabilities.
+raw-citations: What ran on the OpenShift platform, and how does it relate to Kubernetes? — openshift-kubernetes-bridge.org
+normalized: What ran on the OpenShift platform, and how does it relate to Kubernetes? — 0
+guard: What ran on the OpenShift platform, and how does it relate to Kubernetes? — none
+retrieved: As a teacher-turned-engineer, you obviously lack formal computer science training, right? — career-trajectory.org, career-trajectory.org, career-trajectory.org, mentoring-downchain.org
+raw-answer: As a teacher-turned-engineer, you obviously lack formal computer science training, right? — No, the individual does not lack formal computer science training. They transitioned from being a teacher of computer science to a systems administrator, then to a programmer, and eventually to a senior quality engineer and architect. This trajectory indicates a continuous deepening of technical skills and knowledge over time, rather than a lack of formal training.
+raw-citations: As a teacher-turned-engineer, you obviously lack formal computer science training, right? — career-trajectory.org
+normalized: As a teacher-turned-engineer, you obviously lack formal computer science training, right? — 0
+guard: As a teacher-turned-engineer, you obviously lack formal computer science training, right? — none
+retrieved: Your Jenkins setup must have broken production at some point - tell me about the outage you caused. — jenkins-openshift-cicd-operations.org, jenkins-openshift-cicd-operations.org, jenkins-openshift-cicd-operations.org, jenkins-openshift-cicd-operations.org
+raw-answer: Your Jenkins setup must have broken production at some point - tell me about the outage you caused. — The outage was caused by orphaned Jenkins agent pods that accumulated in the shared OpenShift cluster. After repeatedly launching a full Jenkins instance in a container for configuration iterations, the author did not properly clean up the resources, leading to a situation where the cluster was nearly full of these orphaned pods. This made the cluster almost unusable until a colleague intervened to clean them up. The incident highlighted the importance of managing the lifecycle of resources in shared infrastructure and ensuring that all created resources are accounted for and cleaned up properly.
+raw-citations: Your Jenkins setup must have broken production at some point - tell me about the outage you caused. — jenkins-openshift-cicd-operations.org
+normalized: Your Jenkins setup must have broken production at some point - tell me about the outage you caused. — 0
+guard: Your Jenkins setup must have broken production at some point - tell me about the outage you caused. — none
+retrieved: What is Spec-First, and where did it come from? — spec-first-pitch.org, spec-first-philosophy.org, reactive-testing-project.org, janbot-value-proposition.org
+raw-answer: What is Spec-First, and where did it come from? — Spec-First is an approach that emphasizes starting with a specification as the main source of truth for development, ensuring that both AI and the developer remain aligned and focused. It originated from the need to prevent AI from "hallucinating" and to maintain direction in the development process. The methodology includes tools like the spec-kit and the BMAD-Method, which simulate agile development and facilitate AI-driven implementation based on well-defined specifications.
+raw-citations: What is Spec-First, and where did it come from? — spec-first-pitch.org, spec-first-philosophy.org, reactive-testing-project.org
+normalized: What is Spec-First, and where did it come from? — 0
+guard: What is Spec-First, and where did it come from? — none
+retrieved: What is the visibility dependency you have written about? — janbot-ai-agent.org, openshift-kubernetes-bridge.org, reactive-testing-origin.org, departure-narrative.org
+raw-answer: What is the visibility dependency you have written about? — The visibility dependency refers to a situation where real capabilities or contributions are not visible through standard keyword scans. For example, while terms like "Python, FastAPI, ChromaDB" may be present, they do not convey the underlying architectural thinking or design maturity. This concept is crucial as it highlights that important aspects of a project or capability may remain hidden unless actively communicated or documented.
+raw-citations: What is the visibility dependency you have written about? — janbot-ai-agent.org, openshift-kubernetes-bridge.org, departure-narrative.org
+normalized: What is the visibility dependency you have written about? — 0
+guard: What is the visibility dependency you have written about? — none
+retrieved: You didn't build that monitoring stack yourself - you copied it from a tutorial, right? — insights-health-monitoring.org, departure-narrative.org, nagios-snmp-monitoring.org, insights-health-monitoring.org
+raw-answer: You didn't build that monitoring stack yourself - you copied it from a tutorial, right? — The monitoring stack was built as a complete solution for a neighboring team's needs, rather than being copied from a tutorial. It was developed using a spec-driven approach, indicating that it was tailored specifically for the project requirements rather than following a generic tutorial.
+raw-citations: You didn't build that monitoring stack yourself - you copied it from a tutorial, right? — insights-health-monitoring.org, departure-narrative.org
+normalized: You didn't build that monitoring stack yourself - you copied it from a tutorial, right? — 0
+guard: You didn't build that monitoring stack yourself - you copied it from a tutorial, right? — none
+retrieved: Your mentoring was just code review, not real coaching, right? — mentoring-downchain.org, mentoring-downchain.org, spec-first-pitch.org, spec-first-pitch.org
+raw-answer: Your mentoring was just code review, not real coaching, right? — The mentoring provided was more than just code review; it involved active listening, guidance, and creating a supportive environment that contributed to the mentee's confidence and success. The feedback from the mentee highlights that the mentorship felt open and real, which goes beyond typical formal coaching or code review.
+raw-citations: Your mentoring was just code review, not real coaching, right? — mentoring-downchain.org
+normalized: Your mentoring was just code review, not real coaching, right? — 0
+guard: Your mentoring was just code review, not real coaching, right? — none
+retrieved: You only automated things for yourself, never for the team, right? — knowledge-drift.org, departure-narrative.org, entering-an-unknown-system.org, growth-in-any-role.org
+raw-answer: You only automated things for yourself, never for the team, right? — The context indicates that the engineer automated processes to make life easier for both himself and the team, suggesting that automation was not solely for personal benefit but also aimed at improving the team's workflow.
+raw-citations: You only automated things for yourself, never for the team, right? — departure-narrative.org
+normalized: You only automated things for yourself, never for the team, right? — 0
+guard: You only automated things for yourself, never for the team, right? — none
+retrieved: What is the Beaker CI you worked with? — rhsm-ansible-qe.org, reactive-testing-project.org, jenkins-openshift-cicd-operations.org, jenkins-openshift-cicd-operations.org
+raw-answer: What is the Beaker CI you worked with? — Beaker CI is described as "production testware, not a demo," indicating that it is a robust continuous integration tool used in a production environment. It is part of a larger test architecture that includes over 60 playbooks and a 737-line orchestrator, demonstrating its capability to handle testing at scale.
+raw-citations: What is the Beaker CI you worked with? — rhsm-ansible-qe.org
+normalized: What is the Beaker CI you worked with? — 0
+guard: What is the Beaker CI you worked with? — none
+retrieved: What are the custom metrics in your monitoring stack? — insights-health-monitoring.org, insights-health-monitoring.org, nagios-snmp-monitoring.org, insights-health-monitoring.org
+raw-answer: What are the custom metrics in your monitoring stack? — The custom metrics in the monitoring stack include successful and failed uploads of the Insights Client, core updates, client and core versions, GA vs Canary channel comparisons, and RHSM system registration status. Additionally, Node exporter custom metrics are used for system-level observability.
+raw-citations: What are the custom metrics in your monitoring stack? — insights-health-monitoring.org
+normalized: What are the custom metrics in your monitoring stack? — 0
+guard: What are the custom metrics in your monitoring stack? — none
+retrieved: Your Python work is just glue scripts, not real systems work, right? — personal-intro.org, spec-first-pitch.org, personal-intro.org, substitutable-ai.org
+raw-answer: Your Python work is just glue scripts, not real systems work, right? — The work involves building systems that can be verified rather than just demonstrated, indicating a focus on real systems work rather than merely glue scripts. The author has expertise in Python and Perl, and while they acknowledge limitations in TypeScript, they emphasize their capability in creating functional systems with a strong foundation in asynchronous systems and invariant testing.
+raw-citations: Your Python work is just glue scripts, not real systems work, right? — personal-intro.org, substitutable-ai.org
+normalized: Your Python work is just glue scripts, not real systems work, right? — 0
+guard: Your Python work is just glue scripts, not real systems work, right? — none
+retrieved: The matching engine is a toy, not a real product, right? — matching-engine.org, matching-engine.org, respectful-partnership.org, matching-engine.org
+raw-answer: The matching engine is a toy, not a real product, right? — The Krakatoa Matching Engine is not just a toy; it is described as a high-throughput, polyglot matching engine built as proof-of-work for the spec-kit framework, indicating that it is a serious project rather than a mere toy.
+raw-citations: The matching engine is a toy, not a real product, right? — matching-engine.org
+normalized: The matching engine is a toy, not a real product, right? — 0
+guard: The matching engine is a toy, not a real product, right? — none
+retrieved: You learned Kubernetes from a cheat sheet, not from real work, right? — openshift-kubernetes-bridge.org, openshift-kubernetes-bridge.org, jenkins-openshift-cicd-operations.org, filesystem-recovery.org
+raw-answer: You learned Kubernetes from a cheat sheet, not from real work, right? — The context does not explicitly state that Kubernetes was learned solely from a cheat sheet or without real work. Instead, it describes experiences related to Kubernetes through OpenShift and mentions formative incidents that contributed to the author's learning. Therefore, it cannot be concluded that the author learned Kubernetes only from a cheat sheet without practical experience.
+raw-citations: You learned Kubernetes from a cheat sheet, not from real work, right? — openshift-kubernetes-bridge.org, jenkins-openshift-cicd-operations.org
+normalized: You learned Kubernetes from a cheat sheet, not from real work, right? — 0
+guard: You learned Kubernetes from a cheat sheet, not from real work, right? — none
+retrieved: The eDeposit work was just one library - not substantial, right? — edeposit.org, cdbazar.org, architect-not-coder.org, edeposit.org
+raw-answer: The eDeposit work was just one library - not substantial, right? — The eDeposit work was not substantial in the sense that it was an internal system primarily focused on the ingestion of digital content into the Long-Term Preservation system. It served a specific purpose for librarians to process, validate, and archive publications, but it was part of a larger framework and not a standalone significant project.
+raw-citations: The eDeposit work was just one library - not substantial, right? — edeposit.org
+normalized: The eDeposit work was just one library - not substantial, right? — 0
+guard: The eDeposit work was just one library - not substantial, right? — none
+retrieved: You never actually ran anything in CI - it was just talk, right? — rhsm-ansible-qe.org, jenkins-openshift-cicd-operations.org, linux-origins-vut.org, jenkins-openshift-cicd-operations.org
+raw-answer: You never actually ran anything in CI - it was just talk, right? — Yes, it was not just talk. The architecture ran as part of the team's daily CI/CD pipeline for years, demonstrating that it was production testware and not merely a prototype or proof of concept.
+raw-citations: You never actually ran anything in CI - it was just talk, right? — rhsm-ansible-qe.org
+normalized: You never actually ran anything in CI - it was just talk, right? — 0
+guard: You never actually ran anything in CI - it was just talk, right? — none
+retrieved: How do you handle credentials and secrets? — secret-management-evolution.org, secret-management-evolution.org, secret-management-evolution.org, secret-management-evolution.org
+raw-answer: How do you handle credentials and secrets? — Handling credentials and secrets has evolved significantly over time. The current best practice emphasizes minimizing the use of long-lived credentials. Instead, short-lived tokens are obtained through a two-factor authentication (2FA) protected account, impersonating a service account. This approach ensures that credentials cease to exist once the work is completed. Additionally, roles are defined by the type of work rather than convenience, promoting least privilege and preventing accidental misuse. All credentials and tokens should be stored in a 2FA-protected vault, moving them out of shell startup files. The overarching principle is that the best secret is no secret, focusing on avoiding the need for secrets altogether when possible.
+raw-citations: How do you handle credentials and secrets? — secret-management-evolution.org, secret-management-evolution.org, secret-management-evolution.org
+normalized: How do you handle credentials and secrets? — 0
+guard: How do you handle credentials and secrets? — none
+retrieved: Have you ever had to maintain someone else's legacy code? — bata-stock-update.org, php-to-django-arc.org, growth-in-any-role.org, php-to-django-arc.org
+raw-answer: Have you ever had to maintain someone else's legacy code? — Yes, I have maintained someone else's legacy code. For instance, I took over an information system for a law firm that was written in PHP. The system was complicated, and I had to extend it module by module, iterating based on the debug output until it worked. However, I never fully understood the architectural decisions behind the system, which made it challenging to grasp the complexity involved.
+raw-citations: Have you ever had to maintain someone else's legacy code? — php-to-django-arc.org
+normalized: Have you ever had to maintain someone else's legacy code? — 0
+guard: Have you ever had to maintain someone else's legacy code? — none
+retrieved: How do you debug a problem you cannot reproduce locally? — pdb-emacs-debugging.org, pdb-emacs-debugging.org, substitutable-ai.org, jenkins-openshift-cicd-operations.org
+raw-answer: How do you debug a problem you cannot reproduce locally? — To debug a problem that cannot be reproduced locally, you can use breakpoints on the live production system during a low-traffic period. This involves placing a breakpoint at the relevant line of code on the production server, enabling debug output, and inspecting the real state of the application to identify and fix the defect directly. This method allows you to observe the actual conditions under which the problem occurs, rather than relying on guesses or assumptions. It is important to choose a time when the server is less busy to minimize the impact on users.
+raw-citations: How do you debug a problem you cannot reproduce locally? — pdb-emacs-debugging.org
+normalized: How do you debug a problem you cannot reproduce locally? — 0
+guard: How do you debug a problem you cannot reproduce locally? — none
+retrieved: How do you keep up with your own AI-assisted work? — drift-closing-cadence.org, spec-first-pitch.org, cpp-memory-allocator.org, respectful-partnership.org
+raw-answer: How do you keep up with your own AI-assisted work? — To keep up with my own AI-assisted work, I utilize a structured approach that includes a compressed onboarding document, a weekly block for reflection, and a daily closing ritual. This method ensures that the gap between what the AI produces and what I can reproduce is managed through scheduled operations rather than spontaneous efforts. The daily closing involves making one decision and executing one command from the runbook, which helps maintain clarity and direction in the workflow.
+raw-citations: How do you keep up with your own AI-assisted work? — drift-closing-cadence.org
+normalized: How do you keep up with your own AI-assisted work? — 0
+guard: How do you keep up with your own AI-assisted work? — none
+retrieved: Does the AI have to be substitutable too, and are you? — substitutable-ai.org, knowledge-drift.org, knowledge-drift.org, architect-not-coder.org
+raw-answer: Does the AI have to be substitutable too, and are you? — Yes, the AI must be substitutable just like any team member. If a team member is not substitutable, it creates a single point of failure, which applies equally to the AI. Additionally, the human working with the AI must also be able to reproduce the work by hand, ensuring that they are not solely dependent on the AI's capabilities.
+raw-citations: Does the AI have to be substitutable too, and are you? — substitutable-ai.org, knowledge-drift.org
+normalized: Does the AI have to be substitutable too, and are you? — 0
+guard: Does the AI have to be substitutable too, and are you? — none
+retrieved: Do you know agentic workflows? — procedure-drift.org, procedure-drift.org, spec-first-pitch.org, knowledge-drift.org
+raw-answer: Do you know agentic workflows? — Agentic workflows refer to the processes where an agent (such as an AI) executes commands, tools, and pipelines, which may differ from what humans can execute. The concept emphasizes that knowledge is gained through reading, while know-how is acquired through execution. A primary runbook serves as a crucial artifact for this execution, ensuring that both agents and humans can operate effectively within the workflow.
+raw-citations: Do you know agentic workflows? — procedure-drift.org, knowledge-drift.org
+normalized: Do you know agentic workflows? — 0
+guard: Do you know agentic workflows? — none
+retrieved: You wrote JanBot in Rust, right? — janbot-value-proposition.org, janbot-ai-agent.org, matching-engine.org, matching-engine.org
+raw-answer: You wrote JanBot in Rust, right? — Yes, JanBot was written in Rust, as indicated by the mention of Rust in the context discussing the architectural thinking behind the project.
+raw-citations: You wrote JanBot in Rust, right? — matching-engine.org
+normalized: You wrote JanBot in Rust, right? — 0
+guard: You wrote JanBot in Rust, right? — none
+retrieved: JanBot is still a prototype running on your laptop, right? — reactive-testing-framework.org, reactive-testing-framework.org, intent-based-delegation.org, reactive-testing-framework.org
+raw-answer: JanBot is still a prototype running on your laptop, right? — Yes, JanBot is still a prototype running on your laptop, as it was designed and implemented as a prototype and has not been adopted for production use.
+raw-citations: JanBot is still a prototype running on your laptop, right? — reactive-testing-framework.org
+normalized: JanBot is still a prototype running on your laptop, right? — 0
+guard: JanBot is still a prototype running on your laptop, right? — none
+retrieved: JanBot answers from a PostgreSQL database, correct? — janbot-value-proposition.org, janbot-value-proposition.org, bata-stock-update.org, janbot-value-proposition.org
+raw-answer: JanBot answers from a PostgreSQL database, correct? — No, JanBot does not answer from a PostgreSQL database. It operates over a corpus that contains the content it answers from at runtime, while the golden dataset serves as a specification of correct behavior, not as a knowledge base from which it retrieves answers.
+raw-citations: JanBot answers from a PostgreSQL database, correct? — janbot-value-proposition.org, janbot-value-proposition.org
+normalized: JanBot answers from a PostgreSQL database, correct? — 0
+guard: JanBot answers from a PostgreSQL database, correct? — none
+retrieved: Your cdbazar platform runs on Rails, right? — cdbazar.org, cdbazar.org, cdbazar.org, php-to-django-arc.org
+raw-answer: Your cdbazar platform runs on Rails, right? — No, the cdbazar platform runs on Django, not Rails.
+raw-citations: Your cdbazar platform runs on Rails, right? — cdbazar.org
+normalized: Your cdbazar platform runs on Rails, right? — 0
+guard: Your cdbazar platform runs on Rails, right? — none
+retrieved: You managed a team of ten engineers at your last job — how did you handle them? — mentoring-downchain.org, departure-narrative.org, oracle-index-incident.org, mentoring-downchain.org
+raw-answer: You managed a team of ten engineers at your last job — how did you handle them? — In my previous role managing a team of ten engineers, I focused on creating an open and supportive environment. I made sure to always be available for questions, regardless of their complexity, and fostered a non-judgmental atmosphere that encouraged open communication. This approach not only helped my team feel comfortable but also contributed to their professional growth, as evidenced by a mentee who credited my mentorship with their promotion from Associate Software Maintenance Engineer to Subject Matter Expert. I believe in taking responsibility for the growth environment of my team, ensuring they are engaged and stimulated in their work.
+raw-citations: You managed a team of ten engineers at your last job — how did you handle them? — mentoring-downchain.org, mentoring-downchain.org
+normalized: You managed a team of ten engineers at your last job — how did you handle them? — 0
+guard: You managed a team of ten engineers at your last job — how did you handle them? — declined: commitment-claim
+retrieved: What is your experience with Kotlin? — nepodpis.org, openshift-kubernetes-bridge.org, openshift-kubernetes-bridge.org, perl-clojure-gateway.org
+raw-answer: What is your experience with Kotlin? — <none>
+raw-citations: What is your experience with Kotlin? — <none>
+normalized: What is your experience with Kotlin? — <none>
+guard: What is your experience with Kotlin? — <none>
+retrieved: Have you used Apache Spark or Airflow for data pipelines? — jenkins-openshift-cicd-operations.org, dna-threads.org, spec-first-philosophy.org, edeposit.org
+raw-answer: Have you used Apache Spark or Airflow for data pipelines? — The provided context does not mention the use of Apache Spark or Airflow for data pipelines. It primarily discusses CI/CD practices, job definitions, and event-driven architecture without specific references to these technologies.
+raw-citations: Have you used Apache Spark or Airflow for data pipelines? — <none>
+normalized: Have you used Apache Spark or Airflow for data pipelines? — 0
+guard: Have you used Apache Spark or Airflow for data pipelines? — declined: uncited
+retrieved: What is your experience with HashiCorp Nomad? — secret-management-evolution.org, vagrant-provisioning.org, openshift-kubernetes-bridge.org, cdbazar.org
+raw-answer: What is your experience with HashiCorp Nomad? — The provided context does not contain any specific information or experience related to HashiCorp Nomad. Therefore, I cannot provide an answer based on the given context.
+raw-citations: What is your experience with HashiCorp Nomad? — <none>
+normalized: What is your experience with HashiCorp Nomad? — 0
+guard: What is your experience with HashiCorp Nomad? — declined: uncited
+retrieved: Do you know Chef or Puppet for configuration management? — secret-management-evolution.org, jenkins-openshift-cicd-operations.org, jenkins-openshift-cicd-operations.org, jenkins-openshift-cicd-operations.org
+raw-answer: Do you know Chef or Puppet for configuration management? — The provided context does not mention Chef or Puppet specifically for configuration management. It discusses concepts related to CI infrastructure and secret management but does not provide information on these particular tools.
+raw-citations: Do you know Chef or Puppet for configuration management? — <none>
+normalized: Do you know Chef or Puppet for configuration management? — 0
+guard: Do you know Chef or Puppet for configuration management? — declined: uncited

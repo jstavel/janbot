@@ -1,0 +1,71 @@
+:PROPERTIES:
+:ID:       20261021-growth-in-any-role
+:TITLE:    Growth works in any role — but only through a topic that brings something to the people around
+:CREATED:  <2026-10-21>
+:AUTHOR:   goose
+:REVIEWED:
+:DOMAIN:   attitudes
+:TAGS:     rust motivace uzitek kariera komfortni-zona deep-work start-with-why
+:SYNOPSIS: Every role has interesting areas to improve, but growth that is worth anything is growth whose topic brings something to the company or to the people around — not personal development for personal development's sake.
+:STRENGTHS:  finds-leverage-anywhere ties-growth-to-value not-motivated-by-the-tool-itself
+:WEAKNESSES:  value-for-others-is-hard-to-measure sounds-like-a-cliche-until-evidenced never-verified-in-a-role-without-leverage
+:SOURCE-ID: @@SOURCE-ID@@
+:SOURCE-SHA256: @@SOURCE-SHA256@@
+:END:
+
+# Growth works in any role
+
+Use this when they ask why I would even want to do this job — or when I myself am
+weighing whether to stay where I am.
+
+* The method in one sentence
+
+> In every job I look for **an area that can be improved or automated**, and that
+> topic has to bring something to the people around — the company, the team,
+> another team. When that holds, I can grow anywhere; when it does not, the
+> growth has nowhere to go.
+
+* What actually drives me
+
+Not the language and not the tool. **Seeing that my work is useful to someone
+else** — that I made someone's day better. That is consistent across roles:
+developer, tester, admin. Strip the technology away and this is what remains.
+
+* Why "comfort zone" is not enough of an explanation
+
+Stepping outside the comfort zone is a phrase, and a phrase can be said about
+anything. It becomes usable only in connection with usefulness: **a topic that
+engages the head and at the same time helps someone.** Without the second half it
+is a hobby. It relates to
+[[id:20261007-foundational-books][the books that shaped how I work]]
+(Deep Work, Start With Why) — but the point here is how this looks in practice,
+not in a quotation.
+
+* Honest limits
+
+- **"Usefulness to the people around" is hard to measure.** I can say that I feel
+  it; I cannot evidence it with a number. Until I can, it is my criterion, not a
+  fact.
+- **It sounds like a phrase from a motivational poster.** The only difference is
+  that with me it decided concrete choices — and that is a claim that should be
+  evidenced by examples, not asserted.
+- **It is not universal advice.** For some people growth is something other than
+  usefulness to the people around; I give this answer for myself.
+- **Untested in a role without leverage.** When a position gives no room to
+  improve anything, I do not know whether I would leave it, or rationalize it.
+
+* Related
+
+- [[id:20261021-routine-carries-knowledge][Routine carries the knowledge]] — where the usefulness comes from when the work looks boring.
+- [[id:20261007-mentoring-downchain][Extreme Ownership DOWN]] — usefulness to the people around, in the form of another person.
+- [[id:20261018-architect-not-coder][Hired for judgement, not for typing]] — another version of the same: the value is not in writing code.
+
+* Sources
+- corpus/texts/20261021-why-engineer-wants-to-improve-transcript.txt
+  — a transcript of the recording from 2026-10-21, Gemini `gemini-3.5-flash-lite`.
+  git ref: 51f3c39:corpus/texts/20261021-why-engineer-wants-to-improve-transcript.txt
+  sha256: 7f5b45b709dc635fced42030452012be91f6742e25b22c0dcd218314a12ebfcc
+- corpus/texts/20261021-growth-on-any-position-transcript.txt
+  — a transcript of the recording from 2026-10-21, Gemini `gemini-3.5-flash-lite`.
+  git ref: 51f3c39:corpus/texts/20261021-growth-on-any-position-transcript.txt
+  sha256: 4c192b929ea2a77bdc238fde254a567149a9040721a1cd4fce96ade2ffe71ef6

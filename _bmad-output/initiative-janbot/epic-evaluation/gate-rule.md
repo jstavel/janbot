@@ -38,22 +38,73 @@ per-item evidence remains valid historical record.
 
 ## Reference
 
-Reference: the val baseline **`156b5d1a76694867bd92e7a03feda76b`** (status `FINISHED`),
-registered 2026-10-20 under the population contract above. Nominal gate-eligible
-**n = 49** (val 59 minus the 10 `should_refuse`); the claim-quality metrics now aggregate
-over that same **n = 49** — the nominal/observed split is gone. Config: `chunks` window,
-`top_k=4`, hybrid, θ = 0.26; judge `anthropic/claude-haiku-4.5`; `program=baseline`
-(`JANBOT_PROGRAM_PATH` unset); **`output_guard=on`** (ADR-010); `dataset_sha256`
-`a8bd69dc…`; corpus `05b11a7` (61 content files), index **417 chunks / 60 sources**;
-train 47 / val 59; `should_refuse` 13 (10 val). This reference supersedes `5ed5d8d7`
-under a **contract change**, not a corpus/index/dataset re-base: the per-item retrieval,
-citation, judge, failure and decline lines are byte-identical to `5ed5d8d7`; only the
-aggregates and populations changed. Gate comparisons are still evaluated on the common
-items observed in both runs (brief §6.8, Amendment 2), as a second guard beside the fixed
-population. It is a **re-baseline, not a gate verdict**; the principle (1.5σ, symmetric
-floor) is unchanged.
+Reference: the val baseline **`e1a0fa4ef96f4f47b37dcea1e0bfba36`** (status
+`FINISHED`), measured 2026-10-22 on the re-based instrument under the population
+contract above. Nominal gate-eligible **n = 55** (val 69 minus the 14
+`should_refuse`); every claim-quality metric aggregates over that same **n = 55**.
+Config: `chunks` window, `top_k=4`, hybrid, θ = 0.26; judge
+`anthropic/claude-haiku-4.5`; `program=baseline` (`JANBOT_PROGRAM_PATH` unset);
+**`output_guard=on`** (ADR-010); `dataset_sha256`
+`c4786e1c9e3f6f5c677b3ecbbee8fbc03ff19628b9bcf374aea958fc9cd9af20` (120 items;
+train 51 / val 69); corpus `~/org` `339359e` (64 content files), index **440
+chunks / 63 sources**; val `should_refuse` 14. Measured: `citation_correctness`
+**0.6182** (34/55), `faithfulness` **0.8545** (47/55); context: `answer_coverage`
+0.9636 (53/55), `citation_precision` 0.6348, `public_references` 0.9636,
+`retrieval_accuracy` 0.6545, `retrieval_mrr` 0.7121, `refusal_pass_rate` 1.0
+(n=14), `spurious_refusal_rate` 2/55. Diagnostics: `hard_error__n` = 0,
+`in_corpus_decline__n` = 2, `judge_failure__n` = 0, `non_answered__n` = 2.
+Artifact: `run-e1a0fa4e-output.txt`. The frozen floors for this reference are the
+n = 55 pre-registration **below** (**citation accept ≥6 / regress ≤5; faithfulness
+accept ≥4 / regress ≤3**). `156b5d1a` is **historical** (corpus `05b11a7`,
+59-object extract, 417 chunks; dataset `a8bd69dc…`, 106 items; n = 49) and
+`c6ced445` is older still (dataset `1c3864bd…`, 91 items, 44 gate-eligible,
+~291 chunks). Their absolute claim-quality values are not comparable to this run. It is a **re-baseline, not a gate verdict**; the
+principle (1.5σ, symmetric floor) is unchanged.
+
+## Re-registration — 2026-10-22 (n = 55, thresholds frozen before the run)
+
+The instrument moved under the reference, so the reference was measured on a new
+instrument and its thresholds were frozen **before** that measurement:
+
+- **Corpus re-extract at `339359e`** (`~/org`, view commit): 62 objects (the
+  view's full selection) + `public-proof-map.org` + `thesis-map.md`; the three
+  Czech objects (`growth-in-any-role`, `intent-based-delegation`,
+  `style-references-as-intent`) enter as English translations with injected
+  `:SOURCE-ID:`/`:SOURCE-SHA256:` pins. Extract committed at janbot `1aae1d8`;
+  index rebuilt: **440 chunks / 63 sources**, identity `930e0a3d…`
+  (`all-MiniLM-L6-v2@913d7300…`); `out_of_scope_sources` empty at startup.
+- **Dataset `c4786e1c…`** (120 items; train 51 / val 69; val `should_refuse` 14
+  → **gate-eligible n = 55**, verified against the dataset file).
+- **Thresholds, derived at the outgoing reference's own p and projected to
+  n = 55** (`156b5d1a` is the only honest pre-measurement p):
+  - **Gain-carrier `citation_correctness`** (p = 33/49 = 0.6735):
+    σ = √(0.6735·0.3265/55) ≈ 0.0632; 1.5σ ≈ 0.0948. 5/55 = 0.0909 is inside it;
+    6/55 = 0.1091 exceeds it → **accept ≥ 6 items up; a regression is allowed up
+    to 5 items down**.
+  - **Guard `faithfulness`** (p = 45/49 = 0.9184): σ = √(0.9184·0.0816/55) ≈
+    0.0369; 1.5σ ≈ 0.0554. 3/55 = 0.0545 is inside it — exactly the noise-carry
+    the re-baseline warns about, which is why the frozen n=49 floor (≤2) must
+    **not** be carried forward; 4/55 = 0.0727 exceeds it → **accept ≥ 4 items
+    up; a regression is allowed up to 3 items down**.
+- **Integer thresholds, frozen: citation accept ≥ 6 / regress ≤ 5; faithfulness
+  accept ≥ 4 / regress ≤ 3.** The principle is untouched: 1.5σ per metric at the
+  reference's own p, symmetric floor, one fixed population per claim-quality
+  metric, judge failure = faithfulness failure. If the new reference's own p
+  shifts materially from `156b5d1a`'s, that is recorded — these frozen floors
+  still govern this round.
+- **`156b5d1a` and `c6ced445` are historical from here on** — `156b5d1a` on
+  dataset `a8bd69dc…` (106 items, n = 49) and 417 chunks; `c6ced445` on dataset
+  `1c3864bd…` (91 items, n = 44) and ~291 chunks; neither is comparable to runs
+  on this instrument.
+- **Owner sign-off: given with the plan approval (2026-10-22), before the
+  reference run.** The frozen threshold commit `7161460` predates the run; this
+  sign-off line was committed with the registration, so the repository's commit
+  time does not by itself prove the ordering — the threshold commit does.
 
 ## Metrics
+
+*Historical derivation at `156b5d1a` (n = 49); the governing floors for the
+current reference are the n = 55 pre-registration above.*
 
 - **Gate metrics: `citation_correctness` is the GAIN-CARRIER** (baseline **0.6735**,
   33/49 — room to move) and **`faithfulness` is the GUARD** (baseline **0.9184**,
@@ -75,6 +126,9 @@ floor) is unchanged.
   It is a failure in the claim-quality metrics.
 
 ## Target and threshold
+
+*Historical derivation at `156b5d1a` (n = 49); the governing floors for the
+current reference are the n = 55 pre-registration above.*
 
 - **Symmetric target:** either gate metric may carry the gain; **neither may regress
   beyond the floor**. A cross-floor trade — one up beyond the floor, the other down
@@ -109,12 +163,13 @@ floor) is unchanged.
 ## Breadth gates optimization
 
 Detecting a ~5% effect needs val ≈ 100 items; until then **"no decision" is the
-honest expected outcome** of a stage, not a failure. **Breadth has arrived** (2026-10-15):
-the val is now **59 items (49 gate-eligible)** across the ten-class failure taxonomy, and
-the N confirmation on the previous 54-item val passed (citation-moved 9 under hybrid vs
-the floor 5); that confirmation is carried forward as the breadth evidence — it was **not**
-re-measured on the new val. The gate is now **decidable** for a lever that moves
-`citation_correctness`.
+honest expected outcome** of a stage, not a failure. **Breadth has arrived**: as of
+the 2026-10-22 re-baseline the val is **69 items (55 gate-eligible)** across the
+ten-class failure taxonomy (it was 59/49 at the 2026-10-20 reference), and the N
+confirmation on the earlier 54-item val passed (citation-moved 9 under hybrid vs
+the floor 5); that confirmation is carried forward as the breadth evidence — it was
+**not** re-measured on each new val. The gate is **decidable** for a lever that
+moves `citation_correctness`.
 
 Threshold note on record: 2σ would be off-spec — chosen after the fact — and would
 weaken the pre-registration; 1.5σ is the value entry 18 pre-registered, re-instantiated
@@ -141,6 +196,14 @@ A re-registration moves the reference and re-derives its n-specific thresholds; 
   and dataset; the per-item evidence is byte-identical to `5ed5d8d7`. Every earlier run is
   incomparable on absolute claim-quality values. Floors: citation accept ≥5 / regress ≤4;
   faithfulness accept ≥3 / regress ≤2. This is a re-registration, not a verdict.
+- **2026-10-22** — **`156b5d1a…` → `e1a0fa4ef96f4f47b37dcea1e0bfba36`** (corpus
+  re-extract at `~/org` `339359e`: 62 objects + 2 generated = 64 content files; three
+  Czech objects enter as pinned English translations; index 440/63; dataset
+  `c4786e1c…`, 120 items, train 51 / val 69, **n = 55**). Floors were frozen before
+  the run from `156b5d1a`'s own p projected to n = 55: citation accept ≥6 / regress
+  ≤5; faithfulness accept ≥4 / regress ≤3. Measured: citation 34/55 (0.6182),
+  faithfulness 47/55 (0.8545), zero hard errors and zero judge failures. `156b5d1a`
+  and `c6ced445` are historical from here on. This is a re-registration, not a verdict.
 
 ## Verdict record
 
