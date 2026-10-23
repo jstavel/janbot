@@ -36,3 +36,6 @@ _bmad/render/
 *.tfvars
 *.tfvars.json
 
+
+# Playwright MCP artifacts
+.playwright-mcp/

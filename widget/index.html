@@ -1,197 +1,297 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>JanBot — ask the public profile</title>
-<style>
-  :root { color-scheme: light dark; }
-  * { box-sizing: border-box; }
-  body {
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    margin: 0;
-    background: #f6f6f4;
-    color: #1c1c1c;
-    line-height: 1.5;
-  }
-  @media (prefers-color-scheme: dark) {
-    body { background: #17171a; color: #e8e8e6; }
-    #reply.answered { border-color: #3a5a40; background: #20261f; }
-    #reply.declined { border-color: #6b5b2e; background: #26221a; }
-    #error { color: #e08888; }
-  }
-  main { max-width: 40rem; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
-  h1 { font-size: 1.6rem; margin: 0 0 0.25rem; }
-  #intro { margin: 0 0 1.5rem; color: #63635e; }
-  form { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  label { display: block; width: 100%; font-size: 0.9rem; margin-bottom: 0.25rem; }
-  input[type="text"] {
-    flex: 1 1 14rem;
-    padding: 0.55rem 0.7rem;
-    font-size: 1rem;
-    border: 1px solid #b9b9b2;
-    border-radius: 6px;
-    background: #fff;
-    color: inherit;
-  }
-  @media (prefers-color-scheme: dark) { input[type="text"] { background: #232327; border-color: #44444b; } }
-  button {
-    padding: 0.55rem 1.1rem;
-    font-size: 1rem;
-    border: 1px solid #2c2c28;
-    border-radius: 6px;
-    background: #2c2c28;
-    color: #f6f6f4;
-    cursor: pointer;
-  }
-  button:disabled { opacity: 0.6; cursor: wait; }
-  #loading { font-style: italic; color: #63635e; }
-  #reply { border: 1px solid #b9b9b2; border-radius: 8px; padding: 0.9rem 1rem; background: #fff; }
-  @media (prefers-color-scheme: dark) { #reply { background: #202024; border-color: #44444b; } }
-  #reply.answered { border-color: #7aa87f; background: #f0f6ef; }
-  #reply.declined { border-color: #c9b06a; background: #faf6e8; }
-  #answer { margin: 0; white-space: pre-line; }
-  #citations { margin: 0.6rem 0 0; font-size: 0.85rem; color: #63635e; word-break: break-all; }
-  #error { color: #a03030; font-size: 0.95rem; }
-  #caption { margin-top: 2rem; font-size: 0.85rem; color: #63635e; }
-</style>
-</head>
-<body>
-<main>
-  <h1>JanBot</h1>
-  <p id="intro">Ask a question about Jan&rsquo;s public profile.</p>
-
-  <form id="ask">
-    <label for="question">Your question</label>
-    <input id="question" name="question" type="text" autocomplete="off" required>
-    <button type="submit" id="ask-button">Ask</button>
-  </form>
-
-  <p id="loading" hidden aria-live="polite">
-    Waiting for the answer &mdash; the first question after idle may take up to
-    ~23&nbsp;s (the service cold-starts).
-  </p>
-
-  <section id="reply" hidden aria-live="polite">
-    <p id="answer"></p>
-    <p id="citations"></p>
-  </section>
-
-  <p id="error" hidden aria-live="assertive"></p>
-
-  <p id="caption">
-    A thin demo of the public JanBot API &mdash; how the service works, its
-    guardrails and its contract are in the
-    <a href="https://github.com/jstavel/janbot#readme">repository README</a>.
-  </p>
-</main>
-<script>
-"use strict";
-
-// The deployed public service. POST /chat is the only call this page makes;
-// it sends no key and the service holds none. This constant is the single
-// source of truth for the widget's endpoint — no CI injection, no build step.
-const SERVICE_URL = "https://janbot-api-kafmnjtk3a-lm.a.run.app/chat";
-
-const form = document.getElementById("ask");
-const input = document.getElementById("question");
-const askButton = document.getElementById("ask-button");
-const loading = document.getElementById("loading");
-const reply = document.getElementById("reply");
-const answerEl = document.getElementById("answer");
-const citationsEl = document.getElementById("citations");
-const errorEl = document.getElementById("error");
-
-const show = (el) => { el.hidden = false; };
-const hide = (el) => { el.hidden = true; };
-
-function setError(text) {
-  errorEl.textContent = text;
-  show(errorEl);
-}
-
-function renderReply(data) {
-  // The answer text comes from the server in both cases; an "insufficient"
-  // reply IS the graceful-decline copy (and never carries citations).
-  answerEl.textContent = data.answer;
-  if (data.status === "answered") {
-    const sources = (data.citations ?? []).map((citation) => citation.source);
-    citationsEl.textContent = sources.length
-      ? "Cited sources: " + sources.join(", ")
-      : "";
-    reply.className = "answered";
-  } else {
-    citationsEl.textContent = "";
-    reply.className = "declined";
-  }
-  show(reply);
-}
-
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const question = input.value.trim();
-  if (!question) {
-    setError("Please type a question first.");
-    return;
-  }
-  askButton.disabled = true;
-  hide(reply);
-  hide(errorEl);
-  show(loading);
-  try {
-    const response = await fetch(SERVICE_URL, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ question }),
-    });
-    hide(loading);
-    if (!response.ok) {
-      // Refusals (429/413/422, 5xx) use the /chat error envelope: {detail}.
-      // The 429 refusals get human copy keyed on the stable detail strings;
-      // everything else keeps the raw status + detail rendering.
-      let detail = "the service refused the request";
-      try {
-        const body = await response.json();
-        if (typeof body.detail === "string") detail = body.detail;
-      } catch (_) {
-        // A non-JSON refusal body keeps the generic copy.
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JanBot — ask the public profile</title>
+    <style>
+      :root {
+        color-scheme: light dark;
       }
-      if (response.status === 429 && detail === "too many requests") {
-        // The rate refusal carries Retry-After (seconds to this address's
-        // next window boundary), rounded up to whole minutes.
-        const seconds = Number.parseInt(response.headers.get("retry-after"), 10);
-        const minutes = Math.ceil(seconds / 60);
-        if (Number.isFinite(minutes) && minutes >= 1) {
-          setError(
-            "Too many questions from this address — try again in about " +
-              minutes +
-              (minutes === 1 ? " minute." : " minutes.")
-          );
-        } else {
-          setError("Too many questions from this address — try again later.");
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        margin: 0;
+        background: #f6f6f4;
+        color: #1c1c1c;
+        line-height: 1.5;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #17171a;
+          color: #e8e8e6;
         }
-        return;
+        #reply.answered {
+          border-color: #3a5a40;
+          background: #20261f;
+        }
+        #reply.declined {
+          border-color: #6b5b2e;
+          background: #26221a;
+        }
+        #error {
+          color: #e08888;
+        }
       }
-      if (
-        response.status === 429 &&
-        detail === "the daily model-call quota is exhausted"
-      ) {
-        setError(
-          "The daily question limit has been reached — please try again tomorrow."
-        );
-        return;
+      main {
+        max-width: 40rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 3rem;
       }
-      setError(response.status + ": " + detail);
-      return;
-    }
-    renderReply(await response.json());
-  } catch (_) {
-    hide(loading);
-    setError("The service could not be reached. Check your connection and try again.");
-  } finally {
-    askButton.disabled = false;
-  }
-});
-</script>
-</body>
+      h1 {
+        font-size: 1.6rem;
+        margin: 0 0 0.25rem;
+      }
+      #intro {
+        margin: 0 0 1.5rem;
+        color: #63635e;
+      }
+      form {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      label {
+        display: block;
+        width: 100%;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+      }
+      input[type="text"] {
+        flex: 1 1 14rem;
+        padding: 0.55rem 0.7rem;
+        font-size: 1rem;
+        border: 1px solid #b9b9b2;
+        border-radius: 6px;
+        background: #fff;
+        color: inherit;
+      }
+      @media (prefers-color-scheme: dark) {
+        input[type="text"] {
+          background: #232327;
+          border-color: #44444b;
+        }
+      }
+      button {
+        padding: 0.55rem 1.1rem;
+        font-size: 1rem;
+        border: 1px solid #2c2c28;
+        border-radius: 6px;
+        background: #2c2c28;
+        color: #f6f6f4;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+      #loading {
+        font-style: italic;
+        color: #63635e;
+      }
+      #reply {
+        border: 1px solid #b9b9b2;
+        border-radius: 8px;
+        padding: 0.9rem 1rem;
+        background: #fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        #reply {
+          background: #202024;
+          border-color: #44444b;
+        }
+      }
+      #reply.answered {
+        border-color: #7aa87f;
+        background: #f0f6ef;
+      }
+      #reply.declined {
+        border-color: #c9b06a;
+        background: #faf6e8;
+      }
+      #answer {
+        margin: 0;
+        white-space: pre-line;
+      }
+      #citations {
+        margin: 0.6rem 0 0;
+        font-size: 0.85rem;
+        color: #63635e;
+        word-break: break-all;
+      }
+      #error {
+        color: #a03030;
+        font-size: 0.95rem;
+      }
+      #caption {
+        margin-top: 2rem;
+        font-size: 0.85rem;
+        color: #63635e;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>JanBot</h1>
+      <p id="intro">Ask a question about Jan&rsquo;s public profile.</p>
+
+      <form id="ask">
+        <label for="question">Your question</label>
+        <input
+          id="question"
+          name="question"
+          type="text"
+          autocomplete="off"
+          required
+        />
+        <button type="submit" id="ask-button">Ask</button>
+      </form>
+
+      <p id="loading" hidden aria-live="polite">
+        Waiting for the answer &mdash; a new question can take up to ~15&nbsp;s;
+        common questions come back in about a second.
+      </p>
+
+      <section id="reply" hidden aria-live="polite">
+        <p id="answer"></p>
+        <p id="citations"></p>
+      </section>
+
+      <p id="error" hidden aria-live="assertive"></p>
+
+      <p id="caption">
+        A thin demo of the public JanBot API &mdash; how the service works, its
+        guardrails and its contract are in the
+        <a href="https://github.com/jstavel/janbot#readme">repository README</a
+        >.
+      </p>
+    </main>
+    <script>
+      "use strict";
+
+      // The deployed public service. POST /chat is the only call this page makes;
+      // it sends no key and the service holds none. This constant is the single
+      // source of truth for the widget's endpoint — no CI injection, no build step.
+      const SERVICE_URL = "https://janbot-api-kafmnjtk3a-lm.a.run.app/chat";
+
+      const form = document.getElementById("ask");
+      const input = document.getElementById("question");
+      const askButton = document.getElementById("ask-button");
+      const loading = document.getElementById("loading");
+      const reply = document.getElementById("reply");
+      const answerEl = document.getElementById("answer");
+      const citationsEl = document.getElementById("citations");
+      const errorEl = document.getElementById("error");
+
+      const show = (el) => {
+        el.hidden = false;
+      };
+      const hide = (el) => {
+        el.hidden = true;
+      };
+
+      function setError(text) {
+        errorEl.textContent = text;
+        show(errorEl);
+      }
+
+      function renderReply(data) {
+        // The answer text comes from the server in both cases; an "insufficient"
+        // reply IS the graceful-decline copy (and never carries citations).
+        answerEl.textContent = data.answer;
+        if (data.status === "answered") {
+          const sources = (data.citations ?? []).map(
+            (citation) => citation.source,
+          );
+          citationsEl.textContent = sources.length
+            ? "Cited sources: " + sources.join(", ")
+            : "";
+          reply.className = "answered";
+        } else {
+          citationsEl.textContent = "";
+          reply.className = "declined";
+        }
+        show(reply);
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const question = input.value.trim();
+        if (!question) {
+          setError("Please type a question first.");
+          return;
+        }
+        askButton.disabled = true;
+        hide(reply);
+        hide(errorEl);
+        show(loading);
+        try {
+          const response = await fetch(SERVICE_URL, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ question }),
+          });
+          hide(loading);
+          if (!response.ok) {
+            // Refusals (429/413/422, 5xx) use the /chat error envelope: {detail}.
+            // The 429 refusals get human copy keyed on the stable detail strings;
+            // everything else keeps the raw status + detail rendering.
+            let detail = "the service refused the request";
+            try {
+              const body = await response.json();
+              if (typeof body.detail === "string") detail = body.detail;
+            } catch (_) {
+              // A non-JSON refusal body keeps the generic copy.
+            }
+            if (response.status === 429 && detail === "too many requests") {
+              // The rate refusal carries Retry-After (seconds to this address's
+              // next window boundary), rounded up to whole minutes.
+              const seconds = Number.parseInt(
+                response.headers.get("retry-after"),
+                10,
+              );
+              const minutes = Math.ceil(seconds / 60);
+              if (Number.isFinite(minutes) && minutes >= 1) {
+                setError(
+                  "Too many questions from this address — try again in about " +
+                    minutes +
+                    (minutes === 1 ? " minute." : " minutes."),
+                );
+              } else {
+                setError(
+                  "Too many questions from this address — try again later.",
+                );
+              }
+              return;
+            }
+            if (
+              response.status === 429 &&
+              detail === "the daily model-call quota is exhausted"
+            ) {
+              setError(
+                "The daily question limit has been reached — please try again tomorrow.",
+              );
+              return;
+            }
+            setError(response.status + ": " + detail);
+            return;
+          }
+          renderReply(await response.json());
+        } catch (_) {
+          hide(loading);
+          setError(
+            "The service could not be reached. Check your connection and try again.",
+          );
+        } finally {
+          askButton.disabled = false;
+        }
+      });
+    </script>
+  </body>
 </html>
