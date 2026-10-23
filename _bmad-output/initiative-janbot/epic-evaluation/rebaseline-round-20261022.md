@@ -1,8 +1,9 @@
 # Re-baseline round 2026-10-22 — one corpus state, one index, one pre-registered gate
 
 **Task:** `task-rebaseline-round.md` · **Plan:** `task-rebaseline-round-plan.md` ·
-**Status:** extract, index, pre-registration, reference, cache and the gemini
-re-measure **done**; the deploy (owner-run) is **pending** (see §Pending).
+**Status:** all done — extract, index, pre-registration, reference, cache,
+gemini re-measure, deploy (owner applied 2026-10-23) and the post-apply cold
+start (6.0 s vs 1.0 s warm) recorded in `epic-gcp-deploy/run-e3-public.md`.
 
 The three divergences this round closes: the `~/org` view (`339359e`) was ahead of
 the extract, the 120-item dataset (`c4786e1c…`) was ahead of the baked cache
@@ -185,8 +186,10 @@ and record the seconds beside the ~50 s pre-change number in
 not change any image trigger, so the apply may use the final HEAD sha as its
 `image_tag`; no source, corpus, cache or Containerfile byte moves.
 
-## Pending (the owner's remaining steps)
+## 8. Applied and measured (owner, 2026-10-23)
 
-1. **Owner applies** the verified plan above, then records the post-apply cold
-   start beside ~50 s in `epic-gcp-deploy/run-e3-public.md`.
+The owner applied the verified plan; the new image (digest `80b39d1c…`) is
+live with rate 20/10 min. The cold start was measured per the runbook and
+recorded beside the pre-flip number: **6.0 s cold** (baked question, cache hit,
+~16 min idle) vs **1.0 s warm** — a ≈5 s penalty against the pre-flip ≈40–50 s.
 

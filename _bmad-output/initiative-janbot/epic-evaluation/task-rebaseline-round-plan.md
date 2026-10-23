@@ -70,7 +70,7 @@ context: []
 - [x] `gate-rule.md` n=55 pre-registration committed and **owner-signed** before the run. (committed `7161460`; signed 2026-10-22 before measuring, line recorded in `gate-rule.md`)
 - [x] Reference run + artifact + registration + round note; historical refs named. (run `e1a0fa4e…`, artifact `run-e1a0fa4e-output.txt`, citation 34/55, faithfulness 47/55; `gate-rule.md` repointed; `156b5d1a`/`c6ced445` historical)
 - [x] Cache regenerated; Containerfile repointed; `build_cache` validation green. (run `9f51134f…`, 55 entries, dataset `c4786e1c…`, corpus `a7752a0…`)
-- [ ] Verified `terraform plan` → **owner applies** → cold start measured and recorded. (plan verified: image replace + rate 10→20 / cpu-boost off→on in place, `Plan: 1 add / 1 change / 1 destroy`; **apply + cold start are owner-run and pending**)
+- [x] Verified `terraform plan` → **owner applies** → cold start measured and recorded. (plan verified `1 add / 1 change / 1 destroy`; owner applied 2026-10-23 — digest `80b39d1c…`, rate 20 live; cold start recorded in `epic-gcp-deploy/run-e3-public.md`: 6.0 s vs 1.0 s warm, penalty ≈5 s vs the pre-flip ~40–50 s)
 - [x] gemini re-run on the new instrument; measurement note supersession recorded. (run `3a7d8151…`, artifact `run-3a7d8151-output.txt`; fails the old "no regression on all four" rule: refusal_pass 14/14 → 13/14, citations dip 34 → 32; routing untouched)
 
 **Acceptance Criteria:**
