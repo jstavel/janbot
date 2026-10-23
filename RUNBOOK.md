@@ -161,7 +161,8 @@ gcloud run services update-traffic janbot-api --region europe-central2 --to-revi
 
 | trap | what it looks like | what to do |
 |---|---|---|
-| cold start | first request after a deploy takes 20+ s (instance boot ~8 s measured on `00008`) | do not read a single post-deploy request as steady-state latency |
+| cold start | first request after idle takes seconds, not milliseconds — measured 2026-10-23 on revision `00010` with `startup_cpu_boost`: **6.0 s cold vs 1.0 s warm** on a baked question (pre-boost, owner-measured 2026-10-22: ~40–50 s) | do not read a single post-deploy request as steady-state latency, and measure the cold path on a **baked** question so the model call is not inside the number |
+| deploy from an unmerged state | the deploy succeeds and production serves a digest that `origin/main` does not contain yet (applied from a local branch, PR still open) | the deployed state is **ahead of the repository**. Merge the applied commits **immediately** after the apply — otherwise anyone applying from `origin/main` silently rolls production back to the previous digest. If the merge cannot follow, do not apply yet |
 | `reason` vs `cause` | the API says `reason=personal`, the log says `cause=low-relevance` | `reason` is the question class, `cause` is the mechanism that fired — read the log |
 | file descriptors | the full suite fails in the store tests only | the per-test chroma/mlflow release fixture in [`tests/conftest.py`](tests/conftest.py) closes this (2026-10-22: measured 1021 → 26 fds at session end under `ulimit -n 1024`, suite green). A reappearance is a regression in that fixture — do not raise the limit |
 | stale state lock | `Error acquiring the state lock` after an interrupted command | confirm no terraform is running, then `terraform force-unlock <ID>` |
