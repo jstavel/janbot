@@ -170,6 +170,14 @@ Changes land through a pull request; `main` is not pushed to directly.
 > run id and the `dataset_sha256` instead — that is what the reference registration does. If a
 > commit SHA must be cited, cite it from `main` *after* the merge.
 
+> **Round branches are single-theme.** A corpus/eval round branch carries only what belongs
+> to that round. Documentation, agent-skill and configuration commits go to `main` through
+> their own PR (a `docs/*` branch), never onto the round branch. Otherwise the round PR
+> carries unrelated files, and as soon as `main` moves the round can no longer
+> fast-forward — which forces a merge commit (acceptable) or a rebase that rewrites pinned
+> SHAs (not acceptable). Measured 2026-10-25: an `org-keeping` skill commit landed on
+> `corpus/10-23-cv-and-honesty` because that branch happened to be checked out.
+
 ## License
 
 [MIT](LICENSE)
