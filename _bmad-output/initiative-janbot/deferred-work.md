@@ -140,3 +140,41 @@ this entry, do not let it compete with E2/E3, and do not open a ticket for it.
   evidence (cheapest instrument, if this is ever picked up): a "dovetail set" — 5–8 two-turn scenarios whose second turn is genuinely ambiguous alone (`"and what about that incident?"`, `"tell me more about it"`) — scored as `retrieval_accuracy` **on turn 2**. Deterministic, no judge, no model call, no cost. It makes "discussion" measurable before it is built.
   **Conditional trigger on ADR-009, control 4 (only if this entry is ever picked up):** the control reads "maximum *question* length"; the acceptance test is "a question over the cap is rejected (4xx) and never reaches retrieval". The moment a `history` field enters `ChatRequest` — the cheapest way to keep the server stateless, since history travels in the request rather than a Firestore session — that AC stops covering the surface: an unbounded history is a prompt-size and cost vector spread across many turns, not one oversized question. Control 4 would then have to bound the **total payload**, and `ChatRequest.question` currently carries no `max_length` at all (`src/janbot/api/contract.py:39`), so even the single-question cap is still to be built in E2. **This is not a defect today** (no `history` field exists, so the AC matches the shipped shape); it is a note about when its wording expires.
   status: **maybe** — unowned, unscheduled, no blocker, not planned. Revisit only if the owner ever says so, and then as a fresh decision (spec + ADR), not as a task pulled off a list.
+
+## Decided, deferred by ordering (2026-10-25) — authenticated tier (IAP or OIDC RP)
+
+**Not "maybe". This is decided: it is a necessity, not an idea.** It is deferred only by
+*ordering* (what gets attention first), not by doubt.
+
+- source_plan: none (raised in conversation 2026-10-25; owner verdict: "je to rozhodnuto,
+  je to nutnost")
+  owner: `stavel.jan@gmail.com`
+  summary: Put every **ops/admin surface** (usage statistics, eval endpoints, corpus
+  inspection, future Firestore counters) behind an authenticated tier — Google IAP in
+  front of Cloud Run, or an OIDC relying party inside the app — while `/chat` and
+  `/health` stay **unauthenticated** exactly as the E3 flip intended.
+  evidence: Today the service is public by design and that is correct for the demo, but
+  it means every surface that is *not* the demo is also public or does not exist yet.
+  `RUNBOOK.md` §6 states it plainly ("Since the E3 flip (ADR-008), `GET /health` and
+  `POST /chat` are **unauthenticated**"); `src/janbot/guardrails/limits.py` and
+  `usage.py` bound rate per IP but carry **no per-identity dimension**; ADR-009
+  (minimum guardrail layer) is `ADOPTED … CONDITIONAL`; and this file already carries
+  the neighbouring item ("Exact model-call quota … needs a pre-LM hook inside
+  `ChatProgram`", 2026-10-20). The prompt for it is already recorded outside the repo:
+  conversation 2026-10-24 13:53 ("doplnit podporu pro OAuth identitu … Firebase/Firestore
+  counters"). IAP cannot simply be switched on — it would break the public demo, which
+  is the single most valuable artifact in the profile — so the deliverable is the
+  **split**, not the proxy.
+  scope decision (open, cheap to defer): **IAP** = fast, GCP-native, little code;
+  **OIDC RP with a vetted library** = transferable beyond GCP and ties to the owner's
+  OIDC/OAuth certificate work. Choose at ADR time, not now.
+  claim this may support (honest wording only): "identity and least privilege at the
+  edge, with quotas per identity" — *platform* security. It does **not** cover
+  antimalware / WAF / IDS engine work, which is a different discipline; do not let it be
+  written up as product-security experience.
+  status: **decided, deferred by ordering** — after the two pending job offers are
+  answered (#A) and the CloudLinux application is submitted; then **timebox two
+  evenings**. If it overruns, cut scope to `/admin` only, not the whole proxy. An ADR
+  comes first (it changes the access model; AD-1 does not allow an unrecorded interface
+  decision). Reopen this entry only to record the ADR number or to state that the
+  ordering changed.
