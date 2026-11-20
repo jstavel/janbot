@@ -2,6 +2,8 @@
 
 An autonomous AI career assistant that answers recruiter questions accurately and contextually from personal org-mode documentation — built spec-first, verified by tests from day one.
 
+> **Live demo:** [`jstavel.github.io/janbot/`](https://jstavel.github.io/janbot/) — ask it anything about the author's career.
+
 JanBot parses an org-mode corpus into semantically intact units, indexes them, and exposes a single `POST /chat` endpoint that returns a grounded answer with citations. Private notes are provably never indexed: the ingestion boundary is fail-closed over an explicit public folder.
 
 > **Operating it:** [`RUNBOOK.md`](RUNBOOK.md) is the single source for *how* — local run, tests, index rebuild, answer-cache regeneration, deploy, the post-deploy live check and rollback. The stack procedure is [`terraform/RUNBOOK.md`](terraform/RUNBOOK.md). Which decisions bind is [`DECISIONS.md`](DECISIONS.md); what and why stay in `_bmad-output/`.
